@@ -1,0 +1,1161 @@
+# ================================================ #
+#  This configuration is made for Minecraft 1.8.x  #
+# ================================================ #
+#      Please reset config if this is not your     #
+#                 server's version.                #
+# ================================================ #
+
+# Here is where every message can be customized including the prefix.
+# (Note: each message can have custom JSON clickable text and be disabled by being set to "".)
+# For JSON clickable text use the format <message:command:tooltip>.
+language-section:
+  prefix: "&0(&dHyper&5Drive&0) "
+  invalid-help-page: "&cThe entered help page does not exist."
+  no-permission: "&cYou don't have permission to use this."
+  player-invalid: "&cThe player &e{player} &cis either invalid or offline."
+  world-invalid: "&cThe world &e{world} &cis invalid."
+  must-be-player: "&cYou must be a player to use this."
+  reload: "&eAll configurations, tasks, and warps have been successfully reloaded."
+  insufficient-funds: "&cYou do not have enough money to purchase this for &e${amount}&c."
+  transaction-success: "&aYour transaction for &e${amount} &awas successful."
+  last-transaction-return: "&aThe last transaction has been reversed and &e${amount} &ahas been deposited into your account."
+  not-hook-safe: "&cThe current location is not hook safe to perform this action."
+  cross-server: "&eThe player &a{player} &ehas been transferred to the &a{server}&e."
+  teleportation-cancelled: "&cYour teleportation process has been cancelled."
+  warp-list: "&eWarps (&a{count}&e): &a{list}"
+  warp-invalid: "&cA warp with the name &e{warp} &cwas unable to be found."
+  warp-exists: "&cA warp already exists with the name &e{warp}&c."
+  warp-no-access: "&cYou are not the owner nor an assistant of the warp &e{warp}&c."
+  warp-created: "&aThe warp &e{warp} &ahas been created."
+  warp-limit-met: "&cYou have met your warp limitation. You will be unable to create or own anymore warps."
+  warp-renamed: "&aThe warp &e{previous-name} &ahas been re-named to &e{new-name}&a."
+  warp-deleted: "&eThe warp &a{warp} &ehas been deleted."
+  teleport-fail-message: "&cUnable to teleport to the warp &e{warp} &cdue to the location being un-retrievable. Perhaps the world is invalid."
+  delete-not-owner: "&cUnfortunately, you are not the owner of the warp &e{warp} &cand will be unable to delete the warp."
+  warp-relocated: "&aThe warp &e{warp} &ahas been relocated to &dWorld: &e{world} &a(&dX: &e{x}&a, &dY: &e{y}&a, &dZ: &e{z}&a)."
+  warp-status-changed: "&aThe warp &e{warp} &ahas had it's status changed to &e{next-status} &afrom &e{previous-status}&a."
+  teleportation-engaged: "&eYou have been teleported to the &a{warp} &ewarp."
+  teleportation-delay: "&eTeleportation to the &a{warp} &ewarp will engage in approximately &a{duration} &eseconds."
+  teleportation-start: "&eYou will be teleported to the &a{warp} &ewarp in approximately &a{duration} &eseconds."
+  warp-cooldown: "&cYou are unable to warp for another &e{duration} &cseconds."
+  random-teleport-fail: "&cUnable to find a safe location for teleportation after &e{tries} &cattempt(s)."
+  random-teleport-admin: "&eThe player &a{player} &eis now undergoing random teleportation to the &a{world} &eworld."
+  random-teleported: "&eYou have been teleported to &aWorld: &c{world} &aX: &c{x} &aY: &c{y} &aZ: &c{z} &eafter &a{tries} &eattempts."
+  random-teleport-start: "&ePlease wait while a safe location is found for random teleportation..."
+  random-teleport-cooldown: "&cYou must wait &e{duration} &cseconds before beginning another random teleportation process."
+  interaction-already-active: "&cYou must complete your current chat interaction in order to begin a new interaction."
+  chat-interaction-cleared: "&cAll of your chat interactions have been cleared."
+  chat-interaction-cancelled: "&cYour chat interaction has been cancelled."
+  create-warp-interaction: "&ePlease enter the name you wish to give your warp (Type {cancel} to stop the interaction):"
+  rename-warp-interaction: "&ePlease enter the name you wish to re-name your warp to (Type {cancel} to stop the interaction):"
+  give-ownership-interaction: "&ePlease enter the name of the player you wish to give ownership of the warp to (Type &a{cancel} &eto stop the interaction):"
+  edit-description-interaction: "&ePlease enter the text followed by a colon and the index where the text should be set in the description (Type &a{cancel} &eto stop the interaction):"
+  invalid-description-index: "&cThe index entered was unable to be retrieved due to it being invalid or out of bounds. There are currently &e{lines} &clines in the warp's description."
+  description-index-set: "&aThe description line at the index &e{index} &ahas been set to &e{text} &afor the warp &e{warp}&a."
+  description-line-added: "&aThe line &e{text} &ahas been added to the description of the warp &e{warp}&a."
+  description-index-removed: "&aThe line at index &e{index} &ahas been removed from the warp &e{warp}&a."
+  invalid-color: "&cThe color entered was invalid or unavailable. Please enter one of these colors: &e{colors}"
+  change-color-interaction: "&ePlease enter the color you would like to set the warp's name color to from the following list (Type &a{cancel} &eto stop the interaction): &a{colors}"
+  name-color-changed: "&eThe name color of the warp &a{warp} &ehas been set to &a{color}&e."
+  change-usage-price-interaction: "&ePlease enter the usage price (Type &a{cancel} &eto stop the interaction):"
+  invalid-usage-price: "&cThe usage price entered was invalid. Please enter an integer or decimal value."
+  usage-price-set: "&aThe usage price of the warp &e{warp} 7ahas been set to &e${price}&a."
+  give-assistant-interaction: "&ePlease enter the name of the player you wish to give assistant to (Type &a{cancel} &eto stop the interaction):"
+  remove-assistant-interaction: "&ePlease enter the name of the player you wish to remove assistant from (Type &a{cancel} &eto stop the interaction):"
+  add-whitelist-interaction: "&ePlease enter the name of the player you wish to add to the whitelist (Type &a{cancel} &eto stop the interaction):"
+  remove-whitelist-interaction: "&ePlease enter the name of the player you wish to remove from the whitelist (Type &a{cancel} &eto stop the interaction):"
+  player-already-assistant: "&cThe player &e{player} &cis already an assistant for this warp."
+  player-not-assistant: "&cThe player &e{player} &cis not an assistant for this warp."
+  remove-assistant: "&aThe player &e{player} &ais no longer an assistant for the warp &e{warp}&a."
+  give-assistant: "&aThe player &e{player} &ais now an assistant for the warp &e{warp}&a."
+  player-whitelisted: "&cThe player &e{player} &cis already whitelisted for this warp."
+  player-not-whitelisted: "&cThe player &e{player} &cis not whitelisted for this warp."
+  add-whitelist: "&aThe player &e{player} &ahas been added to the whitelist of the warp &e{warp}&a."
+  remove-whitelist: "&aThe player &e{player} &ahas been removed from the whitelist of the warp &e{warp}&a."
+  add-command-interaction: "&ePlease enter the command you would like to add to the warp (Type &a{cancel} &eto stop the interaction):"
+  add-command: "&eThe command &a{command} &eto the warp &a{warp}&e."
+  remove-command-interaction: "&ePlease enter the command you would like to add to the warp (Type &a{cancel} &eto stop the interaction):"
+  command-already-exists: "&cThe command &e{command} &calready exists for the warp &e{warp}&c."
+  invalid-command-index: "&cThe index entered was unable to be found or out of bounds. There is/are currently &e{command-count} &ccommand(s) on this warp."
+  remove-command: "&aThe command at the index &e{index} &ahas been removed from the warp &e{warp}&a."
+  enchanted-look-toggle: "&aThe icon enchanted look has been &e{status} &afor the warp &e{warp}&a!"
+  theme-invalid: "&cThe next icon theme was unable to be found. The original icon theme has been kept."
+  theme-changed: "&aThe icon theme of the warp &e{warp} &ahas been changed to &e{theme}&a."
+  animation-set-changed: "&aThe animation set of the warp &e{warp} &ahas been changed to &e{animation-set}&a."
+  animation-set-invalid: "&cThe next animation set was unable to be found. The original animation set has been kept."
+  no-next-page: "&cThere are no more pages. You are on the final page."
+  no-previous-page: "&cThere are no previous pages to view. You are on the first page."
+  refresh-fail: "&cThere was nothing to refresh."
+  group-selection-start: "&ePlease select all of the players you wish to request to teleport with you."
+  player-selection-fail: "&cThere must be at least one player selected to complete the process."
+  player-selected-teleport: "&eThe player &a{player} &ewould like you to teleport with them. <&e(Click To Accept):/warps accept {player}:&aClick to accept the player's request.>"
+  no-players-found: "&cThere seems to be no players currently online other than yourself."
+  group-teleport-fail: "&cThe group teleportation failed due to none of the selected players accepting the request."
+  group-teleport-success: "&eYou have been teleported with all of the selected players who accepted the request."
+  group-teleport-sent: "&eTeleportation requests have been sent out to all selected players."
+  group-teleported: "&eYou have been teleported with &a{player}&e."
+  no-request: "&cYou don't have any requests from &e{player}&c."
+  request-deny-fail: "&cUnable to deny &e{player} &csince the request was either not accepted or invalid."
+  request-accept-fail: "&cUnable to accept &e{player} &csince the request was either already accepted or invalid."
+  request-denied: "&eYou have denied &a{player}'s &erequest."
+  request-accepted: "&eYou have accepted &a{player}'s &erequest. Please do not &aMove &eor take &aDamage &eduring this process."
+  destination-invalid: "&cUnable to complete group teleportation due to the destination being invalid."
+  group-teleport-cancelled: "&cThe group teleportation process has been cancelled due to movement or damage."
+  tp-victim: "&eYou have been teleported to &a{player}&e."
+  tp-receiver: "&a{player} &ehas been teleported to you."
+  toggled-tp-player: "&eThe player &a{player} &ecurrently has teleportation toggled."
+  players-invalid: "&cOne of the players you have entered is either invalid or offline."
+  coordinate-invalid: "&cA coordinate you entered was invalid. Please use integers."
+  teleport-pos: "&e{player} &chas been teleported to the entered coordinates and world."
+  teleported-pos: "&eYou have been teleported to &aX: {x} - Y: {y} - Z: {z} - World: {world}&e."
+  player-teleportation-toggled: "&cThe player &e{player} &chas teleportation toggled and will not be able to be teleported to without administration access."
+  player-tpa-sent: "&eYour teleport request has been sent to &a{player}&e. (&a10 &eseconds to accept)"
+  player-tpa-received: "&eYou have received a teleport request from &a{player}&e. (&a10 &eseconds to accept)"
+  player-tpa-invalid: "&cYou do not currently have any TPA requests from &e{player}&c."
+  self-tpa-fail: "&cYou can't send, deny, or accept TPA requests from yourself."
+  player-tpa-accept: "&eYou have accepted &a{player}'s &eTPA request."
+  player-tpa-accepted: "&a{player} &ehas accepted your TPA request."
+  player-tpa-deny: "&eYou have denied &a{player}'s &eTPA request."
+  player-tpa-denied: "&e{player} &chas denied your TPA request."
+  teleport-toggled-off: "&eTeleportation has been toggled &cOff&e."
+  teleport-toggled-on: "&eTeleportation has been toggled &aOn&e."
+  no-last-location: "&cYou currently have no last teleport location."
+  teleport-last-location: "&eYou have teleported to your last location."
+  teleported-last-location: "&eThe player &a{player} &ehas been teleported to their last location."
+  teleport-self: "&cYou are unable to teleport to yourself. Please use another player's name."
+  teleport-same: "&cBoth player names entered were the same. Please enter two different player names."
+  self-teleportation-toggled: "&cYou currently have teleportation disabled. use &e/tptoggle &cto re-enable."
+  player-selection-group: "&eSelect all of the players you wish to randomly teleport with. After &a12 &eseconds the players who accepted will be randomly teleported with you."
+  group-destination-teleport-fail: "&cThe group teleportation process has failed since a destination was unable to be found."
+  sign-creation: "&eYou have created a HyperDrive sign. Please interact with it to ensure you have provided correct information."
+  sign-action-invalid: "&cLine &e2 &con this sign is incorrect. Please make sure the action is &eWarp&c, &eRtp&c, &eGroup Warp&c, or &eGroup Rtp&c."
+  sign-warp-invalid: "&cThe warp on the sign is invalid. Please change it to a valid warp."
+
+# Here is where the MySQL connection can be configured.
+# (Note: Database tables are created and managed automatically. There is also no MySQL conversion to YAML file; therefore, use at your own risk.)
+mysql-connection:
+  # If this option is enabled, HyperDrive will enable cross-server teleportation and MySQL warp saving/loading.
+  use-mysql: false
+  # Below, define your MySQL information. THE DEFINED DATABASE MUST ALREADY EXIST.
+  database-name: "hyperdrive"
+  host: "localhost"
+  port: 3306
+  username: "root"
+  password: ""
+
+# Here is where everything that is general can be configured
+general-section:
+  # If this option is enabled, Vault will be hooked into and be used for item which require a fee.
+  use-vault: false
+  # If this option is enabled, the console will be notified every time the warps are automatically saved.
+  auto-save-log: true
+  # This is the interval of the warp auto-save in seconds.
+  auto-save-interval: 900
+  # If this option is enabled, all warps found in the existing Essentials folder will be converted into HyperDrive warps.
+  # (Note: No essentials warps will be removed; therefore, please disable this option after the conversion is complete.)
+  essentials-converter: false
+  # This is what the user must type to forcefully cancel a chat interaction.
+  chat-interaction-cancel: "cancel"
+  # This is the format that is used for toggle based options. These will be the two values used when a option is either enabled or disabled (Please use the format <enable>:<disable>).
+  # (Note: If the format is incorrect the plugin will use the values "Enabled" and "Disabled" by default).
+  option-toggle-format: "Enabled:Disabled"
+  # This is the format that is used for date display and storage within the plugin (Please only change this if you know what you are doing).
+  date-format: "MM/dd/yyyy HH:mm:ss"
+  # This is the default amount of warps a user can own.
+  default-warp-limit: 3
+  # These are the sounds used throughout the plugin. These will need to be adjusted based on the server's Minecraft version.
+  # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+  # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+  global-sounds:
+    # This is the sound played when a player is teleported.
+    teleport: "ENDERMAN_TELEPORT"
+  # This is the color that will be placed in front of the header of newly created HyperDrive signs.
+  # (Note: ONLY use color codes)
+  sign-header-color: "&d"
+  # Here you can implement unlimited custom aliases that run commands. Use the format <alias:command:sender>.
+  # You can use the placeholder {player}. (Note: Set the sender to PLAYER for the command to be re-sent as a
+  # player and CONSOLE to send as console. Don't use the initial command / if it is set to CONSOLE)
+  custom-alias-commands:
+    - "/rtp:/warps rtp:PLAYER"
+
+hooks-section:
+  # If a region's name is in this list hyperdrive will allow its magic to perform in the region.
+  world-guard-whitelist:
+    - "allowed-region"
+  # If this option is enabled, HyperDrive will hook accordingly into Factions, if needed.
+  use-factions: true
+  # If this option is enabled, HyperDrive will hook accordingly into ASkyBlock, if needed.
+  use-askyblock: true
+  # If this option is enabled, HyperDrive will hook accordingly into GriefPrevention, if needed.
+  use-grief-prevention: true
+  # If this option is enabled, HyperDrive will hook accordingly into Towny, if needed.
+  use-towny: true
+  # If this option is enabled, HyperDrive will hook accordingly into Residence, if needed.
+  use-residence: true
+
+# Here is where filters can be customized to remove unwanted symbols or words from use in the plugin's features.
+filter-section:
+  # Strings within the global filter will be remove from warp names, descriptions, and other similar textual features. (Case sensitive)
+  # (Note: Phrases can be implemented into this list as well. The list can also be changed to a vertical format like
+  # other lists in the configuration.)
+  global-filter: ["@", "%", "{", "}", "&", "`", "'", '"', ";", ":", "fuck", "shit", "cunt", "fag", "faggot",
+                  "bitch", "dick", "damn", "www.", ".com", ".net"]
+
+# Here is where everything related to teleportation can be customize.
+teleportation-section:
+  # This is the duration of how long a TPA request will stay alive. After the duration the request can no longer be accepted or denied.
+  teleport-ask-duration: 10
+  # This is the duration of how long a group request will stay alive. After the duration the request can no longer be accepted or denied.
+  group-request-duration: 12
+  # If this option is enabled, players will have their teleportation process cancelled upon taking damage from any source.
+  damage-cancellation: true
+  # If this option is enabled, players will have their teleportation process cancelled upon moving.
+  move-cancellation: true
+  # This is the duration the player must wait before engaging teleportation (In seconds).
+  warp-delay-duration: 10
+  # This is the animation that is displayed when the player is successfully teleported through a standalone teleportation command such as /TP or /TPO.
+  # (Format: <type>:<effect>) Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
+  # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
+  standalone-teleport-animation: "CIRCLE:SMOKE_NORMAL"
+  # This is the animation that is displayed for each player involved in a group teleport after the teleportation is complete. (Format: <type>:<effect>)
+  # Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
+  # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
+  group-teleport-animation: "CIRCLE:SMOKE_NORMAL"
+  # These are the title and sub-title that are sent to the player after they are teleported (Note: Set to "" to disable).
+  teleport-title: "&eYou have been teleported"
+  teleport-sub-title: "&eto the &a{warp} &ewarp."
+  # These are the title and sub-title that are sent to the player 5 seconds before the teleportation is engaged (Note: Set to "" to disable).
+  delay-title: "&eTeleportation will be engaged"
+  delay-sub-title: "&ein approximately &a{duration} &eseconds."
+  # These are the title and sub-title that are sent to the player when the teleportation process has begun (Note: Set to "" to disable).
+  start-title: "&eYou will be teleported to"
+  start-sub-title: "&ethe &a{warp} &ein approximately &a{duration} &eseconds."
+  # This is the message display on the player's action bar while the teleportation process is counting down (Set to "" to disable).
+  delay-bar-message: "&eTeleportation will engage in: &r{progress} &e- &a{duration-left} &eSeconds"
+  # This is the message display on the player's action bar when a teleportation process has begun (Set to "" to disable).
+  start-bar-message: "&eTeleportation to the warp &a{warp} &ewill engage in &a{duration} &eseconds."
+  # This is the message display on the player's action bar when a teleportation process has completed (Set to "" to disable).
+  teleport-bar-message: "&eYou have been teleported to the warp &a{warp}&e."
+
+# Here is where everything related to random teleportation can be customize.
+random-teleport-section:
+  # This determines whether the random teleportation process is allowed to load chunks or not.
+  can-load-chunks: true
+  # This determines whether the random teleportation process is allowed to generate new chunks or not.
+  can-generate-chunks: false
+  # How long in between random teleportation processes should the player have to wait before beginning another in seconds.
+  cooldown: 10
+  # This is the forced location list which is used to force the random teleportation to generate off of the defined location
+  # instead of using the player's base location. This will only work if the world name is found in the list for where the player
+  # is being teleported. (Format: <world name>:<x>,<y>,<z>)
+  forced-location-list:
+    - "world:0,0,0"
+    - "world_the_nether:0,0,0"
+    - "world_the_end:0,0,0"
+  # This is the bound radius that a player can be teleported within. You can think of this as like a world border.
+  # (Note: It is recommended to set this value to the size of your world's world border)
+  bounds-radius: 1000
+  # This is how many times the random teleportation feature can attempt to teleport the player before aborting the task.
+  # (Note: The higher the slower, recommended value is below 30 if "can-load-chunks" is enabled, set to -1 for unlimited)
+  max-tries: 100
+  # This is the animation that is displayed when the player is successfully randomly teleported. (Format: <type>:<effect>)
+  # Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
+  # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
+  teleport-animation: "CIRCLE:SMOKE_NORMAL"
+  # Materials in this list will be avoided while a player is undergoing random teleportation.
+  # (Format: <material>:<durability>)
+  forbidden-materials:
+    - "WATER:-1"
+    - "STATIONARY_WATER:-1"
+    - "LAVA:-1"
+    - "STATIONARY_LAVA:-1"
+    - "LILY_PAD:-1"
+    - "WATER_LILY:-1"
+    - "AIR:-1"
+
+
+warp-icon-section:
+  # This is the sound that is played when a warp icon is selected. This option can be set to "" to disable.
+  # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+  # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+  click-sound: "CLICK"
+  # This message is used in place of placeholders in the warp icon that were unable to be retrieved.
+  invalid-retrieval: "&cUnable to be retrieved at this time."
+  # This is the default status a newly created warp is set to.
+  # Current Status Values: [PUBLIC, PRIVATE, SERVER]
+  default-status: "PUBLIC"
+  # This is the default display name color that is used when a warp is created.
+  default-name-color: "GREEN"
+  # This is the default description that is set to a newly created warp.
+  default-description:
+    - "&7This is the default HyperDrive warp description."
+    - "&7(Note: This can be changed inside the edit menu)"
+  # These are the icon themes a player can choose for the warps. By default, the first in the list will be the default theme for new warps.
+  # Please follow the format <Theme Name>:<Material>:<Durability>:<Amount> (Note: There must be at least one icon theme in the list and the theme names can contain color codes).
+  icon-theme-list:
+    - "&6A Little Grassy:GRASS:0:1"
+    - "&cRock Hard:STONE:0:1"
+    - "&bNeed Diamonds?:DIAMOND:0:1"
+    - "&dQuantity?:ARROW:0:15"
+    - "&fMore of Me:PLAYER_HEAD:0:1"
+  # This is the lore the warp icon is given inside of menus.
+  # Current Placeholders:
+  # {description} - replaces the line with the first description line while adding the remaining lines below it.
+  # {status} - replaced with the warp's current status.
+  # {creation-date} - replaced with the warp's creation date.
+  # {owner} - replaced with the warp owner's name.
+  # {assistant-count}- replaced with warp's assistants count.
+  # {theme} - replaced with the name of the icon theme currently in use by the warp.
+  # {animation-set} - replaced with the name of the animation set.
+  # {whitelist-count} - The total of whitelisted players.
+  # {assistant-count} - The total of assistant players.
+  ###
+  # Unlike other formats in this lore format you are able to hide/show certain lines based on events. To hide/show a line based
+  # on an event you must simply ensure that the line contains an event placeholder. Below are the currently available placeholders:
+  # (Note: The placeholder can be anywhere in the line it just needs to be exactly how it is show below to be detected.
+  # Only one event will be read and used all extra events will be ignored.)
+  ###
+  # {is-owner} - Only displays the line if the player is the owner of the warp.
+  # {has-access} - Only displays the line if the player has access to use the warp.
+  # {no-access} - Only displays the line if the player does NOT have access to use the warp.
+  # {can-edit} - Only displays the line if the player can edit the warp.
+  # {is-private} - Only displays if the warp's status is set to PRIVATE.
+  # {is-public} - Only displays if the warp's status is set to PUBLIC.
+  # {is-admin} - Only displays if the warp's status is set to ADMIN.
+  list-lore-format:
+    - "&e&l&m----------------------------"
+    - ""
+    - "{description}"
+    - ""
+    - "&e&l&m----------------------------"
+    - ""
+    - "&7Status: &e{status}"
+    - "&7Icon Theme: &e{theme}"
+    - "&7Animation Set: &e{animation-set}"
+    - "&7Creation Date: &e{creation-date}"
+    - "&7Usage Cost: &e${usage-price}"
+    - ""
+    - "{no-access}&cYou don't have access to use this warp."
+    - "{has-access}&a(Left-Click) &eBegin the teleportation process."
+    - "{has-access}&a(Right-Click) &eBegin the group teleportation process."
+    - "{can-edit}&a(Shift-Click) &eBegin the warp edit process."
+    - ""
+    - "&7Owner: &e{owner}"
+    - "&7Whitelist Count: &e{whitelist-count}"
+    - "&7Assistant Count: &e{assistant-count}"
+    - ""
+    - "&e&l&m----------------------------"
+
+# Here is where everything related to animation can be customized.
+special-effects-section:
+  # These are the animation sets a player can choose for the warps. By default, the first in the list will be the default animation set for new warps.
+  # Please follow the format <Set Name>:<Delay Type>/<Delay Effect>:<Teleport Type>/<Teleport Effect> (Note: There must be at least one animation set in the list and the set names can contain color codes).
+  # Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
+  # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
+  warp-animation-list:
+    - "&fFlash Backs:CONE/CLOUD:CIRCLE/SPELL_WITCH"
+    - "&6Over Drive:VORTEX/SPELL_WITCH:CIRCLE/CLOUD"
+    - "&cOddly Hot:RING/FLAME:CIRCLE/FLAME"
+
+# This is where the list menu can be fully customized.
+list-menu-section:
+  # This is the title of the menu. (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+  title: "&c&lWarps"
+  # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+  size: 54
+  # These are the slots that will be filled with warps from each page. To have this menu contain no warps, make sure this list is empty.
+  # (Note: This list must only contain slots that are logical with the size value above.)
+  warp-slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+  # This is the default filter status the filter will start on. (Available Indexes: [0 (Public), 1 (Private), 2 (Admin), 3 (Owned), 4 (Everything)])
+  default-filter-index: 0
+  # This is the format that replaces the second to final status in the filter-switch, which only loads warps that are owned by the player.
+  own-status-format: "Assisted or Owned"
+  # This is the format that replaces the final status in the filter-switch, which loads all warps.
+  everything-status-format: "Everything"
+  # This is the format that replaces the first status in the filter-switch, which only loads warps with the 'Public' status.
+  public-status-format: "Public"
+  # This is the format that replaces the second status in the filter-switch, which only loads warps with the 'Private' status.
+  private-status-format: "Private"
+  # This is the format that replaces the third status in the filter-switch, which only loads warps with the 'Admin' status.
+  # (Note: This filter will only show for those with proper permission)
+  admin-status-format: "Admin"
+  # Under this section unlimited fully customizable items can be created and inserted into the menu.
+  items:
+    # This is the item's id which is used to define each individual item. With this feature unlimited
+    # items can be created and applied to the menu's interface.
+    next-page:
+      # Available click actions: "next-page", "previous-page", "filter-switch", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: "next-page"
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: ""
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 0
+      # This is the display name of the item. The display name can use placeholders which can be found below:
+      ###
+      # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
+      ###
+      display-name: "&cNext Page"
+      # This is the lore of the item.
+      lore:
+        - ""
+        - "&eClick to view the next page."
+      # This is the slot in the menu where the item will be placed.
+      slot: 53
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: true
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: "MHF_ArrowRight"
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "ARROW"
+      # This is the durability of the item's material.
+      durability: 0
+      # This is the stack count of the item.
+      amount: 1
+    # Starting here are all of the pre-generated items without comments.
+    previous-page:
+      click-action: "previous-page"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: "&cPrevious Page"
+      lore:
+        - ""
+        - "&eClick to view the previous page."
+      slot: 52
+      use-player-head: true
+      player-head-name: "MHF_ArrowLeft"
+      material: "ARROW"
+      durability: 0
+      amount: 1
+    create-warp:
+      click-action: "create-warp"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: "&aCreate New Warp"
+      lore:
+        - ""
+        - "&c&lWARNING: &r&7The cost of this action is &a$25&7."
+        - "&eClick to begin the process of creating a new warp."
+      slot: 48
+      use-player-head: false
+      player-head-name: ""
+      material: "PAPER"
+      durability: 0
+      amount: 1
+    filter-switch:
+      click-action: "filter-switch"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 0
+      # The {current-status} placeholder must be in the display name for a filter-switch.
+      display-name: "&dFilter: &e{current-status}"
+      lore:
+        - ""
+        - "&eClick to switch the warp status filter."
+      slot: 49
+      use-player-head: false
+      player-head-name: ""
+      material: "DIAMOND"
+      durability: 0
+      amount: 1
+    refresh:
+      click-action: "refresh"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: "&dRefresh"
+      lore:
+        - ""
+        - "&eClick to refresh the warp list."
+      slot: 51
+      use-player-head: false
+      player-head-name: ""
+      material: "INK_SACK"
+      durability: 1
+      amount: 1
+    random-teleport-solo:
+      click-action: "dispatch-command-player:warps rtp"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: "&cSolo Random Teleport"
+      lore:
+        - ""
+        - "&eClick to begin a solo random teleportation sequence."
+      slot: 45
+      use-player-head: false
+      player-head-name: ""
+      material: "COMPASS"
+      durability: 0
+      amount: 1
+    random-teleport-group:
+      click-action: "dispatch-command-player:warps rtpgroup"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: "&cGroup Random Teleport"
+      lore:
+        - ""
+        - "&eClick to begin a group random teleportation sequence."
+      slot: 46
+      use-player-head: false
+      player-head-name: ""
+      material: "WATCH"
+      durability: 0
+      amount: 1
+    background-items:
+      click-action: ""
+      click-message: ""
+      fill-empty-slots: true
+      click-sound: false
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: ""
+      lore: []
+      slot: 0
+      use-player-head: false
+      player-head-name: ""
+      material: "STAINED_GLASS_PANE"
+      durability: 15
+      amount: 1
+
+# This is where the edit menu can be fully customized.
+edit-menu-section:
+  # This is the title of the menu. The warp's name and display name color are automatically added to the end of the title.
+  # (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+  title: "&c&lEditing: &r"
+  # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+  size: 54
+  # Under this section unlimited fully customizable items can be created and inserted into the menu.
+  items:
+    rename-warp:
+      # Available click actions: "rename", "relocate", "change-status", "change-name-color", "edit-description", "give-ownership", "give-assistant", "remove-assistant",
+      # "add-to-whitelist", "remove-from-whitelist", "change-usage-price", "add-command", "remove-command", "toggle-enchant-look", "change-animation-set", "change-icon-theme",
+      # "dispatch-command-console", "dispatch-command-player", "delete", and "open-custom-menu".
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: "rename"
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: ""
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 50
+      # This is the display name of the item. The display name can use placeholders which can be found below:
+      ###
+      # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
+      ###
+      display-name: "&dRename"
+      # This is the lore of the item.
+      # You can use the placeholder {warp-name} for the warp being edited's name and {usage-price} for the item's usage price.
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to rename the warp &a{warp-name}&e."
+      # This is the slot in the menu where the item will be placed.
+      slot: 10
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: false
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: ""
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "WATCH"
+      # This is the durability of the item's material.
+      durability: 0
+      # This is the stack count of the item.
+      amount: 1
+    change-status:
+      click-action: "change-status"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 65
+      display-name: "&bChange Status"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&7Current Status: &e{current-status}"
+        - "&7Next Status: &e{next-status}"
+        - ""
+        - "&eClick to change the status of the warp &a{warp-name}&e."
+      slot: 11
+      use-player-head: false
+      player-head-name: ""
+      material: "SIGN"
+      durability: 0
+      amount: 1
+    relocate-warp:
+      click-action: "relocate"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 125
+      display-name: "&cRelocate"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to relocate the warp"
+        - "&a{warp-name} &eto your current"
+        - "&elocation."
+      slot: 12
+      use-player-head: false
+      player-head-name: ""
+      material: "ENDER_PEARL"
+      durability: 0
+      amount: 1
+    give-ownership:
+      click-action: "give-ownership"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&dGive Ownership"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to give ownership of the"
+        - "warp &a{warp-name} &eto another"
+        - "&eplayer."
+      slot: 13
+      use-player-head: false
+      player-head-name: ""
+      material: "TRIPWIRE_HOOK"
+      durability: 0
+      amount: 1
+    change-name-color:
+      click-action: "change-name-color"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 120
+      display-name: "&cChange Name Color"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to change the name color"
+        - "&eof the warp &a{warp-name}&e."
+      slot: 14
+      use-player-head: false
+      player-head-name: ""
+      material: "FEATHER"
+      durability: 0
+      amount: 1
+    edit-description:
+      click-action: "edit-description"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 120
+      display-name: "&cEdit Description"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to edit the description"
+        - "&eof the warp &a{warp-name}&e."
+      slot: 15
+      use-player-head: false
+      player-head-name: ""
+      material: "BOOK"
+      durability: 0
+      amount: 1
+    change-usage-price:
+      click-action: "change-usage-price"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 120
+      display-name: "&cChange Usage Price"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to change the usage price"
+        - "&eof the warp &a{warp-name}&e."
+      slot: 16
+      use-player-head: false
+      player-head-name: ""
+      material: "GOLD_INGOT"
+      durability: 0
+      amount: 1
+    enchant-toggle:
+      click-action: "toggle-enchant-look"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&bToggle Enchant Look"
+      lore:
+        - ""
+        - "&7Status: &e{enchant-status}"
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to toggle the whether the"
+        - "&ewarp icon looks enchanted or not."
+      slot: 19
+      use-player-head: false
+      player-head-name: ""
+      material: "ENCHANTED_BOOK"
+      durability: 0
+      amount: 1
+    give-assistant:
+      click-action: "give-assistant"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&bGive Assistant"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to make a player an"
+        - "&eassistant of the warp &a{warp-name}&e."
+      slot: 37
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 13
+      amount: 1
+    add-to-whitelist:
+      click-action: "add-to-whitelist"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&aAdd To Whitelist"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&c&lINFO: &r&7The whitelist enables"
+        - "&7and disables automatically based on if"
+        - "&7there are any whitelisted players."
+        - ""
+        - "&eClick to add a player to the whitelist"
+        - "&eof the warp &a{warp-name}&e."
+      slot: 38
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 13
+      amount: 1
+    add-command:
+      click-action: "add-command"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&aAdd Command"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&c&lINFO: &r&7The warp commands enable"
+        - "&7and disable automatically based on"
+        - "&7if there are any commands in the warp's"
+        - "&7command list."
+        - ""
+        - "&eClick to add a command to the warp"
+        - "&a{warp-name}&e."
+      slot: 39
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 13
+      amount: 1
+    remove-assistant:
+      click-action: "remove-assistant"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&bRemove Assistant"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to remove assistant from"
+        - "&ea player for the warp &a{warp-name}&e."
+      slot: 41
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 14
+      amount: 1
+    remove-from-whitelist:
+      click-action: "remove-from-whitelist"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&cRemove From Whitelist"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&c&lINFO: &r&7The whitelist enables"
+        - "&7and disables automatically based on if"
+        - "&7there are any whitelisted players."
+        - ""
+        - "&eClick to remove a player from the"
+        - "&ewhitelist of the warp &a{warp-name}&e."
+      slot: 42
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 14
+      amount: 1
+    remove-command:
+      click-action: "remove-command"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&cRemove Command"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&c&lINFO: &r&7The warp commands enable"
+        - "&7and disable automatically based on"
+        - "&7if there are any commands in the warp's"
+        - "&7command list."
+        - ""
+        - "&eClick to add a command to the warp"
+        - "&a{warp-name}&e."
+      slot: 43
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 14
+      amount: 1
+    change-icon-theme:
+      click-action: "change-icon-theme"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&aChange Icon Theme"
+      lore:
+        - ""
+        - "&7Next Icon Theme: &e{next-theme}"
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to change the icon theme of"
+        - "&ethe warp &a{warp-name}&e."
+      slot: 20
+      use-player-head: false
+      player-head-name: ""
+      material: "GRASS"
+      durability: 0
+      amount: 1
+    change-animation-set:
+      click-action: "change-animation-set"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&aChange Animation Set"
+      lore:
+        - ""
+        - "&7Next Animation Set: &e{animation-set}"
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to change the animation set of"
+        - "&ethe warp &a{warp-name}&e."
+      slot: 21
+      use-player-head: false
+      player-head-name: ""
+      material: "SLIME_BALL"
+      durability: 0
+      amount: 1
+    delete-warp:
+      click-action: "delete"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 50
+      display-name: "&cDelete Warp"
+      lore:
+        - ""
+        - "&eClick to delete the warp &a{warp-name}&e."
+      slot: 24
+      use-player-head: false
+      player-head-name: ""
+      material: "BARRIER"
+      durability: 0
+      amount: 1
+    return-list-menu:
+      click-action: "open-menu:List Menu"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 80
+      display-name: "&cBack"
+      lore:
+        - ""
+        - "&eClick to return to the &bList Menu&e."
+      slot: 25
+      use-player-head: true
+      player-head-name: "MHF_ArrowLeft"
+      material: "ARROW"
+      durability: 0
+      amount: 1
+    background-items:
+      click-action: ""
+      click-message: ""
+      fill-empty-slots: true
+      click-sound: false
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: ""
+      lore: []
+      slot: 0
+      use-player-head: false
+      player-head-name: ""
+      material: "STAINED_GLASS_PANE"
+      durability: 15
+      amount: 1
+
+# This is where the player selection menu can be fully customized.
+ps-menu-section:
+  # This is the title of the menu. The warp's name and display name color are automatically added to the end of the title.
+  # (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+  title: "&d&lPlayer Selection"
+  # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+  size: 54
+  # These are the slots that will be filled with player heads from each page. (Note: This list must only contain slots that are logical with the size value above.)
+  player-slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+  # This is the sound the player head will use when clicked. Set to "" to disable.
+  # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+  # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+  player-click-sound: "CLICK"
+  # This is the player head that is used when the player is not selected.
+  unselected-player-head:
+    # This is the display name of the player head item (Note: The player's name is added to the end of the entered value below).
+    display-name: "&d&l"
+    lore:
+      - ""
+      - "&cThis player is not selected."
+      - "&7Click to select this player."
+  # This is the player head that is used when the player is selected.
+  selected-player-head:
+    # This is the display name of the player head item (Note: The player's name is added to the end of the entered value below).
+    display-name: "&d&l"
+    lore:
+      - ""
+      - "&aThis player is selected."
+      - "&7Click to de-select this player."
+  # Under this section unlimited fully customizable items can be created and inserted into the menu.
+  items:
+    # This is the item's id which is used to define each individual item. With this feature unlimited
+    # items can be created and applied to the menu's interface.
+    next-page:
+      # Available click actions: "next-page", "previous-page", "confirm", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: "next-page"
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: ""
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 0
+      # This is the display name of the item. The display name can use placeholders which can be found below:
+      ###
+      # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
+      ###
+      display-name: "&cNext Page"
+      # This is the lore of the item.
+      lore:
+        - ""
+        - "&eClick to view the next page."
+      # This is the slot in the menu where the item will be placed.
+      slot: 53
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: true
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: "MHF_ArrowRight"
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "ARROW"
+      # This is the durability of the item's material.
+      durability: 0
+      # This is the stack count of the item.
+      amount: 1
+    previous-page:
+      click-action: "previous-page"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: "&cPrevious Page"
+      lore:
+        - ""
+        - "&eClick to view the next page."
+      slot: 52
+      use-player-head: true
+      player-head-name: "MHF_ArrowLeft"
+      material: "ARROW"
+      durability: 0
+      amount: 1
+    confirm:
+      click-action: "confirm"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: "&aConfirm Selection"
+      lore:
+        - ""
+        - "&eClick to confirm your selection."
+      slot: 51
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 5
+      amount: 1
+    background-items:
+      click-action: ""
+      click-message: ""
+      fill-empty-slots: true
+      click-sound: false
+      sound-name: "CLICK"
+      usage-cost: 0
+      display-name: ""
+      lore: []
+      slot: 0
+      use-player-head: false
+      player-head-name: ""
+      material: "STAINED_GLASS_PANE"
+      durability: 15
+      amount: 1
+
+# Under this section unlimited fully customizable menus are able to be created and used within HyperDrive.
+custom-menus-section:
+  # This is the ID of the custom menu which is used as an identifier.
+  example-menu:
+    # This is the title of the menu. (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+    title: "&e&lExample Menu"
+    # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+    size: 27
+    # These are the slots that will be filled with warps from each page. To have a menu that contains no warps make sure this list is empty.
+    # (Note: This list must only contain slots that are logical with the size value above.)
+    warp-slots: []
+    # Under this section unlimited fully customizable items can be created and inserted into the custom menu.
+    items:
+    # This is the item's id which is used to define each individual item. With this feature unlimited
+    # items can be created and applied to the menu's interface.
+    next-page:
+      # Available click actions: "next-page", "previous-page", "filter-switch", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: ""
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: "&cThis is an example button that can be fully customized."
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 0
+      # This is the display name of the item. The display name can use placeholders which can be found below:
+      ###
+      # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
+      ###
+      display-name: "&dExample Button"
+      # This is the lore of the item.
+      lore:
+        - ""
+        - "&eClick to receive a nice example message"
+      # This is the slot in the menu where the item will be placed.
+      slot: 14
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: true
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: "MHF_Exclamation"
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "ARROW"
+      # This is the durability of the item's material.
+      durability: 0
+      # This is the stack count of the item.
+      amount: 1

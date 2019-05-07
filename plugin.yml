@@ -1,0 +1,203 @@
+name: HyperDrive
+version: 5.0
+api-version: 1.13
+author: XZot1K
+main: xzot1k.plugins.hd.HyperDrive
+description: A high class warp plugin allowing you and your players to warp through space and time with high control.
+softdepend: [Vault, WorldGuard, Factions, ASkyBlock, Towny, GriefPrevention, Residence, MultiWorld, Multiverse-Core]
+commands:
+  hyperdrive:
+    default: op
+  warps:
+    default: op
+    description: Opens the warp list menu.
+    aliases: [warp]
+
+  # REMOVE THE COMMANDS BELOW TO DISABLE STANDALONE TELEPORTATION COMMANDS
+  teleport:
+    default: op
+    description: The basic teleportation command.
+    aliases: [tp]
+  teleporthere:
+    default: op
+    description: Teleport a player to the sender location.
+    aliases: [tphere]
+  teleportoverride:
+    default: op
+    description: Teleport to a player unnoiticed, ignoring TP toggled players.
+    aliases: [tpo]
+  teleportoverridehere:
+    default: op
+    description: Teleport a player to the sender location unoticed, ignoring TP toggled players.
+    aliases: [toh, tpohere]
+  teleportposition:
+    default: op
+    description: Teleport the send or the defined player to the defined coordinates.
+    aliases: [tppos]
+  teleportask:
+    default: op
+    description: Request to teleport to a player.
+    aliases: [tpa, tpask]
+  teleportaccept:
+    default: op
+    description: Accept a teleport request from a player.
+    aliases: [tpaccept]
+  teleportdeny:
+    default: op
+    description: Deny a teleport request from a player.
+    aliases: [tpdeny]
+  teleporttoggle:
+    default: op
+    description: Disable standalone teleportation from effecting the sender, except override commands.
+    aliases: [tt, tptoggle]
+  back:
+    description: Returns the sender to the last teleported location.
+    default: op
+  crossserver:
+    description: Attempts to teleport the defined player to the defined server at the defined location.
+    default: op
+
+permissions:
+
+  # PLAYER STAR PERMISSION
+  hyperdrive.use.*:
+    default: op
+    description: Gives the player access to all baseline permissions originally meant for a casual player.
+    children:
+      hyperdrive.use: true
+      hyperdrive.use.create: true
+      hyperdrive.use.delete: true
+      hyperdrive.groups.use: true
+      hyperdrive.rtp: true
+      hyperdrive.use.edit: true
+      hyperdrive.use.accept: true
+      hyperdrive.use.deny: true
+      hyperdrive.admin.bypass: true
+      hyperdrive.tpa: true
+      hyperdrive.tpt: true
+      hyperdrive.use.rtpgroup: true
+      hyperdrive.use.signs: true
+
+  # ADMIN STAR PERMISSION
+  hyperdrive.admin.*:
+    default: op
+    description: Gives the player all the permissions intended for an administrator.
+    children:
+      hyperdrive.use.*: true
+      hyperdrive.warplimit.*: true
+      hyperdrive.info: true
+      hyperdrive.reload: true
+      hyperdrive.admin.edit: true
+      hyperdrive.admin.rtp: true
+      hyperdrive.tpcooldown: true
+      hyperdrive.rtpbypass: true
+      hyperdrive.admin.help: true
+      hyperdrive.admin.warp: true
+      hyperdrive.admin.bypass: true
+      hyperdrive.admin.status: true
+      hyperdrive.admin.tp: true
+      hyperdrive.admin.tphere: true
+      hyperdrive.admin.tpo: true
+      hyperdrive.admin.tppos: true
+      hyperdrive.admin.back: true
+      hyperdrive.economybypass: true
+      hyperdrive.use.createsigns: true
+      hyperdrive.admin.crossserver: true
+
+  # INTENDED PLAYER PERMISSIONS
+  hyperdrive.use:
+    default: true
+    description: This permission allows any player with the node to use the /warps command, which is the only way to access the GUI portion of the plugin.
+  hyperdrive.use.create:
+    default: op
+    description: This permission allows any player with the node to create a warp.
+  hyperdrive.use.delete:
+    default: op
+    description: This permission allows any player with the node to delete a warp.
+  hyperdrive.groups.use:
+    default: op
+    description: This permission node is used to allow any player with the node to teleport their group to any warps the leader has permission for.
+  hyperdrive.rtp:
+    default: op
+    description: This permission node is used to allow any player with the node to use the rtp command.
+  hyperdrive.use.edit:
+    default: op
+    description: This permission node is used to allow any player with the node to use the edit command.
+  hyperdrive.use.accept:
+    default: op
+    description: This permission node is used to allow any player with the node to use the accept command.
+  hyperdrive.use.deny:
+    default: op
+    description: This permission node is used to allow any player with the node to use the deny command.
+  hyperdrive.tpa:
+    default: op
+    description: This permission node is used to allow any player with the node to use the /tpa <player>, /tpaccept <player>, and /tpdeny <player> standalone teleportation commands.
+  hyperdrive.tpt:
+    default: op
+    description: This permission node is used to allow any player with the node to use the /teleporttoggle standalone teleportation command.
+  hyperdrive.back:
+    default: op
+    description: This permission node is used to allow any player with the node to use the /back standalone teleportation command.
+  hyperdrive.use.rtpgroup:
+    default: op
+    description: This permission node is used to allow any player with the node to use the /warps <rtpgroup/rtpg> command.
+  hyperdrive.use.signs:
+    default: op
+    description: This permission node is used to allow any player with the node to create HyperDrive signs.
+
+  # INTENDED ADMIN PERMISSIONS
+  hyperdrive.info:
+    default: op
+    description: This permission allows any player with the node to use the /warps info command, which will display information about the current build of the plugin.
+  hyperdrive.reload:
+    default: op
+    description: This permission allows any player with the node to use the /warps reload command, which will reload all configurations and warps.
+  hyperdrive.tpcooldown:
+    default: op
+    description: This permission node is used to allow any player with the node to bypass warp cooldowns.
+  hyperdrive.admin.rtp:
+    default: op
+    description: This permission node is used to allow any player with the node to use the admin rtp commands.
+  hyperdrive.admin.edit:
+    default: op
+    description: This permission node is used to allow any player with the node to edit any existing warp.
+  hyperdrive.rtpbypass:
+    default: op
+    description: This permission node is used to allow any player with the node to bypass the rtp cooldown.
+  hyperdrive.admin.help:
+    default: op
+    description: This permission node is used to allow any player with the node to access the admin help menu.
+  hyperdrive.admin.warp:
+    default: op
+    description: This permission node is used to allow any player with the node to access the admin warp other players command.
+  hyperdrive.admin.bypass:
+    default: op
+    description: This permission node is used to allow any player with the node to bypass all hook restrictions.
+  hyperdrive.admin.status:
+    default: op
+    description: This permission node is used to allow any player with the node to change that status of a warp to “ADMIN”.
+  hyperdrive.admin.tp:
+    default: op
+    description: This permission node is used to allow any player with the node to use the /tp <player> <player> standalone teleportation command.
+  hyperdrive.admin.tphere:
+    default: op
+    description: This permission node is used to allow any player with the node to use the /tphere <player> standalone teleportation command.
+  hyperdrive.admin.tpo:
+    default: op
+    description: This permission node is used to allow any player with the node to use the /tpo <player> standalone teleportation command.
+  hyperdrive.admin.tppos:
+    default: op
+    description: This permission node is used to allow any player with the node to use the /tppos <player> <x> <y> <z> <world> standalone teleportation
+  hyperdrive.admin.back:
+    default: op
+    description: This permission node is used to allow any player with the node to use the /back <player> standalone teleportation command.
+  hyperdrive.economybypass:
+    default: op
+    description: This permission node is used to allow any player with the node to bypass the economy entirely.
+  hyperdrive.use.createsigns:
+    default: op
+    description: This permission node is used to allow any player with the node to create HyperDrive signs.
+  hyperdrive.admin.crossserver:
+    default: op
+    description: This permission node is used to allow any player with the node to attempt and teleport a player to the defined server at the defined location.
+
