@@ -49,13 +49,13 @@ language-section:
   create-warp-interaction: "&ePlease enter the name you wish to give your warp (Type {cancel} to stop the interaction):"
   rename-warp-interaction: "&ePlease enter the name you wish to re-name your warp to (Type {cancel} to stop the interaction):"
   give-ownership-interaction: "&ePlease enter the name of the player you wish to give ownership of the warp to (Type &a{cancel} &eto stop the interaction):"
-  edit-description-interaction: "&ePlease enter the text followed by a colon and the index where the text should be set in the description (Type &a{cancel} &eto stop the interaction):"
-  invalid-description-index: "&cThe index entered was unable to be retrieved due to it being invalid or out of bounds. There are currently &e{lines} &clines in the warp's description."
-  description-index-set: "&aThe description line at the index &e{index} &ahas been set to &e{text} &afor the warp &e{warp}&a."
-  description-line-added: "&aThe line &e{text} &ahas been added to the description of the warp &e{warp}&a."
-  description-index-removed: "&aThe line at index &e{index} &ahas been removed from the warp &e{warp}&a."
+  edit-description-interaction: "&ePlease enter the text that should be set as the warp's description (Type &a{cancel} &eto stop the interaction and {clear} to clear the description):"
+  description-set: "&eThe description of the warp &a{warp} &ehas been set to &a{description}&e."
+  description-cleared: "&eThe description of the warp &a{warp} &ehas been cleared."
   invalid-color: "&cThe color entered was invalid or unavailable. Please enter one of these colors: &e{colors}"
-  change-color-interaction: "&ePlease enter the color you would like to set the warp's name color to from the following list (Type &a{cancel} &eto stop the interaction): &a{colors}"
+  change-description-color-interaction: "&ePlease enter the color you would like to set the warp's description color to from the following list (Type &a{cancel} &eto stop the interaction): &a{colors}"
+  description-color-changed: "&eThe description color of the warp &a{warp} &ehas been set to &a{color}&e."
+  change-name-color-interaction: "&ePlease enter the color you would like to set the warp's name color to from the following list (Type &a{cancel} &eto stop the interaction): &a{colors}"
   name-color-changed: "&eThe name color of the warp &a{warp} &ehas been set to &a{color}&e."
   change-usage-price-interaction: "&ePlease enter the usage price (Type &a{cancel} &eto stop the interaction):"
   invalid-usage-price: "&cThe usage price entered was invalid. Please enter an integer or decimal value."
@@ -179,19 +179,21 @@ general-section:
     - "/rtp:/warps rtp:PLAYER"
 
 hooks-section:
+  # If this option is enabled, HyperDrive will hook accordingly into WorldGuard, if needed.
+  use-worldguard: false
   # If a region's name is in this list hyperdrive will allow its magic to perform in the region.
   world-guard-whitelist:
     - "allowed-region"
   # If this option is enabled, HyperDrive will hook accordingly into Factions, if needed.
-  use-factions: true
+  use-factions: false
   # If this option is enabled, HyperDrive will hook accordingly into ASkyBlock, if needed.
-  use-askyblock: true
+  use-askyblock: false
   # If this option is enabled, HyperDrive will hook accordingly into GriefPrevention, if needed.
-  use-grief-prevention: true
+  use-grief-prevention: false
   # If this option is enabled, HyperDrive will hook accordingly into Towny, if needed.
-  use-towny: true
+  use-towny: false
   # If this option is enabled, HyperDrive will hook accordingly into Residence, if needed.
-  use-residence: true
+  use-residence: false
 
 # Here is where filters can be customized to remove unwanted symbols or words from use in the plugin's features.
 filter-section:
@@ -285,7 +287,14 @@ warp-icon-section:
   # Current Status Values: [PUBLIC, PRIVATE, SERVER]
   default-status: "PUBLIC"
   # This is the default display name color that is used when a warp is created.
+  default-description-color: "GRAY"
+  # This is the default display name color that is used when a warp is created.
   default-name-color: "GREEN"
+  # When the player sets the description to only this symbol, the description will be cleared.
+  description-clear-symbol: "-"
+  # This is the maximum character count per description line when setting it. All characters past this count will be
+  # wrapped to the next line.
+  description-line-cap: 32
   # This is the default description that is set to a newly created warp.
   default-description:
     - "&7This is the default HyperDrive warp description."
@@ -297,7 +306,7 @@ warp-icon-section:
     - "&cRock Hard:STONE:0:1"
     - "&bNeed Diamonds?:DIAMOND:0:1"
     - "&dQuantity?:ARROW:0:15"
-    - "&fMore of Me:PLAYER_HEAD:0:1"
+    - "&fMore of Me:SKULL_ITEM:0:1"
   # This is the lore the warp icon is given inside of menus.
   # Current Placeholders:
   # {description} - replaces the line with the first description line while adding the remaining lines below it.
@@ -666,6 +675,26 @@ edit-menu-section:
       material: "TRIPWIRE_HOOK"
       durability: 0
       amount: 1
+    change-description-color:
+      click-action: "change-description-color"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "CLICK"
+      usage-cost: 120
+      display-name: "&cChange Description Color"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to change the description"
+        - "&ecolor of the warp &a{warp-name}&e."
+      slot: 14
+      use-player-head: false
+      player-head-name: ""
+      material: "COAL"
+      durability: 0
+      amount: 1
     change-name-color:
       click-action: "change-name-color"
       click-message: ""
@@ -680,7 +709,7 @@ edit-menu-section:
         - ""
         - "&eClick to change the name color"
         - "&eof the warp &a{warp-name}&e."
-      slot: 14
+      slot: 15
       use-player-head: false
       player-head-name: ""
       material: "FEATHER"
@@ -700,7 +729,7 @@ edit-menu-section:
         - ""
         - "&eClick to edit the description"
         - "&eof the warp &a{warp-name}&e."
-      slot: 15
+      slot: 16
       use-player-head: false
       player-head-name: ""
       material: "BOOK"
@@ -720,7 +749,7 @@ edit-menu-section:
         - ""
         - "&eClick to change the usage price"
         - "&eof the warp &a{warp-name}&e."
-      slot: 16
+      slot: 19
       use-player-head: false
       player-head-name: ""
       material: "GOLD_INGOT"
@@ -741,7 +770,7 @@ edit-menu-section:
         - ""
         - "&eClick to toggle the whether the"
         - "&ewarp icon looks enchanted or not."
-      slot: 19
+      slot: 20
       use-player-head: false
       player-head-name: ""
       material: "ENCHANTED_BOOK"
@@ -765,7 +794,7 @@ edit-menu-section:
       use-player-head: false
       player-head-name: ""
       material: "WOOL"
-      durability: 13
+      durability: 15
       amount: 1
     add-to-whitelist:
       click-action: "add-to-whitelist"
@@ -789,7 +818,7 @@ edit-menu-section:
       use-player-head: false
       player-head-name: ""
       material: "WOOL"
-      durability: 13
+      durability: 15
       amount: 1
     add-command:
       click-action: "add-command"
@@ -814,7 +843,7 @@ edit-menu-section:
       use-player-head: false
       player-head-name: ""
       material: "WOOL"
-      durability: 13
+      durability: 15
       amount: 1
     remove-assistant:
       click-action: "remove-assistant"
@@ -900,7 +929,7 @@ edit-menu-section:
         - ""
         - "&eClick to change the icon theme of"
         - "&ethe warp &a{warp-name}&e."
-      slot: 20
+      slot: 21
       use-player-head: false
       player-head-name: ""
       material: "GRASS"
@@ -921,7 +950,7 @@ edit-menu-section:
         - ""
         - "&eClick to change the animation set of"
         - "&ethe warp &a{warp-name}&e."
-      slot: 21
+      slot: 22
       use-player-head: false
       player-head-name: ""
       material: "SLIME_BALL"

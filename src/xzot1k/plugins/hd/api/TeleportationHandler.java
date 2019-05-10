@@ -45,7 +45,6 @@ public class TeleportationHandler implements Runnable
     private HashMap<UUID, TeleportTemp> teleportTempMap;
     private HashMap<UUID, SerializableLocation> destinationMap;
     private List<UUID> randomTeleportingPlayers;
-    private String teleportTitle, teleportSound, teleportSubTitle, delayTitle, delaySubTitle;
 
     public TeleportationHandler(HyperDrive pluginInstance)
     {
@@ -55,18 +54,17 @@ public class TeleportationHandler implements Runnable
         setTeleportTempMap(new HashMap<>());
         setDestinationMap(new HashMap<>());
         setRandomTeleportingPlayers(new ArrayList<>());
-
-        setTeleportTitle(getPluginInstance().getConfig().getString("teleportation-section.teleport-title"));
-        setTeleportSubTitle(getPluginInstance().getConfig().getString("teleportation-section.teleport-sub-title"));
-        setDelayTitle(getPluginInstance().getConfig().getString("teleportation-section.delay-title"));
-        setDelaySubTitle(getPluginInstance().getConfig().getString("teleportation-section.delay-sub-title"));
-        setTeleportSound(Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"));
     }
 
     @Override
     public void run()
     {
+        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
+                .toUpperCase().replace(" ", "_").replace("-", "_"),
+                teleportTitle = getPluginInstance().getConfig().getString("teleportation-section.teleport-title"),
+                teleportSubTitle = getPluginInstance().getConfig().getString("teleportation-section.teleport-sub-title"),
+                delayTitle = getPluginInstance().getConfig().getString("teleportation-section.delay-title"),
+                delaySubTitle = getPluginInstance().getConfig().getString("teleportation-section.delay-sub-title");
         List<UUID> uuidList = new ArrayList<>(getTeleportTempMap().keySet());
         for (int i = -1; ++i < uuidList.size(); )
         {
@@ -88,9 +86,9 @@ public class TeleportationHandler implements Runnable
                         {
                             if (teleportTemp.getTeleportTypeId().equalsIgnoreCase("warp"))
                             {
-                                if (getDelayTitle() != null && getDelaySubTitle() != null)
-                                    getPluginInstance().getManager().sendTitle(player, getDelayTitle().replace("{warp}", warp.getWarpName())
-                                            .replace("{duration}", String.valueOf(teleportTemp.getSeconds())), getDelaySubTitle().replace("{warp}", warp.getWarpName())
+                                if (delayTitle != null && delaySubTitle != null)
+                                    getPluginInstance().getManager().sendTitle(player, delayTitle.replace("{warp}", warp.getWarpName())
+                                            .replace("{duration}", String.valueOf(teleportTemp.getSeconds())), delaySubTitle.replace("{warp}", warp.getWarpName())
                                             .replace("{duration}", String.valueOf(teleportTemp.getSeconds())), 0, 5, 0);
 
                                 int delayDuration = getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration");
@@ -149,12 +147,12 @@ public class TeleportationHandler implements Runnable
                                         }
                                     }
 
-                                    if (!getTeleportSound().equalsIgnoreCase(""))
-                                        player.getWorld().playSound(player.getLocation(), Sound.valueOf(getTeleportSound()), 1, 1);
+                                    if (!teleportSound.equalsIgnoreCase(""))
+                                        player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
 
-                                    if (getTeleportTitle() != null && getTeleportSubTitle() != null)
-                                        getPluginInstance().getManager().sendTitle(player, getTeleportTitle().replace("{warp}", warp.getWarpName()),
-                                                getTeleportSubTitle().replace("{warp}", warp.getWarpName()), 0, 5, 0);
+                                    if (teleportTitle != null && teleportSubTitle != null)
+                                        getPluginInstance().getManager().sendTitle(player, teleportTitle.replace("{warp}", warp.getWarpName()),
+                                                teleportSubTitle.replace("{warp}", warp.getWarpName()), 0, 5, 0);
 
                                     getPluginInstance().getManager().sendActionBar(player, Objects.requireNonNull(getPluginInstance().getConfig().getString("teleportation-section.teleport-bar-message"))
                                             .replace("{warp}", warp.getWarpName()));
@@ -271,6 +269,8 @@ public class TeleportationHandler implements Runnable
             int tries = 0, maxTries = getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"), x, z, smartLimit = 0;
             boolean foundSafeLocation = false, canLoadChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-load-chunks"),
                     canGenerateChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-generate-chunks");
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_");
 
             @Override
             public void run()
@@ -384,8 +384,8 @@ public class TeleportationHandler implements Runnable
                             }
                         }
 
-                        if (!getTeleportSound().equalsIgnoreCase(""))
-                            Objects.requireNonNull(newLocation.getWorld()).playSound(newLocation, Sound.valueOf(getTeleportSound()), 1, 1);
+                        if (!teleportSound.equalsIgnoreCase(""))
+                            Objects.requireNonNull(newLocation.getWorld()).playSound(newLocation, Sound.valueOf(teleportSound), 1, 1);
 
 
                         getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleported"))
@@ -772,46 +772,6 @@ public class TeleportationHandler implements Runnable
         this.teleportTempMap = teleportTempMap;
     }
 
-    private String getTeleportTitle()
-    {
-        return teleportTitle;
-    }
-
-    private void setTeleportTitle(String teleportTitle)
-    {
-        this.teleportTitle = teleportTitle;
-    }
-
-    private String getTeleportSubTitle()
-    {
-        return teleportSubTitle;
-    }
-
-    private void setTeleportSubTitle(String teleportSubTitle)
-    {
-        this.teleportSubTitle = teleportSubTitle;
-    }
-
-    private String getDelayTitle()
-    {
-        return delayTitle;
-    }
-
-    private void setDelayTitle(String delayTitle)
-    {
-        this.delayTitle = delayTitle;
-    }
-
-    private String getDelaySubTitle()
-    {
-        return delaySubTitle;
-    }
-
-    private void setDelaySubTitle(String delaySubTitle)
-    {
-        this.delaySubTitle = delaySubTitle;
-    }
-
     public Animation getAnimation()
     {
         return animation;
@@ -821,13 +781,6 @@ public class TeleportationHandler implements Runnable
     {
         this.animation = animation;
     }
-
-    private void setTeleportSound(String teleportSound)
-    {
-        this.teleportSound = teleportSound;
-    }
-
-    private String getTeleportSound() { return teleportSound; }
 
     public List<UUID> getRandomTeleportingPlayers()
     {

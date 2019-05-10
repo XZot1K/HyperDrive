@@ -188,8 +188,8 @@ public class HyperDrive extends JavaPlugin
 
                 Statement statement = getConnection().createStatement();
                 statement.executeUpdate("create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100)," +
-                        "icon_theme varchar(100),animation_set varchar(100),name_color varchar(100),description varchar(255),commands varchar(255),owner varchar(100)," +
-                        "white_list varchar(255),assistants varchar(255),usage_price double,enchanted_look int, server_ip varchar(255),primary key (name))");
+                        "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255)," +
+                        "owner varchar(100),white_list varchar(255),assistants varchar(255),usage_price double,enchanted_look int,server_ip varchar(255),primary key (name))");
                 statement.executeUpdate("create table if not exists transfer (player_uuid varchar(100),location varchar(255),primary key (player_uuid))");
                 statement.close();
             } catch (ClassNotFoundException | SQLException e)
@@ -238,6 +238,9 @@ public class HyperDrive extends JavaPlugin
                             warp.setUsagePrice(ymlFile.getDouble("Usage Price"));
                             warp.setIconEnchantedLook(ymlFile.getBoolean("Enchanted Look"));
                             warp.setCreationDate(ymlFile.getString("Creation Date"));
+
+                            ChatColor descriptionColor = ChatColor.getByChar(Objects.requireNonNull(ymlFile.getString("Description Color")).replace("&", ""));
+                            if (descriptionColor != null) warp.setDescriptionColor(descriptionColor);
 
                             ChatColor displayNameColor = ChatColor.getByChar(Objects.requireNonNull(ymlFile.getString("Name Color")).replace("&", ""));
                             if (displayNameColor != null) warp.setDisplayNameColor(displayNameColor);
@@ -435,33 +438,41 @@ public class HyperDrive extends JavaPlugin
                     yaml.set(warp.getWarpName() + ".location.y", warp.getWarpLocation().getY());
                     yaml.set(warp.getWarpName() + ".location.z", warp.getWarpLocation().getZ());
 
-                    List<String> whiteList = new ArrayList<>();
-                    for (int j = -1; ++j < warp.getWhiteList().size(); )
+                    try
                     {
-                        UUID uuid = warp.getWhiteList().get(j);
-                        whiteList.add(uuid.toString());
-                    }
+                        List<String> whiteList = new ArrayList<>();
+                        for (int j = -1; ++j < warp.getWhiteList().size(); )
+                        {
+                            UUID uuid = warp.getWhiteList().get(j);
+                            whiteList.add(uuid.toString());
+                        }
 
-                    List<String> assistants = new ArrayList<>();
-                    for (int j = -1; ++j < warp.getAssistants().size(); )
+                        List<String> assistants = new ArrayList<>();
+                        for (int j = -1; ++j < warp.getAssistants().size(); )
+                        {
+                            UUID uuid = warp.getAssistants().get(j);
+                            assistants.add(uuid.toString());
+                        }
+
+                        yaml.set(warp.getWarpName() + ".status", warp.getStatus().toString());
+                        yaml.set(warp.getWarpName() + ".creation-date", warp.getCreationDate());
+                        yaml.set(warp.getWarpName() + ".owner", warp.getOwner().toString());
+                        yaml.set(warp.getWarpName() + ".assistants", assistants);
+                        yaml.set(warp.getWarpName() + ".whitelist", whiteList);
+                        yaml.set(warp.getWarpName() + ".commands", warp.getCommands());
+                        yaml.set(warp.getWarpName() + ".animation-set", warp.getAnimationSet());
+
+                        yaml.set(warp.getWarpName() + ".icon.theme", warp.getIconTheme());
+                        yaml.set(warp.getWarpName() + ".icon.description-color", warp.getDescriptionColor().name());
+                        yaml.set(warp.getWarpName() + ".icon.name-color", warp.getDisplayNameColor().name());
+                        yaml.set(warp.getWarpName() + ".icon.description", warp.getDescription());
+                        yaml.set(warp.getWarpName() + ".icon.use-enchanted-look", warp.hasIconEnchantedLook());
+                        yaml.set(warp.getWarpName() + ".icon.prices.usage", warp.getUsagePrice());
+                    } catch (Exception e)
                     {
-                        UUID uuid = warp.getAssistants().get(j);
-                        assistants.add(uuid.toString());
+                        e.printStackTrace();
+                        log(Level.INFO, "There was an issue saving the warp " + warp.getWarpName() + "'s data aside it's location.");
                     }
-
-                    yaml.set(warp.getWarpName() + ".status", warp.getStatus().toString());
-                    yaml.set(warp.getWarpName() + ".creation-date", warp.getCreationDate());
-                    yaml.set(warp.getWarpName() + ".owner", warp.getOwner().toString());
-                    yaml.set(warp.getWarpName() + ".assistants", assistants);
-                    yaml.set(warp.getWarpName() + ".whitelist", whiteList);
-                    yaml.set(warp.getWarpName() + ".commands", warp.getCommands());
-                    yaml.set(warp.getWarpName() + ".animation-set", warp.getAnimationSet());
-
-                    yaml.set(warp.getWarpName() + ".icon.theme", warp.getIconTheme());
-                    yaml.set(warp.getWarpName() + ".icon.name-color", warp.getDisplayNameColor().name());
-                    yaml.set(warp.getWarpName() + ".icon.description", warp.getDescription());
-                    yaml.set(warp.getWarpName() + ".icon.use-enchanted-look", warp.hasIconEnchantedLook());
-                    yaml.set(warp.getWarpName() + ".icon.prices.usage", warp.getUsagePrice());
 
                     yaml.save(file);
                     savedWarps += 1;
@@ -509,12 +520,12 @@ public class HyperDrive extends JavaPlugin
                 }
 
                 PreparedStatement preparedStatement = connection.prepareStatement("insert into warps (name, location, status, creation_date, icon_theme," +
-                        "animation_set, name_color, description, commands, owner, white_list, assistants, usage_price, enchanted_look, server_ip) values ('" + warp.getWarpName()
-                        + "', '" + (warp.getWarpLocation().getWorldName() + "," + warp.getWarpLocation().getX() + "," + warp.getWarpLocation().getY() + ","
-                        + warp.getWarpLocation().getZ() + "," + warp.getWarpLocation().getYaw() + "," + warp.getWarpLocation().getPitch()) + "', '" +
-                        warp.getStatus().name() + "', '" + warp.getCreationDate() + "', '" + warp.getIconTheme() + "', '" + warp.getAnimationSet() + "', '"
-                        + warp.getDisplayNameColor().name() + "', ?, ?, '" + warp.getOwner().toString() + "', ?, ?, " + warp.getUsagePrice() + ", "
-                        + warp.hasIconEnchantedLook() + ", '" + warp.getServerIPAddress() + "');");
+                        "animation_set, description_color, name_color, description, commands, owner, white_list, assistants, usage_price, enchanted_look, server_ip) " +
+                        "values ('" + warp.getWarpName() + "', '" + (warp.getWarpLocation().getWorldName() + "," + warp.getWarpLocation().getX() + ","
+                        + warp.getWarpLocation().getY() + "," + warp.getWarpLocation().getZ() + "," + warp.getWarpLocation().getYaw() + ","
+                        + warp.getWarpLocation().getPitch()) + "', '" + warp.getStatus().name() + "', '" + warp.getCreationDate() + "', '" + warp.getIconTheme()
+                        + "', '" + warp.getAnimationSet() + "', '" + warp.getDescriptionColor().name() + "', '" + warp.getDisplayNameColor().name() + "', ?, ?, '"
+                        + warp.getOwner().toString() + "', ?, ?, " + warp.getUsagePrice() + ", " + warp.hasIconEnchantedLook() + ", '" + warp.getServerIPAddress() + "');");
 
                 preparedStatement.setString(1, description.toString());
                 preparedStatement.setString(2, commands.toString());
@@ -556,34 +567,45 @@ public class HyperDrive extends JavaPlugin
 
                         Warp warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
 
-                        List<UUID> assistantList = new ArrayList<>(), whiteListPlayers = new ArrayList<>();
-                        List<String> assistants = yaml.getStringList(warpName + ".assistants"), whiteList = yaml.getStringList(warpName + ".whitelist");
-                        for (int j = -1; ++j < assistants.size(); )
+                        try
                         {
-                            UUID uniqueId = UUID.fromString(assistants.get(j));
-                            assistantList.add(uniqueId);
-                        }
+                            List<UUID> assistantList = new ArrayList<>(), whiteListPlayers = new ArrayList<>();
+                            List<String> assistants = yaml.getStringList(warpName + ".assistants"), whiteList = yaml.getStringList(warpName + ".whitelist");
+                            for (int j = -1; ++j < assistants.size(); )
+                            {
+                                UUID uniqueId = UUID.fromString(assistants.get(j));
+                                assistantList.add(uniqueId);
+                            }
 
-                        for (int j = -1; ++j < whiteList.size(); )
+                            for (int j = -1; ++j < whiteList.size(); )
+                            {
+                                UUID uniqueId = UUID.fromString(whiteList.get(j));
+                                whiteListPlayers.add(uniqueId);
+                            }
+
+                            String statusString = yaml.getString(warpName + ".status");
+                            if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
+
+                            EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_")
+                                    .replace("-", "_"));
+                            warp.setStatus(status);
+                            warp.setAssistants(assistantList);
+                            warp.setWhiteList(whiteListPlayers);
+                            warp.setCreationDate(yaml.getString(warpName + ".creation-date"));
+                            warp.setCommands(yaml.getStringList(warpName + ".commands"));
+                            warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
+
+                            warp.setIconTheme(yaml.getString(warpName + ".icon.theme"));
+                            warp.setDescriptionColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.description-color")));
+                            warp.setDisplayNameColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.name-color")));
+                            warp.setDescription(yaml.getStringList(warpName + ".icon.description"));
+                            warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
+                            warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
+                        } catch (Exception e)
                         {
-                            UUID uniqueId = UUID.fromString(whiteList.get(j));
-                            whiteListPlayers.add(uniqueId);
+                            e.printStackTrace();
+                            log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
                         }
-
-                        EnumContainer.Status status = EnumContainer.Status.valueOf(Objects.requireNonNull(yaml.getString(warpName + ".status"))
-                                .toUpperCase().replace(" ", "_").replace("-", "_"));
-                        warp.setStatus(status);
-                        warp.setAssistants(assistantList);
-                        warp.setWhiteList(whiteListPlayers);
-                        warp.setCreationDate(yaml.getString(warpName + ".creation-date"));
-                        warp.setCommands(yaml.getStringList(warpName + ".commands"));
-                        warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
-
-                        warp.setIconTheme(yaml.getString(warpName + ".icon.theme"));
-                        warp.setDisplayNameColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.name-color")));
-                        warp.setDescription(yaml.getStringList(warpName + ".icon.description"));
-                        warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
-                        warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
 
                         warp.register();
                         loadedWarps += 1;
@@ -620,13 +642,25 @@ public class HyperDrive extends JavaPlugin
                             Float.parseFloat(locationStringArgs[5]));
 
                     Warp warp = new Warp(warpName, serializableLocation);
-                    warp.setStatus(EnumContainer.Status.valueOf(resultSet.getString(3).toUpperCase().replace(" ", "_").replace("-", "_")));
+
+                    String statusString = resultSet.getString(3);
+                    if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
+
+                    EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_")
+                            .replace("-", "_"));
+                    warp.setStatus(status);
                     warp.setCreationDate(resultSet.getString(4));
                     warp.setIconTheme(resultSet.getString(5));
                     warp.setAnimationSet(resultSet.getString(6));
-                    warp.setDisplayNameColor(ChatColor.valueOf(resultSet.getString(7).toUpperCase().replace(" ", "_").replace("-", "_")));
 
-                    String descriptionString = resultSet.getString(8);
+                    String descriptionColor = resultSet.getString(7);
+                    if (descriptionColor != null && !descriptionColor.equalsIgnoreCase(""))
+                        warp.setDescriptionColor(ChatColor.valueOf(descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+                    String nameColor = resultSet.getString(8);
+                    if (nameColor != null && !nameColor.equalsIgnoreCase(""))
+                        warp.setDisplayNameColor(ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+
+                    String descriptionString = resultSet.getString(9);
                     if (descriptionString.contains(","))
                     {
                         List<String> description = new ArrayList<>();
@@ -636,7 +670,7 @@ public class HyperDrive extends JavaPlugin
                         warp.setDescription(description);
                     }
 
-                    String commandsString = resultSet.getString(9);
+                    String commandsString = resultSet.getString(10);
                     if (commandsString.contains(","))
                     {
                         List<String> commands = new ArrayList<>();
@@ -646,9 +680,9 @@ public class HyperDrive extends JavaPlugin
                         warp.setCommands(commands);
                     }
 
-                    warp.setOwner(UUID.fromString(resultSet.getString(10)));
+                    warp.setOwner(UUID.fromString(resultSet.getString(11)));
 
-                    String whitelistString = resultSet.getString(11);
+                    String whitelistString = resultSet.getString(12);
                     if (whitelistString.contains(","))
                     {
                         List<UUID> whitelist = new ArrayList<>();
@@ -658,7 +692,7 @@ public class HyperDrive extends JavaPlugin
                         warp.setWhiteList(whitelist);
                     }
 
-                    String assistantsString = resultSet.getString(12);
+                    String assistantsString = resultSet.getString(13);
                     if (assistantsString.contains(","))
                     {
                         List<UUID> assistants = new ArrayList<>();
@@ -668,8 +702,8 @@ public class HyperDrive extends JavaPlugin
                         warp.setAssistants(assistants);
                     }
 
-                    warp.setUsagePrice(resultSet.getDouble(13));
-                    warp.setIconEnchantedLook(resultSet.getInt(14) >= 1);
+                    warp.setUsagePrice(resultSet.getDouble(14));
+                    warp.setIconEnchantedLook(resultSet.getInt(15) >= 1);
                     warp.setServerIPAddress(ipAddress);
                     warp.register();
                 }

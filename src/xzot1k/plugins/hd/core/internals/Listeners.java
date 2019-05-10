@@ -109,10 +109,12 @@ public class Listeners implements Listener
                 else
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-limit-met")), e.getPlayer());
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", enteredName), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared"))
                     .replace("{warp}", enteredName), e.getPlayer());
@@ -150,10 +152,12 @@ public class Listeners implements Listener
                     return;
                 }
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", enteredName), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared"))
                     .replace("{warp}", enteredName), e.getPlayer());
@@ -187,13 +191,14 @@ public class Listeners implements Listener
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-exists")).replace("{warp}", enteredName), e.getPlayer());
             } else
             {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", enteredName), e.getPlayer());
             }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared")).replace("{warp}", enteredName), e.getPlayer());
+            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared"))
+                    .replace("{warp}", enteredName), e.getPlayer());
             return;
         }
 
@@ -201,59 +206,72 @@ public class Listeners implements Listener
         if (editDescriptionInteraction != null)
         {
             e.setCancelled(true);
-            String enteredTextLine = e.getMessage().replace(" ", "_");
-            Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "edit-description"));
+            String passedWarpName = getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "edit-description");
+            Warp warp = getPluginInstance().getManager().getWarp(passedWarpName);
 
-            if (!enteredTextLine.equalsIgnoreCase(chatInteractionCancelKey))
+            if (!e.getMessage().equalsIgnoreCase(chatInteractionCancelKey))
             {
 
-                if (enteredTextLine.contains(":"))
+                warp.getDescription().clear();
+                if (e.getMessage().equalsIgnoreCase(getPluginInstance().getConfig().getString("warp-icon-section.description-clear-symbol")))
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-cleared"))
+                            .replace("{warp}", warp.getWarpName()), e.getPlayer());
+                else
                 {
-                    String[] lineArgs = enteredTextLine.split(":");
-                    String textLine = lineArgs[0].replace("_", " "), lineIndex = lineArgs[1];
-                    int index;
-
-                    if (getPluginInstance().getManager().isNumeric(lineIndex))
-                    {
-                        index = Integer.parseInt(lineIndex) - 1;
-                        if (index < 0 || index >= warp.getDescription().size())
-                        {
-                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-description-index"))
-                                    .replace("{lines}", String.valueOf(warp.getDescription().size())), e.getPlayer());
-                            return;
-                        }
-                    } else
-                    {
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-description-index"))
-                                .replace("{lines}", String.valueOf(warp.getDescription().size())), e.getPlayer());
-                        return;
-                    }
-
-                    if (textLine.equalsIgnoreCase(""))
-                    {
-                        warp.getDescription().remove(index);
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-index-removed"))
-                                .replace("{warp}", warp.getWarpName()).replace("{index}", String.valueOf(index)), e.getPlayer());
-                    } else
-                    {
-                        warp.getDescription().set(index, textLine);
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-index-set"))
-                                .replace("{warp}", warp.getWarpName()).replace("{index}", String.valueOf(index)
-                                        .replace("{text}", getPluginInstance().getManager().colorText(textLine.replace("_", " ")))), e.getPlayer());
-                    }
-                } else
-                {
-                    warp.getDescription().add(enteredTextLine.replace("_", " "));
-                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-line-added"))
-                            .replace("{warp}", warp.getWarpName()).replace("{text}", getPluginInstance().getManager().colorText(enteredTextLine.replace("_", " "))), e.getPlayer());
+                    warp.setDescription(getPluginInstance().getManager().wrapString(e.getMessage(), getPluginInstance().getConfig().getInt("warp-icon-section.description-line-cap")));
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-set"))
+                            .replace("{warp}", warp.getWarpName()).replace("{description}", getPluginInstance().getManager().colorText(e.getMessage())), e.getPlayer());
                 }
+
+                getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared"))
+                        .replace("{warp}", warp.getWarpName()), e.getPlayer());
+                return;
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared")).replace("{warp}", warp.getWarpName()), e.getPlayer());
+            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared"))
+                    .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            return;
+        }
+
+        String changeDescriptionColorInteraction = getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "change-description-color");
+        if (changeDescriptionColorInteraction != null)
+        {
+            e.setCancelled(true);
+            String enteredText = ChatColor.stripColor(e.getMessage().replace(" ", "_"));
+            Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "change-description-color"));
+
+            if (!enteredText.equalsIgnoreCase(chatInteractionCancelKey))
+            {
+                ChatColor enteredColor = ChatColor.valueOf(enteredText.toUpperCase().replace(" ", "_").replace("-", "_"));
+                if (enteredColor == ChatColor.BOLD || enteredColor == ChatColor.MAGIC || enteredColor == ChatColor.UNDERLINE || enteredColor == ChatColor.STRIKETHROUGH
+                        || enteredColor == ChatColor.ITALIC || enteredColor == ChatColor.RESET)
+                {
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-color"))
+                            .replace("{colors}", getPluginInstance().getManager().getColorNames().toString()), e.getPlayer());
+                    return;
+                }
+
+                warp.setDescriptionColor(enteredColor);
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-color-changed"))
+                        .replace("{warp}", warp.getWarpName()).replace("{color}", WordUtils.capitalize(enteredColor.name().toLowerCase().replace("_", " ")
+                                .replace("-", "_"))), e.getPlayer());
+            } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
+                        .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            }
+
+            getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
+            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared"))
+                    .replace("{warp}", warp.getWarpName()), e.getPlayer());
             return;
         }
 
@@ -261,7 +279,7 @@ public class Listeners implements Listener
         if (changeNameColorInteraction != null)
         {
             e.setCancelled(true);
-            String enteredText = e.getMessage().replace(" ", "_");
+            String enteredText = ChatColor.stripColor(e.getMessage().replace(" ", "_"));
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "change-name-color"));
 
             if (!enteredText.equalsIgnoreCase(chatInteractionCancelKey))
@@ -280,10 +298,12 @@ public class Listeners implements Listener
                         .replace("{warp}", warp.getWarpName()).replace("{color}", WordUtils.capitalize(enteredColor.name().toLowerCase().replace("_", " ")
                                 .replace("-", "_"))), e.getPlayer());
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared"))
                     .replace("{warp}", warp.getWarpName()), e.getPlayer());
@@ -312,10 +332,12 @@ public class Listeners implements Listener
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.usage-price-set"))
                         .replace("{warp}", warp.getWarpName()).replace("{price}", String.valueOf(price)), e.getPlayer());
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared")).replace("{warp}", warp.getWarpName()), e.getPlayer());
             return;
@@ -349,10 +371,12 @@ public class Listeners implements Listener
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.give-assistant"))
                         .replace("{warp}", warp.getWarpName()).replace("{player}", Objects.requireNonNull(offlinePlayer.getName())), e.getPlayer());
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared"))
                     .replace("{warp}", warp.getWarpName()), e.getPlayer());
@@ -385,10 +409,12 @@ public class Listeners implements Listener
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.remove-assistant"))
                         .replace("{warp}", warp.getWarpName()).replace("{player}", Objects.requireNonNull(offlinePlayer.getName())), e.getPlayer());
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared")).replace("{warp}", warp.getWarpName()), e.getPlayer());
             return;
@@ -422,10 +448,12 @@ public class Listeners implements Listener
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.add-whitelist"))
                         .replace("{warp}", warp.getWarpName()).replace("{player}", Objects.requireNonNull(offlinePlayer.getName())), e.getPlayer());
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared")).replace("{warp}", warp.getWarpName()), e.getPlayer());
             return;
@@ -459,10 +487,12 @@ public class Listeners implements Listener
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.remove-whitelist"))
                         .replace("{warp}", warp.getWarpName()).replace("{player}", Objects.requireNonNull(offlinePlayer.getName())), e.getPlayer());
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared")).replace("{warp}", warp.getWarpName()), e.getPlayer());
             return;
@@ -493,10 +523,12 @@ public class Listeners implements Listener
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.add-command"))
                         .replace("{warp}", warp.getWarpName()).replace("{command}", enteredCommand), e.getPlayer());
             } else
+            {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", warp.getWarpName()), e.getPlayer());
+            }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared")).replace("{warp}", warp.getWarpName()), e.getPlayer());
             return;
@@ -535,11 +567,11 @@ public class Listeners implements Listener
                         .replace("{warp}", warp.getWarpName()).replace("{index}", String.valueOf(index)), e.getPlayer());
             } else
             {
+                getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                         .replace("{warp}", warp.getWarpName()), e.getPlayer());
             }
 
-            getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
             getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cleared")).replace("{warp}", warp.getWarpName()), e.getPlayer());
         }
@@ -1633,6 +1665,7 @@ public class Listeners implements Listener
                                 getPluginInstance().getManager().updateChatInteraction(player, "edit-description", warp != null ? warp.getWarpName() : warpName);
                                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.edit-description-interaction"))
                                         .replace("{cancel}", Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel")))
+                                        .replace("{clear}", Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.description-clear-symbol")))
                                         .replace("{player}", player.getName()), player);
                             } else
                                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.interaction-already-active"), player);
@@ -1645,7 +1678,22 @@ public class Listeners implements Listener
                             if (!getPluginInstance().getManager().isInOtherChatInteraction(player, "change-name-color"))
                             {
                                 getPluginInstance().getManager().updateChatInteraction(player, "change-name-color", warp != null ? warp.getWarpName() : warpName);
-                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.change-color-interaction"))
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.change-name-color-interaction"))
+                                        .replace("{cancel}", Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel")))
+                                        .replace("{colors}", getPluginInstance().getManager().getColorNames().toString())
+                                        .replace("{player}", player.getName()), player);
+                            } else
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.interaction-already-active"), player);
+
+                            break;
+
+                        case "change-description-color":
+
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().isInOtherChatInteraction(player, "change-description-color"))
+                            {
+                                getPluginInstance().getManager().updateChatInteraction(player, "change-description-color", warp != null ? warp.getWarpName() : warpName);
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.change-description-color-interaction"))
                                         .replace("{cancel}", Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel")))
                                         .replace("{colors}", getPluginInstance().getManager().getColorNames().toString())
                                         .replace("{player}", player.getName()), player);

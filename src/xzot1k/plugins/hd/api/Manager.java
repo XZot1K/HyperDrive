@@ -160,6 +160,23 @@ public class Manager
         return string.matches("-?\\d+(\\.\\d+)?");
     }
 
+    public List<String> wrapString(String text, int lineSize)
+    {
+        List<String> finalList = new ArrayList<>();
+        char[] charArray = text.toCharArray();
+        int start = 0;
+
+        for (int i = (lineSize - 1); ++i < charArray.length; )
+        {
+            finalList.add(text.substring(start, (i + 1)));
+            start = i + 1;
+            i += lineSize;
+        }
+
+        finalList.add(text.substring(start));
+        return finalList;
+    }
+
     public String colorText(String text)
     {
         return ChatColor.translateAlternateColorCodes('&', text);
@@ -384,19 +401,16 @@ public class Manager
     public String getNextIconTheme(Warp warp)
     {
         List<String> themeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
-        int currentIndex = -1;
+        int currentIndex = 0;
         for (int i = -1; ++i < themeList.size(); )
-        {
-            String themeLine = themeList.get(i);
-            if (themeLine.equalsIgnoreCase(warp.getIconTheme()))
+            if (themeList.get(i).equalsIgnoreCase(warp.getIconTheme()))
             {
                 currentIndex = i;
                 break;
             }
-        }
 
-        if (currentIndex + 1 >= themeList.size()) return themeList.get(0);
-        else return themeList.get(currentIndex + 1);
+        int nextTheme = (currentIndex + 1);
+        return nextTheme < themeList.size() ? themeList.get(nextTheme) : themeList.get(0);
     }
 
     @SuppressWarnings("deprecation")
@@ -408,10 +422,7 @@ public class Manager
         if (itemMeta != null)
         {
             itemMeta.setDisplayName(colorText(displayName));
-            List<String> newLore = new ArrayList<>();
-            for (int i = -1; ++i < lore.size(); )
-                newLore.add(colorText(lore.get(i)));
-            itemMeta.setLore(newLore);
+            itemMeta.setLore(lore);
             itemStack.setItemMeta(itemMeta);
         }
 
@@ -556,7 +567,7 @@ public class Manager
                     return EnumContainer.Status.PRIVATE.name();
                 else if (pulledStatus.equals(getPluginInstance().getConfig().getString("list-menu-section.admin-status-format")))
                     return EnumContainer.Status.ADMIN.name();
-                else return ChatColor.stripColor(pulledStatus).toUpperCase().replace(" ", "_").replace("-", "_");
+                else return ChatColor.stripColor(pulledStatus);
             }
         }
 
@@ -620,15 +631,11 @@ public class Manager
                 if (warpDescription != null && !warpDescription.isEmpty())
                 {
                     for (int j = -1; ++j < warpDescription.size(); )
-                    {
-                        String line = warpDescription.get(j);
-                        newLore.add(colorText(line));
-                    }
+                        newLore.add(warp.getDescriptionColor() + ChatColor.stripColor(warpDescription.get(j)));
                 }
 
                 continue;
             }
-
 
             for (int j = -1; ++j < eventPlaceholders.length; )
             {
@@ -719,7 +726,8 @@ public class Manager
 
             if (material != null && (material.name().equalsIgnoreCase("SKULL_ITEM") || material.name().equalsIgnoreCase("PLAYER_HEAD")))
             {
-                ItemStack item = getPlayerHead(player.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
+                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+                ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
                 ItemMeta itemMeta = item.getItemMeta();
                 if (warp.hasIconEnchantedLook() && itemMeta != null)
                 {
@@ -743,7 +751,8 @@ public class Manager
             }
         } else
         {
-            ItemStack item = getPlayerHead(player.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
+            OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+            ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
             ItemMeta itemMeta = item.getItemMeta();
             if (warp.hasIconEnchantedLook() && itemMeta != null)
             {
@@ -815,10 +824,8 @@ public class Manager
                     Material material = Material.getMaterial(
                             Objects.requireNonNull(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".material"))
                                     .toUpperCase().replace(" ", "_").replace("-", "_"));
-                    return buildItem(material,
-                            getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".durability"),
-                            displayName, newLore,
-                            getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
+                    return buildItem(material, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".durability"),
+                            displayName, newLore, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
                 }
             }
         }
@@ -1202,7 +1209,8 @@ public class Manager
                 if (fillEmptySlots) emptySlotFiller = playerHeadItem;
             } else
             {
-                String displayName = getPluginInstance().getConfig().getString("edit-menu-section.items." + itemId + ".display-name"), nextThemeLine = getPluginInstance().getManager().getNextIconTheme(warp),
+                String displayName = getPluginInstance().getConfig().getString("edit-menu-section.items." + itemId + ".display-name"),
+                        nextThemeLine = getPluginInstance().getManager().getNextIconTheme(warp),
                         nextAnimationSet = getPluginInstance().getManager().getNextAnimationSet(warp);
                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig().getStringList("edit-menu-section.items." + itemId + ".lore");
                 for (int j = -1; ++j < lore.size(); )

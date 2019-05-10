@@ -20,7 +20,7 @@ public class Warp
     private SerializableLocation warpLocation;
     private String warpName, creationDate, iconTheme, animationSet, serverIPAddress;
     private EnumContainer.Status status;
-    private ChatColor displayNameColor;
+    private ChatColor displayNameColor, descriptionColor;
     private List<String> description, commands;
     private UUID owner;
     private List<UUID> whiteList, assistants;
@@ -42,6 +42,8 @@ public class Warp
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
 
         setDisplayNameColor(ChatColor.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-name-color"))
+                .toUpperCase().replace(" ", "_").replace("-", "_")));
+        setDescriptionColor(ChatColor.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-description-color"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
@@ -69,6 +71,8 @@ public class Warp
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
 
         setDisplayNameColor(ChatColor.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-name-color"))
+                .toUpperCase().replace(" ", "_").replace("-", "_")));
+        setDescriptionColor(ChatColor.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-description-color"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
@@ -98,6 +102,8 @@ public class Warp
 
         setDisplayNameColor(ChatColor.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-name-color"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
+        setDescriptionColor(ChatColor.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-description-color"))
+                .toUpperCase().replace(" ", "_").replace("-", "_")));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         List<String> defaultDescription = getPluginInstance().getConfig().getStringList("warp-icon-section.default-description");
@@ -124,6 +130,8 @@ public class Warp
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
 
         setDisplayNameColor(ChatColor.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-name-color"))
+                .toUpperCase().replace(" ", "_").replace("-", "_")));
+        setDescriptionColor(ChatColor.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-description-color"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
@@ -344,5 +352,15 @@ public class Warp
     public void setServerIPAddress(String serverIPAddress)
     {
         this.serverIPAddress = serverIPAddress;
+    }
+
+    public ChatColor getDescriptionColor()
+    {
+        return descriptionColor;
+    }
+
+    public void setDescriptionColor(ChatColor descriptionColor)
+    {
+        this.descriptionColor = descriptionColor;
     }
 }
