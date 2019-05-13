@@ -219,7 +219,6 @@ public class Paging
     public HashMap<Integer, List<Warp>> getWarpPages(OfflinePlayer player, String menuPath, String status)
     {
         String ownedFormat = getPluginInstance().getConfig().getString("list-menu-section.own-status-format"),
-                everythingFormat = getPluginInstance().getConfig().getString("list-menu-section.everything-status-format"),
                 publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
                 privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
                 adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
@@ -266,23 +265,6 @@ public class Paging
                                 currentWarpList = new ArrayList<>();
                                 currentPage += 1;
                             }
-
-                        continue;
-                    } else if (status.equalsIgnoreCase(everythingFormat))
-                    {
-                        if (warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString()) || warp.getAssistants().contains(player.getUniqueId())
-                                || warp.getWhiteList().contains(player.getUniqueId()) || warp.getStatus() == EnumContainer.Status.PUBLIC || (player.getPlayer() != null
-                                && (player.getPlayer().hasPermission("hyperdrive.warps.*") || player.getPlayer().hasPermission("hyperdrive.warps." + warp.getWarpName()))))
-                        {
-                            if (currentWarpList.size() < slotCount)
-                                currentWarpList.add(warp);
-                            else
-                            {
-                                finalMap.put(currentPage, currentWarpList);
-                                currentWarpList = new ArrayList<>();
-                                currentPage += 1;
-                            }
-                        }
 
                         continue;
                     } else if (status.equalsIgnoreCase(publicFormat))

@@ -209,9 +209,9 @@ public class TeleportationHandler implements Runnable
         {
             Entity entity = player.getVehicle();
             entity.eject();
-            entity.teleport(location);
             player.teleport(location);
-            entity.addPassenger(player);
+            entity.teleport(player.getLocation());
+            getPluginInstance().getServer().getScheduler().scheduleSyncDelayedTask(getPluginInstance(), () -> entity.addPassenger(player), 5);
         } else player.teleport(location);
     }
 

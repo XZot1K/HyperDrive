@@ -162,19 +162,28 @@ public class Manager
 
     public List<String> wrapString(String text, int lineSize)
     {
-        List<String> finalList = new ArrayList<>();
-        char[] charArray = text.toCharArray();
-        int start = 0;
+        List<String> result = new ArrayList<>();
+        char[] chars = text.toCharArray();
+        int counter = 0;
+        StringBuilder tempLine = new StringBuilder();
 
-        for (int i = (lineSize - 1); ++i < charArray.length; )
+        for (int i = -1; ++i < chars.length; )
         {
-            finalList.add(text.substring(start, (i + 1)));
-            start = i + 1;
-            i += lineSize;
+            if (counter <= lineSize) tempLine.append(chars[i]);
+            else
+            {
+                tempLine.append(chars[i]);
+                result.add(tempLine.toString());
+                tempLine.setLength(0);
+                counter = 0;
+                continue;
+            }
+
+            counter += 1;
         }
 
-        finalList.add(text.substring(start));
-        return finalList;
+        if (tempLine.length() > 0) result.add(tempLine.toString());
+        return result;
     }
 
     public String colorText(String text)
@@ -182,11 +191,11 @@ public class Manager
         return ChatColor.translateAlternateColorCodes('&', text);
     }
 
-    public void clearChat(Player player)
+    public boolean isChatColor(String text)
     {
-        player.sendMessage("\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n"
-                + "\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n"
-                + "\n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n \n");
+        for (int i = -1; ++i < ChatColor.values().length; )
+            if (ChatColor.values()[i].name().equalsIgnoreCase(text)) return true;
+        return false;
     }
 
     public void sendCustomMessage(String message, Player player)
@@ -546,7 +555,8 @@ public class Manager
             String displayName = getPluginInstance().getConfig().getString(menuPath + ".items." + itemId + ".display-name");
             if ((displayName != null) && displayName.toLowerCase().contains("{current-status}"))
             {
-                String[] displayNameArgs = displayName.replace("{current-status}", "%%/split_point/%%").split("%%/split_point/%%");
+                String[] displayNameArgs = displayName.replace("{current-status}", "%%/split_point/%%")
+                        .split("%%/split_point/%%");
                 String pulledStatus;
                 switch (displayNameArgs.length)
                 {
@@ -554,7 +564,8 @@ public class Manager
                         pulledStatus = itemStack.getItemMeta().getDisplayName().replace(colorText(displayNameArgs[0]), "");
                         break;
                     case 2:
-                        pulledStatus = itemStack.getItemMeta().getDisplayName().replace(colorText(displayNameArgs[0]), "").replace(colorText(displayNameArgs[1]), "");
+                        pulledStatus = itemStack.getItemMeta().getDisplayName().replace(colorText(displayNameArgs[0]), "")
+                                .replace(colorText(displayNameArgs[1]), "");
                         break;
                     default:
                         pulledStatus = itemStack.getItemMeta().getDisplayName();
@@ -765,74 +776,6 @@ public class Manager
         }
     }
 
-    public ItemStack getFirstBackgroundItem(OfflinePlayer player, EnumContainer.Status currentFilterStatus)
-    {
-        boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player), hasNextPage = getPaging().hasNextWarpPage(player);
-        int currentPage = getPaging().getCurrentPage(player);
-        List<String> itemIds = new ArrayList<>(
-                Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection("list-menu-section.items")).getKeys(false));
-        for (int i = -1; ++i < itemIds.size(); )
-        {
-            String itemId = itemIds.get(i);
-            boolean usePlayerHead = getPluginInstance().getConfig()
-                    .getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
-                    fillEmptySlots = getPluginInstance().getConfig()
-                            .getBoolean("list-menu-section.items." + itemId + ".fill-empty-slots");
-            if (fillEmptySlots)
-            {
-                if (usePlayerHead)
-                {
-                    String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
-                            .getString("list-menu-section.items." + itemId + ".display-name"))
-                            .replace("{current-page}", String.valueOf(currentPage))
-                            .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                            .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
-                            .replace("{current-status}",
-                                    WordUtils.capitalize(currentFilterStatus.name().toLowerCase().replace("_", " ")));
-                    List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig()
-                            .getStringList("list-menu-section.items." + itemId + ".lore");
-                    for (int j = -1; ++j < lore.size(); )
-                        newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
-                                .replace("{previous-page}",
-                                        hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                                .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
-                                .replace("{current-status}", WordUtils
-                                        .capitalize(currentFilterStatus.name().toLowerCase().replace("_", " ")))));
-                    return getPlayerHead(
-                            getPluginInstance().getConfig().getString(
-                                    "list-menu-section.items." + itemId + ".player-head-name"),
-                            displayName, newLore,
-                            getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                } else
-                {
-                    String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
-                            .getString("list-menu-section.items." + itemId + ".display-name"))
-                            .replace("{current-page}", String.valueOf(currentPage))
-                            .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                            .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
-                            .replace("{current-status}",
-                                    WordUtils.capitalize(currentFilterStatus.name().toLowerCase().replace("_", " ")));
-                    List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig()
-                            .getStringList("list-menu-section.items." + itemId + ".lore");
-                    for (int j = -1; ++j < lore.size(); )
-                        newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
-                                .replace("{previous-page}",
-                                        hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                                .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
-                                .replace("{current-status}", WordUtils
-                                        .capitalize(currentFilterStatus.name().toLowerCase().replace("_", " ")))));
-                    Material material = Material.getMaterial(
-                            Objects.requireNonNull(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".material"))
-                                    .toUpperCase().replace(" ", "_").replace("-", "_"));
-                    return buildItem(material, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".durability"),
-                            displayName, newLore, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                }
-            }
-        }
-
-        return null;
-    }
-
     public ItemStack buildItemFromId(OfflinePlayer player, String currentFilterStatus, String menuPath, String itemId)
     {
         boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player), hasNextPage = getPaging().hasNextWarpPage(player);
@@ -937,7 +880,6 @@ public class Manager
         int defaultFilterIndex = getPluginInstance().getConfig().getInt("list-menu-section.default-filter-index");
 
         String currentStatus, ownFormat = getPluginInstance().getConfig().getString("list-menu-section.own-status-format"),
-                everythingFormat = getPluginInstance().getConfig().getString("list-menu-section.everything-status-format"),
                 publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
                 privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
                 adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
@@ -952,9 +894,6 @@ public class Manager
                 break;
             case 3:
                 currentStatus = ownFormat;
-                break;
-            case 4:
-                currentStatus = everythingFormat;
                 break;
             default:
                 currentStatus = publicFormat;

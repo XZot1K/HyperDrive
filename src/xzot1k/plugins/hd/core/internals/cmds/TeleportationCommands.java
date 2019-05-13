@@ -12,11 +12,7 @@ import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class TeleportationCommands implements CommandExecutor
 {
@@ -197,8 +193,18 @@ public class TeleportationCommands implements CommandExecutor
             return;
         }
 
-        String serverName = args[1];
+        if (getPluginInstance().getConnection() == null)
+        {
+            if (commandSender instanceof Player)
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance()
+                        .getConfig().getString("language-section.mysql-disabled")), (Player) commandSender);
+            else
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance()
+                        .getConfig().getString("language-section.mysql-disabled"))));
+            return;
+        }
 
+        String serverName = args[1];
         World world = getPluginInstance().getServer().getWorld(args[2]);
         if (world == null)
         {
@@ -246,10 +252,10 @@ public class TeleportationCommands implements CommandExecutor
         getPluginInstance().getManager().teleportCrossServer(enteredPlayer, serverName, location);
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.cross-server"))
-                    .replace("{server}", serverName)), (Player) commandSender);
+                    .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName)), (Player) commandSender);
         else
             commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.cross-server"))
-                    .replace("{server}", serverName))));
+                    .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName))));
     }
 
     private void runCrossServer(CommandSender commandSender, String[] args)
@@ -275,8 +281,18 @@ public class TeleportationCommands implements CommandExecutor
             return;
         }
 
-        String serverName = args[1];
+        if (getPluginInstance().getConnection() == null)
+        {
+            if (commandSender instanceof Player)
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance()
+                        .getConfig().getString("language-section.mysql-disabled")), (Player) commandSender);
+            else
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance()
+                        .getConfig().getString("language-section.mysql-disabled"))));
+            return;
+        }
 
+        String serverName = args[1];
         World world = getPluginInstance().getServer().getWorld(args[2]);
         if (world == null)
         {
@@ -343,10 +359,10 @@ public class TeleportationCommands implements CommandExecutor
         getPluginInstance().getManager().teleportCrossServer(enteredPlayer, serverName, location);
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.cross-server"))
-                    .replace("{server}", serverName)), (Player) commandSender);
+                    .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName)), (Player) commandSender);
         else
             commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.cross-server"))
-                    .replace("{server}", serverName))));
+                    .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName))));
     }
 
     private void runBack(CommandSender commandSender, String playerName)

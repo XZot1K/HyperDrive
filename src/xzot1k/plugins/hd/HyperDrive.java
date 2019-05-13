@@ -331,8 +331,11 @@ public class HyperDrive extends JavaPlugin
     public void stopTasks()
     {
         getServer().getScheduler().cancelTask(getTeleportationHandlerTaskId());
-        getServer().getScheduler().cancelTask(getAutoSaveTaskId());
-        getServer().getScheduler().cancelTask(getCrossServerTaskId());
+
+        if (getConnection() != null)
+            getServer().getScheduler().cancelTask(getCrossServerTaskId());
+        if (getConfig().getBoolean("auto-save"))
+            getServer().getScheduler().cancelTask(getAutoSaveTaskId());
     }
 
     public void startTasks()
@@ -347,12 +350,13 @@ public class HyperDrive extends JavaPlugin
         boolean autoSave = getConfig().getBoolean("auto-save");
         if (autoSave)
         {
+            int interval = getConfig().getInt("auto-save-interval");
             BukkitTask autoSaveTask = getServer().getScheduler().runTaskTimerAsynchronously(this, () ->
             {
                 long tempTime = System.currentTimeMillis();
                 saveWarps(getConnection() != null);
                 log(Level.INFO, "All warps have been automatically saved! (Took " + (System.currentTimeMillis() - tempTime) + "ms)");
-            }, 20 * getConfig().getInt("auto-save-interval"), 20 * getConfig().getInt("auto-save-interval"));
+            }, 20 * interval, 20 * interval);
             setAutoSaveTaskId(autoSaveTask.getTaskId());
         }
 
@@ -849,4 +853,5 @@ public class HyperDrive extends JavaPlugin
     {
         this.serverVersion = serverVersion;
     }
+
 }

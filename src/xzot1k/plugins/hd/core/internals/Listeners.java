@@ -218,9 +218,11 @@ public class Listeners implements Listener
                             .replace("{warp}", warp.getWarpName()), e.getPlayer());
                 else
                 {
-                    warp.setDescription(getPluginInstance().getManager().wrapString(e.getMessage(), getPluginInstance().getConfig().getInt("warp-icon-section.description-line-cap")));
+                    warp.setDescription(getPluginInstance().getManager().wrapString(ChatColor.stripColor(getPluginInstance().getManager().colorText(e.getMessage())),
+                            getPluginInstance().getConfig().getInt("warp-icon-section.description-line-cap")));
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-set"))
-                            .replace("{warp}", warp.getWarpName()).replace("{description}", getPluginInstance().getManager().colorText(e.getMessage())), e.getPlayer());
+                            .replace("{warp}", warp.getWarpName()).replace("{description}", warp.getDescriptionColor()
+                                    + ChatColor.stripColor(getPluginInstance().getManager().colorText(e.getMessage()))), e.getPlayer());
                 }
 
                 getPluginInstance().getManager().clearChatInteractions(e.getPlayer());
@@ -249,19 +251,29 @@ public class Listeners implements Listener
 
             if (!enteredText.equalsIgnoreCase(chatInteractionCancelKey))
             {
-                ChatColor enteredColor = ChatColor.valueOf(enteredText.toUpperCase().replace(" ", "_").replace("-", "_"));
-                if (enteredColor == ChatColor.BOLD || enteredColor == ChatColor.MAGIC || enteredColor == ChatColor.UNDERLINE || enteredColor == ChatColor.STRIKETHROUGH
-                        || enteredColor == ChatColor.ITALIC || enteredColor == ChatColor.RESET)
+                String message = Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-color"))
+                        .replace("{colors}", getPluginInstance().getManager().getColorNames().toString()),
+                        enteredValue = ChatColor.stripColor(getPluginInstance().getManager().colorText(e.getMessage().toUpperCase()
+                                .replace(" ", "_").replace("-", "_")));
+                if (!getPluginInstance().getManager().isChatColor(enteredValue))
                 {
-                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-color"))
-                            .replace("{colors}", getPluginInstance().getManager().getColorNames().toString()), e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage(message, e.getPlayer());
+                    return;
+                }
+
+                ChatColor enteredColor = ChatColor.valueOf(enteredValue);
+                if (enteredColor == ChatColor.BOLD || enteredColor == ChatColor.MAGIC || enteredColor == ChatColor.UNDERLINE
+                        || enteredColor == ChatColor.STRIKETHROUGH || enteredColor == ChatColor.ITALIC || enteredColor == ChatColor.RESET)
+                {
+                    getPluginInstance().getManager().sendCustomMessage(message, e.getPlayer());
                     return;
                 }
 
                 warp.setDescriptionColor(enteredColor);
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-color-changed"))
-                        .replace("{warp}", warp.getWarpName()).replace("{color}", WordUtils.capitalize(enteredColor.name().toLowerCase().replace("_", " ")
-                                .replace("-", "_"))), e.getPlayer());
+                        .replace("{warp}", warp.getWarpName()).replace("{color}",
+                                enteredColor + WordUtils.capitalize(enteredColor.name().toLowerCase().replace("_", " ")
+                                        .replace("-", "_"))), e.getPlayer());
             } else
             {
                 getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
@@ -279,24 +291,32 @@ public class Listeners implements Listener
         if (changeNameColorInteraction != null)
         {
             e.setCancelled(true);
-            String enteredText = ChatColor.stripColor(e.getMessage().replace(" ", "_"));
+            String message = Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-color"))
+                    .replace("{colors}", getPluginInstance().getManager().getColorNames().toString()),
+                    enteredText = ChatColor.stripColor(getPluginInstance().getManager().colorText(e.getMessage().toUpperCase().replace(" ", "_").replace("-", "_")));
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "change-name-color"));
 
             if (!enteredText.equalsIgnoreCase(chatInteractionCancelKey))
             {
-                ChatColor enteredColor = ChatColor.valueOf(enteredText.toUpperCase().replace(" ", "_").replace("-", "_"));
-                if (enteredColor == ChatColor.BOLD || enteredColor == ChatColor.MAGIC || enteredColor == ChatColor.UNDERLINE || enteredColor == ChatColor.STRIKETHROUGH
-                        || enteredColor == ChatColor.ITALIC || enteredColor == ChatColor.RESET)
+                if (!getPluginInstance().getManager().isChatColor(enteredText))
                 {
-                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-color"))
-                            .replace("{colors}", getPluginInstance().getManager().getColorNames().toString()), e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage(message, e.getPlayer());
+                    return;
+                }
+
+                ChatColor enteredColor = ChatColor.valueOf(enteredText);
+                if (enteredColor == ChatColor.BOLD || enteredColor == ChatColor.MAGIC || enteredColor == ChatColor.UNDERLINE
+                        || enteredColor == ChatColor.STRIKETHROUGH || enteredColor == ChatColor.ITALIC || enteredColor == ChatColor.RESET)
+                {
+                    getPluginInstance().getManager().sendCustomMessage(message, e.getPlayer());
                     return;
                 }
 
                 warp.setDisplayNameColor(enteredColor);
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.name-color-changed"))
-                        .replace("{warp}", warp.getWarpName()).replace("{color}", WordUtils.capitalize(enteredColor.name().toLowerCase().replace("_", " ")
-                                .replace("-", "_"))), e.getPlayer());
+                        .replace("{warp}", warp.getWarpName()).replace("{color}",
+                                enteredColor + WordUtils.capitalize(enteredColor.name().toLowerCase().replace("_", " ")
+                                        .replace("-", "_"))), e.getPlayer());
             } else
             {
                 getPluginInstance().getManager().returnLastTransactionAmount(e.getPlayer());
@@ -1188,7 +1208,6 @@ public class Listeners implements Listener
                         .replace("{player}", player.getName()).replace("{item-id}", itemId), player);
 
                 String ownFormat = getPluginInstance().getConfig().getString("list-menu-section.own-status-format"),
-                        everythingFormat = getPluginInstance().getConfig().getString("list-menu-section.everything-status-format"),
                         publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
                         privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
                         adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
@@ -1350,7 +1369,6 @@ public class Listeners implements Listener
                             {
                                 int index = -1;
                                 boolean isOwnFormat = statusFromItem.equalsIgnoreCase(ownFormat),
-                                        isEverythingFormat = statusFromItem.equalsIgnoreCase(everythingFormat),
                                         isPublicFormat = statusFromItem.equalsIgnoreCase(publicFormat),
                                         isPrivateFormat = statusFromItem.equalsIgnoreCase(privateFormat),
                                         isAdminFormat = statusFromItem.equalsIgnoreCase(adminFormat);
@@ -1362,7 +1380,6 @@ public class Listeners implements Listener
                                 else if (isAdminFormat || statusFromItem.equalsIgnoreCase(EnumContainer.Status.ADMIN.name()))
                                     index = 2;
                                 else if (isOwnFormat) index = 3;
-                                else if (isEverythingFormat) index = 4;
 
                                 int nextIndex = index + 1;
                                 String nextStatus;
@@ -1370,7 +1387,6 @@ public class Listeners implements Listener
                                 if (nextIndex == 1) nextStatus = EnumContainer.Status.PRIVATE.name();
                                 else if (nextIndex == 2) nextStatus = EnumContainer.Status.ADMIN.name();
                                 else if (nextIndex == 3) nextStatus = ownFormat;
-                                else if (nextIndex == 4) nextStatus = everythingFormat;
                                 else nextStatus = EnumContainer.Status.PUBLIC.name();
 
                                 ItemStack filterItem = getPluginInstance().getManager().buildItemFromId(player, Objects.requireNonNull(nextStatus), "list-menu-section", itemId);
