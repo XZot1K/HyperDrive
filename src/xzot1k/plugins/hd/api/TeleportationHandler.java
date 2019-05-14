@@ -19,7 +19,6 @@ import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -205,14 +204,15 @@ public class TeleportationHandler implements Runnable
     // teleport methods
     public void teleportPlayer(Player player, Location location)
     {
-        if (player.isInsideVehicle() && player.getVehicle() != null)
+        /*if (player.isInsideVehicle() && player.getVehicle() != null)
         {
             Entity entity = player.getVehicle();
             entity.eject();
             player.teleport(location);
             entity.teleport(player.getLocation());
             getPluginInstance().getServer().getScheduler().scheduleSyncDelayedTask(getPluginInstance(), () -> entity.addPassenger(player), 5);
-        } else player.teleport(location);
+        } else */
+        player.teleport(location);
     }
 
     public void randomlyTeleportPlayer(Player player, World world)
