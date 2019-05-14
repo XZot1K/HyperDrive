@@ -187,7 +187,7 @@ permissions:
     description: This permission node is used to allow any player with the node to use the /tpo <player> standalone teleportation command.
   hyperdrive.admin.tppos:
     default: op
-    description: This permission node is used to allow any player with the node to use the /tppos <player> <x> <y> <z> <world> standalone teleportation
+    description: This permission node is used to allow any player with the node to use the /tppos <player> <x> <y> <z> <world> standalone teleportation.
   hyperdrive.admin.back:
     default: op
     description: This permission node is used to allow any player with the node to use the /back <player> standalone teleportation command.

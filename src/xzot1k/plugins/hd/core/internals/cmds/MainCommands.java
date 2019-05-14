@@ -7,8 +7,10 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
+import xzot1k.plugins.hd.api.events.MenuOpenEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
 import xzot1k.plugins.hd.core.objects.json.JSONExtra;
@@ -247,8 +249,15 @@ public class MainCommands implements CommandExecutor
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.random-teleport-start"), player);
         getPluginInstance().getTeleportationHandler().getDestinationMap().remove(player.getUniqueId());
         getPluginInstance().getTeleportationHandler().updateDestinationWithRandomLocation(player, player.getLocation(), player.getWorld());
-        player.openInventory(getPluginInstance().getManager().buildPlayerSelectionMenu(player));
-        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-selection-group"), player);
+
+        Inventory inventory = getPluginInstance().getManager().buildPlayerSelectionMenu(player);
+        MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.PLAYER_SELECTION, inventory, player);
+        getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+        if (!menuOpenEvent.isCancelled())
+        {
+            player.openInventory(inventory);
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-selection-group"), player);
+        }
     }
 
     private void beginDenyCommand(CommandSender commandSender, String playerName)
@@ -396,8 +405,14 @@ public class MainCommands implements CommandExecutor
             return;
         }
 
-        player.closeInventory();
-        player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
+        Inventory inventory = getPluginInstance().getManager().buildEditMenu(warp);
+        MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.EDIT, inventory, player);
+        getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+        if (!menuOpenEvent.isCancelled())
+        {
+            player.closeInventory();
+            player.openInventory(inventory);
+        }
     }
 
     private void runWarpDeleteCommand(CommandSender commandSender, String warpName)
@@ -594,7 +609,7 @@ public class MainCommands implements CommandExecutor
 
         String[] infoLines = {"&e&m-------------------------", "",
                 "&7Plugin Name: &dHyperDrive", "&7Version: &a" + getPluginInstance().getDescription().getVersion(),
-                "&7Author(s): &bXZot1K", "", "&7Testing Accommodation(s): &6JarFiles&7, &cSikatsu&7, &dHRZNzero", "", "&e&m-------------------------"};
+                "&7Author(s): &bXZot1K", "", "&7Testing Accommodation(s): &cSikatsu&7, &6JarFiles&7, &dHRZNzero", "", "&e&m-------------------------"};
         for (int i = -1; ++i < infoLines.length; )
         {
             String infoLine = infoLines[i];
@@ -724,7 +739,10 @@ public class MainCommands implements CommandExecutor
             return;
         }
 
-        player.openInventory(getPluginInstance().getManager().buildListMenu(player));
+        Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
+        MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player);
+        getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+        if (!menuOpenEvent.isCancelled()) player.openInventory(inventory);
     }
 
     // page methods
@@ -836,7 +854,6 @@ public class MainCommands implements CommandExecutor
             return;
         }
 
-        // getPluginInstance().getManager().clearChat(player);
         List<String> lines = getAdminHelpPages().get(page);
         for (int i = -1; ++i < lines.size(); )
             player.sendMessage(getPluginInstance().getManager().colorText(lines.get(i)));
