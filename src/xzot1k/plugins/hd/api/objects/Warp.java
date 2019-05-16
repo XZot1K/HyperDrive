@@ -24,6 +24,7 @@ public class Warp
     private List<String> description, commands;
     private UUID owner;
     private List<UUID> whiteList, assistants;
+    private int traffic;
     private double usagePrice;
     private boolean enchantedLook;
 
@@ -34,6 +35,7 @@ public class Warp
         setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setOwner(player.getUniqueId());
         setWarpLocation(location);
+        setTraffic(0);
         setServerIPAddress(getPluginInstance().getServer().getIp());
 
         List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
@@ -362,5 +364,15 @@ public class Warp
     public void setDescriptionColor(ChatColor descriptionColor)
     {
         this.descriptionColor = descriptionColor;
+    }
+
+    public int getTraffic()
+    {
+        return traffic;
+    }
+
+    public void setTraffic(int traffic)
+    {
+        this.traffic = traffic;
     }
 }

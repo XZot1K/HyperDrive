@@ -683,6 +683,7 @@ public class Manager
                     .replace("{theme}", warp.getIconTheme() != null && warp.getIconTheme().contains(":") ? warp.getIconTheme().split(":")[0] : "")
                     .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
                     .replace("{player}", Objects.requireNonNull(player.getName()))
+                    .replace("{traffic}", String.valueOf(warp.getTraffic()))
                     .replace("{owner}", offlinePlayer.getName() == null ? Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.invalid-retrieval"))
                             : Objects.requireNonNull(offlinePlayer.getName()));
 

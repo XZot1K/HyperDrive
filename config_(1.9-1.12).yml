@@ -315,6 +315,8 @@ warp-icon-section:
   # Current Placeholders:
   # {description} - replaces the line with the first description line while adding the remaining lines below it.
   # {status} - replaced with the warp's current status.
+  # {usage-price} - replaced with the warp's usage price.
+  # {traffic} - replaced with the warp's traffic count.
   # {creation-date} - replaced with the warp's creation date.
   # {owner} - replaced with the warp owner's name.
   # {assistant-count}- replaced with warp's assistants count.
@@ -356,6 +358,7 @@ warp-icon-section:
     - "&7Owner: &e{owner}"
     - "&7Whitelist Count: &e{whitelist-count}"
     - "&7Assistant Count: &e{assistant-count}"
+    - "&7Warp Traffic/Popularity: &e{traffic}"
     - ""
     - "&e&l&m----------------------------"
 

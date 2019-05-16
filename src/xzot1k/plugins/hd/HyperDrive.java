@@ -50,6 +50,7 @@ public class HyperDrive extends JavaPlugin
         setPluginInstance(this);
         setServerVersion(getPluginInstance().getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
         saveDefaultVersionConfig();
+        try { updateConfig(); } catch (IOException ignored) {}
 
         if (getConfig().getBoolean("general-section.use-vault") && !setupVaultEconomy())
         {
@@ -174,6 +175,66 @@ public class HyperDrive extends JavaPlugin
         log(Level.INFO, getServerVersion() + " has been detected. Configuration created!");
     }
 
+    private void updateConfig()
+    {
+        int updateCount = 0;
+        File latestConfigFile;
+
+        if (getServerVersion().startsWith("v1_14"))
+        {
+            saveResource("config_(1.14).yml", true);
+            latestConfigFile = new File(getDataFolder(), "config_(1.14).yml");
+        } else if (getServerVersion().startsWith("v1_13"))
+        {
+            saveResource("config_(1.13).yml", true);
+            latestConfigFile = new File(getDataFolder(), "config_(1.13).yml");
+        } else if (getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_10") ||
+                getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_12"))
+        {
+            saveResource("config_(1.9-1.12).yml", true);
+            latestConfigFile = new File(getDataFolder(), "config_(1.9-1.12).yml");
+        } else
+        {
+            saveResource("config_(1.8).yml", true);
+            latestConfigFile = new File(getDataFolder(), "config_(1.8).yml");
+        }
+
+        FileConfiguration updatedYaml = YamlConfiguration.loadConfiguration(latestConfigFile);
+        List<String> currentKeys = new ArrayList<>(Objects.requireNonNull(getConfig().getConfigurationSection("")).getKeys(true)),
+                updatedKeys = new ArrayList<>(Objects.requireNonNull(updatedYaml.getConfigurationSection("")).getKeys(true));
+        for (int i = -1; ++i < updatedKeys.size(); )
+        {
+            String updatedKey = updatedKeys.get(i);
+            if (!currentKeys.contains(updatedKey))
+            {
+                getConfig().set(updatedKey, updatedYaml.get(updatedKey));
+                updateCount += 1;
+                log(Level.INFO, "Updated the '" + updatedKey + "' key within the configuration since it wasn't found.");
+            }
+        }
+
+        for (int i = -1; ++i < currentKeys.size(); )
+        {
+            String currentKey = currentKeys.get(i);
+            if (!updatedKeys.contains(currentKey))
+            {
+                getConfig().set(currentKey, null);
+                updateCount += 1;
+                log(Level.INFO, "Removed the '" + currentKey + "' key within the configuration since it was invalid.");
+            }
+        }
+
+        if (updateCount > 0)
+        {
+            saveConfig();
+            log(Level.INFO, "The configuration has been updated using the " + latestConfigFile.getName() + " file.");
+            log(Level.WARNING, "Please go check out the configuration and customize these newly generated options to your liking. " +
+                    "Messages and similar values may not appear the same as they did in the default configuration " +
+                    "(P.S. Configuration comments have more than likely been removed to ensure proper syntax).");
+        } else log(Level.INFO, "Everything inside the configuration seems to be up to date.");
+        latestConfigFile.delete();
+    }
+
     // core methods
     private void attemptMySQLConnection()
     {
@@ -189,7 +250,7 @@ public class HyperDrive extends JavaPlugin
                 Statement statement = getConnection().createStatement();
                 statement.executeUpdate("create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100)," +
                         "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255)," +
-                        "owner varchar(100),white_list varchar(255),assistants varchar(255),usage_price double,enchanted_look int,server_ip varchar(255),primary key (name))");
+                        "owner varchar(100),white_list varchar(255),assistants varchar(255), traffic int,usage_price double,enchanted_look int,server_ip varchar(255),primary key (name))");
                 statement.executeUpdate("create table if not exists transfer (player_uuid varchar(100),location varchar(255),primary key (player_uuid))");
                 statement.close();
             } catch (ClassNotFoundException | SQLException e)
@@ -441,6 +502,8 @@ public class HyperDrive extends JavaPlugin
                     yaml.set(warp.getWarpName() + ".location.x", warp.getWarpLocation().getX());
                     yaml.set(warp.getWarpName() + ".location.y", warp.getWarpLocation().getY());
                     yaml.set(warp.getWarpName() + ".location.z", warp.getWarpLocation().getZ());
+                    yaml.set(warp.getWarpName() + ".location.yaw", warp.getWarpLocation().getYaw());
+                    yaml.set(warp.getWarpName() + ".location.pitch", warp.getWarpLocation().getPitch());
 
                     try
                     {
@@ -458,6 +521,7 @@ public class HyperDrive extends JavaPlugin
                             assistants.add(uuid.toString());
                         }
 
+                        yaml.set(warp.getWarpName() + ".traffic", warp.getTraffic());
                         yaml.set(warp.getWarpName() + ".status", warp.getStatus().toString());
                         yaml.set(warp.getWarpName() + ".creation-date", warp.getCreationDate());
                         yaml.set(warp.getWarpName() + ".owner", warp.getOwner().toString());
@@ -524,12 +588,12 @@ public class HyperDrive extends JavaPlugin
                 }
 
                 PreparedStatement preparedStatement = connection.prepareStatement("insert into warps (name, location, status, creation_date, icon_theme," +
-                        "animation_set, description_color, name_color, description, commands, owner, white_list, assistants, usage_price, enchanted_look, server_ip) " +
+                        "animation_set, description_color, name_color, description, commands, owner, white_list, assistants, traffic, usage_price, enchanted_look, server_ip) " +
                         "values ('" + warp.getWarpName() + "', '" + (warp.getWarpLocation().getWorldName() + "," + warp.getWarpLocation().getX() + ","
                         + warp.getWarpLocation().getY() + "," + warp.getWarpLocation().getZ() + "," + warp.getWarpLocation().getYaw() + ","
                         + warp.getWarpLocation().getPitch()) + "', '" + warp.getStatus().name() + "', '" + warp.getCreationDate() + "', '" + warp.getIconTheme()
                         + "', '" + warp.getAnimationSet() + "', '" + warp.getDescriptionColor().name() + "', '" + warp.getDisplayNameColor().name() + "', ?, ?, '"
-                        + warp.getOwner().toString() + "', ?, ?, " + warp.getUsagePrice() + ", " + warp.hasIconEnchantedLook() + ", '" + warp.getServerIPAddress() + "');");
+                        + warp.getOwner().toString() + "', ?, ?, " + warp.getTraffic() + ", " + warp.getUsagePrice() + ", " + warp.hasIconEnchantedLook() + ", '" + warp.getServerIPAddress() + "');");
 
                 preparedStatement.setString(1, description.toString());
                 preparedStatement.setString(2, commands.toString());
@@ -570,6 +634,7 @@ public class HyperDrive extends JavaPlugin
                                 (float) yaml.getDouble(warpName + ".location.pitch"));
 
                         Warp warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
+                        warp.register();
 
                         try
                         {
@@ -605,13 +670,13 @@ public class HyperDrive extends JavaPlugin
                             warp.setDescription(yaml.getStringList(warpName + ".icon.description"));
                             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
                             warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
+                            warp.setTraffic(yaml.getInt(warpName + ".traffic"));
                         } catch (Exception e)
                         {
                             e.printStackTrace();
                             log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
                         }
 
-                        warp.register();
                         loadedWarps += 1;
                     } catch (Exception ignored) { failedToLoadWarps += 1; }
                 }
@@ -646,6 +711,7 @@ public class HyperDrive extends JavaPlugin
                             Float.parseFloat(locationStringArgs[5]));
 
                     Warp warp = new Warp(warpName, serializableLocation);
+                    warp.register();
 
                     String statusString = resultSet.getString(3);
                     if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
@@ -706,10 +772,10 @@ public class HyperDrive extends JavaPlugin
                         warp.setAssistants(assistants);
                     }
 
-                    warp.setUsagePrice(resultSet.getDouble(14));
-                    warp.setIconEnchantedLook(resultSet.getInt(15) >= 1);
+                    warp.setTraffic(resultSet.getInt(14));
+                    warp.setUsagePrice(resultSet.getDouble(15));
+                    warp.setIconEnchantedLook(resultSet.getInt(16) >= 1);
                     warp.setServerIPAddress(ipAddress);
-                    warp.register();
                 }
             }
 
