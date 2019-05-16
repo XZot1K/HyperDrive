@@ -50,7 +50,7 @@ public class HyperDrive extends JavaPlugin
         setPluginInstance(this);
         setServerVersion(getPluginInstance().getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
         saveDefaultVersionConfig();
-        try { updateConfig(); } catch (IOException ignored) {}
+        updateConfig();
 
         if (getConfig().getBoolean("general-section.use-vault") && !setupVaultEconomy())
         {
