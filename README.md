@@ -5,9 +5,9 @@
 ### Description
 -----
 ```
-HyperDrive is a high class warp plugin allowing you and your players to warp through space and time with high
+HyperDrive is a high-class warp plugin allowing you and your players to warp through space and time with high
 control. The plugin aims to give players the capability to create, manage, and manipulate their own warps,
-admin warps, and even specific warps they have been give accessed to. HyperDrive is also contains many unique
+admin warps, and even specific warps they have been given access to. HyperDrive is also contains many unique
 utilities and features such as a Cross-Server teleportation method, group teleportation, and a full GUI based
 warp system.
 ```
