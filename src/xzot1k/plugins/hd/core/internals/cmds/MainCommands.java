@@ -1,6 +1,7 @@
 package xzot1k.plugins.hd.core.internals.cmds;
 
 import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -495,6 +496,7 @@ public class MainCommands implements CommandExecutor
             warpName = warpName.replace(filterString, "");
         }
 
+        warpName = ChatColor.stripColor(getPluginInstance().getManager().colorText(warpName));
         if (getPluginInstance().getManager().doesWarpExist(warpName))
         {
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-exists"))

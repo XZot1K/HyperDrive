@@ -83,7 +83,7 @@ public class Listeners implements Listener
         if (createWarpInteraction != null)
         {
             e.setCancelled(true);
-            String enteredName = e.getMessage().replace(" ", "_");
+            String enteredName = ChatColor.stripColor(getPluginInstance().getManager().colorText(e.getMessage())).replace(" ", "_");
 
             if (!e.getMessage().equalsIgnoreCase(chatInteractionCancelKey))
             {

@@ -205,7 +205,7 @@ public class HyperDrive extends JavaPlugin
         for (int i = -1; ++i < updatedKeys.size(); )
         {
             String updatedKey = updatedKeys.get(i);
-            if (!currentKeys.contains(updatedKey))
+            if (!currentKeys.contains(updatedKey) && !updatedKey.contains(".items.") && !updatedKey.contains("custom-menus-section."))
             {
                 getConfig().set(updatedKey, updatedYaml.get(updatedKey));
                 updateCount += 1;
