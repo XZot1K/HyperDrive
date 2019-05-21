@@ -510,9 +510,13 @@ public class MainCommands implements CommandExecutor
                 .replace("{warp}", warpName), player);
     }
 
-    private boolean runWarpAdminCommand(CommandSender commandSender, String playerName, String warpName)
+    private boolean runWarpAdminCommand(CommandSender commandSender, String warpName, String playerName)
     {
-        if (!commandSender.hasPermission("hyperdrive.admin.warp")) return false;
+        if (!commandSender.hasPermission("hyperdrive.admin.warp"))
+        {
+            beginWarpCommand(commandSender, warpName);
+            return true;
+        }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
         if (enteredPlayer == null || !enteredPlayer.isOnline()) return false;

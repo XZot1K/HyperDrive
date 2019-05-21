@@ -660,7 +660,7 @@ public class Listeners implements Listener
                     return;
                 }
 
-                if (getPluginInstance().getTeleportationHandler().isTeleporting(e.getPlayer()))
+                if (getPluginInstance().getTeleportationHandler().isTeleporting(e.getPlayer()) && getPluginInstance().getTeleportationHandler().getRemainingTime(e.getPlayer()) > 0)
                 {
                     getPluginInstance().getTeleportationHandler().getRandomTeleportingPlayers().remove(e.getPlayer().getUniqueId());
                     getPluginInstance().getTeleportationHandler().removeTeleportTemp(e.getPlayer());

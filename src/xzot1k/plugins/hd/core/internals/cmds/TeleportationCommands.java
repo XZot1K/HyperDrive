@@ -588,12 +588,6 @@ public class TeleportationCommands implements CommandExecutor
                         .replace("{player}", enteredPlayer.getName()), player);
                 return;
             }
-
-            if (playerUniqueId.toString().equals(player.getUniqueId().toString()))
-            {
-                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.self-tpa-fail"), player);
-                return;
-            }
         } else if (getTpaSentMap().isEmpty() || !getTpaSentMap().containsKey(enteredPlayer.getUniqueId()))
         {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-invalid")
