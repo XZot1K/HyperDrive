@@ -208,7 +208,7 @@ filter-section:
 teleportation-section:
   # If the player teleports while in a vehicle should they be dismounted and teleported?
   # (Note: The mount will be teleported as well, but half a second after to prevent faulty chunk loading)
-  teleport-vehicles: false
+  teleport-vehicles: true
   # This is the duration of how long a TPA request will stay alive. After the duration the request can no longer be accepted or denied.
   teleport-ask-duration: 10
   # This is the duration of how long a group request will stay alive. After the duration the request can no longer be accepted or denied.

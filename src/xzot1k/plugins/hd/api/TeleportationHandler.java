@@ -209,16 +209,25 @@ public class TeleportationHandler implements Runnable
     public void teleportPlayer(Player player, Location location)
     {
         boolean teleportVehicle = getPluginInstance().getConfig().getBoolean("teleportation-section.teleport-vehicles");
-        if (player.isInsideVehicle() && player.getVehicle() != null && teleportVehicle)
+        if (player.getVehicle() != null && teleportVehicle)
         {
             Entity entity = player.getVehicle();
-            entity.eject();
+            if (getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_12")
+                    || getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14"))
+                entity.removePassenger(player);
+            else entity.setPassenger(null);
+            if (entity.getPassengers().contains(player)) entity.eject();
+
             player.teleport(location);
-            getPluginInstance().getServer().getScheduler().scheduleSyncDelayedTask(getPluginInstance(), () ->
+            new BukkitRunnable()
             {
-                entity.teleport(player.getLocation());
-                entity.addPassenger(player);
-            }, 10);
+                @Override
+                public void run()
+                {
+                    entity.teleport(player.getLocation());
+                    entity.addPassenger(player);
+                }
+            }.runTaskLater(getPluginInstance(), 1);
         } else
             player.teleport(location);
     }

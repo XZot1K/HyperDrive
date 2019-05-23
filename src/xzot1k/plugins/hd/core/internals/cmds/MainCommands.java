@@ -752,7 +752,6 @@ public class MainCommands implements CommandExecutor
     }
 
     // page methods
-
     private void setupAdminPages()
     {
         ArrayList<String> page1 = new ArrayList<>(), page2 = new ArrayList<>(), page3 = new ArrayList<>(), page4 = new ArrayList<>(),
@@ -771,7 +770,7 @@ public class MainCommands implements CommandExecutor
         page2.add("");
         page2.add("&7&l*&r &e/warps &7- &aopens the warp list menu.");
         page2.add("&7&l*&r &e/warps <name> &7- &aattempts to teleport to the entered warp.");
-        page2.add("&7&l*&r &e/warps <player> <name> &7- &aattempts to teleport the entered player to the entered warp.");
+        page2.add("&7&l*&r &e/warps <name> <player> &7- &aattempts to teleport the entered player to the entered warp.");
         page2.add("&7&l*&r &e/warps rtp &7- &abegins the random teleportation process on the sender.");
         page2.add("&7&l*&r &e/warps rtp <player> &7- &abegins the random teleportation process on the entered player.");
         page2.add("");
