@@ -249,7 +249,8 @@ public class TeleportationCommands implements CommandExecutor
 
         Location location = new Location(world, Double.parseDouble(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), enteredPlayer.getLocation().getYaw(),
                 enteredPlayer.getLocation().getPitch());
-        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, serverName, location);
+
+        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, getPluginInstance().getBungeeListener().getIPFromMap(serverName), serverName, location);
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.cross-server"))
                     .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName)), (Player) commandSender);
@@ -356,7 +357,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         Location location = new Location(world, Double.parseDouble(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), Float.parseFloat(args[6]), Float.parseFloat(args[7]));
-        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, serverName, location);
+        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, getPluginInstance().getBungeeListener().getIPFromMap(serverName), serverName, location);
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.cross-server"))
                     .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName)), (Player) commandSender);

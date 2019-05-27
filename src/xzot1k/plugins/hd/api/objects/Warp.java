@@ -36,7 +36,8 @@ public class Warp
         setOwner(player.getUniqueId());
         setWarpLocation(location);
         setTraffic(0);
-        setServerIPAddress(getPluginInstance().getServer().getIp());
+        setServerIPAddress(getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp()
+                + ":" + getPluginInstance().getServer().getPort());
 
         List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
         setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
@@ -66,6 +67,8 @@ public class Warp
         setWarpName(warpName);
         setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setWarpLocation(location);
+        setServerIPAddress(getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp()
+                + ":" + getPluginInstance().getServer().getPort());
 
         List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
         setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
@@ -96,6 +99,8 @@ public class Warp
         setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setOwner(player.getUniqueId());
         setWarpLocation(serializableLocation);
+        setServerIPAddress(getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp()
+                + ":" + getPluginInstance().getServer().getPort());
 
         List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
         setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
@@ -125,6 +130,8 @@ public class Warp
         setWarpName(warpName);
         setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setWarpLocation(serializableLocation);
+        setServerIPAddress(getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp()
+                + ":" + getPluginInstance().getServer().getPort());
 
         List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
         setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");

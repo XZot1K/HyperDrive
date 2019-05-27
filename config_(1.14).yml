@@ -131,6 +131,10 @@ language-section:
   sign-action-invalid: "&cLine &e2 &con this sign is incorrect. Please make sure the action is &eWarp&c, &eRtp&c, &eGroup Warp&c, or &eGroup Rtp&c."
   sign-warp-invalid: "&cThe warp on the sign is invalid. Please change it to a valid warp."
   mysql-disabled: "&cIt seems the MySQL database is currently disabled. Unable to perform this task."
+  warp-ip-invalid: "&cNo warps with the registered IP Address &e{ip} &cwere found."
+  warp-ip-set: "&a{count} &ewarps have had their IP Addresses set to &a{set-ip} &efrom &a{initial-ip}&e."
+  ip-ping-fail: "&cUnable to warp to the warp &e{warp} &cbecause the IP Address &e{ip} &cis not responding."
+  cross-teleported: "&eYou have been teleported to the server &a{server} &eat World: &a{world} &eX: &a{x}&e, Y: &a{y}&e, Z: &a{z}&e."
 
 # Here is where the MySQL connection can be configured.
 # (Note: Database tables are created and managed automatically. There is also no MySQL conversion to YAML file; therefore, use at your own risk.)

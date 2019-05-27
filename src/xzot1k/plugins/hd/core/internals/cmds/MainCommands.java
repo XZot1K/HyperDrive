@@ -99,6 +99,26 @@ public class MainCommands implements CommandExecutor
 
                         return true;
 
+                    case 3:
+
+                        if (args[0].equalsIgnoreCase("updateip"))
+                        {
+                            runUpdateIP(commandSender, args);
+                            return true;
+                        }
+
+                        if (commandSender.hasPermission("hyperdrive.admin.help"))
+                            sendAdminHelpPage(commandSender, 1);
+                        else
+                        {
+                            if (commandSender instanceof Player)
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), (Player) commandSender);
+                            else
+                                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
+                        }
+
+                        return true;
+
                     default:
 
                         if (commandSender.hasPermission("hyperdrive.admin.help"))
@@ -222,6 +242,57 @@ public class MainCommands implements CommandExecutor
         }
 
         return false;
+    }
+
+    private void runUpdateIP(CommandSender commandSender, String[] args)
+    {
+        if (!commandSender.hasPermission("hyperdrive.updateid"))
+        {
+            String message = getPluginInstance().getConfig().getString("language-section.no-permission");
+            if (commandSender instanceof Player)
+                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
+            else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            return;
+        }
+
+        String initialIP = args[1].toLowerCase().replace("current", getPluginInstance().getServer().getIp()
+                + ":" + getPluginInstance().getServer().getPort()),
+                setIP = args[2].toLowerCase().replace("current", getPluginInstance().getServer().getIp()
+                        + ":" + getPluginInstance().getServer().getPort());
+
+        List<Warp> foundWarps = new ArrayList<>(), warps;
+        Collection<Warp> warpCollection = getPluginInstance().getManager().getWarpMap().values();
+        if (warpCollection instanceof List) warps = (List<Warp>) warpCollection;
+        else warps = new ArrayList<>(warpCollection);
+
+        for (int i = -1; ++i < warps.size(); )
+        {
+            Warp warp = warps.get(i);
+            if (warp != null && warp.getServerIPAddress().equalsIgnoreCase(initialIP))
+                foundWarps.add(warp);
+        }
+
+        if (foundWarps.size() <= 0)
+        {
+            String message = getPluginInstance().getConfig().getString("language-section.warp-ip-invalid").replace("{ip}", initialIP);
+            if (commandSender instanceof Player)
+                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
+            else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            return;
+        }
+
+        for (int i = -1; ++i < foundWarps.size(); )
+        {
+            Warp warp = warps.get(i);
+            if (warp != null) warp.setServerIPAddress(setIP);
+        }
+
+        String message = getPluginInstance().getConfig().getString("language-section.warp-ip-set")
+                .replace("{initial-ip}", initialIP).replace("{set-ip}", setIP)
+                .replace("{count}", String.valueOf(foundWarps.size()));
+        if (commandSender instanceof Player)
+            getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
+        else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
     }
 
     private void beginGroupRandomTeleportCommand(CommandSender commandSender)
@@ -524,6 +595,21 @@ public class MainCommands implements CommandExecutor
         if (!getPluginInstance().getManager().doesWarpExist(warpName)) return false;
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
+
+        if ((getPluginInstance().getConnection() != null && getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))
+                && warp.getServerIPAddress().replace("localhost", "127.0.0.1").equalsIgnoreCase(getPluginInstance().getServer().getIp()
+                + ":" + getPluginInstance().getServer().getPort()))
+            if (!getPluginInstance().getManager().pingIP(warp.getServerIPAddress()))
+            {
+                if (commandSender instanceof Player)
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.ip-ping-fail"))
+                            .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress()), (Player) commandSender);
+                else
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.ip-ping-fail"))
+                            .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress())));
+                return true;
+            }
+
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(enteredPlayer, "warp", warp.getWarpName(), 0);
         return true;
     }
@@ -675,6 +761,16 @@ public class MainCommands implements CommandExecutor
             return;
         }
 
+        if ((getPluginInstance().getConnection() != null && getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))
+                && warp.getServerIPAddress().replace("localhost", "127.0.0.1").equalsIgnoreCase(getPluginInstance().getServer().getIp()
+                + ":" + getPluginInstance().getServer().getPort()))
+            if (!getPluginInstance().getManager().pingIP(warp.getServerIPAddress()))
+            {
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.ip-ping-fail"))
+                        .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress()), player);
+                return;
+            }
+
         long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp",
                 getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration"));
         if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown"))
@@ -804,6 +900,7 @@ public class MainCommands implements CommandExecutor
         page5.add("&7&l*&r &e/back <player> &7- &aattempts to teleport the entered player to their last teleport location.");
         page5.add("&7&l*&r &e/crossserver <player> <server> <world> <x> <y> <z> &7- &aattempts to teleport the defined player to the server at the defined coordinates.");
         page5.add("&7&l*&r &e/crossserver <player> <server> <world> <x> <y> <z> <yaw> <pitch> &7- &aattempts to teleport the defined player to the server at the defined coordinates.");
+        page5.add("&7&l*&r &e/hyperdrive updateip <initial-ip> <new-ip> &7- &asets all IP Addresses of warps with the initial server ip to the new IP Address, Use 'current' for current server IP.");
         page5.add("");
         getAdminHelpPages().put(5, page5);
     }

@@ -31,6 +31,8 @@ import xzot1k.plugins.hd.core.packets.titles.versions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -153,6 +155,16 @@ public class Manager
         else
             getPluginInstance().log(Level.WARNING, "Your version is not supported by HyperDrive's packets. Expect errors when attempting to use anything packet " +
                     "related. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+    }
+
+    public boolean pingIP(String ipAddress)
+    {
+        try
+        {
+            InetAddress geek = InetAddress.getByName(ipAddress);
+            return geek.isReachable(5000);
+        } catch (IOException ignored) {}
+        return false;
     }
 
     public boolean isNumeric(String string)
@@ -324,13 +336,12 @@ public class Manager
     }
 
     // cross-server stuff
-    public void teleportCrossServer(Player player, String serverName, Location location)
+    public void teleportCrossServer(Player player, String serverIP, String serverName, Location location)
     {
         if (getPluginInstance().getConnection() == null) return;
 
         try
         {
-            getPluginInstance().getServer().getMessenger().registerOutgoingPluginChannel(pluginInstance, "BungeeCord");
             ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
             DataOutputStream out = new DataOutputStream(byteArray);
             out.writeUTF("Connect");
@@ -353,21 +364,21 @@ public class Manager
                 if (rs.next())
                 {
                     statement.executeUpdate("update transfer set location = '" + (Objects.requireNonNull(location.getWorld()).getName() + "," + location.getX() + ","
-                            + location.getY() + "," + location.getZ() + "," + location.getYaw() + "," + location.getPitch()) + "' where player_uuid = '"
-                            + player.getUniqueId().toString() + "';");
+                            + location.getY() + "," + location.getZ() + "," + location.getYaw() + "," + location.getPitch()) + "', server_ip = '" + serverIP
+                            + "' where player_uuid = '" + player.getUniqueId().toString() + "';");
                     rs.close();
                     statement.close();
-                    getPluginInstance().log(Level.WARNING, "Cross-Server transfer initiated (" + player.getName() + "_" + player.getUniqueId().toString() + " / " + serverName + " / World: "
+                    getPluginInstance().log(Level.WARNING, "Cross-Server transfer updated (" + player.getName() + "_" + player.getUniqueId().toString() + " / " + serverName + " / World: "
                             + location.getWorld().getName() + ", X: " + location.getBlockX() + ", Y: " + location.getBlockY() + ", Z: " + location.getBlockZ() + ")");
                     return;
                 }
 
-                PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement("insert into transfer (player_uuid, location) values ('"
+                PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement("insert into transfer (player_uuid, location, server_ip) values ('"
                         + player.getUniqueId().toString() + "', '" + (Objects.requireNonNull(location.getWorld()).getName() + "," + location.getX() + "," + location.getY() + ","
-                        + location.getZ() + "," + location.getYaw() + "," + location.getPitch()) + "');");
+                        + location.getZ() + "," + location.getYaw() + "," + location.getPitch()) + "', '" + serverIP + "');");
                 preparedStatement.executeUpdate();
                 preparedStatement.close();
-                getPluginInstance().log(Level.WARNING, "Cross-Server transfer initiated (" + player.getName() + "_" + player.getUniqueId().toString() + " / " + serverName + " / World: "
+                getPluginInstance().log(Level.WARNING, "Cross-Server transfer updated (" + player.getName() + "_" + player.getUniqueId().toString() + " / " + serverName + " / World: "
                         + location.getWorld().getName() + ", X: " + location.getBlockX() + ", Y: " + location.getBlockY() + ", Z: " + location.getBlockZ() + ")");
             } catch (SQLException e)
             {

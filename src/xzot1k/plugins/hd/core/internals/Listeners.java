@@ -1035,6 +1035,17 @@ public class Listeners implements Listener
                                     || warp.getAssistants().contains(player.getUniqueId()) || warp.getWhiteList().contains(player.getUniqueId()))
                             {
                                 player.closeInventory();
+
+                                if ((getPluginInstance().getConnection() != null && getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))
+                                        && warp.getServerIPAddress().replace("localhost", "127.0.0.1").equalsIgnoreCase(getPluginInstance().getServer().getIp()
+                                        + ":" + getPluginInstance().getServer().getPort()))
+                                    if (!getPluginInstance().getManager().pingIP(warp.getServerIPAddress()))
+                                    {
+                                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.ip-ping-fail"))
+                                                .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress()), player);
+                                        return;
+                                    }
+
                                 int duration = getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration"),
                                         cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
 
@@ -1100,6 +1111,16 @@ public class Listeners implements Listener
                                     || warp.getAssistants().contains(player.getUniqueId()) || warp.getWhiteList().contains(player.getUniqueId())) && player.hasPermission("hyperdrive.groups.use"))
                             {
                                 player.closeInventory();
+
+                                if ((getPluginInstance().getConnection() != null && getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))
+                                        && warp.getServerIPAddress().replace("localhost", "127.0.0.1").equalsIgnoreCase(getPluginInstance().getServer().getIp()
+                                        + ":" + getPluginInstance().getServer().getPort()))
+                                    if (!getPluginInstance().getManager().pingIP(warp.getServerIPAddress()))
+                                    {
+                                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.ip-ping-fail"))
+                                                .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress()), player);
+                                        return;
+                                    }
 
                                 int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
                                 long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);

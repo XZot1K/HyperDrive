@@ -7,6 +7,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -15,7 +16,9 @@ import xzot1k.plugins.hd.api.Manager;
 import xzot1k.plugins.hd.api.TeleportationHandler;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
 import xzot1k.plugins.hd.api.objects.Warp;
+import xzot1k.plugins.hd.core.internals.BungeeListener;
 import xzot1k.plugins.hd.core.internals.Listeners;
+import xzot1k.plugins.hd.core.internals.Metrics;
 import xzot1k.plugins.hd.core.internals.cmds.MainCommands;
 import xzot1k.plugins.hd.core.internals.cmds.TeleportationCommands;
 
@@ -36,6 +39,7 @@ public class HyperDrive extends JavaPlugin
     private MainCommands mainCommands;
     private TeleportationCommands teleportationCommands;
     private Manager manager;
+    private BungeeListener bungeeListener;
 
     private Economy vaultEconomy;
     private Connection connection;
@@ -59,8 +63,10 @@ public class HyperDrive extends JavaPlugin
             return;
         }
 
+        getServer().getMessenger().registerOutgoingPluginChannel(getPluginInstance(), "BungeeCord");
+        setBungeeListener(new BungeeListener(getPluginInstance()));
+        getServer().getMessenger().registerIncomingPluginChannel(getPluginInstance(), "BungeeCord", getBungeeListener());
         setManager(new Manager(this));
-
 
         setMainCommands(new MainCommands(this));
         String[] commandNames = {"warps", "hyperdrive"};
@@ -96,6 +102,7 @@ public class HyperDrive extends JavaPlugin
         startWarpConverter();
 
         startTasks();
+        new Metrics(getPluginInstance());
         log(Level.INFO, "The plugin was enabled successfully. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
 
         if (isOutdated())
@@ -242,8 +249,7 @@ public class HyperDrive extends JavaPlugin
             try
             {
                 Class.forName("com.mysql.jdbc.Driver");
-                setConnection(DriverManager.getConnection(
-                        "jdbc:mysql://" + getConfig().getString("mysql-connection.host") + ":"
+                setConnection(DriverManager.getConnection("jdbc:mysql://" + getConfig().getString("mysql-connection.host") + ":"
                                 + getConfig().getString("mysql-connection.port") + "/" + getConfig().getString("mysql-connection.database-name"),
                         getConfig().getString("mysql-connection.username"), getConfig().getString("mysql-connection.password")));
 
@@ -251,7 +257,8 @@ public class HyperDrive extends JavaPlugin
                 statement.executeUpdate("create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100)," +
                         "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255)," +
                         "owner varchar(100),white_list varchar(255),assistants varchar(255), traffic int,usage_price double,enchanted_look int,server_ip varchar(255),primary key (name))");
-                statement.executeUpdate("create table if not exists transfer (player_uuid varchar(100),location varchar(255),primary key (player_uuid))");
+                statement.executeUpdate("drop table transfer");
+                statement.executeUpdate("create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
                 statement.close();
             } catch (ClassNotFoundException | SQLException e)
             {
@@ -426,7 +433,9 @@ public class HyperDrive extends JavaPlugin
             HashMap<UUID, Location> locationMap = new HashMap<>();
             int crossServerTeleportTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
             {
-                locationMap.clear();
+                Player firstPlayer = getBungeeListener().getFirstPlayer();
+                if (firstPlayer != null) getBungeeListener().requestServers(firstPlayer);
+
                 getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () ->
                 {
                     try
@@ -436,15 +445,32 @@ public class HyperDrive extends JavaPlugin
                         while (resultSet.next())
                         {
                             UUID playerUniqueId = UUID.fromString(resultSet.getString(1));
-                            if (locationMap.keySet().contains(playerUniqueId)) continue;
-
-                            String locationString = resultSet.getString(2);
-                            if (locationString.contains(","))
+                            if (!locationMap.keySet().contains(playerUniqueId))
                             {
-                                String[] locationStringArgs = locationString.split(",");
-                                Location location = new Location(getPluginInstance().getServer().getWorld(locationStringArgs[0]), Double.parseDouble(locationStringArgs[1]),
-                                        Double.parseDouble(locationStringArgs[2]), Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]), Float.parseFloat(locationStringArgs[5]));
-                                locationMap.put(playerUniqueId, location);
+                                String locationString = resultSet.getString(2), server_ip = resultSet.getString(3);
+                                if (server_ip == null || server_ip.equalsIgnoreCase(""))
+                                {
+                                    if (locationString.contains(","))
+                                    {
+                                        String[] locationStringArgs = locationString.split(",");
+                                        Location location = new Location(getPluginInstance().getServer().getWorld(locationStringArgs[0]), Double.parseDouble(locationStringArgs[1]),
+                                                Double.parseDouble(locationStringArgs[2]), Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]), Float.parseFloat(locationStringArgs[5]));
+                                        locationMap.put(playerUniqueId, location);
+                                    }
+                                } else
+                                {
+                                    if (!server_ip.replace("localhost", "127.0.0.1")
+                                            .equalsIgnoreCase((getServer().getIp() + ":" + getServer().getPort()).replace("localhost", "127.0.0.1")))
+                                        continue;
+
+                                    if (locationString.contains(","))
+                                    {
+                                        String[] locationStringArgs = locationString.split(",");
+                                        Location location = new Location(getPluginInstance().getServer().getWorld(locationStringArgs[0]), Double.parseDouble(locationStringArgs[1]),
+                                                Double.parseDouble(locationStringArgs[2]), Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]), Float.parseFloat(locationStringArgs[5]));
+                                        locationMap.put(playerUniqueId, location);
+                                    }
+                                }
                             }
                         }
 
@@ -457,24 +483,29 @@ public class HyperDrive extends JavaPlugin
                 for (int i = -1; ++i < playerUniqueIds.size(); )
                 {
                     UUID playerUniqueId = playerUniqueIds.get(i);
+                    getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () ->
+                    {
+                        try
+                        {
+                            PreparedStatement preparedStatement = getConnection().prepareStatement("delete from transfer where player_uuid = '" + playerUniqueId.toString() + "'");
+                            preparedStatement.executeUpdate();
+                            preparedStatement.close();
+                        } catch (SQLException e) { e.printStackTrace(); }
+                    });
+
                     OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(playerUniqueId);
                     if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() != null)
                     {
-                        getTeleportationHandler().teleportPlayer(offlinePlayer.getPlayer(), locationMap.get(playerUniqueId));
+                        Location location = locationMap.get(playerUniqueId);
                         locationMap.remove(playerUniqueId);
-
-                        getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () ->
-                        {
-                            try
-                            {
-                                PreparedStatement preparedStatement = getConnection().prepareStatement("delete from transfer where player_uuid = '" + playerUniqueId.toString() + "'");
-                                preparedStatement.executeUpdate();
-                                preparedStatement.close();
-                            } catch (SQLException e) { e.printStackTrace(); }
-                        });
+                        getTeleportationHandler().teleportPlayer(offlinePlayer.getPlayer(), location);
+                        getManager().sendCustomMessage(getConfig().getString("language-section.cross-teleported")
+                                        .replace("{world}", location.getWorld().getName()).replace("{x}", String.valueOf(location.getBlockX()))
+                                        .replace("{y}", String.valueOf(location.getBlockY())).replace("{z}", String.valueOf(location.getBlockZ())),
+                                offlinePlayer.getPlayer());
                     }
                 }
-            }, 20 * 5, 20 * 5);
+            }, 20, 20);
             setCrossServerTaskId(crossServerTeleportTaskId);
         }
 
@@ -524,6 +555,7 @@ public class HyperDrive extends JavaPlugin
                         yaml.set(warp.getWarpName() + ".traffic", warp.getTraffic());
                         yaml.set(warp.getWarpName() + ".status", warp.getStatus().toString());
                         yaml.set(warp.getWarpName() + ".creation-date", warp.getCreationDate());
+                        yaml.set(warp.getWarpName() + ".server-ip", warp.getServerIPAddress().replace("localhost", "127.0.0.1"));
                         yaml.set(warp.getWarpName() + ".owner", warp.getOwner().toString());
                         yaml.set(warp.getWarpName() + ".assistants", assistants);
                         yaml.set(warp.getWarpName() + ".whitelist", whiteList);
@@ -580,7 +612,8 @@ public class HyperDrive extends JavaPlugin
                             warp.getCreationDate() + "', icon_theme = '" + warp.getIconTheme() + "', animation_set = '" + warp.getAnimationSet() + "'," +
                             " name_color = '" + warp.getDisplayNameColor().name() + "', description = '" + description.toString() + "', commands = '" + commands.toString() + "'," +
                             " owner = '" + warp.getOwner().toString() + "', white_list = '" + whitelist.toString() + "', assistants = '" + assistants.toString() + "'," +
-                            " usage_price = '" + warp.getUsagePrice() + "', enchanted_look = '" + (warp.hasIconEnchantedLook() ? 1 : 0) + "' where name = '" + warp.getWarpName() + "';");
+                            " usage_price = '" + warp.getUsagePrice() + "', enchanted_look = '" + (warp.hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '"
+                            + warp.getServerIPAddress() + "' where name = '" + warp.getWarpName() + "';");
 
                     rs.close();
                     statement.close();
@@ -593,7 +626,8 @@ public class HyperDrive extends JavaPlugin
                         + warp.getWarpLocation().getY() + "," + warp.getWarpLocation().getZ() + "," + warp.getWarpLocation().getYaw() + ","
                         + warp.getWarpLocation().getPitch()) + "', '" + warp.getStatus().name() + "', '" + warp.getCreationDate() + "', '" + warp.getIconTheme()
                         + "', '" + warp.getAnimationSet() + "', '" + warp.getDescriptionColor().name() + "', '" + warp.getDisplayNameColor().name() + "', ?, ?, '"
-                        + warp.getOwner().toString() + "', ?, ?, " + warp.getTraffic() + ", " + warp.getUsagePrice() + ", " + warp.hasIconEnchantedLook() + ", '" + warp.getServerIPAddress() + "');");
+                        + warp.getOwner().toString() + "', ?, ?, " + warp.getTraffic() + ", " + warp.getUsagePrice() + ", " + warp.hasIconEnchantedLook()
+                        + ", '" + warp.getServerIPAddress().replace("localhost", "127.0.0.1") + "');");
 
                 preparedStatement.setString(1, description.toString());
                 preparedStatement.setString(2, commands.toString());
@@ -671,6 +705,7 @@ public class HyperDrive extends JavaPlugin
                             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
                             warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
                             warp.setTraffic(yaml.getInt(warpName + ".traffic"));
+                            warp.setServerIPAddress(yaml.getString(warpName + ".server-ip").replace("localhost", "127.0.0.1"));
                         } catch (Exception e)
                         {
                             e.printStackTrace();
@@ -693,15 +728,8 @@ public class HyperDrive extends JavaPlugin
             ResultSet resultSet = statement.executeQuery("select * from warps");
             while (resultSet.next())
             {
-                String warpName = resultSet.getString(1), ipAddress = resultSet.getString(15);
-                if (ipAddress != null && !ipAddress.equalsIgnoreCase(getServer().getIp()))
-                {
-                    log(Level.WARNING, "The warp " + warpName + " was not loaded due to the saved ip address (" + ipAddress + ") not belonging to the server. " +
-                            "Cross-Server warping will be coming soon...");
-                    continue;
-                }
-
-                String locationString = resultSet.getString(2);
+                String warpName = resultSet.getString(1), ipAddress = resultSet.getString(17).replace("localhost", "127.0.0.1"),
+                        locationString = resultSet.getString(2);
                 if (locationString.contains(","))
                 {
                     String[] locationStringArgs = locationString.split(",");
@@ -920,4 +948,13 @@ public class HyperDrive extends JavaPlugin
         this.serverVersion = serverVersion;
     }
 
+    public BungeeListener getBungeeListener()
+    {
+        return bungeeListener;
+    }
+
+    private void setBungeeListener(BungeeListener bungeeListener)
+    {
+        this.bungeeListener = bungeeListener;
+    }
 }

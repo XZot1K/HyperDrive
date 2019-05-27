@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.0.2-B
+version: 5.0.3_SNAPSHOT
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -103,6 +103,7 @@ permissions:
       hyperdrive.economybypass: true
       hyperdrive.use.createsigns: true
       hyperdrive.admin.crossserver: true
+      hyperdrive.updateid: true
 
   # INTENDED PLAYER PERMISSIONS
   hyperdrive.use:
@@ -200,4 +201,6 @@ permissions:
   hyperdrive.admin.crossserver:
     default: op
     description: This permission node is used to allow any player with the node to attempt and teleport a player to the defined server at the defined location.
-
+  hyperdrive.updateid:
+    default: op
+    description: This permission node is used to allow any sender with the node to update warps with the initially defined IP to a new IP.

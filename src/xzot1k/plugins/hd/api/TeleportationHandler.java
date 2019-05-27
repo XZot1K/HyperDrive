@@ -132,8 +132,21 @@ public class TeleportationHandler implements Runnable
                                     if (!warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString())
                                             && !warp.getAssistants().contains(player.getUniqueId()))
                                         warp.setTraffic(warp.getTraffic() + 1);
-                                    teleportPlayer(player, warpLocation);
-                                    getPluginInstance().getManager().updateCooldown(player, "warp");
+
+                                    boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+                                    if ((getPluginInstance().getConnection() == null && !useMySQL) || warp.getServerIPAddress().replace("localhost", "127.0.0.1")
+                                            .equalsIgnoreCase((getPluginInstance().getServer().getIp() + ":" + getPluginInstance().getServer().getPort()).replace("localhost", "127.0.0.1")))
+                                    {
+                                        teleportPlayer(player, warpLocation);
+                                        getPluginInstance().getManager().updateCooldown(player, "warp");
+                                    } else
+                                    {
+                                        getPluginInstance().getManager().teleportCrossServer(player, warp.getServerIPAddress(),
+                                                getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress()),
+                                                warp.getWarpLocation().asBukkitLocation());
+                                        getPluginInstance().getManager().updateCooldown(player, "warp");
+                                        return;
+                                    }
 
                                     // Warp teleport animation
                                     if (warp.getAnimationSet().contains(":"))
@@ -312,7 +325,7 @@ public class TeleportationHandler implements Runnable
 
                     if (smartLimit < boundsRadius) smartLimit += (boundsRadius * 0.005);
 
-                    if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(x >> 4, z >> 4))
+                    if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(finalBasedLocation.getChunk()))
                         return;
 
                     if (!canGenerateChunks && !finalBasedLocation.getWorld().isChunkGenerated(x >> 4, z >> 4))
@@ -489,7 +502,7 @@ public class TeleportationHandler implements Runnable
 
                     if (smartLimit < boundsRadius) smartLimit += (boundsRadius * 0.005);
 
-                    if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(x >> 4, z >> 4))
+                    if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(finalBasedLocation.getChunk()))
                         return;
 
                     if (!canGenerateChunks && !finalBasedLocation.getWorld().isChunkGenerated(x >> 4, z >> 4))
