@@ -23,7 +23,7 @@ warp system.
 ### Developer Notes
 -----
 Though the plugin has been released as 'Open-Source'. If possible, please support the plugin by purchasing the plugin
-on the main page. The link can be found [here](https://www.spigotmc.org/resources/1-8-1-14-ready-%E2%96%BA%E2%96%BA%E2%96%BA-hyperdrive-%E2%96%BA%E2%96%BA%E2%96%BA-advanced-teleportation-plugin-%E2%96%BA%E2%96%BA%E2%96%BA.17184/).
+on the main page. The link can be found [here](https://www.spigotmc.org/resources/1-8-1-14-1-ready-%E2%96%BA%E2%96%BA%E2%96%BA-hyperdrive-%E2%96%BA%E2%96%BA%E2%96%BA-advanced-teleportation-plugin-%E2%96%BA%E2%96%BA%E2%96%BA.17184/).
 
 Required Libraries when compiling:
 ```
