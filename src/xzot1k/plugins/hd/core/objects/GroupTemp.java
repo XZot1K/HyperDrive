@@ -52,7 +52,7 @@ public class GroupTemp
         {
             int time = 0;
             int duration = getPluginInstance().getConfig().getInt("teleportation-section.group-request-duration");
-            String animationSet = getPluginInstance().getConfig().getString("teleportation-section.group-teleport-animation"),
+            String animationSet = getPluginInstance().getConfig().getString("special-effects-section.group-teleport-animation"),
                     teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                             .toUpperCase().replace(" ", "_").replace("-", "_");
 
@@ -102,15 +102,10 @@ public class GroupTemp
                                 if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
                                 {
                                     String[] themeArgs = animationSet.split(":");
-                                    String teleportTheme = themeArgs[2];
-                                    if (teleportTheme.contains("/"))
-                                    {
-                                        String[] teleportThemeArgs = teleportTheme.split("/");
-                                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[1],
-                                                EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                                        .replace("-", "_")), 1);
-                                    }
+                                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                                    .replace("-", "_")), 1);
                                 }
 
                                 teleportCount += 1;
@@ -124,15 +119,10 @@ public class GroupTemp
                             if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
                             {
                                 String[] themeArgs = animationSet.split(":");
-                                String teleportTheme = themeArgs[2];
-                                if (teleportTheme.contains("/"))
-                                {
-                                    String[] teleportThemeArgs = teleportTheme.split("/");
-                                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[1],
-                                            EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                                    .replace("-", "_")), 1);
-                                }
+                                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                                .replace("-", "_")), 1);
                             }
 
                             if (teleportCount > 0)

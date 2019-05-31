@@ -325,11 +325,19 @@ public class TeleportationHandler implements Runnable
 
                     if (smartLimit < boundsRadius) smartLimit += (boundsRadius * 0.005);
 
-                    if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(finalBasedLocation.getChunk()))
-                        return;
+                    if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14"))
+                    {
+                        if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(x >> 4, z >> 4))
+                            return;
+                    } else
+                    {
+                        if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(finalBasedLocation.getChunk()))
+                            return;
+                    }
 
-                    if (!canGenerateChunks && !finalBasedLocation.getWorld().isChunkGenerated(x >> 4, z >> 4))
-                        return;
+                    if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14"))
+                        if (!canGenerateChunks && !finalBasedLocation.getWorld().isChunkGenerated(x >> 4, z >> 4))
+                            return;
 
                     int safeY = getSafeY(finalBasedLocation.getWorld(), x, z);
                     if (!(safeY > 0 && safeY <= finalBasedLocation.getWorld().getMaxHeight()))
@@ -403,7 +411,7 @@ public class TeleportationHandler implements Runnable
 
                         teleportPlayer(player, newLocation.add(0.5, 0, 0.5));
 
-                        String animationLine = getPluginInstance().getConfig().getString("random-teleport-section.teleport-animation");
+                        String animationLine = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-animation");
                         if (animationLine != null && animationLine.contains(":"))
                         {
                             String[] animationArgs = animationLine.split(":");
@@ -502,11 +510,19 @@ public class TeleportationHandler implements Runnable
 
                     if (smartLimit < boundsRadius) smartLimit += (boundsRadius * 0.005);
 
-                    if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(finalBasedLocation.getChunk()))
-                        return;
+                    if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14"))
+                    {
+                        if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(x >> 4, z >> 4))
+                            return;
+                    } else
+                    {
+                        if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(finalBasedLocation.getChunk()))
+                            return;
+                    }
 
-                    if (!canGenerateChunks && !finalBasedLocation.getWorld().isChunkGenerated(x >> 4, z >> 4))
-                        return;
+                    if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14"))
+                        if (!canGenerateChunks && !finalBasedLocation.getWorld().isChunkGenerated(x >> 4, z >> 4))
+                            return;
 
                     int safeY = getSafeY(finalBasedLocation.getWorld(), x, z);
                     if (!(safeY > 0 && safeY <= finalBasedLocation.getWorld().getMaxHeight()))

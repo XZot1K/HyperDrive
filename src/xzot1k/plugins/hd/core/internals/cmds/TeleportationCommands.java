@@ -441,7 +441,7 @@ public class TeleportationCommands implements CommandExecutor
 
         String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("random-teleport-section.standalone-teleport-animation");
+                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
         if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
@@ -601,7 +601,7 @@ public class TeleportationCommands implements CommandExecutor
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("random-teleport-section.standalone-teleport-animation");
+                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
         if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
@@ -718,7 +718,7 @@ public class TeleportationCommands implements CommandExecutor
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("random-teleport-section.standalone-teleport-animation");
+                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
         if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
@@ -787,7 +787,7 @@ public class TeleportationCommands implements CommandExecutor
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("random-teleport-section.standalone-teleport-animation");
+                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
         if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
@@ -927,7 +927,7 @@ public class TeleportationCommands implements CommandExecutor
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("random-teleport-section.standalone-teleport-animation");
+                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
         if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
@@ -991,7 +991,7 @@ public class TeleportationCommands implements CommandExecutor
 
         String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("random-teleport-section.standalone-teleport-animation");
+                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             enteredPlayer1.getWorld().playSound(enteredPlayer1.getLocation(), Sound.valueOf(teleportSound), 1, 1);
         if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
@@ -1060,7 +1060,7 @@ public class TeleportationCommands implements CommandExecutor
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("random-teleport-section.standalone-teleport-animation");
+                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
         if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
