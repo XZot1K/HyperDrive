@@ -133,6 +133,7 @@ language-section:
   mysql-disabled: "&cIt seems the MySQL database is currently disabled. Unable to perform this task."
   warp-ip-invalid: "&cNo warps with the registered IP Address &e{ip} &cwere found."
   warp-ip-set: "&a{count} &ewarps have had their IP Addresses set to &a{set-ip} &efrom &a{initial-ip}&e."
+  ip-ping-fail: "&cUnable to warp to the warp &e{warp} &cbecause the IP Address &e{ip} &cis not responding."
   cross-teleported: "&eYou have been teleported to the server &a{server} &eat World: &a{world} &eX: &a{x}&e, Y: &a{y}&e, Z: &a{z}&e."
 
 # Here is where the MySQL connection can be configured.

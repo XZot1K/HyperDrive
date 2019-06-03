@@ -41,8 +41,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 
-public class Manager
-{
+public class Manager {
     private HyperDrive pluginInstance;
     private Paging paging;
     private SimpleDateFormat simpleDateFormat;
@@ -58,8 +57,7 @@ public class Manager
     private HashMap<UUID, HashMap<String, String>> chatInteractionMap;
     private HashMap<UUID, List<UUID>> groupMap;
 
-    public Manager(HyperDrive pluginInstance)
-    {
+    public Manager(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
         setSimpleDateFormat(new SimpleDateFormat(Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
         setPaging(new Paging(getPluginInstance()));
@@ -73,12 +71,10 @@ public class Manager
     }
 
     // general stuff
-    private void setupPackets()
-    {
+    private void setupPackets() {
         boolean succeeded = true;
         long startTime = System.currentTimeMillis();
-        switch (getPluginInstance().getServerVersion())
-        {
+        switch (getPluginInstance().getServerVersion()) {
             case "v1_14_R1":
                 setParticleHandler(new Particle_Latest());
                 setJsonHandler(new JSONHandler1_14R1());
@@ -157,33 +153,28 @@ public class Manager
                     "related. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
-    public boolean pingIP(String ipAddress)
-    {
-        try
-        {
+    public boolean pingIP(String ipAddress) {
+        try {
             InetAddress geek = InetAddress.getByName(ipAddress);
             return geek.isReachable(5000);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
         return false;
     }
 
-    public boolean isNumeric(String string)
-    {
+    public boolean isNumeric(String string) {
         return string.matches("-?\\d+(\\.\\d+)?");
     }
 
-    public List<String> wrapString(String text, int lineSize)
-    {
+    public List<String> wrapString(String text, int lineSize) {
         List<String> result = new ArrayList<>();
         char[] chars = text.toCharArray();
         int counter = 0;
         StringBuilder tempLine = new StringBuilder();
 
-        for (int i = -1; ++i < chars.length; )
-        {
+        for (int i = -1; ++i < chars.length; ) {
             if (counter <= lineSize) tempLine.append(chars[i]);
-            else
-            {
+            else {
                 tempLine.append(chars[i]);
                 result.add(tempLine.toString());
                 tempLine.setLength(0);
@@ -198,25 +189,20 @@ public class Manager
         return result;
     }
 
-    public String colorText(String text)
-    {
+    public String colorText(String text) {
         return ChatColor.translateAlternateColorCodes('&', text);
     }
 
-    public boolean isChatColor(String text)
-    {
+    public boolean isChatColor(String text) {
         for (int i = -1; ++i < ChatColor.values().length; )
             if (ChatColor.values()[i].name().equalsIgnoreCase(text)) return true;
         return false;
     }
 
-    public void sendCustomMessage(String message, Player player)
-    {
-        if (message != null && !message.equalsIgnoreCase(""))
-        {
+    public void sendCustomMessage(String message, Player player) {
+        if (message != null && !message.equalsIgnoreCase("")) {
             String prefix = getPluginInstance().getConfig().getString("language-section.prefix");
-            if (message.contains("<") && message.contains(">"))
-            {
+            if (message.contains("<") && message.contains(">")) {
                 message = prefix + message;
                 String jsonFormat = StringUtils.substringBetween(message, "<", ">");
                 String[] jsonFormatArgs = jsonFormat.split(":");
@@ -231,8 +217,7 @@ public class Manager
                     je1.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT, jsonFormatArgs[2]);
                 jm1.addExtra(je1);
 
-                if (splitMessageArgs.length >= 2)
-                {
+                if (splitMessageArgs.length >= 2) {
                     JSONExtra je2 = new JSONExtra(getPluginInstance(), splitMessageArgs[1]);
                     jm1.addExtra(je2);
                 }
@@ -245,27 +230,22 @@ public class Manager
         }
     }
 
-    public void sendActionBar(Player player, String message)
-    {
+    public void sendActionBar(Player player, String message) {
         if (message != null && !message.equalsIgnoreCase(""))
             getActionBarHandler().sendActionBar(player, message);
     }
 
-    public void sendTitle(Player player, String title, String subTitle, int fadeIn, int displayTime, int fadeOut)
-    {
+    public void sendTitle(Player player, String title, String subTitle, int fadeIn, int displayTime, int fadeOut) {
         getTitleHandler().sendTitle(player, colorText(title), colorText(subTitle), fadeIn, displayTime, fadeOut);
     }
 
-    public void displayParticle(Location location, String particleEffect)
-    {
+    public void displayParticle(Location location, String particleEffect) {
         getParticleHandler().displayParticle(particleEffect, location, 0, 0, 0, 0, 1);
     }
 
-    public List<String> getColorNames()
-    {
+    public List<String> getColorNames() {
         List<String> colorNames = new ArrayList<>();
-        for (int i = -1; ++i < ChatColor.values().length; )
-        {
+        for (int i = -1; ++i < ChatColor.values().length; ) {
             ChatColor color = ChatColor.values()[i];
             if (color == ChatColor.BOLD || color == ChatColor.ITALIC || color == ChatColor.UNDERLINE || color == ChatColor.STRIKETHROUGH
                     || color == ChatColor.MAGIC || color == ChatColor.RESET)
@@ -276,12 +256,10 @@ public class Manager
         return colorNames;
     }
 
-    public List<UUID> getPlayerUUIDs()
-    {
+    public List<UUID> getPlayerUUIDs() {
         List<UUID> tempList = new ArrayList<>();
         List<Player> playerList = new ArrayList<>(getPluginInstance().getServer().getOnlinePlayers());
-        for (int i = -1; ++i < playerList.size(); )
-        {
+        for (int i = -1; ++i < playerList.size(); ) {
             Player player = playerList.get(i);
             tempList.add(player.getUniqueId());
         }
@@ -289,27 +267,22 @@ public class Manager
         return tempList;
     }
 
-    public double getLastTransactionAmount(OfflinePlayer player)
-    {
+    public double getLastTransactionAmount(OfflinePlayer player) {
         if (!getLastTransactionMap().isEmpty() && getLastTransactionMap().containsKey(player.getUniqueId()))
             return getLastTransactionMap().get(player.getUniqueId());
         else return 0;
     }
 
-    public void updateLastTransactionAmount(OfflinePlayer player, double amount)
-    {
+    public void updateLastTransactionAmount(OfflinePlayer player, double amount) {
         if (!getLastTransactionMap().isEmpty() && getLastTransactionMap().containsKey(player.getUniqueId()))
             getLastTransactionMap().put(player.getUniqueId(), getLastTransactionMap().get(player.getUniqueId()) + amount);
         else getLastTransactionMap().put(player.getUniqueId(), amount);
     }
 
-    public void returnLastTransactionAmount(OfflinePlayer player)
-    {
-        if (getPluginInstance().getConfig().getBoolean("general-section.use-vault"))
-        {
+    public void returnLastTransactionAmount(OfflinePlayer player) {
+        if (getPluginInstance().getConfig().getBoolean("general-section.use-vault")) {
             double lastAmount = getLastTransactionAmount(player);
-            if (lastAmount > 0)
-            {
+            if (lastAmount > 0) {
                 getPluginInstance().getVaultEconomy().depositPlayer(player, lastAmount);
                 if (player.isOnline())
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.last-transaction-return"))
@@ -318,15 +291,12 @@ public class Manager
         }
     }
 
-    public String getProgressionBar(int f1, int f2, int segments)
-    {
+    public String getProgressionBar(int f1, int f2, int segments) {
         StringBuilder bar = new StringBuilder();
         int fractionValue = (int) (((double) f1) / ((double) f2) * segments);
 
-        for (int i = -1; ++i < segments; )
-        {
-            if (fractionValue > 0)
-            {
+        for (int i = -1; ++i < segments; ) {
+            if (fractionValue > 0) {
                 bar.append("&a█");
                 fractionValue -= 1;
             } else bar.append("&c█");
@@ -336,19 +306,16 @@ public class Manager
     }
 
     // cross-server stuff
-    public void teleportCrossServer(Player player, String serverIP, String serverName, Location location)
-    {
+    public void teleportCrossServer(Player player, String serverIP, String serverName, Location location) {
         if (getPluginInstance().getConnection() == null) return;
 
-        try
-        {
+        try {
             ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
             DataOutputStream out = new DataOutputStream(byteArray);
             out.writeUTF("Connect");
             out.writeUTF(serverName);
             player.sendPluginMessage(pluginInstance, "BungeeCord", byteArray.toByteArray());
-        } catch (Exception ex)
-        {
+        } catch (Exception ex) {
             ex.printStackTrace();
             getPluginInstance().log(Level.WARNING, "There seems to have been an issue when switching the player to the '" + serverName + "' server.");
             return;
@@ -356,13 +323,11 @@ public class Manager
 
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () ->
         {
-            try
-            {
+            try {
                 Statement statement = getPluginInstance().getConnection().createStatement();
 
                 ResultSet rs = statement.executeQuery("select * from transfer where player_uuid = '" + player.getUniqueId().toString() + "'");
-                if (rs.next())
-                {
+                if (rs.next()) {
                     statement.executeUpdate("update transfer set location = '" + (Objects.requireNonNull(location.getWorld()).getName() + "," + location.getX() + ","
                             + location.getY() + "," + location.getZ() + "," + location.getYaw() + "," + location.getPitch()) + "', server_ip = '" + serverIP
                             + "' where player_uuid = '" + player.getUniqueId().toString() + "';");
@@ -380,8 +345,7 @@ public class Manager
                 preparedStatement.close();
                 getPluginInstance().log(Level.WARNING, "Cross-Server transfer updated (" + player.getName() + "_" + player.getUniqueId().toString() + " / " + serverName + " / World: "
                         + location.getWorld().getName() + ", X: " + location.getBlockX() + ", Y: " + location.getBlockY() + ", Z: " + location.getBlockZ() + ")");
-            } catch (SQLException e)
-            {
+            } catch (SQLException e) {
                 e.printStackTrace();
                 getPluginInstance().log(Level.WARNING, "There seems to have been an issue communicating with the MySQL database.");
                 getPluginInstance().log(Level.WARNING, "Cross-Server initiation failed for the player '" + player.getName() + "_" + player.getUniqueId().toString() + "'. They have been sent to " +
@@ -391,10 +355,8 @@ public class Manager
     }
 
     // cooldown stuff
-    public void updateCooldown(OfflinePlayer player, String cooldownId)
-    {
-        if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId()))
-        {
+    public void updateCooldown(OfflinePlayer player, String cooldownId) {
+        if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId())) {
             HashMap<String, Long> playerCooldownMap = getCooldownMap().get(player.getUniqueId());
             if (playerCooldownMap != null)
                 playerCooldownMap.put(cooldownId.toUpperCase(), System.currentTimeMillis());
@@ -404,10 +366,8 @@ public class Manager
         getCooldownMap().get(player.getUniqueId()).put(cooldownId, System.currentTimeMillis());
     }
 
-    public long getCooldownDuration(OfflinePlayer player, String cooldownId, int cooldownDuration)
-    {
-        if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId()))
-        {
+    public long getCooldownDuration(OfflinePlayer player, String cooldownId, int cooldownDuration) {
+        if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId())) {
             HashMap<String, Long> playerCooldownMap = getCooldownMap().get(player.getUniqueId());
             if (playerCooldownMap != null && !playerCooldownMap.isEmpty() && playerCooldownMap.containsKey(cooldownId))
                 return ((playerCooldownMap.get(cooldownId) / 1000) + cooldownDuration)
@@ -418,13 +378,11 @@ public class Manager
     }
 
     // inventory stuff
-    public String getNextIconTheme(Warp warp)
-    {
+    public String getNextIconTheme(Warp warp) {
         List<String> themeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
         int currentIndex = 0;
         for (int i = -1; ++i < themeList.size(); )
-            if (themeList.get(i).equalsIgnoreCase(warp.getIconTheme()))
-            {
+            if (themeList.get(i).equalsIgnoreCase(warp.getIconTheme())) {
                 currentIndex = i;
                 break;
             }
@@ -434,13 +392,11 @@ public class Manager
     }
 
     @SuppressWarnings("deprecation")
-    private ItemStack buildItem(Material material, int durability, String displayName, List<String> lore, int amount)
-    {
+    private ItemStack buildItem(Material material, int durability, String displayName, List<String> lore, int amount) {
         ItemStack itemStack = new ItemStack(material, amount);
         itemStack.setDurability((short) durability);
         ItemMeta itemMeta = itemStack.getItemMeta();
-        if (itemMeta != null)
-        {
+        if (itemMeta != null) {
             itemMeta.setDisplayName(colorText(displayName));
             itemMeta.setLore(lore);
             itemStack.setItemMeta(itemMeta);
@@ -450,28 +406,23 @@ public class Manager
     }
 
     @SuppressWarnings("deprecation")
-    private ItemStack getPlayerHead(String playerName, String displayName, List<String> lore, int amount)
-    {
+    private ItemStack getPlayerHead(String playerName, String displayName, List<String> lore, int amount) {
         boolean isNew = getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14");
         ItemStack itemStack;
 
-        if (isNew)
-        {
+        if (isNew) {
             itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), amount);
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
-            if (skullMeta != null)
-            {
+            if (skullMeta != null) {
                 skullMeta.setOwningPlayer(getPluginInstance().getServer().getOfflinePlayer(playerName));
                 skullMeta.setDisplayName(colorText(displayName));
                 skullMeta.setLore(lore);
                 itemStack.setItemMeta(skullMeta);
             }
-        } else
-        {
+        } else {
             itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial("SKULL_ITEM")), amount, (short) org.bukkit.SkullType.PLAYER.ordinal());
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
-            if (skullMeta != null)
-            {
+            if (skullMeta != null) {
                 skullMeta.setOwner(playerName);
                 skullMeta.setDisplayName(colorText(displayName));
                 skullMeta.setLore(lore);
@@ -482,17 +433,14 @@ public class Manager
         return itemStack;
     }
 
-    public ItemStack getPlayerSelectionHead(OfflinePlayer player, boolean isSelected)
-    {
+    public ItemStack getPlayerSelectionHead(OfflinePlayer player, boolean isSelected) {
         boolean isNew = getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14");
         ItemStack itemStack;
 
-        if (isNew)
-        {
+        if (isNew) {
             itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), 1);
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
-            if (skullMeta != null)
-            {
+            if (skullMeta != null) {
                 skullMeta.setOwningPlayer(player);
                 skullMeta.setDisplayName(colorText(isSelected ? getPluginInstance().getConfig().getString("ps-menu-section.selected-player-head.display-name") + player.getName()
                         : getPluginInstance().getConfig().getString("ps-menu-section.unselected-player-head.display-name") + player.getName()));
@@ -505,12 +453,10 @@ public class Manager
                 skullMeta.setLore(newLore);
                 itemStack.setItemMeta(skullMeta);
             }
-        } else
-        {
+        } else {
             itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial("SKULL_ITEM")), 1, (short) 3);
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
-            if (skullMeta != null)
-            {
+            if (skullMeta != null) {
                 skullMeta.setOwner(player.getName());
                 skullMeta.setDisplayName(colorText(isSelected ? getPluginInstance().getConfig().getString("ps-menu-section.selected-player-head.display-name") + player.getName()
                         : getPluginInstance().getConfig().getString("ps-menu-section.unselected-player-head.display-name") + player.getName()));
@@ -528,14 +474,11 @@ public class Manager
         return itemStack;
     }
 
-    public String getMenuId(String inventoryName)
-    {
+    public String getMenuId(String inventoryName) {
         ConfigurationSection configurationSection = getPluginInstance().getConfig().getConfigurationSection("custom-menus-section");
-        if (configurationSection != null)
-        {
+        if (configurationSection != null) {
             List<String> menuIds = new ArrayList<>(configurationSection.getKeys(false));
-            for (int i = -1; ++i < menuIds.size(); )
-            {
+            for (int i = -1; ++i < menuIds.size(); ) {
                 String menuId = menuIds.get(i), inventoryTitle = colorText(getPluginInstance().getConfig().getString("custom-menus-section." + menuId + ".title"));
                 if (inventoryTitle.equalsIgnoreCase(inventoryName)) return menuId;
             }
@@ -544,12 +487,10 @@ public class Manager
         return null;
     }
 
-    public String getIdFromSlot(String menuPath, int slot)
-    {
+    public String getIdFromSlot(String menuPath, int slot) {
         List<String> configurationSection = new ArrayList<>(
                 Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection(menuPath + ".items")).getKeys(false));
-        for (int i = -1; ++i < configurationSection.size(); )
-        {
+        for (int i = -1; ++i < configurationSection.size(); ) {
             String itemId = configurationSection.get(i);
             int itemSlot = getPluginInstance().getConfig().getInt(menuPath + ".items." + itemId + ".slot");
             if (itemSlot == slot)
@@ -559,18 +500,14 @@ public class Manager
         return null;
     }
 
-    public String getFilterStatusFromItem(ItemStack itemStack, String menuPath, String itemId)
-    {
-        if (itemStack != null && itemStack.hasItemMeta() && Objects.requireNonNull(itemStack.getItemMeta()).hasDisplayName())
-        {
+    public String getFilterStatusFromItem(ItemStack itemStack, String menuPath, String itemId) {
+        if (itemStack != null && itemStack.hasItemMeta() && Objects.requireNonNull(itemStack.getItemMeta()).hasDisplayName()) {
             String displayName = getPluginInstance().getConfig().getString(menuPath + ".items." + itemId + ".display-name");
-            if ((displayName != null) && displayName.toLowerCase().contains("{current-status}"))
-            {
+            if ((displayName != null) && displayName.toLowerCase().contains("{current-status}")) {
                 String[] displayNameArgs = displayName.replace("{current-status}", "%%/split_point/%%")
                         .split("%%/split_point/%%");
                 String pulledStatus;
-                switch (displayNameArgs.length)
-                {
+                switch (displayNameArgs.length) {
                     case 1:
                         pulledStatus = itemStack.getItemMeta().getDisplayName().replace(colorText(displayNameArgs[0]), "");
                         break;
@@ -596,24 +533,18 @@ public class Manager
         return null;
     }
 
-    public String getCurrentFilterStatus(String menuPath, Inventory inventory)
-    {
+    public String getCurrentFilterStatus(String menuPath, Inventory inventory) {
         List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection(menuPath + ".items")).getKeys(false));
-        for (int i = -1; ++i < itemIds.size(); )
-        {
+        for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i), clickAction = getPluginInstance().getConfig().getString(menuPath + ".items." + itemId + ".click-action");
-            if (clickAction != null && clickAction.equalsIgnoreCase("filter-switch"))
-            {
+            if (clickAction != null && clickAction.equalsIgnoreCase("filter-switch")) {
                 ItemStack itemStack = inventory.getItem(getPluginInstance().getConfig().getInt(menuPath + ".items." + itemId + ".slot"));
-                if (itemStack != null && itemStack.hasItemMeta() && Objects.requireNonNull(itemStack.getItemMeta()).hasDisplayName())
-                {
+                if (itemStack != null && itemStack.hasItemMeta() && Objects.requireNonNull(itemStack.getItemMeta()).hasDisplayName()) {
                     String displayName = getPluginInstance().getConfig().getString(menuPath + ".items." + itemId + ".display-name");
-                    if (displayName != null && displayName.toLowerCase().contains("{current-status}"))
-                    {
+                    if (displayName != null && displayName.toLowerCase().contains("{current-status}")) {
                         String[] displayNameArgs = displayName.replace("{current-status}", "%%/split_point/%%").split("%%/split_point/%%");
                         String pulledStatus;
-                        switch (displayNameArgs.length)
-                        {
+                        switch (displayNameArgs.length) {
                             case 1:
                                 pulledStatus = itemStack.getItemMeta().getDisplayName().replace(colorText(displayNameArgs[0]), "");
                                 break;
@@ -634,8 +565,7 @@ public class Manager
         return EnumContainer.Status.PUBLIC.name();
     }
 
-    public ItemStack buildWarpIcon(OfflinePlayer player, Warp warp)
-    {
+    public ItemStack buildWarpIcon(OfflinePlayer player, Warp warp) {
         String publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
                 privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
                 adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
@@ -644,14 +574,11 @@ public class Manager
         List<String> iconLoreFormat = getPluginInstance().getConfig().getStringList("warp-icon-section.list-lore-format"),
                 newLore = new ArrayList<>(), warpDescription = warp.getDescription();
 
-        for (int i = -1; ++i < iconLoreFormat.size(); )
-        {
+        for (int i = -1; ++i < iconLoreFormat.size(); ) {
             String formatLine = iconLoreFormat.get(i), foundEventPlaceholder = null;
 
-            if (formatLine.equalsIgnoreCase("{description}"))
-            {
-                if (warpDescription != null && !warpDescription.isEmpty())
-                {
+            if (formatLine.equalsIgnoreCase("{description}")) {
+                if (warpDescription != null && !warpDescription.isEmpty()) {
                     for (int j = -1; ++j < warpDescription.size(); )
                         newLore.add(warp.getDescriptionColor() + ChatColor.stripColor(warpDescription.get(j)));
                 }
@@ -659,11 +586,9 @@ public class Manager
                 continue;
             }
 
-            for (int j = -1; ++j < eventPlaceholders.length; )
-            {
+            for (int j = -1; ++j < eventPlaceholders.length; ) {
                 String eventPlaceholder = eventPlaceholders[j];
-                if (formatLine.toLowerCase().contains(eventPlaceholder.toLowerCase()))
-                {
+                if (formatLine.toLowerCase().contains(eventPlaceholder.toLowerCase())) {
                     foundEventPlaceholder = eventPlaceholder;
                     formatLine = formatLine.replace(eventPlaceholder, "");
                     break;
@@ -672,8 +597,7 @@ public class Manager
 
             String statusName;
 
-            switch (warp.getStatus())
-            {
+            switch (warp.getStatus()) {
                 case PRIVATE:
                     statusName = privateFormat;
                     break;
@@ -698,10 +622,8 @@ public class Manager
                     .replace("{owner}", offlinePlayer.getName() == null ? Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.invalid-retrieval"))
                             : Objects.requireNonNull(offlinePlayer.getName()));
 
-            if (foundEventPlaceholder != null)
-            {
-                switch (foundEventPlaceholder)
-                {
+            if (foundEventPlaceholder != null) {
+                switch (foundEventPlaceholder) {
                     case "{is-owner}":
                         if (warp.getOwner().toString().equals(player.getUniqueId().toString()))
                             newLore.add(colorText(furtherFormattedLine));
@@ -741,30 +663,25 @@ public class Manager
             } else newLore.add(colorText(furtherFormattedLine));
         }
 
-        if (warp.getIconTheme() != null && warp.getIconTheme().contains(":"))
-        {
+        if (warp.getIconTheme() != null && warp.getIconTheme().contains(":")) {
             String[] themeArgs = warp.getIconTheme().split(":");
             Material material = Material.getMaterial(themeArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"));
             int durability = Integer.parseInt(themeArgs[2]), amount = Integer.parseInt(themeArgs[3]);
 
-            if (material != null && (material.name().equalsIgnoreCase("SKULL_ITEM") || material.name().equalsIgnoreCase("PLAYER_HEAD")))
-            {
+            if (material != null && (material.name().equalsIgnoreCase("SKULL_ITEM") || material.name().equalsIgnoreCase("PLAYER_HEAD"))) {
                 OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
                 ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
                 ItemMeta itemMeta = item.getItemMeta();
-                if (warp.hasIconEnchantedLook() && itemMeta != null)
-                {
+                if (warp.hasIconEnchantedLook() && itemMeta != null) {
                     itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
                     itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                     item.setItemMeta(itemMeta);
                 }
                 return item;
-            } else
-            {
+            } else {
                 ItemStack item = buildItem(material, durability, warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
                 ItemMeta itemMeta = item.getItemMeta();
-                if (warp.hasIconEnchantedLook() && itemMeta != null)
-                {
+                if (warp.hasIconEnchantedLook() && itemMeta != null) {
                     itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
                     itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                     item.setItemMeta(itemMeta);
@@ -772,13 +689,11 @@ public class Manager
 
                 return item;
             }
-        } else
-        {
+        } else {
             OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
             ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
             ItemMeta itemMeta = item.getItemMeta();
-            if (warp.hasIconEnchantedLook() && itemMeta != null)
-            {
+            if (warp.hasIconEnchantedLook() && itemMeta != null) {
                 itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
                 itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 item.setItemMeta(itemMeta);
@@ -788,8 +703,7 @@ public class Manager
         }
     }
 
-    public ItemStack buildItemFromId(OfflinePlayer player, String currentFilterStatus, String menuPath, String itemId)
-    {
+    public ItemStack buildItemFromId(OfflinePlayer player, String currentFilterStatus, String menuPath, String itemId) {
         boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player), hasNextPage = getPaging().hasNextWarpPage(player);
         int currentPage = getPaging().getCurrentPage(player);
         List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection(menuPath + ".items")).getKeys(false));
@@ -813,8 +727,7 @@ public class Manager
             index = 4;
 
         String statusFormat;
-        switch (index)
-        {
+        switch (index) {
             case 1:
                 statusFormat = privateFormat;
                 break;
@@ -832,13 +745,10 @@ public class Manager
                 break;
         }
 
-        for (int i = -1; ++i < itemIds.size(); )
-        {
-            if (itemIds.get(i).equalsIgnoreCase(itemId))
-            {
+        for (int i = -1; ++i < itemIds.size(); ) {
+            if (itemIds.get(i).equalsIgnoreCase(itemId)) {
                 boolean usePlayerHead = getPluginInstance().getConfig().getBoolean(menuPath + ".items." + itemId + ".use-player-head");
-                if (usePlayerHead)
-                {
+                if (usePlayerHead) {
                     String displayName = Objects.requireNonNull(getPluginInstance().getConfig().getString(menuPath + ".items." + itemId + ".display-name"))
                             .replace("{current-page}", String.valueOf(currentPage))
                             .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
@@ -855,8 +765,7 @@ public class Manager
                                 .replace("{current-status}", statusFormat)));
                     return getPlayerHead(getPluginInstance().getConfig().getString(menuPath + ".items." + itemId + ".player-head-name"),
                             displayName, newLore, getPluginInstance().getConfig().getInt(menuPath + ".items." + itemId + ".amount"));
-                } else
-                {
+                } else {
                     String displayName = Objects.requireNonNull(getPluginInstance().getConfig().getString(menuPath + ".items." + itemId + ".display-name"))
                             .replace("{current-page}", String.valueOf(currentPage))
                             .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
@@ -881,8 +790,7 @@ public class Manager
         return null;
     }
 
-    public Inventory buildListMenu(OfflinePlayer player)
-    {
+    public Inventory buildListMenu(OfflinePlayer player) {
         Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getConfig().getInt("list-menu-section.size"),
                 colorText(getPluginInstance().getConfig().getString("list-menu-section.title")));
 
@@ -896,8 +804,7 @@ public class Manager
                 privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
                 adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
 
-        switch (defaultFilterIndex)
-        {
+        switch (defaultFilterIndex) {
             case 1:
                 currentStatus = privateFormat;
                 break;
@@ -919,10 +826,8 @@ public class Manager
         if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(1))
             pageOneWarpList = new ArrayList<>(warpPageMap.get(1));
 
-        for (int i = -1; ++i < inventory.getSize(); )
-        {
-            if (warpSlots.contains(i) && pageOneWarpList.size() >= 1)
-            {
+        for (int i = -1; ++i < inventory.getSize(); ) {
+            if (warpSlots.contains(i) && pageOneWarpList.size() >= 1) {
                 Warp warp = pageOneWarpList.get(0);
                 inventory.setItem(i, buildWarpIcon(player, warp));
                 pageOneWarpList.remove(warp);
@@ -933,59 +838,56 @@ public class Manager
         boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player), hasNextPage = getPaging().hasNextWarpPage(player);
 
         List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection("list-menu-section.items")).getKeys(false));
-        for (int i = -1; ++i < itemIds.size(); )
-        {
+        for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i);
-            boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
-                    fillEmptySlots = getPluginInstance().getConfig().getBoolean("list-menu-section.items." + itemId + ".fill-empty-slots");
-            if (usePlayerHead)
-            {
-                String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
-                        .getString("list-menu-section.items." + itemId + ".display-name"))
-                        .replace("{current-page}", String.valueOf(currentPage))
-                        .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                        .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
-                        .replace("{current-status}", Objects.requireNonNull(currentStatus));
-                List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig().getStringList("list-menu-section.items." + itemId + ".lore");
-                for (int j = -1; ++j < lore.size(); )
-                    newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
+            if (itemId != null && !itemId.equalsIgnoreCase("")) {
+                player.getPlayer().sendMessage(itemId + " - " + i + "/" + itemIds.size());
+                boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
+                        fillEmptySlots = getPluginInstance().getConfig().getBoolean("list-menu-section.items." + itemId + ".fill-empty-slots");
+                if (usePlayerHead) {
+                    String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
+                            .getString("list-menu-section.items." + itemId + ".display-name"))
+                            .replace("{current-page}", String.valueOf(currentPage))
                             .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
                             .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
-                            .replace("{current-status}", currentStatus)));
+                            .replace("{current-status}", Objects.requireNonNull(currentStatus));
+                    List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig().getStringList("list-menu-section.items." + itemId + ".lore");
+                    for (int j = -1; ++j < lore.size(); )
+                        newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
+                                .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
+                                .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                                .replace("{current-status}", currentStatus)));
 
-                ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".player-head-name"),
-                        displayName, newLore, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                inventory.setItem(getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"), playerHeadItem);
-                if (fillEmptySlots) emptySlotFiller = playerHeadItem;
-            } else
-            {
-                String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
-                        .getString("list-menu-section.items." + itemId + ".display-name"))
-                        .replace("{current-page}", String.valueOf(currentPage))
-                        .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                        .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
-                        .replace("{current-status}", Objects.requireNonNull(currentStatus));
-                List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig()
-                        .getStringList("list-menu-section.items." + itemId + ".lore");
-                for (int j = -1; ++j < lore.size(); )
-                    newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
+                    ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".player-head-name"),
+                            displayName, newLore, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
+                    inventory.setItem(getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"), playerHeadItem);
+                    if (fillEmptySlots) emptySlotFiller = playerHeadItem;
+                } else {
+                    String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
+                            .getString("list-menu-section.items." + itemId + ".display-name"))
+                            .replace("{current-page}", String.valueOf(currentPage))
                             .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
                             .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
-                            .replace("{current-status}", currentStatus)));
-                Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".material"))
-                        .toUpperCase().replace(" ", "_").replace("-", "_"));
-
-                ItemStack itemStack = buildItem(material, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".durability"),
-                        displayName, newLore, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                inventory.setItem(getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"), itemStack);
-                if (fillEmptySlots) emptySlotFiller = itemStack;
+                            .replace("{current-status}", Objects.requireNonNull(currentStatus));
+                    List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig()
+                            .getStringList("list-menu-section.items." + itemId + ".lore");
+                    for (int j = -1; ++j < lore.size(); )
+                        newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
+                                .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
+                                .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                                .replace("{current-status}", currentStatus)));
+                    Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".material"))
+                            .toUpperCase().replace(" ", "_").replace("-", "_"));
+                    ItemStack itemStack = buildItem(material, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".durability"),
+                            displayName, newLore, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
+                    inventory.setItem(getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"), itemStack);
+                    if (fillEmptySlots) emptySlotFiller = itemStack;
+                }
             }
         }
 
-        for (int i = -1; ++i < inventory.getSize(); )
-        {
-            if (emptySlotFiller != null && !warpSlots.contains(i))
-            {
+        for (int i = -1; ++i < inventory.getSize(); ) {
+            if (emptySlotFiller != null && !warpSlots.contains(i)) {
                 ItemStack itemStack = inventory.getItem(i);
                 if (itemStack == null || itemStack.getType() == Material.AIR) inventory.setItem(i, emptySlotFiller);
             }
@@ -994,11 +896,9 @@ public class Manager
         return inventory;
     }
 
-    public Inventory buildPlayerSelectionMenu(OfflinePlayer player)
-    {
+    public Inventory buildPlayerSelectionMenu(OfflinePlayer player) {
         List<UUID> playersSelected = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
-        if (playersSelected != null)
-        {
+        if (playersSelected != null) {
             playersSelected.clear();
             getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
         }
@@ -1017,10 +917,8 @@ public class Manager
             pageOnePlayerList = new ArrayList<>(playerSelectionMap.get(1));
 
         List<UUID> selectedPlayers = getPaging().getSelectedPlayers(player);
-        for (int i = -1; ++i < inventory.getSize(); )
-        {
-            if (playerSlots.contains(i) && pageOnePlayerList.size() >= 1)
-            {
+        for (int i = -1; ++i < inventory.getSize(); ) {
+            if (playerSlots.contains(i) && pageOnePlayerList.size() >= 1) {
                 UUID playerUniqueId = pageOnePlayerList.get(0);
                 if (playerUniqueId == null) continue;
 
@@ -1035,13 +933,11 @@ public class Manager
         int currentPage = getPaging().getCurrentPage(player);
         boolean hasPreviousPage = getPaging().hasPreviousPlayerSelectionPage(player), hasNextPage = getPaging().hasNextPlayerSelectionPage(player);
         List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection("ps-menu-section.items")).getKeys(false));
-        for (int i = -1; ++i < itemIds.size(); )
-        {
+        for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i);
             boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("ps-menu-section.items." + itemId + ".use-player-head"),
                     fillEmptySlots = getPluginInstance().getConfig().getBoolean("ps-menu-section.items." + itemId + ".fill-empty-slots");
-            if (usePlayerHead)
-            {
+            if (usePlayerHead) {
                 String displayName = Objects.requireNonNull(getPluginInstance().getConfig().getString("ps-menu-section.items." + itemId + ".display-name"))
                         .replace("{current-page}", String.valueOf(currentPage))
                         .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
@@ -1056,8 +952,7 @@ public class Manager
                         displayName, newLore, getPluginInstance().getConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
                 inventory.setItem(getPluginInstance().getConfig().getInt("ps-menu-section.items." + itemId + ".slot"), playerHeadItem);
                 if (fillEmptySlots) emptySlotFiller = playerHeadItem;
-            } else
-            {
+            } else {
                 String displayName = Objects.requireNonNull(getPluginInstance().getConfig().getString("ps-menu-section.items." + itemId + ".display-name"))
                         .replace("{current-page}", String.valueOf(currentPage))
                         .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
@@ -1078,10 +973,8 @@ public class Manager
             }
         }
 
-        for (int i = -1; ++i < inventory.getSize(); )
-        {
-            if (!playerSlots.contains(i) && emptySlotFiller != null)
-            {
+        for (int i = -1; ++i < inventory.getSize(); ) {
+            if (!playerSlots.contains(i) && emptySlotFiller != null) {
                 ItemStack itemStack = inventory.getItem(i);
                 if (itemStack == null || itemStack.getType() == Material.AIR) inventory.setItem(i, emptySlotFiller);
             }
@@ -1090,8 +983,7 @@ public class Manager
         return inventory;
     }
 
-    public Inventory buildEditMenu(Warp warp)
-    {
+    public Inventory buildEditMenu(Warp warp) {
         Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getConfig().getInt("edit-menu-section.size"),
                 colorText(getPluginInstance().getConfig().getString("edit-menu-section.title") + "&" + warp.getDisplayNameColor().getChar() + warp.getWarpName()));
         ItemStack emptySlotFiller = null;
@@ -1106,8 +998,7 @@ public class Manager
 
         String currentStatusName, nextStatusName;
 
-        switch (currentStatusIndex)
-        {
+        switch (currentStatusIndex) {
             case 1:
                 currentStatusName = privateFormat;
                 break;
@@ -1119,8 +1010,7 @@ public class Manager
                 break;
         }
 
-        switch (nextStatus)
-        {
+        switch (nextStatus) {
             case PRIVATE:
                 nextStatusName = privateFormat;
                 break;
@@ -1133,13 +1023,11 @@ public class Manager
         }
 
         List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection("edit-menu-section.items")).getKeys(false));
-        for (int i = -1; ++i < itemIds.size(); )
-        {
+        for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i);
             boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("edit-menu-section.items." + itemId + ".use-player-head"),
                     fillEmptySlots = getPluginInstance().getConfig().getBoolean("edit-menu-section.items." + itemId + ".fill-empty-slots");
-            if (usePlayerHead)
-            {
+            if (usePlayerHead) {
                 String displayName = getPluginInstance().getConfig().getString("edit-menu-section.items." + itemId + ".display-name"),
                         nextThemeLine = getPluginInstance().getManager().getNextIconTheme(warp), nextAnimationSet = getPluginInstance().getManager().getNextAnimationSet(warp);
                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig().getStringList("edit-menu-section.items." + itemId + ".lore");
@@ -1158,8 +1046,7 @@ public class Manager
                         displayName, newLore, getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
                 inventory.setItem(getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".slot"), playerHeadItem);
                 if (fillEmptySlots) emptySlotFiller = playerHeadItem;
-            } else
-            {
+            } else {
                 String displayName = getPluginInstance().getConfig().getString("edit-menu-section.items." + itemId + ".display-name"),
                         nextThemeLine = getPluginInstance().getManager().getNextIconTheme(warp),
                         nextAnimationSet = getPluginInstance().getManager().getNextAnimationSet(warp);
@@ -1184,10 +1071,8 @@ public class Manager
             }
         }
 
-        for (int i = -1; ++i < inventory.getSize(); )
-        {
-            if (emptySlotFiller != null)
-            {
+        for (int i = -1; ++i < inventory.getSize(); ) {
+            if (emptySlotFiller != null) {
                 ItemStack itemStack = inventory.getItem(i);
                 if (itemStack == null || itemStack.getType() == Material.AIR)
                     inventory.setItem(i, emptySlotFiller);
@@ -1197,8 +1082,7 @@ public class Manager
         return inventory;
     }
 
-    public Inventory buildCustomMenu(OfflinePlayer player, String menuId)
-    {
+    public Inventory buildCustomMenu(OfflinePlayer player, String menuId) {
         Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getConfig().getInt("custom-menus-section." + menuId + ".size"),
                 colorText(getPluginInstance().getConfig().getString("custom-menus-section." + menuId + ".title")));
 
@@ -1212,10 +1096,8 @@ public class Manager
         if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(1))
             pageOneWarpList = new ArrayList<>(warpPageMap.get(1));
 
-        for (int i = -1; ++i < inventory.getSize(); )
-        {
-            if (warpSlots.contains(i) && pageOneWarpList.size() >= 1)
-            {
+        for (int i = -1; ++i < inventory.getSize(); ) {
+            if (warpSlots.contains(i) && pageOneWarpList.size() >= 1) {
                 Warp warp = pageOneWarpList.get(0);
                 inventory.setItem(i, buildWarpIcon(player, warp));
                 pageOneWarpList.remove(warp);
@@ -1225,13 +1107,11 @@ public class Manager
         int currentPage = getPaging().getCurrentPage(player);
         boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player), hasNextPage = getPaging().hasNextWarpPage(player);
         List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection("custom-menus-section." + menuId + ".items")).getKeys(false));
-        for (int i = -1; ++i < itemIds.size(); )
-        {
+        for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i);
             boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("custom-menus-section." + menuId + ".items." + itemId + ".use-player-head"),
                     fillEmptySlots = getPluginInstance().getConfig().getBoolean("custom-menus-section." + menuId + ".items." + itemId + ".fill-empty-slots");
-            if (usePlayerHead)
-            {
+            if (usePlayerHead) {
                 String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
                         .getString("custom-menus-section." + menuId + ".items." + itemId + ".display-name"))
                         .replace("{current-page}", String.valueOf(currentPage))
@@ -1250,8 +1130,7 @@ public class Manager
                         displayName, newLore, getPluginInstance().getConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".amount"));
                 inventory.setItem(getPluginInstance().getConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".slot"), playerHeadItem);
                 if (fillEmptySlots) emptySlotFiller = playerHeadItem;
-            } else
-            {
+            } else {
                 String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
                         .getString("custom-menus-section." + menuId + ".items." + itemId + ".display-name"))
                         .replace("{current-page}", String.valueOf(currentPage))
@@ -1274,10 +1153,8 @@ public class Manager
             }
         }
 
-        for (int i = -1; ++i < inventory.getSize(); )
-        {
-            if (emptySlotFiller != null && !warpSlots.contains(i))
-            {
+        for (int i = -1; ++i < inventory.getSize(); ) {
+            if (emptySlotFiller != null && !warpSlots.contains(i)) {
                 ItemStack itemStack = inventory.getItem(i);
                 if (itemStack == null || itemStack.getType() == Material.AIR) inventory.setItem(i, emptySlotFiller);
             }
@@ -1287,15 +1164,12 @@ public class Manager
     }
 
     // warp stuff
-    public String getNextAnimationSet(Warp warp)
-    {
+    public String getNextAnimationSet(Warp warp) {
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         int currentIndex = -1;
-        for (int i = -1; ++i < animationSetList.size(); )
-        {
+        for (int i = -1; ++i < animationSetList.size(); ) {
             String animationSetLine = animationSetList.get(i);
-            if (animationSetLine.equalsIgnoreCase(warp.getAnimationSet()))
-            {
+            if (animationSetLine.equalsIgnoreCase(warp.getAnimationSet())) {
                 currentIndex = i;
                 break;
             }
@@ -1305,15 +1179,12 @@ public class Manager
         else return animationSetList.get(currentIndex + 1);
     }
 
-    public int getStatusIndex(String status)
-    {
+    public int getStatusIndex(String status) {
         int index = -1;
 
         EnumContainer.Status[] statusList = EnumContainer.Status.values();
-        for (int i = -1; ++i < statusList.length; )
-        {
-            if (status != null)
-            {
+        for (int i = -1; ++i < statusList.length; ) {
+            if (status != null) {
                 index += 1;
                 if (status.replace(" ", "_").replace("-", "_").equalsIgnoreCase(statusList[i].name())) break;
             }
@@ -1322,14 +1193,12 @@ public class Manager
         return index;
     }
 
-    public boolean hasMetWarpLimit(OfflinePlayer player)
-    {
+    public boolean hasMetWarpLimit(OfflinePlayer player) {
         int warpCount = 0, warpLimit = getWarpLimit(player);
         if (warpLimit < 0) return false;
 
         List<Warp> warpList = new ArrayList<>(getWarpMap().values());
-        for (int i = -1; ++i < warpList.size(); )
-        {
+        for (int i = -1; ++i < warpList.size(); ) {
             Warp warp = warpList.get(i);
             if (warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString()))
                 warpCount += 1;
@@ -1338,22 +1207,18 @@ public class Manager
         return (warpCount >= warpLimit);
     }
 
-    public int getWarpLimit(OfflinePlayer player)
-    {
+    public int getWarpLimit(OfflinePlayer player) {
         int currentFoundAmount = getPluginInstance().getConfig().getInt("general-section.default-warp-limit");
 
-        if (player.isOnline())
-        {
+        if (player.isOnline()) {
             Player p = player.getPlayer();
             if (p == null) return 0;
             if (p.hasPermission("hyperdrive.warplimit.*")) return -1;
 
             List<PermissionAttachmentInfo> lists = new ArrayList<>(p.getEffectivePermissions());
-            for (int i = -1; ++i < lists.size(); )
-            {
+            for (int i = -1; ++i < lists.size(); ) {
                 PermissionAttachmentInfo permission = lists.get(i);
-                if (permission.getPermission().toLowerCase().startsWith("hyperdrive.warplimit.") && permission.getValue())
-                {
+                if (permission.getPermission().toLowerCase().startsWith("hyperdrive.warplimit.") && permission.getValue()) {
                     int tempValue = Integer.parseInt(permission.getPermission().toLowerCase().replace("hyperdrive.warplimit.", ""));
                     if (tempValue > currentFoundAmount) currentFoundAmount = tempValue;
                 }
@@ -1363,23 +1228,19 @@ public class Manager
         return currentFoundAmount;
     }
 
-    public boolean doesWarpExist(String warpName)
-    {
+    public boolean doesWarpExist(String warpName) {
         return !getWarpMap().isEmpty() && getWarpMap().containsKey(warpName.toLowerCase());
     }
 
-    public Warp getWarp(String warpName)
-    {
+    public Warp getWarp(String warpName) {
         if (!getWarpMap().isEmpty() && getWarpMap().containsKey(warpName.toLowerCase()))
             return getWarpMap().get(warpName.toLowerCase());
         return null;
     }
 
-    public List<String> getPermittedWarps(OfflinePlayer player)
-    {
+    public List<String> getPermittedWarps(OfflinePlayer player) {
         List<String> permittedWarpNames = new ArrayList<>(), warpNames = new ArrayList<>(getWarpMap().keySet());
-        for (int i = -1; ++i < warpNames.size(); )
-        {
+        for (int i = -1; ++i < warpNames.size(); ) {
             String warpName = warpNames.get(i);
             Warp warp = getWarp(warpName);
             if (warp != null && (warp.getOwner().toString().equals(player.getUniqueId().toString()) || warp.getAssistants().contains(player.getUniqueId())))
@@ -1390,26 +1251,22 @@ public class Manager
     }
 
     // group methods
-    public List<UUID> getGroupMembers(OfflinePlayer player)
-    {
+    public List<UUID> getGroupMembers(OfflinePlayer player) {
         UUID groupLeaderId = getGroupLeader(player);
         if (groupLeaderId != null) if (!getGroupMap().isEmpty() && getGroupMap().containsKey(groupLeaderId))
             return getGroupMap().get(groupLeaderId);
         return null;
     }
 
-    public boolean isGroupLeader(OfflinePlayer player)
-    {
+    public boolean isGroupLeader(OfflinePlayer player) {
         return !getGroupMap().isEmpty() && getGroupMap().containsKey(player.getUniqueId());
     }
 
-    public UUID getGroupLeader(OfflinePlayer player)
-    {
+    public UUID getGroupLeader(OfflinePlayer player) {
         if (isGroupLeader(player)) return player.getUniqueId();
 
         List<UUID> leaderList = new ArrayList<>(getGroupMap().keySet());
-        for (int i = -1; ++i < leaderList.size(); )
-        {
+        for (int i = -1; ++i < leaderList.size(); ) {
             UUID leaderId = leaderList.get(i);
             List<UUID> memberList = getGroupMap().get(leaderId);
             if (memberList != null && memberList.contains(player.getUniqueId()))
@@ -1421,28 +1278,23 @@ public class Manager
 
 
     // chat interaction map methods
-    public void updateChatInteraction(OfflinePlayer player, String chatInteractionId, String chatInteractionValue)
-    {
-        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId()))
-        {
+    public void updateChatInteraction(OfflinePlayer player, String chatInteractionId, String chatInteractionValue) {
+        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId())) {
             HashMap<String, String> interactionMap = getChatInteractionMap().get(player.getUniqueId());
             if (interactionMap == null)
                 interactionMap = new HashMap<>();
 
             interactionMap.put(chatInteractionId, chatInteractionValue);
             getChatInteractionMap().put(player.getUniqueId(), interactionMap);
-        } else
-        {
+        } else {
             HashMap<String, String> interactionMap = new HashMap<>();
             interactionMap.put(chatInteractionId, chatInteractionValue);
             getChatInteractionMap().put(player.getUniqueId(), interactionMap);
         }
     }
 
-    public String getChatInteractionValue(OfflinePlayer player, String chatInteractionId)
-    {
-        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId()))
-        {
+    public String getChatInteractionValue(OfflinePlayer player, String chatInteractionId) {
+        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId())) {
             HashMap<String, String> interactionMap = getChatInteractionMap().get(player.getUniqueId());
             if (interactionMap != null && !interactionMap.isEmpty() && interactionMap.containsKey(chatInteractionId))
                 return interactionMap.get(chatInteractionId);
@@ -1451,32 +1303,25 @@ public class Manager
         return null;
     }
 
-    public void clearChatInteraction(OfflinePlayer player, String chatInteractionId)
-    {
-        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId()))
-        {
+    public void clearChatInteraction(OfflinePlayer player, String chatInteractionId) {
+        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId())) {
             HashMap<String, String> interactionMap = getChatInteractionMap().get(player.getUniqueId());
             if (interactionMap != null && !interactionMap.isEmpty())
                 interactionMap.remove(chatInteractionId);
         }
     }
 
-    public void clearChatInteractions(OfflinePlayer player)
-    {
+    public void clearChatInteractions(OfflinePlayer player) {
         if (!getChatInteractionMap().isEmpty())
             getChatInteractionMap().remove(player.getUniqueId());
     }
 
-    public boolean isInOtherChatInteraction(OfflinePlayer player, String currentChatInteractionId)
-    {
-        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId()))
-        {
+    public boolean isInOtherChatInteraction(OfflinePlayer player, String currentChatInteractionId) {
+        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId())) {
             HashMap<String, String> interactionMap = getChatInteractionMap().get(player.getUniqueId());
-            if (interactionMap != null && !interactionMap.isEmpty())
-            {
+            if (interactionMap != null && !interactionMap.isEmpty()) {
                 List<String> keysetList = new ArrayList<>(interactionMap.keySet());
-                for (int i = -1; ++i < keysetList.size(); )
-                {
+                for (int i = -1; ++i < keysetList.size(); ) {
                     String keyId = keysetList.get(i);
                     if (keyId != null && !keyId.equalsIgnoreCase(currentChatInteractionId))
                         return true;
@@ -1488,123 +1333,99 @@ public class Manager
     }
 
     // getters and setters
-    private HyperDrive getPluginInstance()
-    {
+    private HyperDrive getPluginInstance() {
         return pluginInstance;
     }
 
-    private void setPluginInstance(HyperDrive pluginInstance)
-    {
+    private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
 
-    private HashMap<UUID, HashMap<String, Long>> getCooldownMap()
-    {
+    private HashMap<UUID, HashMap<String, Long>> getCooldownMap() {
         return cooldownMap;
     }
 
-    private void setCooldownMap(HashMap<UUID, HashMap<String, Long>> cooldownMap)
-    {
+    private void setCooldownMap(HashMap<UUID, HashMap<String, Long>> cooldownMap) {
         this.cooldownMap = cooldownMap;
     }
 
-    private ParticleHandler getParticleHandler()
-    {
+    private ParticleHandler getParticleHandler() {
         return particleHandler;
     }
 
-    private void setParticleHandler(ParticleHandler particleHandler)
-    {
+    private void setParticleHandler(ParticleHandler particleHandler) {
         this.particleHandler = particleHandler;
     }
 
-    public JSONHandler getJsonHandler()
-    {
+    public JSONHandler getJsonHandler() {
         return jsonHandler;
     }
 
-    private void setJsonHandler(JSONHandler jsonHandler)
-    {
+    private void setJsonHandler(JSONHandler jsonHandler) {
         this.jsonHandler = jsonHandler;
     }
 
-    private TitleHandler getTitleHandler()
-    {
+    private TitleHandler getTitleHandler() {
         return titleHandler;
     }
 
-    private void setTitleHandler(TitleHandler titleHandler)
-    {
+    private void setTitleHandler(TitleHandler titleHandler) {
         this.titleHandler = titleHandler;
     }
 
-    public HashMap<String, Warp> getWarpMap()
-    {
+    public HashMap<String, Warp> getWarpMap() {
         return warpMap;
     }
 
-    private void setWarpMap(HashMap<String, Warp> warpMap)
-    {
+    private void setWarpMap(HashMap<String, Warp> warpMap) {
         this.warpMap = warpMap;
     }
 
-    private HashMap<UUID, HashMap<String, String>> getChatInteractionMap()
-    {
+    private HashMap<UUID, HashMap<String, String>> getChatInteractionMap() {
         return chatInteractionMap;
     }
 
-    private void setChatInteractionMap(HashMap<UUID, HashMap<String, String>> chatInteractionMap)
-    {
+    private void setChatInteractionMap(HashMap<UUID, HashMap<String, String>> chatInteractionMap) {
         this.chatInteractionMap = chatInteractionMap;
     }
 
-    public Paging getPaging()
-    {
+    public Paging getPaging() {
         return paging;
     }
 
-    private void setPaging(Paging paging)
-    {
+    private void setPaging(Paging paging) {
         this.paging = paging;
     }
 
-    public SimpleDateFormat getSimpleDateFormat()
-    {
+    public SimpleDateFormat getSimpleDateFormat() {
         return simpleDateFormat;
     }
 
-    public void setSimpleDateFormat(SimpleDateFormat simpleDateFormat)
-    {
+    public void setSimpleDateFormat(SimpleDateFormat simpleDateFormat) {
         this.simpleDateFormat = simpleDateFormat;
     }
 
-    private HashMap<UUID, Double> getLastTransactionMap()
-    {
+    private HashMap<UUID, Double> getLastTransactionMap() {
         return lastTransactionMap;
     }
 
-    private void setLastTransactionMap(HashMap<UUID, Double> lastTransactionMap)
-    {
+    private void setLastTransactionMap(HashMap<UUID, Double> lastTransactionMap) {
         this.lastTransactionMap = lastTransactionMap;
     }
 
-    private ActionBarHandler getActionBarHandler()
-    {
+    private ActionBarHandler getActionBarHandler() {
         return actionBarHandler;
     }
 
-    private void setActionBarHandler(ActionBarHandler actionBarHandler)
-    {
+    private void setActionBarHandler(ActionBarHandler actionBarHandler) {
         this.actionBarHandler = actionBarHandler;
     }
 
-    private HashMap<UUID, List<UUID>> getGroupMap()
-    {
+    private HashMap<UUID, List<UUID>> getGroupMap() {
         return groupMap;
     }
 
-    private void setGroupMap(HashMap<UUID, List<UUID>> groupMap)
-    {
+    private void setGroupMap(HashMap<UUID, List<UUID>> groupMap) {
         this.groupMap = groupMap;
     }
 }
