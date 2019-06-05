@@ -841,7 +841,6 @@ public class Manager {
         for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i);
             if (itemId != null && !itemId.equalsIgnoreCase("")) {
-                player.getPlayer().sendMessage(itemId + " - " + i + "/" + itemIds.size());
                 boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
                         fillEmptySlots = getPluginInstance().getConfig().getBoolean("list-menu-section.items." + itemId + ".fill-empty-slots");
                 if (usePlayerHead) {
