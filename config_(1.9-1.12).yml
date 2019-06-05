@@ -420,6 +420,8 @@ list-menu-section:
       # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
       # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
       usage-cost: 0
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
       # This is the display name of the item. The display name can use placeholders which can be found below:
       ###
       # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
@@ -451,6 +453,7 @@ list-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+        permission: ""
       display-name: "&cPrevious Page"
       lore:
         - ""
@@ -468,6 +471,7 @@ list-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: "hyperdrive.use.create"
       display-name: "&aCreate New Warp"
       lore:
         - ""
@@ -486,6 +490,7 @@ list-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: ""
       # The {current-status} placeholder must be in the display name for a filter-switch.
       display-name: "&dFilter: &e{current-status}"
       lore:
@@ -504,6 +509,7 @@ list-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: ""
       display-name: "&dRefresh"
       lore:
         - ""
@@ -521,6 +527,7 @@ list-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: ""
       display-name: "&cSolo Random Teleport"
       lore:
         - ""
@@ -538,6 +545,7 @@ list-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: ""
       display-name: "&cGroup Random Teleport"
       lore:
         - ""
@@ -555,6 +563,7 @@ list-menu-section:
       click-sound: false
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: ""
       display-name: ""
       lore: []
       slot: 0
@@ -594,6 +603,8 @@ edit-menu-section:
       # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
       # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
       usage-cost: 50
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
       # This is the display name of the item. The display name can use placeholders which can be found below:
       ###
       # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
@@ -627,6 +638,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 65
+      permission: ""
       display-name: "&bChange Status"
       lore:
         - ""
@@ -649,6 +661,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 125
+      permission: ""
       display-name: "&cRelocate"
       lore:
         - ""
@@ -670,6 +683,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&dGive Ownership"
       lore:
         - ""
@@ -691,6 +705,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 120
+      permission: ""
       display-name: "&cChange Description Color"
       lore:
         - ""
@@ -711,6 +726,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 120
+      permission: ""
       display-name: "&cChange Name Color"
       lore:
         - ""
@@ -731,6 +747,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 120
+      permission: ""
       display-name: "&cEdit Description"
       lore:
         - ""
@@ -751,6 +768,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 120
+      permission: ""
       display-name: "&cChange Usage Price"
       lore:
         - ""
@@ -771,6 +789,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&bToggle Enchant Look"
       lore:
         - ""
@@ -792,6 +811,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&bGive Assistant"
       lore:
         - ""
@@ -812,6 +832,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&aAdd To Whitelist"
       lore:
         - ""
@@ -836,6 +857,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&aAdd Command"
       lore:
         - ""
@@ -861,6 +883,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&bRemove Assistant"
       lore:
         - ""
@@ -881,6 +904,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&cRemove From Whitelist"
       lore:
         - ""
@@ -905,6 +929,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&cRemove Command"
       lore:
         - ""
@@ -930,6 +955,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&aChange Icon Theme"
       lore:
         - ""
@@ -951,6 +977,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&aChange Animation Set"
       lore:
         - ""
@@ -972,6 +999,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 50
+      permission: ""
       display-name: "&cDelete Warp"
       lore:
         - ""
@@ -989,6 +1017,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
+      permission: ""
       display-name: "&cBack"
       lore:
         - ""
@@ -1006,6 +1035,7 @@ edit-menu-section:
       click-sound: false
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: ""
       display-name: ""
       lore: []
       slot: 0
@@ -1067,6 +1097,8 @@ ps-menu-section:
       # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
       # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
       usage-cost: 0
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
       # This is the display name of the item. The display name can use placeholders which can be found below:
       ###
       # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
@@ -1097,6 +1129,7 @@ ps-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: ""
       display-name: "&cPrevious Page"
       lore:
         - ""
@@ -1114,6 +1147,7 @@ ps-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: ""
       display-name: "&aConfirm Selection"
       lore:
         - ""
@@ -1131,6 +1165,7 @@ ps-menu-section:
       click-sound: false
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
+      permission: ""
       display-name: ""
       lore: []
       slot: 0
@@ -1174,6 +1209,8 @@ custom-menus-section:
       # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
       # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
       usage-cost: 0
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
       # This is the display name of the item. The display name can use placeholders which can be found below:
       ###
       # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
