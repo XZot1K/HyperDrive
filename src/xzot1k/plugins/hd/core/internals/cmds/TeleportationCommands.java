@@ -14,15 +14,13 @@ import xzot1k.plugins.hd.api.objects.SerializableLocation;
 
 import java.util.*;
 
-public class TeleportationCommands implements CommandExecutor
-{
+public class TeleportationCommands implements CommandExecutor {
     private HyperDrive pluginInstance;
     private List<UUID> toggledPlayers;
     private HashMap<UUID, UUID> tpaSentMap;
     private HashMap<UUID, SerializableLocation> lastLocationMap;
 
-    public TeleportationCommands(HyperDrive pluginInstance)
-    {
+    public TeleportationCommands(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
         setToggledPlayers(new ArrayList<>());
         setLastLocationMap(new HashMap<>());
@@ -30,15 +28,12 @@ public class TeleportationCommands implements CommandExecutor
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args)
-    {
+    public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
 
-        switch (command.getName().toLowerCase())
-        {
+        switch (command.getName().toLowerCase()) {
             case "crossserver":
 
-                switch (args.length)
-                {
+                switch (args.length) {
                     case 8:
                         runCrossServer(commandSender, args);
                         return true;
@@ -57,8 +52,7 @@ public class TeleportationCommands implements CommandExecutor
 
             case "teleport":
 
-                switch (args.length)
-                {
+                switch (args.length) {
                     case 1:
                         runTeleportCommand(commandSender, args[0]);
                         return true;
@@ -78,8 +72,7 @@ public class TeleportationCommands implements CommandExecutor
 
             case "teleporthere":
 
-                if (args.length >= 1)
-                {
+                if (args.length >= 1) {
                     runTeleportHereCommand(commandSender, args[0]);
                     return true;
                 }
@@ -90,8 +83,7 @@ public class TeleportationCommands implements CommandExecutor
                 return true;
             case "teleportoverride":
 
-                if (args.length >= 1)
-                {
+                if (args.length >= 1) {
                     runTeleportOverrideCommand(commandSender, args[0]);
                     return true;
                 }
@@ -102,8 +94,7 @@ public class TeleportationCommands implements CommandExecutor
                 return true;
             case "teleportoverridehere":
 
-                if (args.length >= 1)
-                {
+                if (args.length >= 1) {
                     runTeleportOverrideHereCommand(commandSender, args[0]);
                     return true;
                 }
@@ -114,12 +105,10 @@ public class TeleportationCommands implements CommandExecutor
                 return true;
             case "teleportposition":
 
-                if (args.length >= 5)
-                {
+                if (args.length >= 5) {
                     runTeleportPosCommand(commandSender, args[0], args[1], args[2], args[3], args[4]);
                     return true;
-                } else if (args.length >= 4)
-                {
+                } else if (args.length >= 4) {
                     runTeleportPosCommand(commandSender, args[0], args[1], args[2], args[3]);
                     return true;
                 }
@@ -127,8 +116,7 @@ public class TeleportationCommands implements CommandExecutor
                 return true;
             case "teleportask":
 
-                if (args.length >= 1)
-                {
+                if (args.length >= 1) {
                     runTeleportAsk(commandSender, args[0]);
                     return true;
                 }
@@ -137,8 +125,7 @@ public class TeleportationCommands implements CommandExecutor
                 return true;
             case "teleportaccept":
 
-                if (args.length >= 1)
-                {
+                if (args.length >= 1) {
                     runTeleportAskAccept(commandSender, args[0]);
                     return true;
                 }
@@ -147,8 +134,7 @@ public class TeleportationCommands implements CommandExecutor
                 return true;
             case "teleportdeny":
 
-                if (args.length >= 1)
-                {
+                if (args.length >= 1) {
                     runTeleportAskDeny(commandSender, args[0]);
                     return true;
                 }
@@ -170,10 +156,8 @@ public class TeleportationCommands implements CommandExecutor
         return false;
     }
 
-    private void runCrossServerShortened(CommandSender commandSender, String[] args)
-    {
-        if (!commandSender.hasPermission("hyperdrive.admin.crossserver"))
-        {
+    private void runCrossServerShortened(CommandSender commandSender, String[] args) {
+        if (!commandSender.hasPermission("hyperdrive.admin.crossserver")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), (Player) commandSender);
             else
@@ -182,8 +166,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(args[0]);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-invalid"))
                         .replace("{player}", args[0]), (Player) commandSender);
@@ -193,8 +176,7 @@ public class TeleportationCommands implements CommandExecutor
             return;
         }
 
-        if (getPluginInstance().getConnection() == null)
-        {
+        if (getPluginInstance().getConnection() == null) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance()
                         .getConfig().getString("language-section.mysql-disabled")), (Player) commandSender);
@@ -206,8 +188,7 @@ public class TeleportationCommands implements CommandExecutor
 
         String serverName = args[1];
         World world = getPluginInstance().getServer().getWorld(args[2]);
-        if (world == null)
-        {
+        if (world == null) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.world-invalid"))
                         .replace("{world}", args[1]), (Player) commandSender);
@@ -218,8 +199,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         // X coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[3]))
-        {
+        if (!getPluginInstance().getManager().isNumeric(args[3])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.coordinate-invalid")), (Player) commandSender);
             else
@@ -228,8 +208,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         // Y coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[4]))
-        {
+        if (!getPluginInstance().getManager().isNumeric(args[4])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.coordinate-invalid")), (Player) commandSender);
             else
@@ -238,8 +217,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         // Z coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[5]))
-        {
+        if (!getPluginInstance().getManager().isNumeric(args[5])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.coordinate-invalid")), (Player) commandSender);
             else
@@ -259,10 +237,8 @@ public class TeleportationCommands implements CommandExecutor
                     .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName))));
     }
 
-    private void runCrossServer(CommandSender commandSender, String[] args)
-    {
-        if (!commandSender.hasPermission("hyperdrive.admin.crossserver"))
-        {
+    private void runCrossServer(CommandSender commandSender, String[] args) {
+        if (!commandSender.hasPermission("hyperdrive.admin.crossserver")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), (Player) commandSender);
             else
@@ -271,8 +247,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(args[0]);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-invalid"))
                         .replace("{player}", args[0]), (Player) commandSender);
@@ -282,8 +257,7 @@ public class TeleportationCommands implements CommandExecutor
             return;
         }
 
-        if (getPluginInstance().getConnection() == null)
-        {
+        if (getPluginInstance().getConnection() == null) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance()
                         .getConfig().getString("language-section.mysql-disabled")), (Player) commandSender);
@@ -295,8 +269,7 @@ public class TeleportationCommands implements CommandExecutor
 
         String serverName = args[1];
         World world = getPluginInstance().getServer().getWorld(args[2]);
-        if (world == null)
-        {
+        if (world == null) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.world-invalid"))
                         .replace("{world}", args[1]), (Player) commandSender);
@@ -307,8 +280,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         // X coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[3]))
-        {
+        if (!getPluginInstance().getManager().isNumeric(args[3])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.coordinate-invalid")), (Player) commandSender);
             else
@@ -317,8 +289,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         // Y coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[4]))
-        {
+        if (!getPluginInstance().getManager().isNumeric(args[4])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.coordinate-invalid")), (Player) commandSender);
             else
@@ -327,8 +298,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         // Z coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[5]))
-        {
+        if (!getPluginInstance().getManager().isNumeric(args[5])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.coordinate-invalid")), (Player) commandSender);
             else
@@ -337,8 +307,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         // Yaw coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[6]))
-        {
+        if (!getPluginInstance().getManager().isNumeric(args[6])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.coordinate-invalid")), (Player) commandSender);
             else
@@ -347,8 +316,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         // Pitch coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[7]))
-        {
+        if (!getPluginInstance().getManager().isNumeric(args[7])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.coordinate-invalid")), (Player) commandSender);
             else
@@ -366,10 +334,8 @@ public class TeleportationCommands implements CommandExecutor
                     .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName))));
     }
 
-    private void runBack(CommandSender commandSender, String playerName)
-    {
-        if (!commandSender.hasPermission("hyperdrive.admin.back"))
-        {
+    private void runBack(CommandSender commandSender, String playerName) {
+        if (!commandSender.hasPermission("hyperdrive.admin.back")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), (Player) commandSender);
             else
@@ -378,8 +344,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-invalid"))
                         .replace("{player}", playerName), (Player) commandSender);
@@ -390,8 +355,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         Location lastLocation = getLastLocation(enteredPlayer);
-        if (lastLocation == null)
-        {
+        if (lastLocation == null) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-last-location"), (Player) commandSender);
             else
@@ -409,30 +373,25 @@ public class TeleportationCommands implements CommandExecutor
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-last-location"), enteredPlayer);
     }
 
-    private void runBack(CommandSender commandSender)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runBack(CommandSender commandSender) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!commandSender.hasPermission("hyperdrive.back"))
-        {
+        if (!commandSender.hasPermission("hyperdrive.back")) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(player.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(player.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.self-teleportation-toggled"), player);
             return;
         }
 
         Location lastLocation = getLastLocation(player);
-        if (lastLocation == null)
-        {
+        if (lastLocation == null) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-last-location"), player);
             return;
         }
@@ -444,95 +403,75 @@ public class TeleportationCommands implements CommandExecutor
                 animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
-        {
+        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
             String[] themeArgs = animationSet.split(":");
-            String teleportTheme = themeArgs[2];
-            if (teleportTheme.contains("/"))
-            {
-                String[] teleportThemeArgs = teleportTheme.split("/");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[1],
-                        EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
-            }
+            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                            .replace("-", "_")), 1);
         }
 
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-last-location"), player);
     }
 
-    private void runTeleportToggle(CommandSender commandSender)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runTeleportToggle(CommandSender commandSender) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!commandSender.hasPermission("hyperdrive.tpt"))
-        {
+        if (!commandSender.hasPermission("hyperdrive.tpt")) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(player.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(player.getUniqueId())) {
             getToggledPlayers().remove(player.getUniqueId());
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-toggled-on"), player);
-        } else
-        {
+        } else {
             getToggledPlayers().add(player.getUniqueId());
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-toggled-off"), player);
         }
     }
 
-    private void runTeleportAskDeny(CommandSender commandSender, String playerName)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runTeleportAskDeny(CommandSender commandSender, String playerName) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!commandSender.hasPermission("hyperdrive.tpa"))
-        {
+        if (!commandSender.hasPermission("hyperdrive.tpa")) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(player.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(player.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.self-teleportation-toggled"), player);
             return;
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-invalid")
                     .replace("{player}", playerName), player);
             return;
         }
 
-        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString()))
-        {
+        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-self"), player);
             return;
         }
 
-        if (getTpaSentMap().containsKey(enteredPlayer.getUniqueId()))
-        {
+        if (getTpaSentMap().containsKey(enteredPlayer.getUniqueId())) {
             UUID playerUniqueId = getTpaSentMap().get(enteredPlayer.getUniqueId());
-            if (playerUniqueId == null || player.getUniqueId().toString().equals(playerUniqueId.toString()))
-            {
+            if (playerUniqueId == null || player.getUniqueId().toString().equals(playerUniqueId.toString())) {
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-invalid")
                         .replace("{player}", enteredPlayer.getName()), player);
                 return;
             }
-        } else if (getTpaSentMap().isEmpty() || !getTpaSentMap().containsKey(enteredPlayer.getUniqueId()))
-        {
+        } else if (getTpaSentMap().isEmpty() || !getTpaSentMap().containsKey(enteredPlayer.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-invalid")
                     .replace("{player}", enteredPlayer.getName()), player);
             return;
@@ -545,52 +484,43 @@ public class TeleportationCommands implements CommandExecutor
                 .replace("{player}", player.getName()), enteredPlayer);
     }
 
-    private void runTeleportAskAccept(CommandSender commandSender, String playerName)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runTeleportAskAccept(CommandSender commandSender, String playerName) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!commandSender.hasPermission("hyperdrive.tpa"))
-        {
+        if (!commandSender.hasPermission("hyperdrive.tpa")) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(player.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(player.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.self-teleportation-toggled"), player);
             return;
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-invalid")
                     .replace("{player}", playerName), player);
             return;
         }
 
-        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString()))
-        {
+        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-self"), player);
             return;
         }
 
-        if (!getTpaSentMap().isEmpty() && getTpaSentMap().containsKey(enteredPlayer.getUniqueId()))
-        {
+        if (!getTpaSentMap().isEmpty() && getTpaSentMap().containsKey(enteredPlayer.getUniqueId())) {
             UUID playerUniqueId = getTpaSentMap().get(enteredPlayer.getUniqueId());
-            if (playerUniqueId == null)
-            {
+            if (playerUniqueId == null) {
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-invalid")
                         .replace("{player}", enteredPlayer.getName()), player);
                 return;
             }
-        } else if (getTpaSentMap().isEmpty() || !getTpaSentMap().containsKey(enteredPlayer.getUniqueId()))
-        {
+        } else if (getTpaSentMap().isEmpty() || !getTpaSentMap().containsKey(enteredPlayer.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-invalid")
                     .replace("{player}", enteredPlayer.getName()), player);
             return;
@@ -604,18 +534,12 @@ public class TeleportationCommands implements CommandExecutor
                 animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
-        {
+        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
             String[] themeArgs = animationSet.split(":");
-            String teleportTheme = themeArgs[2];
-            if (teleportTheme.contains("/"))
-            {
-                String[] teleportThemeArgs = teleportTheme.split("/");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[1],
-                        EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
-            }
+            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                            .replace("-", "_")), 1);
         }
 
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-accept")
@@ -624,43 +548,36 @@ public class TeleportationCommands implements CommandExecutor
                 .replace("{player}", player.getName()), enteredPlayer);
     }
 
-    private void runTeleportAsk(CommandSender commandSender, String playerName)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runTeleportAsk(CommandSender commandSender, String playerName) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!commandSender.hasPermission("hyperdrive.tpa"))
-        {
+        if (!commandSender.hasPermission("hyperdrive.tpa")) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(player.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(player.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.self-teleportation-toggled"), player);
             return;
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-invalid")
                     .replace("{player}", playerName), player);
             return;
         }
 
-        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString()))
-        {
+        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-self"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(enteredPlayer.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(enteredPlayer.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-teleportation-toggled")
                     .replace("{player}", enteredPlayer.getName()), player);
             return;
@@ -672,43 +589,38 @@ public class TeleportationCommands implements CommandExecutor
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-received")
                 .replace("{player}", player.getName()), enteredPlayer);
 
-        new BukkitRunnable()
-        {
+        new BukkitRunnable() {
             @Override
-            public void run() { getTpaSentMap().remove(player.getUniqueId()); }
+            public void run() {
+                getTpaSentMap().remove(player.getUniqueId());
+            }
         }.runTaskLaterAsynchronously(getPluginInstance(), 20 * getPluginInstance().getConfig().getInt("teleportation-section.teleport-ask-duration"));
     }
 
-    private void runTeleportPosCommand(CommandSender commandSender, String xEntry, String yEntry, String zEntry, String worldName)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runTeleportPosCommand(CommandSender commandSender, String xEntry, String yEntry, String zEntry, String worldName) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!player.hasPermission("hyperdrive.admin.tppos"))
-        {
+        if (!player.hasPermission("hyperdrive.admin.tppos")) {
             player.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
             return;
         }
 
-        if (getToggledPlayers().contains(player.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(player.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.self-teleportation-toggled"), player);
             return;
         }
 
-        if (!getPluginInstance().getManager().isNumeric(xEntry) || !getPluginInstance().getManager().isNumeric(yEntry) || !getPluginInstance().getManager().isNumeric(zEntry))
-        {
+        if (!getPluginInstance().getManager().isNumeric(xEntry) || !getPluginInstance().getManager().isNumeric(yEntry) || !getPluginInstance().getManager().isNumeric(zEntry)) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.coordinate-invalid"), (Player) commandSender);
             return;
         }
 
         World world = getPluginInstance().getServer().getWorld(worldName);
-        if (world == null)
-        {
+        if (world == null) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.world-invalid"), (Player) commandSender);
             return;
         }
@@ -721,28 +633,20 @@ public class TeleportationCommands implements CommandExecutor
                 animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
-        {
+        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
             String[] themeArgs = animationSet.split(":");
-            String teleportTheme = themeArgs[2];
-            if (teleportTheme.contains("/"))
-            {
-                String[] teleportThemeArgs = teleportTheme.split("/");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[1],
-                        EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
-            }
+            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                            .replace("-", "_")), 1);
         }
 
         commandSender.sendMessage(getPluginInstance().getManager().colorText("language-section.teleported-pos")
                 .replace("{world}", world.getName()).replace("{x}", xEntry).replace("{y}", yEntry).replace("{z}", zEntry));
     }
 
-    private void runTeleportPosCommand(CommandSender commandSender, String playerName, String xEntry, String yEntry, String zEntry, String worldName)
-    {
-        if (!commandSender.hasPermission("hyperdrive.admin.tppos"))
-        {
+    private void runTeleportPosCommand(CommandSender commandSender, String playerName, String xEntry, String yEntry, String zEntry, String worldName) {
+        if (!commandSender.hasPermission("hyperdrive.admin.tppos")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.no-permission")), (Player) commandSender);
             else
@@ -751,8 +655,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-invalid")
                         .replace("{player}", playerName), (Player) commandSender);
@@ -761,8 +664,7 @@ public class TeleportationCommands implements CommandExecutor
             return;
         }
 
-        if (!getPluginInstance().getManager().isNumeric(xEntry) || !getPluginInstance().getManager().isNumeric(yEntry) || !getPluginInstance().getManager().isNumeric(zEntry))
-        {
+        if (!getPluginInstance().getManager().isNumeric(xEntry) || !getPluginInstance().getManager().isNumeric(yEntry) || !getPluginInstance().getManager().isNumeric(zEntry)) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.coordinate-invalid")
                         .replace("{player}", playerName), (Player) commandSender);
@@ -772,8 +674,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         World world = getPluginInstance().getServer().getWorld(worldName);
-        if (world == null)
-        {
+        if (world == null) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.world-invalid")
                         .replace("{player}", playerName), (Player) commandSender);
@@ -790,18 +691,12 @@ public class TeleportationCommands implements CommandExecutor
                 animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
-        {
+        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
             String[] themeArgs = animationSet.split(":");
-            String teleportTheme = themeArgs[2];
-            if (teleportTheme.contains("/"))
-            {
-                String[] teleportThemeArgs = teleportTheme.split("/");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, teleportThemeArgs[1],
-                        EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
-            }
+            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer);
+            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, themeArgs[1],
+                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                            .replace("-", "_")), 1);
         }
 
         if (commandSender instanceof Player && !((Player) commandSender).getUniqueId().toString().equals(enteredPlayer.getUniqueId().toString()))
@@ -813,31 +708,26 @@ public class TeleportationCommands implements CommandExecutor
                 .replace("{world}", world.getName()).replace("{x}", xEntry).replace("{y}", yEntry).replace("{z}", zEntry), enteredPlayer);
     }
 
-    private void runTeleportOverrideHereCommand(CommandSender commandSender, String playerName)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runTeleportOverrideHereCommand(CommandSender commandSender, String playerName) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!commandSender.hasPermission("hyperdrive.admin.tpohere"))
-        {
+        if (!commandSender.hasPermission("hyperdrive.admin.tpohere")) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
             return;
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-invalid")
                     .replace("{player}", playerName), player);
             return;
         }
 
-        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString()))
-        {
+        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-self"), player);
             return;
         }
@@ -847,31 +737,26 @@ public class TeleportationCommands implements CommandExecutor
                 .replace("{player}", enteredPlayer.getName()), player);
     }
 
-    private void runTeleportOverrideCommand(CommandSender commandSender, String playerName)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runTeleportOverrideCommand(CommandSender commandSender, String playerName) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!commandSender.hasPermission("hyperdrive.admin.tpo"))
-        {
+        if (!commandSender.hasPermission("hyperdrive.admin.tpo")) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
             return;
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-invalid")
                     .replace("{player}", playerName), player);
             return;
         }
 
-        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString()))
-        {
+        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-self"), player);
             return;
         }
@@ -881,43 +766,36 @@ public class TeleportationCommands implements CommandExecutor
                 .replace("{player}", enteredPlayer.getName()), player);
     }
 
-    private void runTeleportHereCommand(CommandSender commandSender, String playerName)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runTeleportHereCommand(CommandSender commandSender, String playerName) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!commandSender.hasPermission("hyperdrive.admin.tphere"))
-        {
+        if (!commandSender.hasPermission("hyperdrive.admin.tphere")) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(player.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(player.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.self-teleportation-toggled"), player);
             return;
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-invalid")
                     .replace("{player}", playerName), player);
             return;
         }
 
-        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString()))
-        {
+        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-self"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(enteredPlayer.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(enteredPlayer.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.toggled-tp-player")
                     .replace("{player}", enteredPlayer.getName()), player);
             return;
@@ -930,18 +808,12 @@ public class TeleportationCommands implements CommandExecutor
                 animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
-        {
+        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
             String[] themeArgs = animationSet.split(":");
-            String teleportTheme = themeArgs[2];
-            if (teleportTheme.contains("/"))
-            {
-                String[] teleportThemeArgs = teleportTheme.split("/");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, teleportThemeArgs[1],
-                        EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
-            }
+            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                            .replace("-", "_")), 1);
         }
 
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.tp-receiver")
@@ -950,10 +822,8 @@ public class TeleportationCommands implements CommandExecutor
                 .replace("{player}", player.getName()), enteredPlayer);
     }
 
-    private void runTeleportCommand(CommandSender commandSender, String playerName1, String playerName2)
-    {
-        if (!commandSender.hasPermission("hyperdrive.admin.tp"))
-        {
+    private void runTeleportCommand(CommandSender commandSender, String playerName1, String playerName2) {
+        if (!commandSender.hasPermission("hyperdrive.admin.tp")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.no-permission")), (Player) commandSender);
             else
@@ -962,8 +832,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         Player enteredPlayer1 = getPluginInstance().getServer().getPlayer(playerName1), enteredPlayer2 = getPluginInstance().getServer().getPlayer(playerName2);
-        if (enteredPlayer1 == null || !enteredPlayer1.isOnline() || enteredPlayer2 == null || !enteredPlayer2.isOnline())
-        {
+        if (enteredPlayer1 == null || !enteredPlayer1.isOnline() || enteredPlayer2 == null || !enteredPlayer2.isOnline()) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.players-invalid"), (Player) commandSender);
             else
@@ -971,8 +840,7 @@ public class TeleportationCommands implements CommandExecutor
             return;
         }
 
-        if (enteredPlayer1.getUniqueId().toString().equals(enteredPlayer2.getUniqueId().toString()))
-        {
+        if (enteredPlayer1.getUniqueId().toString().equals(enteredPlayer2.getUniqueId().toString())) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-same"), (Player) commandSender);
             else
@@ -981,8 +849,7 @@ public class TeleportationCommands implements CommandExecutor
         }
 
         if (commandSender instanceof Player && ((Player) commandSender).getUniqueId().toString().equals(enteredPlayer1.getUniqueId().toString())
-                && ((Player) commandSender).getUniqueId().toString().equals(enteredPlayer2.getUniqueId().toString()))
-        {
+                && ((Player) commandSender).getUniqueId().toString().equals(enteredPlayer2.getUniqueId().toString())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-self"), (Player) commandSender);
             return;
         }
@@ -994,18 +861,12 @@ public class TeleportationCommands implements CommandExecutor
                 animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             enteredPlayer1.getWorld().playSound(enteredPlayer1.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
-        {
+        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
             String[] themeArgs = animationSet.split(":");
-            String teleportTheme = themeArgs[2];
-            if (teleportTheme.contains("/"))
-            {
-                String[] teleportThemeArgs = teleportTheme.split("/");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer1);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer1, teleportThemeArgs[1],
-                        EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
-            }
+            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer1);
+            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer1, themeArgs[1],
+                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                            .replace("-", "_")), 1);
         }
 
         getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.tp-receiver"))
@@ -1014,43 +875,36 @@ public class TeleportationCommands implements CommandExecutor
                 .replace("{player}", enteredPlayer2.getName()), enteredPlayer1);
     }
 
-    private void runTeleportCommand(CommandSender commandSender, String playerName)
-    {
-        if (!(commandSender instanceof Player))
-        {
+    private void runTeleportCommand(CommandSender commandSender, String playerName) {
+        if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
-        if (!commandSender.hasPermission("hyperdrive.admin.tp"))
-        {
+        if (!commandSender.hasPermission("hyperdrive.admin.tp")) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(player.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(player.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.self-teleportation-toggled"), player);
             return;
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline())
-        {
+        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-invalid")
                     .replace("{player}", playerName), player);
             return;
         }
 
-        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString()))
-        {
+        if (enteredPlayer.getUniqueId().toString().equals(player.getUniqueId().toString())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-self"), player);
             return;
         }
 
-        if (getToggledPlayers().contains(enteredPlayer.getUniqueId()))
-        {
+        if (getToggledPlayers().contains(enteredPlayer.getUniqueId())) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.toggled-tp-player")
                     .replace("{player}", enteredPlayer.getName()), player);
             return;
@@ -1063,18 +917,12 @@ public class TeleportationCommands implements CommandExecutor
                 animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))
             player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
-        {
+        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
             String[] themeArgs = animationSet.split(":");
-            String teleportTheme = themeArgs[2];
-            if (teleportTheme.contains("/"))
-            {
-                String[] teleportThemeArgs = teleportTheme.split("/");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[1],
-                        EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
-            }
+            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                            .replace("-", "_")), 1);
         }
 
         getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.tp-victim"))
@@ -1084,10 +932,8 @@ public class TeleportationCommands implements CommandExecutor
     }
 
     // helping methods
-    public boolean hasRequestPending(Player player)
-    {
-        if (!getTpaSentMap().isEmpty() && getTpaSentMap().containsKey(player.getUniqueId()))
-        {
+    public boolean hasRequestPending(Player player) {
+        if (!getTpaSentMap().isEmpty() && getTpaSentMap().containsKey(player.getUniqueId())) {
             UUID playerUniqueId = getTpaSentMap().get(player.getUniqueId());
             return playerUniqueId != null;
         }
@@ -1095,20 +941,16 @@ public class TeleportationCommands implements CommandExecutor
         return false;
     }
 
-    private void updateTeleportAskRequest(Player sender, Player receiver)
-    {
+    private void updateTeleportAskRequest(Player sender, Player receiver) {
         getTpaSentMap().put(sender.getUniqueId(), receiver.getUniqueId());
     }
 
-    public void updateLastLocation(Player player, Location location)
-    {
+    public void updateLastLocation(Player player, Location location) {
         getLastLocationMap().put(player.getUniqueId(), new SerializableLocation(location));
     }
 
-    public Location getLastLocation(Player player)
-    {
-        if (!getLastLocationMap().isEmpty() && getLastLocationMap().containsKey(player.getUniqueId()))
-        {
+    public Location getLastLocation(Player player) {
+        if (!getLastLocationMap().isEmpty() && getLastLocationMap().containsKey(player.getUniqueId())) {
             SerializableLocation serializableLocation = getLastLocationMap().get(player.getUniqueId());
             if (serializableLocation != null) return serializableLocation.asBukkitLocation();
         }
@@ -1117,43 +959,35 @@ public class TeleportationCommands implements CommandExecutor
     }
 
     // getters & setters
-    private HyperDrive getPluginInstance()
-    {
+    private HyperDrive getPluginInstance() {
         return pluginInstance;
     }
 
-    private void setPluginInstance(HyperDrive pluginInstance)
-    {
+    private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
 
-    public List<UUID> getToggledPlayers()
-    {
+    public List<UUID> getToggledPlayers() {
         return toggledPlayers;
     }
 
-    private void setToggledPlayers(List<UUID> toggledPlayers)
-    {
+    private void setToggledPlayers(List<UUID> toggledPlayers) {
         this.toggledPlayers = toggledPlayers;
     }
 
-    private HashMap<UUID, UUID> getTpaSentMap()
-    {
+    private HashMap<UUID, UUID> getTpaSentMap() {
         return tpaSentMap;
     }
 
-    private void setTpaSentMap(HashMap<UUID, UUID> tpaSentMap)
-    {
+    private void setTpaSentMap(HashMap<UUID, UUID> tpaSentMap) {
         this.tpaSentMap = tpaSentMap;
     }
 
-    private HashMap<UUID, SerializableLocation> getLastLocationMap()
-    {
+    private HashMap<UUID, SerializableLocation> getLastLocationMap() {
         return lastLocationMap;
     }
 
-    private void setLastLocationMap(HashMap<UUID, SerializableLocation> lastLocationMap)
-    {
+    private void setLastLocationMap(HashMap<UUID, SerializableLocation> lastLocationMap) {
         this.lastLocationMap = lastLocationMap;
     }
 }
