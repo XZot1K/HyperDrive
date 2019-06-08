@@ -141,6 +141,8 @@ language-section:
 mysql-connection:
   # If this option is enabled, HyperDrive will enable cross-server teleportation and MySQL warp saving/loading.
   use-mysql: false
+  # If this is enabled HyperDrive will attempt to allow cross-server warping (WARNING: All instances will load all warps to gain full control).
+  cross-server-warping: false
   # Below, define your MySQL information. THE DEFINED DATABASE MUST ALREADY EXIST.
   database-name: "hyperdrive"
   host: "localhost"

@@ -118,17 +118,24 @@ public class TeleportationHandler implements Runnable {
                                             && !warp.getAssistants().contains(player.getUniqueId()))
                                         warp.setTraffic(warp.getTraffic() + 1);
 
-                                    boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-                                    if ((getPluginInstance().getConnection() == null && !useMySQL) || warp.getServerIPAddress().replace("localhost", "127.0.0.1")
-                                            .equalsIgnoreCase((getPluginInstance().getServer().getIp() + ":" + getPluginInstance().getServer().getPort()).replace("localhost", "127.0.0.1"))) {
-                                        teleportPlayer(player, warpLocation);
-                                        getPluginInstance().getManager().updateCooldown(player, "warp");
-                                    } else {
-                                        getPluginInstance().getManager().teleportCrossServer(player, warp.getServerIPAddress(),
-                                                getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress()),
-                                                warp.getWarpLocation().asBukkitLocation());
+                                    boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"),
+                                            useCrossWarping = getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server-warping");
+
+                                    if (useCrossWarping && useMySQL && getPluginInstance().getConnection() != null
+                                            && warp.getServerIPAddress().replace("localhost", "127.0.0.1")
+                                            .equalsIgnoreCase(getPluginInstance().getServer().getIp()
+                                                    .replace("localhost", "127.0.0.1") + ":"
+                                                    + getPluginInstance().getServer().getPort())) {
+                                        String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
+                                        if (server != null)
+                                            getPluginInstance().getManager().teleportCrossServer(player, warp.getServerIPAddress(),
+                                                    server, warp.getWarpLocation().asBukkitLocation());
+                                        else teleportPlayer(player, warpLocation);
                                         getPluginInstance().getManager().updateCooldown(player, "warp");
                                         return;
+                                    } else {
+                                        teleportPlayer(player, warpLocation);
+                                        getPluginInstance().getManager().updateCooldown(player, "warp");
                                     }
 
                                     // Warp teleport animation

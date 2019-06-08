@@ -141,6 +141,8 @@ language-section:
 mysql-connection:
   # If this option is enabled, HyperDrive will enable cross-server teleportation and MySQL warp saving/loading.
   use-mysql: false
+  # If this is enabled HyperDrive will attempt to allow cross-server warping (WARNING: All instances will load all warps to gain full control).
+  cross-server-warping: false
   # Below, define your MySQL information. THE DEFINED DATABASE MUST ALREADY EXIST.
   database-name: "hyperdrive"
   host: "localhost"
@@ -173,7 +175,7 @@ general-section:
   # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
   global-sounds:
     # This is the sound played when a player is teleported.
-    teleport: "ENTITY_ENDERMAN_TELEPORT"
+    teleport: "ENTITY_ENDERMEN_TELEPORT"
   # This is the color that will be placed in front of the header of newly created HyperDrive signs.
   # (Note: ONLY use color codes)
   sign-header-color: "&d"
@@ -453,7 +455,7 @@ list-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 0
-        permission: ""
+      permission: ""
       display-name: "&cPrevious Page"
       lore:
         - ""
