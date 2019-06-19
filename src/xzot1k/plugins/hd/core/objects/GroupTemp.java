@@ -14,15 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class GroupTemp
-{
+public class GroupTemp {
     private HyperDrive pluginInstance;
-    private SerializableLocation destination;
+    private Destination destination;
     private boolean cancelled;
     private List<UUID> selectedPlayers, acceptedPlayers;
 
-    public GroupTemp(HyperDrive pluginInstance, Player player, SerializableLocation destination)
-    {
+    public GroupTemp(HyperDrive pluginInstance, Player player, Destination destination) {
         setPluginInstance(pluginInstance);
         setAcceptedPlayers(new ArrayList<>());
         setCancelled(false);
@@ -34,49 +32,43 @@ public class GroupTemp
         createTask(player);
     }
 
-    private void createTask(Player player)
-    {
-        if (getSelectedPlayers() == null || getSelectedPlayers().isEmpty())
-        {
+    private void createTask(Player player) {
+        if (getSelectedPlayers() == null || getSelectedPlayers().isEmpty()) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-selection-fail"), player);
             return;
         }
 
-        GroupTeleportEvent groupTeleportEvent = new GroupTeleportEvent(getPluginInstance(), getDestination().asBukkitLocation(), player, getAcceptedPlayers());
+        GroupTeleportEvent groupTeleportEvent = new GroupTeleportEvent(getPluginInstance(), getDestination().getLocation().asBukkitLocation(), player, getAcceptedPlayers());
         getPluginInstance().getServer().getPluginManager().callEvent(groupTeleportEvent);
         if (groupTeleportEvent.isCancelled()) return;
         if (groupTeleportEvent.getDestination() != null)
-            setDestination(new SerializableLocation(groupTeleportEvent.getDestination()));
+            setDestination(new Destination(getPluginInstance(), groupTeleportEvent.getDestination()));
 
-        new BukkitRunnable()
-        {
+        new BukkitRunnable() {
             int time = 0;
             int duration = getPluginInstance().getConfig().getInt("teleportation-section.group-request-duration");
             String animationSet = getPluginInstance().getConfig().getString("special-effects-section.group-teleport-animation"),
                     teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                             .toUpperCase().replace(" ", "_").replace("-", "_");
+            boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"),
+                    useCrossWarping = getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server-warping");
 
             @Override
-            public void run()
-            {
+            public void run() {
                 time += 1;
 
-                if (cancelled)
-                {
+                if (cancelled) {
                     getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
                     getPluginInstance().getTeleportationHandler().clearGroupTemp(player);
                     cancel();
                     return;
                 }
 
-                if (time >= duration)
-                {
-                    if (!getAcceptedPlayers().isEmpty())
-                    {
+                if (time >= duration) {
+                    if (!getAcceptedPlayers().isEmpty()) {
 
-                        SerializableLocation serializableLocation = getDestination();
-                        if (serializableLocation == null)
-                        {
+                        SerializableLocation serializableLocation = getDestination().getLocation();
+                        if (serializableLocation == null) {
                             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.group-destination-teleport-fail"), player);
                             getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
                             getPluginInstance().getTeleportationHandler().clearGroupTemp(player);
@@ -84,23 +76,48 @@ public class GroupTemp
                             return;
                         }
 
-                        Location destinationLocation = getDestination().asBukkitLocation();
-                        if (destinationLocation != null)
-                        {
+                        Location destinationLocation = getDestination().getLocation().asBukkitLocation();
+                        if (destinationLocation != null) {
                             int teleportCount = 0;
-                            for (int i = -1; ++i < getAcceptedPlayers().size(); )
-                            {
+                            for (int i = -1; ++i < getAcceptedPlayers().size(); ) {
                                 UUID playerUniqueId = getAcceptedPlayers().get(i);
                                 if (playerUniqueId == null) continue;
 
                                 OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
                                 if (offlinePlayer == null || !offlinePlayer.isOnline()) continue;
 
-                                getPluginInstance().getTeleportationHandler().teleportPlayer(offlinePlayer.getPlayer(), destinationLocation);
+                                if (useCrossWarping && useMySQL && getPluginInstance().getConnection() != null) {
+                                    if (getDestination().getWarp() != null) {
+                                        String warpIP = getDestination().getWarp().getServerIPAddress().replace("localhost", "127.0.0.1"),
+                                                serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
+                                                        || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0")) ?
+                                                        getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort() :
+                                                        (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
+
+                                        if (!warpIP.equalsIgnoreCase(serverIP)) {
+                                            String server = getPluginInstance().getBungeeListener().getServerName(getDestination().getWarp().getServerIPAddress());
+                                            if (server != null) {
+                                                getPluginInstance().getManager().teleportCrossServer(offlinePlayer.getPlayer(), getDestination().getWarp().getServerIPAddress(),
+                                                        server, getDestination().getWarp().getWarpLocation().asBukkitLocation());
+                                                getPluginInstance().getManager().updateCooldown(offlinePlayer.getPlayer(), "warp");
+                                                return;
+                                            }
+                                        }
+                                    }
+
+                                    getPluginInstance().getTeleportationHandler().teleportPlayer(offlinePlayer.getPlayer(), destinationLocation);
+                                    getPluginInstance().getManager().updateCooldown(offlinePlayer.getPlayer(), "warp");
+                                    return;
+                                } else {
+                                    getPluginInstance().getTeleportationHandler().teleportPlayer(offlinePlayer.getPlayer(), destinationLocation);
+                                    getPluginInstance().getManager().updateCooldown(offlinePlayer.getPlayer(), "warp");
+                                }
+
+
+
                                 if (!teleportSound.equalsIgnoreCase(""))
                                     player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-                                if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
-                                {
+                                if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
                                     String[] themeArgs = animationSet.split(":");
                                     getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
                                     getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
@@ -113,11 +130,36 @@ public class GroupTemp
                                         .replace("{player}", player.getName()), offlinePlayer.getPlayer());
                             }
 
-                            getPluginInstance().getTeleportationHandler().teleportPlayer(player, destinationLocation);
+                            if (useCrossWarping && useMySQL && getPluginInstance().getConnection() != null) {
+                                if (getDestination().getWarp() != null) {
+                                    String warpIP = getDestination().getWarp().getServerIPAddress().replace("localhost", "127.0.0.1"),
+                                            serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
+                                                    || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0")) ?
+                                                    getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort() :
+                                                    (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
+
+                                    if (!warpIP.equalsIgnoreCase(serverIP)) {
+                                        String server = getPluginInstance().getBungeeListener().getServerName(getDestination().getWarp().getServerIPAddress());
+                                        if (server != null) {
+                                            getPluginInstance().getManager().teleportCrossServer(player, getDestination().getWarp().getServerIPAddress(),
+                                                    server, getDestination().getWarp().getWarpLocation().asBukkitLocation());
+                                            getPluginInstance().getManager().updateCooldown(player, "warp");
+                                            return;
+                                        }
+                                    }
+                                }
+
+                                getPluginInstance().getTeleportationHandler().teleportPlayer(player, destinationLocation);
+                                getPluginInstance().getManager().updateCooldown(player, "warp");
+                                return;
+                            } else {
+                                getPluginInstance().getTeleportationHandler().teleportPlayer(player, destinationLocation);
+                                getPluginInstance().getManager().updateCooldown(player, "warp");
+                            }
+
                             if (!teleportSound.equalsIgnoreCase(""))
                                 player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-                            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":"))
-                            {
+                            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
                                 String[] themeArgs = animationSet.split(":");
                                 getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
                                 getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
@@ -144,53 +186,43 @@ public class GroupTemp
     }
 
     // getters & setters
-    private HyperDrive getPluginInstance()
-    {
+    private HyperDrive getPluginInstance() {
         return pluginInstance;
     }
 
-    private void setPluginInstance(HyperDrive pluginInstance)
-    {
+    private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
 
-    public List<UUID> getSelectedPlayers()
-    {
+    public List<UUID> getSelectedPlayers() {
         return selectedPlayers;
     }
 
-    private void setSelectedPlayers(List<UUID> selectedPlayers)
-    {
+    private void setSelectedPlayers(List<UUID> selectedPlayers) {
         this.selectedPlayers = selectedPlayers;
     }
 
-    public List<UUID> getAcceptedPlayers()
-    {
+    public List<UUID> getAcceptedPlayers() {
         return acceptedPlayers;
     }
 
-    private void setAcceptedPlayers(List<UUID> acceptedPlayers)
-    {
+    private void setAcceptedPlayers(List<UUID> acceptedPlayers) {
         this.acceptedPlayers = acceptedPlayers;
     }
 
-    public SerializableLocation getDestination()
-    {
+    public Destination getDestination() {
         return destination;
     }
 
-    public void setDestination(SerializableLocation destination)
-    {
+    public void setDestination(Destination destination) {
         this.destination = destination;
     }
 
-    public boolean isCancelled()
-    {
+    public boolean isCancelled() {
         return cancelled;
     }
 
-    public void setCancelled(boolean cancelled)
-    {
+    public void setCancelled(boolean cancelled) {
         this.cancelled = cancelled;
     }
 }

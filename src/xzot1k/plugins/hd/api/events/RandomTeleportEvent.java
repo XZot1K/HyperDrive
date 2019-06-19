@@ -7,72 +7,61 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import xzot1k.plugins.hd.HyperDrive;
 
-public class RandomTeleportEvent extends Event implements Cancellable
-{
+public class RandomTeleportEvent extends Event implements Cancellable {
     private HyperDrive pluginInstance;
-    private HandlerList handlers;
+    private static HandlerList handlers;
     private boolean cancelled;
     private Location location;
     private Player player;
 
-    public RandomTeleportEvent(HyperDrive pluginInstance, Location location, Player player)
-    {
+    public RandomTeleportEvent(HyperDrive pluginInstance, Location location, Player player) {
         setPluginInstance(pluginInstance);
-        setHandlers(new HandlerList());
+        handlers = new HandlerList();
         setCancelled(false);
         setLocation(location);
         setPlayer(player);
     }
 
-    public HandlerList getHandlers()
-    {
-        return handlers;
-    }
-
-    private HyperDrive getPluginInstance()
-    {
+    private HyperDrive getPluginInstance() {
         return pluginInstance;
     }
 
-    private void setPluginInstance(HyperDrive pluginInstance)
-    {
+    private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
 
-    private void setHandlers(HandlerList handlers)
-    {
-        this.handlers = handlers;
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
     }
 
     @Override
-    public boolean isCancelled()
-    {
+    public boolean isCancelled() {
         return cancelled;
     }
 
     @Override
-    public void setCancelled(boolean cancelled)
-    {
+    public void setCancelled(boolean cancelled) {
         this.cancelled = cancelled;
     }
 
-    public Location getLocation()
-    {
+    public Location getLocation() {
         return location;
     }
 
-    public void setLocation(Location location)
-    {
+    public void setLocation(Location location) {
         this.location = location;
     }
 
-    public Player getPlayer()
-    {
+    public Player getPlayer() {
         return player;
     }
 
-    private void setPlayer(Player player)
-    {
+    private void setPlayer(Player player) {
         this.player = player;
+    }
+
+    public static HandlerList getHandlerList() {
+        return handlers;
     }
 }

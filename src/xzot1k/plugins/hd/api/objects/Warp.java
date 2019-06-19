@@ -14,8 +14,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 
-public class Warp
-{
+public class Warp {
     private HyperDrive pluginInstance;
     private SerializableLocation warpLocation;
     private String warpName, creationDate, iconTheme, animationSet, serverIPAddress;
@@ -28,16 +27,18 @@ public class Warp
     private double usagePrice;
     private boolean enchantedLook;
 
-    public Warp(String warpName, OfflinePlayer player, Location location)
-    {
+    public Warp(String warpName, OfflinePlayer player, Location location) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
         setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setOwner(player.getUniqueId());
         setWarpLocation(location);
         setTraffic(0);
-        setServerIPAddress(getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp()
-                + ":" + getPluginInstance().getServer().getPort());
+        if (!getPluginInstance().getServer().getIp().equalsIgnoreCase(""))
+            setServerIPAddress((getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp())
+                    + ":" + getPluginInstance().getServer().getPort());
+        else
+            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
 
         List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
         setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
@@ -61,14 +62,16 @@ public class Warp
         setAssistants(new ArrayList<>());
     }
 
-    public Warp(String warpName, Location location)
-    {
+    public Warp(String warpName, Location location) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
         setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setWarpLocation(location);
-        setServerIPAddress(getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp()
-                + ":" + getPluginInstance().getServer().getPort());
+        if (!getPluginInstance().getServer().getIp().equalsIgnoreCase(""))
+            setServerIPAddress((getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp())
+                    + ":" + getPluginInstance().getServer().getPort());
+        else
+            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
 
         List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
         setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
@@ -92,15 +95,17 @@ public class Warp
         setAssistants(new ArrayList<>());
     }
 
-    public Warp(String warpName, OfflinePlayer player, SerializableLocation serializableLocation)
-    {
+    public Warp(String warpName, OfflinePlayer player, SerializableLocation serializableLocation) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
         setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setOwner(player.getUniqueId());
         setWarpLocation(serializableLocation);
-        setServerIPAddress(getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp()
-                + ":" + getPluginInstance().getServer().getPort());
+        if (!getPluginInstance().getServer().getIp().equalsIgnoreCase(""))
+            setServerIPAddress((getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp())
+                    + ":" + getPluginInstance().getServer().getPort());
+        else
+            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
 
         List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
         setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
@@ -124,14 +129,16 @@ public class Warp
         setAssistants(new ArrayList<>());
     }
 
-    public Warp(String warpName, SerializableLocation serializableLocation)
-    {
+    public Warp(String warpName, SerializableLocation serializableLocation) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
         setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setWarpLocation(serializableLocation);
-        setServerIPAddress(getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp()
-                + ":" + getPluginInstance().getServer().getPort());
+        if (!getPluginInstance().getServer().getIp().equalsIgnoreCase(""))
+            setServerIPAddress((getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp())
+                    + ":" + getPluginInstance().getServer().getPort());
+        else
+            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
 
         List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
         setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
@@ -155,231 +162,192 @@ public class Warp
         setAssistants(new ArrayList<>());
     }
 
-    public void register()
-    {
+    public void register() {
         getPluginInstance().getManager().getWarpMap().put(getWarpName().toLowerCase(), this);
     }
 
-    public void unRegister()
-    {
+    public void unRegister() {
         if (!getPluginInstance().getManager().getWarpMap().isEmpty())
             getPluginInstance().getManager().getWarpMap().remove(getWarpName().toLowerCase());
     }
 
-    public void deleteSaved(boolean async)
-    {
+    public void deleteSaved(boolean async) {
         if (!async) delete();
         else getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), this::delete);
     }
 
-    private void delete()
-    {
-        if (getPluginInstance().getConnection() == null)
-        {
+    private void delete() {
+        if (getPluginInstance().getConnection() == null) {
             File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
             if (!file.exists()) return;
 
             YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(file);
             yamlConfiguration.set("warps." + getWarpName(), null);
-            try { yamlConfiguration.save(file); } catch (IOException e) { e.printStackTrace(); }
+            try {
+                yamlConfiguration.save(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return;
         }
 
-        try
-        {
+        try {
             PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement("delete from warps where name = '" + getWarpName() + "'");
             preparedStatement.executeUpdate();
             preparedStatement.close();
-        } catch (SQLException e)
-        {
+        } catch (SQLException e) {
             e.printStackTrace();
             getPluginInstance().log(Level.WARNING, "There was an issue deleting the warp " + getWarpName() + " from the MySQL database.");
         }
     }
 
     // getters & setters
-    public SerializableLocation getWarpLocation()
-    {
+    public SerializableLocation getWarpLocation() {
         return warpLocation;
     }
 
-    public void setWarpLocation(Location warpLocation)
-    {
+    public void setWarpLocation(Location warpLocation) {
         this.warpLocation = new SerializableLocation(warpLocation);
     }
 
-    public void setWarpLocation(SerializableLocation warpLocation)
-    {
+    public void setWarpLocation(SerializableLocation warpLocation) {
         this.warpLocation = warpLocation;
     }
 
-    public String getWarpName()
-    {
+    public String getWarpName() {
         return warpName;
     }
 
-    public void setWarpName(String warpName)
-    {
+    public void setWarpName(String warpName) {
         this.warpName = warpName;
     }
 
-    private HyperDrive getPluginInstance()
-    {
+    private HyperDrive getPluginInstance() {
         return pluginInstance;
     }
 
-    private void setPluginInstance(HyperDrive pluginInstance)
-    {
+    private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
 
-    public ChatColor getDisplayNameColor()
-    {
+    public ChatColor getDisplayNameColor() {
         return displayNameColor;
     }
 
-    public void setDisplayNameColor(ChatColor displayNameColor)
-    {
+    public void setDisplayNameColor(ChatColor displayNameColor) {
         this.displayNameColor = displayNameColor;
     }
 
-    public List<String> getDescription()
-    {
+    public List<String> getDescription() {
         return description;
     }
 
-    public void setDescription(List<String> description)
-    {
+    public void setDescription(List<String> description) {
         this.description = description;
     }
 
-    public EnumContainer.Status getStatus()
-    {
+    public EnumContainer.Status getStatus() {
         return status;
     }
 
-    public void setStatus(EnumContainer.Status status)
-    {
+    public void setStatus(EnumContainer.Status status) {
         this.status = status;
     }
 
-    public UUID getOwner()
-    {
+    public UUID getOwner() {
         return owner;
     }
 
-    public void setOwner(UUID owner)
-    {
+    public void setOwner(UUID owner) {
         this.owner = owner;
     }
 
-    public double getUsagePrice()
-    {
+    public double getUsagePrice() {
         return usagePrice;
     }
 
-    public void setUsagePrice(double usagePrice)
-    {
+    public void setUsagePrice(double usagePrice) {
         this.usagePrice = usagePrice;
     }
 
-    public List<UUID> getWhiteList()
-    {
+    public List<UUID> getWhiteList() {
         return whiteList;
     }
 
-    public void setWhiteList(List<UUID> whiteList)
-    {
+    public void setWhiteList(List<UUID> whiteList) {
         this.whiteList = whiteList;
     }
 
-    public boolean hasIconEnchantedLook()
-    {
+    public boolean hasIconEnchantedLook() {
         return enchantedLook;
     }
 
-    public void setIconEnchantedLook(boolean enchantedLook)
-    {
+    public void setIconEnchantedLook(boolean enchantedLook) {
         this.enchantedLook = enchantedLook;
     }
 
-    public List<String> getCommands()
-    {
+    public List<String> getCommands() {
         return commands;
     }
 
-    public void setCommands(List<String> commands)
-    {
+    public void setCommands(List<String> commands) {
         this.commands = commands;
     }
 
-    public List<UUID> getAssistants()
-    {
+    public List<UUID> getAssistants() {
         return assistants;
     }
 
-    public void setAssistants(List<UUID> assistants)
-    {
+    public void setAssistants(List<UUID> assistants) {
         this.assistants = assistants;
     }
 
-    public String getCreationDate()
-    {
+    public String getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(String creationDate)
-    {
+    public void setCreationDate(String creationDate) {
         this.creationDate = creationDate;
     }
 
-    public String getIconTheme()
-    {
+    public String getIconTheme() {
         return iconTheme;
     }
 
-    public void setIconTheme(String iconTheme)
-    {
+    public void setIconTheme(String iconTheme) {
         this.iconTheme = iconTheme;
     }
 
-    public String getAnimationSet()
-    {
+    public String getAnimationSet() {
         return animationSet;
     }
 
-    public void setAnimationSet(String animationSet)
-    {
+    public void setAnimationSet(String animationSet) {
         this.animationSet = animationSet;
     }
 
-    public String getServerIPAddress()
-    {
-        return serverIPAddress;
+    public String getServerIPAddress() {
+        return serverIPAddress.replace("localhost", "127.0.0.1")
+                .replace("0.0.0.0", getPluginInstance().getConfig().getString("mysql-connection.default-ip"));
     }
 
-    public void setServerIPAddress(String serverIPAddress)
-    {
+    public void setServerIPAddress(String serverIPAddress) {
         this.serverIPAddress = serverIPAddress;
     }
 
-    public ChatColor getDescriptionColor()
-    {
+    public ChatColor getDescriptionColor() {
         return descriptionColor;
     }
 
-    public void setDescriptionColor(ChatColor descriptionColor)
-    {
+    public void setDescriptionColor(ChatColor descriptionColor) {
         this.descriptionColor = descriptionColor;
     }
 
-    public int getTraffic()
-    {
+    public int getTraffic() {
         return traffic;
     }
 
-    public void setTraffic(int traffic)
-    {
+    public void setTraffic(int traffic) {
         this.traffic = traffic;
     }
 }

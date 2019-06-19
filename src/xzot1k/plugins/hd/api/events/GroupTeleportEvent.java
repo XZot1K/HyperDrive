@@ -10,84 +10,71 @@ import xzot1k.plugins.hd.HyperDrive;
 import java.util.List;
 import java.util.UUID;
 
-public class GroupTeleportEvent extends Event implements Cancellable
-{
+public class GroupTeleportEvent extends Event implements Cancellable {
     private HyperDrive pluginInstance;
-    private HandlerList handlers;
+    private static HandlerList handlers;
     private boolean cancelled;
     private Location destination;
     private Player groupLeader;
     private List<UUID> groupMemberIds;
 
-    public GroupTeleportEvent(HyperDrive pluginInstance, Location destination, Player groupLeader, List<UUID> groupMemberIds)
-    {
+    public GroupTeleportEvent(HyperDrive pluginInstance, Location destination, Player groupLeader, List<UUID> groupMemberIds) {
         setPluginInstance(pluginInstance);
-        setHandlers(new HandlerList());
+        handlers = new HandlerList();
         setCancelled(false);
         setDestination(destination);
         setGroupLeader(groupLeader);
         setGroupMemberIds(groupMemberIds);
     }
 
-    public HandlerList getHandlers()
-    {
-        return handlers;
-    }
-
-    private HyperDrive getPluginInstance()
-    {
+    private HyperDrive getPluginInstance() {
         return pluginInstance;
     }
 
-    private void setPluginInstance(HyperDrive pluginInstance)
-    {
+    private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
 
-    private void setHandlers(HandlerList handlers)
-    {
-        this.handlers = handlers;
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
     }
 
     @Override
-    public boolean isCancelled()
-    {
+    public boolean isCancelled() {
         return cancelled;
     }
 
     @Override
-    public void setCancelled(boolean cancelled)
-    {
+    public void setCancelled(boolean cancelled) {
         this.cancelled = cancelled;
     }
 
-    public List<UUID> getGroupMemberIds()
-    {
+    public List<UUID> getGroupMemberIds() {
         return groupMemberIds;
     }
 
-    private void setGroupMemberIds(List<UUID> groupMemberIds)
-    {
+    private void setGroupMemberIds(List<UUID> groupMemberIds) {
         this.groupMemberIds = groupMemberIds;
     }
 
-    public Player getGroupLeader()
-    {
+    public Player getGroupLeader() {
         return groupLeader;
     }
 
-    private void setGroupLeader(Player groupLeader)
-    {
+    private void setGroupLeader(Player groupLeader) {
         this.groupLeader = groupLeader;
     }
 
-    public Location getDestination()
-    {
+    public Location getDestination() {
         return destination;
     }
 
-    public void setDestination(Location destination)
-    {
+    public void setDestination(Location destination) {
         this.destination = destination;
+    }
+
+    public static HandlerList getHandlerList() {
+        return handlers;
     }
 }

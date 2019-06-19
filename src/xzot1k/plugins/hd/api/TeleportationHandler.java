@@ -27,11 +27,11 @@ import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.events.HookCheckEvent;
 import xzot1k.plugins.hd.api.events.RandomTeleportEvent;
 import xzot1k.plugins.hd.api.events.WarpEvent;
-import xzot1k.plugins.hd.api.objects.SerializableLocation;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.internals.Animation;
 import xzot1k.plugins.hd.core.internals.hooks.worldguard.WG_6;
 import xzot1k.plugins.hd.core.internals.hooks.worldguard.WG_7;
+import xzot1k.plugins.hd.core.objects.Destination;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
 import xzot1k.plugins.hd.core.objects.TeleportTemp;
 
@@ -42,7 +42,7 @@ public class TeleportationHandler implements Runnable {
     private Animation animation;
     private HashMap<UUID, GroupTemp> groupTempMap;
     private HashMap<UUID, TeleportTemp> teleportTempMap;
-    private HashMap<UUID, SerializableLocation> destinationMap;
+    private HashMap<UUID, Destination> destinationMap;
     private List<UUID> randomTeleportingPlayers;
 
     public TeleportationHandler(HyperDrive pluginInstance) {
@@ -121,18 +121,25 @@ public class TeleportationHandler implements Runnable {
                                     boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"),
                                             useCrossWarping = getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server-warping");
 
-                                    if (useCrossWarping && useMySQL && getPluginInstance().getConnection() != null
-                                            && warp.getServerIPAddress().replace("localhost", "127.0.0.1")
-                                            .equalsIgnoreCase(getPluginInstance().getServer().getIp()
-                                                    .replace("localhost", "127.0.0.1") + ":"
-                                                    + getPluginInstance().getServer().getPort())) {
-                                        String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
-                                        if (server != null)
-                                            getPluginInstance().getManager().teleportCrossServer(player, warp.getServerIPAddress(),
-                                                    server, warp.getWarpLocation().asBukkitLocation());
-                                        else teleportPlayer(player, warpLocation);
+                                    if (useCrossWarping && useMySQL && getPluginInstance().getConnection() != null) {
+                                        String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
+                                                serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
+                                                        || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0")) ?
+                                                        getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort() :
+                                                        (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
+
+                                        if (!warpIP.equalsIgnoreCase(serverIP)) {
+                                            String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
+                                            if (server != null) {
+                                                getPluginInstance().getManager().teleportCrossServer(player, warp.getServerIPAddress(),
+                                                        server, warp.getWarpLocation().asBukkitLocation());
+                                                getPluginInstance().getManager().updateCooldown(player, "warp");
+                                                return;
+                                            }
+                                        }
+
+                                        teleportPlayer(player, warpLocation);
                                         getPluginInstance().getManager().updateCooldown(player, "warp");
-                                        return;
                                     } else {
                                         teleportPlayer(player, warpLocation);
                                         getPluginInstance().getManager().updateCooldown(player, "warp");
@@ -514,7 +521,7 @@ public class TeleportationHandler implements Runnable {
 
                     if (!isForbidden) {
                         Location newLocation = new Location(finalBasedLocation.getWorld(), x, safeY, z, finalBasedLocation.getYaw(), finalBasedLocation.getPitch());
-                        updateDestination(player, new SerializableLocation(newLocation.add(0.5, 0, 0.5)));
+                        updateDestination(player, new Destination(getPluginInstance(), newLocation.add(0.5, 0, 0.5)));
                         foundSafeLocation = true;
                         cancel();
                     }
@@ -612,7 +619,6 @@ public class TeleportationHandler implements Runnable {
     }
 
     // group stuff
-
     /**
      * Returns the GroupTemp the passed player id has accepted.
      *
@@ -685,18 +691,18 @@ public class TeleportationHandler implements Runnable {
         return uuidList;
     }
 
-    public void createGroupTemp(Player player, SerializableLocation destination) {
+    public void createGroupTemp(Player player, Destination destination) {
         GroupTemp groupTemp = new GroupTemp(getPluginInstance(), player, destination);
         getGroupTempMap().put(player.getUniqueId(), groupTemp);
     }
 
-    public SerializableLocation getDestination(Player player) {
+    public Destination getDestination(Player player) {
         if (!getDestinationMap().isEmpty() && getDestinationMap().containsKey(player.getUniqueId()))
             return getDestinationMap().get(player.getUniqueId());
         return null;
     }
 
-    public void updateDestination(Player player, SerializableLocation destination) {
+    public void updateDestination(Player player, Destination destination) {
         getDestinationMap().put(player.getUniqueId(), destination);
     }
 
@@ -741,11 +747,11 @@ public class TeleportationHandler implements Runnable {
         this.groupTempMap = groupTempMap;
     }
 
-    public HashMap<UUID, SerializableLocation> getDestinationMap() {
+    public HashMap<UUID, Destination> getDestinationMap() {
         return destinationMap;
     }
 
-    private void setDestinationMap(HashMap<UUID, SerializableLocation> destinationMap) {
+    private void setDestinationMap(HashMap<UUID, Destination> destinationMap) {
         this.destinationMap = destinationMap;
     }
 }

@@ -135,14 +135,24 @@ language-section:
   warp-ip-set: "&a{count} &ewarps have had their IP Addresses set to &a{set-ip} &efrom &a{initial-ip}&e."
   ip-ping-fail: "&cUnable to warp to the warp &e{warp} &cbecause the IP Address &e{ip} &cis not responding."
   cross-teleported: "&eYou have been teleported to the server &a{server} &eat World: &a{world} &eX: &a{x}&e, Y: &a{y}&e, Z: &a{z}&e."
+  warp-no-longer-exists: "&cThe warp seems to no longer exist."
 
 # Here is where the MySQL connection can be configured.
 # (Note: Database tables are created and managed automatically. There is also no MySQL conversion to YAML file; therefore, use at your own risk.)
 mysql-connection:
   # If this option is enabled, HyperDrive will enable cross-server teleportation and MySQL warp saving/loading.
   use-mysql: false
-  # If this is enabled HyperDrive will attempt to allow cross-server warping (WARNING: All instances will load all warps to gain full control).
+  # If this is enabled, HyperDrive will attempt to allow cross-server warping (WARNING: All instances will load all warps to gain full control).
   cross-server-warping: false
+  # If this is enabled, HyperDrive will convert all MySQL warps to flat file warps. 'use-mysql' must be enabled.
+  # (NOTE: DO NOT ENABLE WITH 'run-flat-file-converter').
+  run-mysql-converter: false
+  # If this is enabled, HyperDrive will convert all flat file warps to MySQL warps. 'use-mysql' must be enabled.
+  # (NOTE: DO NOT ENABLE WITH 'run-mysql-converter').
+  run-flat-file-converter: false
+  # If a warp's IP is found blank or null, its IP will be replaced with none.
+  # (Note: This is a simple ID to gain )
+  default-ip: "127.0.0.1"
   # Below, define your MySQL information. THE DEFINED DATABASE MUST ALREADY EXIST.
   database-name: "hyperdrive"
   host: "localhost"

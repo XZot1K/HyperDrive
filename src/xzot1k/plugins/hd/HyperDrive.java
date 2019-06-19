@@ -42,6 +42,7 @@ public class HyperDrive extends JavaPlugin {
 
     private Economy vaultEconomy;
     private Connection connection;
+    private List<String> databaseWarps;
 
     private String serverVersion;
     private int teleportationHandlerTaskId, autoSaveTaskId, crossServerTaskId;
@@ -58,6 +59,19 @@ public class HyperDrive extends JavaPlugin {
             log(Level.INFO, "The plugin was disabled due to Vault or an economy plugin for it being invalid. " + "(Took " + (System.currentTimeMillis() - startTime) + "ms)");
             getServer().getPluginManager().disablePlugin(this);
             return;
+        }
+
+        setDatabaseWarps(new ArrayList<>());
+        if (getConfig().getBoolean("mysql-connection.use-mysql")) {
+            long databaseStartTime = System.currentTimeMillis();
+            attemptMySQLConnection();
+            if (getConnection() != null)
+                log(Level.INFO, "The MySQL database connection was formed. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
+            else
+                log(Level.WARNING, "The MySQL database connection failed. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
+
+            if (getConfig().getBoolean("mysql-connection.run-flat-file-converter")) runFlatFileConverter();
+            else if (getConfig().getBoolean("mysql-connection.run-mysql-converter")) runMySQLConverter();
         }
 
         getServer().getMessenger().registerOutgoingPluginChannel(getPluginInstance(), "BungeeCord");
@@ -81,16 +95,7 @@ public class HyperDrive extends JavaPlugin {
             if (command != null) command.setExecutor(getTeleportationCommands());
         }
 
-        getServer().getPluginManager().registerEvents(new Listeners(this), this);
-
-        if (getConfig().getBoolean("mysql-connection.use-mysql")) {
-            long databaseStartTime = System.currentTimeMillis();
-            attemptMySQLConnection();
-            if (getConnection() != null)
-                log(Level.INFO, "The MySQL database connection was formed. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
-            else
-                log(Level.WARNING, "The MySQL database connection failed. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
-        }
+        getServer().getPluginManager().registerEvents(new Listeners(getPluginInstance()), getPluginInstance());
 
         loadWarps(getConnection() != null);
         startWarpConverter();
@@ -240,6 +245,181 @@ public class HyperDrive extends JavaPlugin {
 
     }
 
+    private void runFlatFileConverter() {
+        int convertedWarpCount = 0, failedToConvertWarps = 0;
+        long startTime = System.currentTimeMillis();
+
+        File file = new File(getDataFolder(), "/warps.yml");
+        if (file.exists()) {
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+            List<String> configurationLines = new ArrayList<>(Objects.requireNonNull(yaml.getConfigurationSection("")).getKeys(false));
+            for (int i = -1; ++i < configurationLines.size(); ) {
+                try {
+                    String warpName = configurationLines.get(i);
+                    UUID uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
+
+                    SerializableLocation serializableLocation = new SerializableLocation(yaml.getString(warpName + ".location.world"), yaml.getDouble(warpName + ".location.x"),
+                            yaml.getDouble(warpName + ".location.y"), yaml.getDouble(warpName + ".location.z"), (float) yaml.getDouble(warpName + ".location.yaw"),
+                            (float) yaml.getDouble(warpName + ".location.pitch"));
+
+                    Warp warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
+
+                    try {
+                        List<UUID> assistantList = new ArrayList<>(), whiteListPlayers = new ArrayList<>();
+                        List<String> assistants = yaml.getStringList(warpName + ".assistants"), whiteList = yaml.getStringList(warpName + ".whitelist");
+                        for (int j = -1; ++j < assistants.size(); ) {
+                            UUID uniqueId = UUID.fromString(assistants.get(j));
+                            assistantList.add(uniqueId);
+                        }
+
+                        for (int j = -1; ++j < whiteList.size(); ) {
+                            UUID uniqueId = UUID.fromString(whiteList.get(j));
+                            whiteListPlayers.add(uniqueId);
+                        }
+
+                        String statusString = yaml.getString(warpName + ".status");
+                        if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
+
+                        EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_")
+                                .replace("-", "_"));
+                        warp.setStatus(status);
+                        warp.setAssistants(assistantList);
+                        warp.setWhiteList(whiteListPlayers);
+                        warp.setCreationDate(yaml.getString(warpName + ".creation-date"));
+                        warp.setCommands(yaml.getStringList(warpName + ".commands"));
+                        warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
+
+                        warp.setIconTheme(yaml.getString(warpName + ".icon.theme"));
+                        warp.setDescriptionColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.description-color")));
+                        warp.setDisplayNameColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.name-color")));
+                        warp.setDescription(yaml.getStringList(warpName + ".icon.description"));
+                        warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
+                        warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
+                        warp.setTraffic(yaml.getInt(warpName + ".traffic"));
+                        warp.setServerIPAddress(yaml.getString(warpName + ".server-ip").replace("localhost", "127.0.0.1"));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
+                    }
+
+                    saveWarp(warp, true);
+                    convertedWarpCount++;
+                } catch (Exception ignored) {
+                    failedToConvertWarps++;
+                }
+            }
+        }
+
+        getConfig().set("mysql-connection.run-flat-file-converter", false);
+        saveConfig();
+        reloadConfig();
+        log(Level.INFO, convertedWarpCount + " " + ((convertedWarpCount == 1) ? "warp was" : "warps were") + " converted to MySQL and " + failedToConvertWarps
+                + " " + ((failedToConvertWarps == 1) ? "warp" : "warps") + " failed to convert to MySQL. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+    }
+
+    private void runMySQLConverter() {
+        int convertedWarpCount = 0, failedToConvert = 0;
+        long startTime = System.currentTimeMillis();
+
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from warps");
+            while (resultSet.next()) {
+                String warpName = resultSet.getString(1), ipAddress = resultSet.getString(17).replace("localhost", "127.0.0.1"),
+                        locationString = resultSet.getString(2);
+                if (locationString.contains(",")) {
+                    String[] locationStringArgs = locationString.split(",");
+
+                    SerializableLocation serializableLocation = new SerializableLocation(locationStringArgs[0], Double.parseDouble(locationStringArgs[1]),
+                            Double.parseDouble(locationStringArgs[2]), Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]),
+                            Float.parseFloat(locationStringArgs[5]));
+
+                    Warp warp = new Warp(warpName, serializableLocation);
+
+                    try {
+                        String statusString = resultSet.getString(3);
+                        if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
+
+                        EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_")
+                                .replace("-", "_"));
+                        warp.setStatus(status);
+                        warp.setCreationDate(resultSet.getString(4));
+                        warp.setIconTheme(resultSet.getString(5));
+                        warp.setAnimationSet(resultSet.getString(6));
+
+                        String descriptionColor = resultSet.getString(7);
+                        if (descriptionColor != null && !descriptionColor.equalsIgnoreCase(""))
+                            warp.setDescriptionColor(ChatColor.valueOf(descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+                        String nameColor = resultSet.getString(8);
+                        if (nameColor != null && !nameColor.equalsIgnoreCase(""))
+                            warp.setDisplayNameColor(ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+
+                        String descriptionString = resultSet.getString(9);
+                        if (descriptionString.contains(",")) {
+                            List<String> description = new ArrayList<>();
+                            String[] descriptionStringArgs = descriptionString.split(",");
+                            for (int i = -1; ++i < descriptionStringArgs.length; )
+                                description.add(descriptionStringArgs[i]);
+                            warp.setDescription(description);
+                        }
+
+                        String commandsString = resultSet.getString(10);
+                        if (commandsString.contains(",")) {
+                            List<String> commands = new ArrayList<>();
+                            String[] commandsStringArgs = commandsString.split(",");
+                            for (int i = -1; ++i < commandsStringArgs.length; )
+                                commands.add(commandsStringArgs[i]);
+                            warp.setCommands(commands);
+                        }
+
+                        warp.setOwner(UUID.fromString(resultSet.getString(11)));
+
+                        String whitelistString = resultSet.getString(12);
+                        if (whitelistString.contains(",")) {
+                            List<UUID> whitelist = new ArrayList<>();
+                            String[] whitelistStringArgs = whitelistString.split(",");
+                            for (int i = -1; ++i < whitelistStringArgs.length; )
+                                whitelist.add(UUID.fromString(whitelistStringArgs[i]));
+                            warp.setWhiteList(whitelist);
+                        }
+
+                        String assistantsString = resultSet.getString(13);
+                        if (assistantsString.contains(",")) {
+                            List<UUID> assistants = new ArrayList<>();
+                            String[] assistantsStringArgs = assistantsString.split(",");
+                            for (int i = -1; ++i < assistantsStringArgs.length; )
+                                assistants.add(UUID.fromString(assistantsStringArgs[i]));
+                            warp.setAssistants(assistants);
+                        }
+
+                        warp.setTraffic(resultSet.getInt(14));
+                        warp.setUsagePrice(resultSet.getDouble(15));
+                        warp.setIconEnchantedLook(resultSet.getInt(16) >= 1);
+                        warp.setServerIPAddress(ipAddress);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
+                    }
+
+                    saveWarp(warp, false);
+                    convertedWarpCount++;
+                }
+            }
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            failedToConvert++;
+        }
+
+        getConfig().set("mysql-connection.run-mysql-converter", false);
+        saveConfig();
+        reloadConfig();
+        log(Level.INFO, convertedWarpCount + " " + ((convertedWarpCount == 1) ? "warp was" : "warps were") + " converted to flat file and " + failedToConvert
+                + " " + ((failedToConvert == 1) ? "warp" : "warps") + " failed to convert to flat file. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+    }
+
     private void startWarpConverter() {
         int convertedWarpCount = 0;
         long startTime = System.currentTimeMillis();
@@ -371,22 +551,44 @@ public class HyperDrive extends JavaPlugin {
         setTeleportationHandlerTaskId(thID);
         setTeleportationHandler(teleportationHandler);
 
-        boolean autoSave = getConfig().getBoolean("auto-save");
-        if (autoSave) {
-            int interval = getConfig().getInt("auto-save-interval");
-            BukkitTask autoSaveTask = getServer().getScheduler().runTaskTimerAsynchronously(this, () ->
-            {
-                long tempTime = System.currentTimeMillis();
-                saveWarps(getConnection() != null);
-                log(Level.INFO, "All warps have been automatically saved! (Took " + (System.currentTimeMillis() - tempTime) + "ms)");
-            }, 20 * interval, 20 * interval);
-            setAutoSaveTaskId(autoSaveTask.getTaskId());
-        }
+        int interval = getConfig().getInt("general-section.auto-save-interval");
+        BukkitTask autoSaveTask = getServer().getScheduler().runTaskTimerAsynchronously(this, () ->
+                saveWarps(getConnection() != null), 20 * interval, 20 * interval);
+        setAutoSaveTaskId(autoSaveTask.getTaskId());
 
         if (getConnection() != null) {
             HashMap<UUID, Location> locationMap = new HashMap<>();
             int crossServerTeleportTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
             {
+                getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () ->
+                {
+                    try {
+                        getDatabaseWarps().clear();
+                        Statement statement = getConnection().createStatement();
+                        ResultSet resultSet = statement.executeQuery("select * from warps");
+                        while (resultSet.next()) getDatabaseWarps().add(resultSet.getString(1));
+                        resultSet.close();
+                        statement.close();
+
+                        List<Warp> warpList = new ArrayList<>(getManager().getWarpMap().values());
+                        for (int i = -1; ++i < warpList.size(); ) {
+                            Warp warp = warpList.get(i);
+                            if (!doesWarpExistInDatabase(warp.getWarpName()))
+                                warp.unRegister();
+                        }
+
+                        for (int i = -1; ++i < getDatabaseWarps().size(); ) {
+                            String warpName = getDatabaseWarps().get(i);
+                            if (!getManager().getWarpMap().containsKey(warpName)) {
+                                loadWarp(warpName, (getConnection() != null));
+                            }
+                        }
+
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                });
+
                 Player firstPlayer = getBungeeListener().getFirstPlayer();
                 if (firstPlayer != null) getBungeeListener().requestServers(firstPlayer);
 
@@ -460,7 +662,7 @@ public class HyperDrive extends JavaPlugin {
         log(Level.INFO, "All tasks were successfully setup and started. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
-    private void saveWarps(boolean useMySQL) {
+    public void saveWarps(boolean useMySQL) {
         long startTime = System.currentTimeMillis();
         int savedWarps = 0, failedToSaveWarps = 0;
         if (!useMySQL || getConnection() == null) {
@@ -526,22 +728,22 @@ public class HyperDrive extends JavaPlugin {
             return;
         }
 
-        try {
-            List<Warp> warps = new ArrayList<>(getManager().getWarpMap().values());
-            for (int i = -1; ++i < warps.size(); ) {
-                Warp warp = warps.get(i);
+        List<Warp> warps = new ArrayList<>(getManager().getWarpMap().values());
+        for (int i = -1; ++i < warps.size(); ) {
+            Warp warp = warps.get(i);
 
-                StringBuilder description = new StringBuilder(), commands = new StringBuilder(),
-                        whitelist = new StringBuilder(), assistants = new StringBuilder();
-                for (int j = -1; ++j < warp.getDescription().size(); )
-                    description.append(warp.getDescription().get(j)).append(",");
-                for (int j = -1; ++j < warp.getCommands().size(); )
-                    commands.append(warp.getCommands().get(j)).append(",");
-                for (int j = -1; ++j < warp.getWhiteList().size(); )
-                    whitelist.append(warp.getWhiteList().get(j).toString()).append(",");
-                for (int j = -1; ++j < warp.getAssistants().size(); )
-                    assistants.append(warp.getAssistants().get(j).toString()).append(",");
+            StringBuilder description = new StringBuilder(), commands = new StringBuilder(),
+                    whitelist = new StringBuilder(), assistants = new StringBuilder();
+            for (int j = -1; ++j < warp.getDescription().size(); )
+                description.append(warp.getDescription().get(j)).append(",");
+            for (int j = -1; ++j < warp.getCommands().size(); )
+                commands.append(warp.getCommands().get(j)).append(",");
+            for (int j = -1; ++j < warp.getWhiteList().size(); )
+                whitelist.append(warp.getWhiteList().get(j).toString()).append(",");
+            for (int j = -1; ++j < warp.getAssistants().size(); )
+                assistants.append(warp.getAssistants().get(j).toString()).append(",");
 
+            try {
                 Statement statement = getConnection().createStatement();
                 ResultSet rs = statement.executeQuery("select * from warps where name='" + warp.getWarpName() + "'");
                 if (rs.next()) {
@@ -556,7 +758,8 @@ public class HyperDrive extends JavaPlugin {
 
                     rs.close();
                     statement.close();
-                    return;
+                    savedWarps += 1;
+                    continue;
                 }
 
                 PreparedStatement preparedStatement = connection.prepareStatement("insert into warps (name, location, status, creation_date, icon_theme," +
@@ -575,11 +778,12 @@ public class HyperDrive extends JavaPlugin {
 
                 preparedStatement.executeUpdate();
                 preparedStatement.close();
-                savedWarps += 1;
-            }
 
-        } catch (SQLException e) {
-            failedToSaveWarps += 1;
+                savedWarps += 1;
+            } catch (SQLException e) {
+                e.printStackTrace();
+                failedToSaveWarps += 1;
+            }
         }
 
         log(Level.INFO, savedWarps + " " + ((savedWarps == 1) ? "warp was" : "warps were") + " saved and " + failedToSaveWarps
@@ -605,6 +809,7 @@ public class HyperDrive extends JavaPlugin {
 
                         Warp warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
                         warp.register();
+                        loadedWarps += 1;
 
                         try {
                             List<UUID> assistantList = new ArrayList<>(), whiteListPlayers = new ArrayList<>();
@@ -643,8 +848,6 @@ public class HyperDrive extends JavaPlugin {
                             e.printStackTrace();
                             log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
                         }
-
-                        loadedWarps += 1;
                     } catch (Exception ignored) {
                         failedToLoadWarps += 1;
                     }
@@ -671,78 +874,342 @@ public class HyperDrive extends JavaPlugin {
 
                     Warp warp = new Warp(warpName, serializableLocation);
                     warp.register();
+                    loadedWarps += 1;
 
-                    String statusString = resultSet.getString(3);
-                    if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
+                    try {
+                        String statusString = resultSet.getString(3);
+                        if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
 
-                    EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_")
-                            .replace("-", "_"));
-                    warp.setStatus(status);
-                    warp.setCreationDate(resultSet.getString(4));
-                    warp.setIconTheme(resultSet.getString(5));
-                    warp.setAnimationSet(resultSet.getString(6));
+                        EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_")
+                                .replace("-", "_"));
+                        warp.setStatus(status);
+                        warp.setCreationDate(resultSet.getString(4));
+                        warp.setIconTheme(resultSet.getString(5));
+                        warp.setAnimationSet(resultSet.getString(6));
 
-                    String descriptionColor = resultSet.getString(7);
-                    if (descriptionColor != null && !descriptionColor.equalsIgnoreCase(""))
-                        warp.setDescriptionColor(ChatColor.valueOf(descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")));
-                    String nameColor = resultSet.getString(8);
-                    if (nameColor != null && !nameColor.equalsIgnoreCase(""))
-                        warp.setDisplayNameColor(ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+                        String descriptionColor = resultSet.getString(7);
+                        if (descriptionColor != null && !descriptionColor.equalsIgnoreCase(""))
+                            warp.setDescriptionColor(ChatColor.valueOf(descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+                        String nameColor = resultSet.getString(8);
+                        if (nameColor != null && !nameColor.equalsIgnoreCase(""))
+                            warp.setDisplayNameColor(ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")));
 
-                    String descriptionString = resultSet.getString(9);
-                    if (descriptionString.contains(",")) {
-                        List<String> description = new ArrayList<>();
-                        String[] descriptionStringArgs = descriptionString.split(",");
-                        for (int i = -1; ++i < descriptionStringArgs.length; )
-                            description.add(descriptionStringArgs[i]);
-                        warp.setDescription(description);
+                        String descriptionString = resultSet.getString(9);
+                        if (descriptionString.contains(",")) {
+                            List<String> description = new ArrayList<>();
+                            String[] descriptionStringArgs = descriptionString.split(",");
+                            for (int i = -1; ++i < descriptionStringArgs.length; )
+                                description.add(descriptionStringArgs[i]);
+                            warp.setDescription(description);
+                        }
+
+                        String commandsString = resultSet.getString(10);
+                        if (commandsString.contains(",")) {
+                            List<String> commands = new ArrayList<>();
+                            String[] commandsStringArgs = commandsString.split(",");
+                            for (int i = -1; ++i < commandsStringArgs.length; )
+                                commands.add(commandsStringArgs[i]);
+                            warp.setCommands(commands);
+                        }
+
+                        warp.setOwner(UUID.fromString(resultSet.getString(11)));
+
+                        String whitelistString = resultSet.getString(12);
+                        if (whitelistString.contains(",")) {
+                            List<UUID> whitelist = new ArrayList<>();
+                            String[] whitelistStringArgs = whitelistString.split(",");
+                            for (int i = -1; ++i < whitelistStringArgs.length; )
+                                whitelist.add(UUID.fromString(whitelistStringArgs[i]));
+                            warp.setWhiteList(whitelist);
+                        }
+
+                        String assistantsString = resultSet.getString(13);
+                        if (assistantsString.contains(",")) {
+                            List<UUID> assistants = new ArrayList<>();
+                            String[] assistantsStringArgs = assistantsString.split(",");
+                            for (int i = -1; ++i < assistantsStringArgs.length; )
+                                assistants.add(UUID.fromString(assistantsStringArgs[i]));
+                            warp.setAssistants(assistants);
+                        }
+
+                        warp.setTraffic(resultSet.getInt(14));
+                        warp.setUsagePrice(resultSet.getDouble(15));
+                        warp.setIconEnchantedLook(resultSet.getInt(16) >= 1);
+                        warp.setServerIPAddress(ipAddress);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
                     }
-
-                    String commandsString = resultSet.getString(10);
-                    if (commandsString.contains(",")) {
-                        List<String> commands = new ArrayList<>();
-                        String[] commandsStringArgs = commandsString.split(",");
-                        for (int i = -1; ++i < commandsStringArgs.length; )
-                            commands.add(commandsStringArgs[i]);
-                        warp.setCommands(commands);
-                    }
-
-                    warp.setOwner(UUID.fromString(resultSet.getString(11)));
-
-                    String whitelistString = resultSet.getString(12);
-                    if (whitelistString.contains(",")) {
-                        List<UUID> whitelist = new ArrayList<>();
-                        String[] whitelistStringArgs = whitelistString.split(",");
-                        for (int i = -1; ++i < whitelistStringArgs.length; )
-                            whitelist.add(UUID.fromString(whitelistStringArgs[i]));
-                        warp.setWhiteList(whitelist);
-                    }
-
-                    String assistantsString = resultSet.getString(13);
-                    if (assistantsString.contains(",")) {
-                        List<UUID> assistants = new ArrayList<>();
-                        String[] assistantsStringArgs = assistantsString.split(",");
-                        for (int i = -1; ++i < assistantsStringArgs.length; )
-                            assistants.add(UUID.fromString(assistantsStringArgs[i]));
-                        warp.setAssistants(assistants);
-                    }
-
-                    warp.setTraffic(resultSet.getInt(14));
-                    warp.setUsagePrice(resultSet.getDouble(15));
-                    warp.setIconEnchantedLook(resultSet.getInt(16) >= 1);
-                    warp.setServerIPAddress(ipAddress);
                 }
             }
 
             resultSet.close();
             statement.close();
-            loadedWarps += 1;
         } catch (SQLException e) {
             failedToLoadWarps += 1;
         }
 
         log(Level.INFO, loadedWarps + " " + ((loadedWarps == 1) ? "warp was" : "warps were") + " loaded and " + failedToLoadWarps
                 + " " + ((failedToLoadWarps == 1) ? "warp" : "warps") + " failed to load. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+    }
+
+    public void saveWarp(Warp warp, boolean useMySQL) {
+        if (!useMySQL || getConnection() == null) {
+            File file = new File(getDataFolder(), "/warps.yml");
+            if (file.exists()) file.delete();
+            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+
+            try {
+                yaml.set(warp.getWarpName() + ".location.world", warp.getWarpLocation().getWorldName());
+                yaml.set(warp.getWarpName() + ".location.x", warp.getWarpLocation().getX());
+                yaml.set(warp.getWarpName() + ".location.y", warp.getWarpLocation().getY());
+                yaml.set(warp.getWarpName() + ".location.z", warp.getWarpLocation().getZ());
+                yaml.set(warp.getWarpName() + ".location.yaw", warp.getWarpLocation().getYaw());
+                yaml.set(warp.getWarpName() + ".location.pitch", warp.getWarpLocation().getPitch());
+
+                try {
+                    List<String> whiteList = new ArrayList<>();
+                    for (int j = -1; ++j < warp.getWhiteList().size(); ) {
+                        UUID uuid = warp.getWhiteList().get(j);
+                        whiteList.add(uuid.toString());
+                    }
+
+                    List<String> assistants = new ArrayList<>();
+                    for (int j = -1; ++j < warp.getAssistants().size(); ) {
+                        UUID uuid = warp.getAssistants().get(j);
+                        assistants.add(uuid.toString());
+                    }
+
+                    yaml.set(warp.getWarpName() + ".traffic", warp.getTraffic());
+                    yaml.set(warp.getWarpName() + ".status", warp.getStatus().toString());
+                    yaml.set(warp.getWarpName() + ".creation-date", warp.getCreationDate());
+                    yaml.set(warp.getWarpName() + ".server-ip", warp.getServerIPAddress().replace("localhost", "127.0.0.1"));
+                    yaml.set(warp.getWarpName() + ".owner", warp.getOwner().toString());
+                    yaml.set(warp.getWarpName() + ".assistants", assistants);
+                    yaml.set(warp.getWarpName() + ".whitelist", whiteList);
+                    yaml.set(warp.getWarpName() + ".commands", warp.getCommands());
+                    yaml.set(warp.getWarpName() + ".animation-set", warp.getAnimationSet());
+
+                    yaml.set(warp.getWarpName() + ".icon.theme", warp.getIconTheme());
+                    yaml.set(warp.getWarpName() + ".icon.description-color", warp.getDescriptionColor().name());
+                    yaml.set(warp.getWarpName() + ".icon.name-color", warp.getDisplayNameColor().name());
+                    yaml.set(warp.getWarpName() + ".icon.description", warp.getDescription());
+                    yaml.set(warp.getWarpName() + ".icon.use-enchanted-look", warp.hasIconEnchantedLook());
+                    yaml.set(warp.getWarpName() + ".icon.prices.usage", warp.getUsagePrice());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log(Level.INFO, "There was an issue saving the warp " + warp.getWarpName() + "'s data aside it's location.");
+                }
+
+                yaml.save(file);
+                return;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        StringBuilder description = new StringBuilder(), commands = new StringBuilder(),
+                whitelist = new StringBuilder(), assistants = new StringBuilder();
+        for (int j = -1; ++j < warp.getDescription().size(); )
+            description.append(warp.getDescription().get(j)).append(",");
+        for (int j = -1; ++j < warp.getCommands().size(); )
+            commands.append(warp.getCommands().get(j)).append(",");
+        for (int j = -1; ++j < warp.getWhiteList().size(); )
+            whitelist.append(warp.getWhiteList().get(j).toString()).append(",");
+        for (int j = -1; ++j < warp.getAssistants().size(); )
+            assistants.append(warp.getAssistants().get(j).toString()).append(",");
+
+        try {
+            Statement statement = getConnection().createStatement();
+            ResultSet rs = statement.executeQuery("select * from warps where name='" + warp.getWarpName() + "'");
+            if (rs.next()) {
+                statement.executeUpdate("update warps set location = '" + (warp.getWarpLocation().getWorldName() + ","
+                        + warp.getWarpLocation().getX() + "," + warp.getWarpLocation().getY() + "," + warp.getWarpLocation().getZ() + ","
+                        + warp.getWarpLocation().getYaw() + "," + warp.getWarpLocation().getPitch()) + "', status = '" + warp.getStatus().name() + "', creation_date = '" +
+                        warp.getCreationDate() + "', icon_theme = '" + warp.getIconTheme() + "', animation_set = '" + warp.getAnimationSet() + "'," +
+                        " name_color = '" + warp.getDisplayNameColor().name() + "', description = '" + description.toString() + "', commands = '" + commands.toString() + "'," +
+                        " owner = '" + warp.getOwner().toString() + "', white_list = '" + whitelist.toString() + "', assistants = '" + assistants.toString() + "'," +
+                        " usage_price = '" + warp.getUsagePrice() + "', enchanted_look = '" + (warp.hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '"
+                        + warp.getServerIPAddress() + "' where name = '" + warp.getWarpName() + "';");
+
+                rs.close();
+                statement.close();
+                return;
+            }
+
+            PreparedStatement preparedStatement = connection.prepareStatement("insert into warps (name, location, status, creation_date, icon_theme," +
+                    "animation_set, description_color, name_color, description, commands, owner, white_list, assistants, traffic, usage_price, enchanted_look, server_ip) " +
+                    "values ('" + warp.getWarpName() + "', '" + (warp.getWarpLocation().getWorldName() + "," + warp.getWarpLocation().getX() + ","
+                    + warp.getWarpLocation().getY() + "," + warp.getWarpLocation().getZ() + "," + warp.getWarpLocation().getYaw() + ","
+                    + warp.getWarpLocation().getPitch()) + "', '" + warp.getStatus().name() + "', '" + warp.getCreationDate() + "', '" + warp.getIconTheme()
+                    + "', '" + warp.getAnimationSet() + "', '" + warp.getDescriptionColor().name() + "', '" + warp.getDisplayNameColor().name() + "', ?, ?, '"
+                    + warp.getOwner().toString() + "', ?, ?, " + warp.getTraffic() + ", " + warp.getUsagePrice() + ", " + warp.hasIconEnchantedLook()
+                    + ", '" + warp.getServerIPAddress().replace("localhost", "127.0.0.1") + "');");
+
+            preparedStatement.setString(1, description.toString());
+            preparedStatement.setString(2, commands.toString());
+            preparedStatement.setString(3, whitelist.toString());
+            preparedStatement.setString(4, assistants.toString());
+
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadWarp(String warpName, boolean useMySQL) {
+        if (!useMySQL || getConnection() == null) {
+            File file = new File(getDataFolder(), "/warps.yml");
+            if (file.exists()) {
+                YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+                UUID uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
+
+                SerializableLocation serializableLocation = new SerializableLocation(yaml.getString(warpName + ".location.world"), yaml.getDouble(warpName + ".location.x"),
+                        yaml.getDouble(warpName + ".location.y"), yaml.getDouble(warpName + ".location.z"), (float) yaml.getDouble(warpName + ".location.yaw"),
+                        (float) yaml.getDouble(warpName + ".location.pitch"));
+
+                Warp warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
+                warp.register();
+
+                try {
+                    List<UUID> assistantList = new ArrayList<>(), whiteListPlayers = new ArrayList<>();
+                    List<String> assistants = yaml.getStringList(warpName + ".assistants"), whiteList = yaml.getStringList(warpName + ".whitelist");
+                    for (int j = -1; ++j < assistants.size(); ) {
+                        UUID uniqueId = UUID.fromString(assistants.get(j));
+                        assistantList.add(uniqueId);
+                    }
+
+                    for (int j = -1; ++j < whiteList.size(); ) {
+                        UUID uniqueId = UUID.fromString(whiteList.get(j));
+                        whiteListPlayers.add(uniqueId);
+                    }
+
+                    String statusString = yaml.getString(warpName + ".status");
+                    if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
+
+                    EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_")
+                            .replace("-", "_"));
+                    warp.setStatus(status);
+                    warp.setAssistants(assistantList);
+                    warp.setWhiteList(whiteListPlayers);
+                    warp.setCreationDate(yaml.getString(warpName + ".creation-date"));
+                    warp.setCommands(yaml.getStringList(warpName + ".commands"));
+                    warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
+
+                    warp.setIconTheme(yaml.getString(warpName + ".icon.theme"));
+                    warp.setDescriptionColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.description-color")));
+                    warp.setDisplayNameColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.name-color")));
+                    warp.setDescription(yaml.getStringList(warpName + ".icon.description"));
+                    warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
+                    warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
+                    warp.setTraffic(yaml.getInt(warpName + ".traffic"));
+                    warp.setServerIPAddress(yaml.getString(warpName + ".server-ip").replace("localhost", "127.0.0.1"));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
+                }
+                return;
+            }
+        }
+
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from warps");
+            while (resultSet.next()) {
+                String ipAddress = resultSet.getString(17).replace("localhost", "127.0.0.1"),
+                        locationString = resultSet.getString(2);
+                if (locationString.contains(",")) {
+                    String[] locationStringArgs = locationString.split(",");
+
+                    SerializableLocation serializableLocation = new SerializableLocation(locationStringArgs[0], Double.parseDouble(locationStringArgs[1]),
+                            Double.parseDouble(locationStringArgs[2]), Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]),
+                            Float.parseFloat(locationStringArgs[5]));
+
+                    Warp warp = new Warp(warpName, serializableLocation);
+                    warp.register();
+
+                    try {
+                        String statusString = resultSet.getString(3);
+                        if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
+
+                        EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_")
+                                .replace("-", "_"));
+                        warp.setStatus(status);
+                        warp.setCreationDate(resultSet.getString(4));
+                        warp.setIconTheme(resultSet.getString(5));
+                        warp.setAnimationSet(resultSet.getString(6));
+
+                        String descriptionColor = resultSet.getString(7);
+                        if (descriptionColor != null && !descriptionColor.equalsIgnoreCase(""))
+                            warp.setDescriptionColor(ChatColor.valueOf(descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+                        String nameColor = resultSet.getString(8);
+                        if (nameColor != null && !nameColor.equalsIgnoreCase(""))
+                            warp.setDisplayNameColor(ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+
+                        String descriptionString = resultSet.getString(9);
+                        if (descriptionString.contains(",")) {
+                            List<String> description = new ArrayList<>();
+                            String[] descriptionStringArgs = descriptionString.split(",");
+                            for (int i = -1; ++i < descriptionStringArgs.length; )
+                                description.add(descriptionStringArgs[i]);
+                            warp.setDescription(description);
+                        }
+
+                        String commandsString = resultSet.getString(10);
+                        if (commandsString.contains(",")) {
+                            List<String> commands = new ArrayList<>();
+                            String[] commandsStringArgs = commandsString.split(",");
+                            for (int i = -1; ++i < commandsStringArgs.length; )
+                                commands.add(commandsStringArgs[i]);
+                            warp.setCommands(commands);
+                        }
+
+                        warp.setOwner(UUID.fromString(resultSet.getString(11)));
+
+                        String whitelistString = resultSet.getString(12);
+                        if (whitelistString.contains(",")) {
+                            List<UUID> whitelist = new ArrayList<>();
+                            String[] whitelistStringArgs = whitelistString.split(",");
+                            for (int i = -1; ++i < whitelistStringArgs.length; )
+                                whitelist.add(UUID.fromString(whitelistStringArgs[i]));
+                            warp.setWhiteList(whitelist);
+                        }
+
+                        String assistantsString = resultSet.getString(13);
+                        if (assistantsString.contains(",")) {
+                            List<UUID> assistants = new ArrayList<>();
+                            String[] assistantsStringArgs = assistantsString.split(",");
+                            for (int i = -1; ++i < assistantsStringArgs.length; )
+                                assistants.add(UUID.fromString(assistantsStringArgs[i]));
+                            warp.setAssistants(assistants);
+                        }
+
+                        warp.setTraffic(resultSet.getInt(14));
+                        warp.setUsagePrice(resultSet.getDouble(15));
+                        warp.setIconEnchantedLook(resultSet.getInt(16) >= 1);
+                        warp.setServerIPAddress(ipAddress);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
+                    }
+                }
+            }
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean doesWarpExistInDatabase(String warpName) {
+        for (int i = -1; ++i < getDatabaseWarps().size(); ) {
+            String name = getDatabaseWarps().get(i);
+            if (name.equalsIgnoreCase(warpName)) return true;
+        }
+
+        return false;
     }
 
     public void reloadWarps() {
@@ -858,5 +1325,13 @@ public class HyperDrive extends JavaPlugin {
 
     private void setBungeeListener(BungeeListener bungeeListener) {
         this.bungeeListener = bungeeListener;
+    }
+
+    private List<String> getDatabaseWarps() {
+        return databaseWarps;
+    }
+
+    private void setDatabaseWarps(List<String> databaseWarps) {
+        this.databaseWarps = databaseWarps;
     }
 }

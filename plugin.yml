@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.0.6
+version: 5.0.7
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -65,8 +65,6 @@ permissions:
     description: Gives the player access to all baseline permissions originally meant for a casual player.
     children:
       hyperdrive.use: true
-      hyperdrive.use.create: true
-      hyperdrive.use.delete: true
       hyperdrive.groups.use: true
       hyperdrive.rtp: true
       hyperdrive.use.edit: true
@@ -84,6 +82,8 @@ permissions:
     description: Gives the player all the permissions intended for an administrator.
     children:
       hyperdrive.use.*: true
+      hyperdrive.use.create: true
+      hyperdrive.use.delete: true
       hyperdrive.warplimit.*: true
       hyperdrive.info: true
       hyperdrive.reload: true

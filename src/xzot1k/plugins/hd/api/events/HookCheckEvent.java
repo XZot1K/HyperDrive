@@ -6,70 +6,59 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import xzot1k.plugins.hd.HyperDrive;
 
-public class HookCheckEvent extends Event
-{
+public class HookCheckEvent extends Event {
     private HyperDrive pluginInstance;
-    private HandlerList handlers;
+    private static HandlerList handlers;
     private Location location;
     private boolean safeLocation;
     private Player player;
 
-    public HookCheckEvent(HyperDrive pluginInstance, Location location, Player player, boolean safeLocation)
-    {
+    public HookCheckEvent(HyperDrive pluginInstance, Location location, Player player, boolean safeLocation) {
         setPluginInstance(pluginInstance);
-        setHandlers(new HandlerList());
+        handlers = new HandlerList();
         setLocation(location);
         setPlayer(player);
         setSafeLocation(safeLocation);
     }
 
-    public HandlerList getHandlers()
-    {
-        return handlers;
-    }
-
-    private HyperDrive getPluginInstance()
-    {
+    private HyperDrive getPluginInstance() {
         return pluginInstance;
     }
 
-    private void setPluginInstance(HyperDrive pluginInstance)
-    {
+    private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
 
-    private void setHandlers(HandlerList handlers)
-    {
-        this.handlers = handlers;
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
     }
 
-    public Location getLocation()
-    {
+    public Location getLocation() {
         return location;
     }
 
-    private void setLocation(Location location)
-    {
+    private void setLocation(Location location) {
         this.location = location;
     }
 
-    public Player getPlayer()
-    {
+    public Player getPlayer() {
         return player;
     }
 
-    private void setPlayer(Player player)
-    {
+    private void setPlayer(Player player) {
         this.player = player;
     }
 
-    public boolean isSafeLocation()
-    {
+    public boolean isSafeLocation() {
         return safeLocation;
     }
 
-    public void setSafeLocation(boolean safeLocation)
-    {
+    public void setSafeLocation(boolean safeLocation) {
         this.safeLocation = safeLocation;
+    }
+
+    public static HandlerList getHandlerList() {
+        return handlers;
     }
 }

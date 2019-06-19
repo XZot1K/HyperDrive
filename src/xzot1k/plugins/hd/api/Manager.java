@@ -31,8 +31,6 @@ import xzot1k.plugins.hd.core.packets.titles.versions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.InetAddress;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -151,15 +149,6 @@ public class Manager {
         else
             getPluginInstance().log(Level.WARNING, "Your version is not supported by HyperDrive's packets. Expect errors when attempting to use anything packet " +
                     "related. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
-    }
-
-    public boolean pingIP(String ipAddress) {
-        try {
-            InetAddress geek = InetAddress.getByName(ipAddress);
-            return geek.isReachable(5000);
-        } catch (IOException ignored) {
-        }
-        return false;
     }
 
     public boolean isNumeric(String string) {
