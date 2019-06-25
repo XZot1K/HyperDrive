@@ -459,8 +459,6 @@ public class MainCommands implements CommandExecutor {
         }
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-
-
         boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                 || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
@@ -475,7 +473,7 @@ public class MainCommands implements CommandExecutor {
 
         if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
-            if (!warp.getOwner().toString().equals(player.getUniqueId().toString())) {
+            if (!player.hasPermission("hyperdrive.admin.delete") && !warp.getOwner().toString().equals(player.getUniqueId().toString())) {
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.delete-not-owner"))
                         .replace("{warp}", warpName), (Player) commandSender);
                 return;

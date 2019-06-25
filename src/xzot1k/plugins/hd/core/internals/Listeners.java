@@ -10,6 +10,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
@@ -72,7 +73,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onChat(AsyncPlayerChatEvent e) {
         String chatInteractionCancelKey = getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
                 createWarpInteraction = getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "create-warp");

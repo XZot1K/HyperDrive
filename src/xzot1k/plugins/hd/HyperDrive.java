@@ -662,128 +662,13 @@ public class HyperDrive extends JavaPlugin {
         log(Level.INFO, "All tasks were successfully setup and started. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
-    public void saveWarps(boolean useMySQL) {
+    private void saveWarps(boolean useMySQL) {
         long startTime = System.currentTimeMillis();
         int savedWarps = 0, failedToSaveWarps = 0;
-        if (!useMySQL || getConnection() == null) {
-            File file = new File(getDataFolder(), "/warps.yml");
-            if (file.exists()) file.delete();
-            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
 
-            List<Warp> warps = new ArrayList<>(getManager().getWarpMap().values());
-            for (int i = -1; ++i < warps.size(); ) {
-                Warp warp = warps.get(i);
-
-                try {
-                    yaml.set(warp.getWarpName() + ".location.world", warp.getWarpLocation().getWorldName());
-                    yaml.set(warp.getWarpName() + ".location.x", warp.getWarpLocation().getX());
-                    yaml.set(warp.getWarpName() + ".location.y", warp.getWarpLocation().getY());
-                    yaml.set(warp.getWarpName() + ".location.z", warp.getWarpLocation().getZ());
-                    yaml.set(warp.getWarpName() + ".location.yaw", warp.getWarpLocation().getYaw());
-                    yaml.set(warp.getWarpName() + ".location.pitch", warp.getWarpLocation().getPitch());
-
-                    try {
-                        List<String> whiteList = new ArrayList<>();
-                        for (int j = -1; ++j < warp.getWhiteList().size(); ) {
-                            UUID uuid = warp.getWhiteList().get(j);
-                            whiteList.add(uuid.toString());
-                        }
-
-                        List<String> assistants = new ArrayList<>();
-                        for (int j = -1; ++j < warp.getAssistants().size(); ) {
-                            UUID uuid = warp.getAssistants().get(j);
-                            assistants.add(uuid.toString());
-                        }
-
-                        yaml.set(warp.getWarpName() + ".traffic", warp.getTraffic());
-                        yaml.set(warp.getWarpName() + ".status", warp.getStatus().toString());
-                        yaml.set(warp.getWarpName() + ".creation-date", warp.getCreationDate());
-                        yaml.set(warp.getWarpName() + ".server-ip", warp.getServerIPAddress().replace("localhost", "127.0.0.1"));
-                        yaml.set(warp.getWarpName() + ".owner", warp.getOwner().toString());
-                        yaml.set(warp.getWarpName() + ".assistants", assistants);
-                        yaml.set(warp.getWarpName() + ".whitelist", whiteList);
-                        yaml.set(warp.getWarpName() + ".commands", warp.getCommands());
-                        yaml.set(warp.getWarpName() + ".animation-set", warp.getAnimationSet());
-
-                        yaml.set(warp.getWarpName() + ".icon.theme", warp.getIconTheme());
-                        yaml.set(warp.getWarpName() + ".icon.description-color", warp.getDescriptionColor().name());
-                        yaml.set(warp.getWarpName() + ".icon.name-color", warp.getDisplayNameColor().name());
-                        yaml.set(warp.getWarpName() + ".icon.description", warp.getDescription());
-                        yaml.set(warp.getWarpName() + ".icon.use-enchanted-look", warp.hasIconEnchantedLook());
-                        yaml.set(warp.getWarpName() + ".icon.prices.usage", warp.getUsagePrice());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        log(Level.INFO, "There was an issue saving the warp " + warp.getWarpName() + "'s data aside it's location.");
-                    }
-
-                    yaml.save(file);
-                    savedWarps += 1;
-                } catch (IOException e) {
-                    failedToSaveWarps += 1;
-                }
-            }
-
-            log(Level.INFO, savedWarps + " " + ((savedWarps == 1) ? "warp was" : "warps were") + " saved and " + failedToSaveWarps
-                    + " " + ((failedToSaveWarps == 1) ? "warp" : "warps") + " failed to save. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
-            return;
-        }
-
-        List<Warp> warps = new ArrayList<>(getManager().getWarpMap().values());
-        for (int i = -1; ++i < warps.size(); ) {
-            Warp warp = warps.get(i);
-
-            StringBuilder description = new StringBuilder(), commands = new StringBuilder(),
-                    whitelist = new StringBuilder(), assistants = new StringBuilder();
-            for (int j = -1; ++j < warp.getDescription().size(); )
-                description.append(warp.getDescription().get(j)).append(",");
-            for (int j = -1; ++j < warp.getCommands().size(); )
-                commands.append(warp.getCommands().get(j)).append(",");
-            for (int j = -1; ++j < warp.getWhiteList().size(); )
-                whitelist.append(warp.getWhiteList().get(j).toString()).append(",");
-            for (int j = -1; ++j < warp.getAssistants().size(); )
-                assistants.append(warp.getAssistants().get(j).toString()).append(",");
-
-            try {
-                Statement statement = getConnection().createStatement();
-                ResultSet rs = statement.executeQuery("select * from warps where name='" + warp.getWarpName() + "'");
-                if (rs.next()) {
-                    statement.executeUpdate("update warps set location = '" + (warp.getWarpLocation().getWorldName() + ","
-                            + warp.getWarpLocation().getX() + "," + warp.getWarpLocation().getY() + "," + warp.getWarpLocation().getZ() + ","
-                            + warp.getWarpLocation().getYaw() + "," + warp.getWarpLocation().getPitch()) + "', status = '" + warp.getStatus().name() + "', creation_date = '" +
-                            warp.getCreationDate() + "', icon_theme = '" + warp.getIconTheme() + "', animation_set = '" + warp.getAnimationSet() + "'," +
-                            " name_color = '" + warp.getDisplayNameColor().name() + "', description = '" + description.toString() + "', commands = '" + commands.toString() + "'," +
-                            " owner = '" + warp.getOwner().toString() + "', white_list = '" + whitelist.toString() + "', assistants = '" + assistants.toString() + "'," +
-                            " usage_price = '" + warp.getUsagePrice() + "', enchanted_look = '" + (warp.hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '"
-                            + warp.getServerIPAddress() + "' where name = '" + warp.getWarpName() + "';");
-
-                    rs.close();
-                    statement.close();
-                    savedWarps += 1;
-                    continue;
-                }
-
-                PreparedStatement preparedStatement = connection.prepareStatement("insert into warps (name, location, status, creation_date, icon_theme," +
-                        "animation_set, description_color, name_color, description, commands, owner, white_list, assistants, traffic, usage_price, enchanted_look, server_ip) " +
-                        "values ('" + warp.getWarpName() + "', '" + (warp.getWarpLocation().getWorldName() + "," + warp.getWarpLocation().getX() + ","
-                        + warp.getWarpLocation().getY() + "," + warp.getWarpLocation().getZ() + "," + warp.getWarpLocation().getYaw() + ","
-                        + warp.getWarpLocation().getPitch()) + "', '" + warp.getStatus().name() + "', '" + warp.getCreationDate() + "', '" + warp.getIconTheme()
-                        + "', '" + warp.getAnimationSet() + "', '" + warp.getDescriptionColor().name() + "', '" + warp.getDisplayNameColor().name() + "', ?, ?, '"
-                        + warp.getOwner().toString() + "', ?, ?, " + warp.getTraffic() + ", " + warp.getUsagePrice() + ", " + warp.hasIconEnchantedLook()
-                        + ", '" + warp.getServerIPAddress().replace("localhost", "127.0.0.1") + "');");
-
-                preparedStatement.setString(1, description.toString());
-                preparedStatement.setString(2, commands.toString());
-                preparedStatement.setString(3, whitelist.toString());
-                preparedStatement.setString(4, assistants.toString());
-
-                preparedStatement.executeUpdate();
-                preparedStatement.close();
-
-                savedWarps += 1;
-            } catch (SQLException e) {
-                e.printStackTrace();
-                failedToSaveWarps += 1;
-            }
+        for (Warp warp : getManager().getWarpMap().values()) {
+            if (saveWarp(warp, useMySQL)) savedWarps += 1;
+            else failedToSaveWarps += 1;
         }
 
         log(Level.INFO, savedWarps + " " + ((savedWarps == 1) ? "warp was" : "warps were") + " saved and " + failedToSaveWarps
@@ -953,7 +838,7 @@ public class HyperDrive extends JavaPlugin {
                 + " " + ((failedToLoadWarps == 1) ? "warp" : "warps") + " failed to load. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
-    public void saveWarp(Warp warp, boolean useMySQL) {
+    public boolean saveWarp(Warp warp, boolean useMySQL) {
         if (!useMySQL || getConnection() == null) {
             File file = new File(getDataFolder(), "/warps.yml");
             if (file.exists()) file.delete();
@@ -1002,9 +887,10 @@ public class HyperDrive extends JavaPlugin {
                 }
 
                 yaml.save(file);
-                return;
+                return true;
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
             }
         }
 
@@ -1034,7 +920,7 @@ public class HyperDrive extends JavaPlugin {
 
                 rs.close();
                 statement.close();
-                return;
+                return true;
             }
 
             PreparedStatement preparedStatement = connection.prepareStatement("insert into warps (name, location, status, creation_date, icon_theme," +
@@ -1053,12 +939,14 @@ public class HyperDrive extends JavaPlugin {
 
             preparedStatement.executeUpdate();
             preparedStatement.close();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
-    public void loadWarp(String warpName, boolean useMySQL) {
+    private void loadWarp(String warpName, boolean useMySQL) {
         if (!useMySQL || getConnection() == null) {
             File file = new File(getDataFolder(), "/warps.yml");
             if (file.exists()) {

@@ -118,10 +118,8 @@ public class TeleportationHandler implements Runnable {
                                             && !warp.getAssistants().contains(player.getUniqueId()))
                                         warp.setTraffic(warp.getTraffic() + 1);
 
-                                    boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"),
-                                            useCrossWarping = getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server-warping");
-
-                                    if (useCrossWarping && useMySQL && getPluginInstance().getConnection() != null) {
+                                    boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+                                    if (useMySQL && getPluginInstance().getConnection() != null) {
                                         String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
                                                 serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
                                                         || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0")) ?
@@ -619,6 +617,7 @@ public class TeleportationHandler implements Runnable {
     }
 
     // group stuff
+
     /**
      * Returns the GroupTemp the passed player id has accepted.
      *

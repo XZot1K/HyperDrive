@@ -142,16 +142,13 @@ language-section:
 mysql-connection:
   # If this option is enabled, HyperDrive will enable cross-server teleportation and MySQL warp saving/loading.
   use-mysql: false
-  # If this is enabled, HyperDrive will attempt to allow cross-server warping (WARNING: All instances will load all warps to gain full control).
-  cross-server-warping: false
   # If this is enabled, HyperDrive will convert all MySQL warps to flat file warps. 'use-mysql' must be enabled.
   # (NOTE: DO NOT ENABLE WITH 'run-flat-file-converter').
   run-mysql-converter: false
   # If this is enabled, HyperDrive will convert all flat file warps to MySQL warps. 'use-mysql' must be enabled.
   # (NOTE: DO NOT ENABLE WITH 'run-mysql-converter').
   run-flat-file-converter: false
-  # If a warp's IP is found blank or null, its IP will be replaced with none.
-  # (Note: This is a simple ID to gain )
+  # If a warp's IP is found blank or null, its IP will be replaced with this IP similar to a backup.
   default-ip: "127.0.0.1"
   # Below, define your MySQL information. THE DEFINED DATABASE MUST ALREADY EXIST.
   database-name: "hyperdrive"
