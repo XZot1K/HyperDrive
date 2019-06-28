@@ -680,7 +680,8 @@ public class Manager {
             }
         } else {
             OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-            ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
+            ItemStack item = (offlinePlayer == null) ? getPlayerHead("MHF_Question", warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1)
+                    : getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
             ItemMeta itemMeta = item.getItemMeta();
             if (warp.hasIconEnchantedLook() && itemMeta != null) {
                 itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
