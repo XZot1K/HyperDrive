@@ -131,8 +131,8 @@ public class Listeners implements Listener {
                 String previousName = getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "rename");
                 Warp warp = getPluginInstance().getManager().getWarp(previousName);
                 boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(enteredName))
-                        || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(enteredName))) {
+                if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(enteredName))
+                        || (!useMySQL && getPluginInstance().getManager().doesWarpExist(enteredName))) {
                     warp.unRegister();
                     warp.setWarpName(enteredName);
                     warp.register();
@@ -172,8 +172,8 @@ public class Listeners implements Listener {
                 String previousName = getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "give-ownership");
                 Warp warp = getPluginInstance().getManager().getWarp(previousName);
                 boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(enteredName))
-                        || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(enteredName))) {
+                if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(enteredName))
+                        || (!useMySQL && getPluginInstance().getManager().doesWarpExist(enteredName))) {
                     warp.setOwner(offlinePlayer.getUniqueId());
                     getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> getPluginInstance().saveWarp(warp, useMySQL));
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-renamed"))
@@ -199,8 +199,8 @@ public class Listeners implements Listener {
             String passedWarpName = getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "edit-description");
             Warp warp = getPluginInstance().getManager().getWarp(passedWarpName);
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!e.getMessage().equalsIgnoreCase(chatInteractionCancelKey)) {
 
                     warp.getDescription().clear();
@@ -240,8 +240,8 @@ public class Listeners implements Listener {
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "change-description-color"));
 
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!enteredText.equalsIgnoreCase(chatInteractionCancelKey)) {
                     String message = Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-color"))
                             .replace("{colors}", getPluginInstance().getManager().getColorNames().toString()),
@@ -287,8 +287,8 @@ public class Listeners implements Listener {
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "change-name-color"));
 
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!enteredText.equalsIgnoreCase(chatInteractionCancelKey)) {
                     if (!getPluginInstance().getManager().isChatColor(enteredText)) {
                         getPluginInstance().getManager().sendCustomMessage(message, e.getPlayer());
@@ -328,8 +328,8 @@ public class Listeners implements Listener {
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "change-usage-price"));
 
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!enteredText.equalsIgnoreCase(chatInteractionCancelKey)) {
                     double price;
 
@@ -363,8 +363,8 @@ public class Listeners implements Listener {
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "give-assistant"));
 
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!enteredName.equalsIgnoreCase(chatInteractionCancelKey)) {
                     OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(enteredName);
                     if (!offlinePlayer.isOnline()) {
@@ -403,8 +403,8 @@ public class Listeners implements Listener {
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "remove-assistant"));
 
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!enteredName.equalsIgnoreCase(chatInteractionCancelKey)) {
                     OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(enteredName);
                     if (!offlinePlayer.isOnline()) {
@@ -440,8 +440,8 @@ public class Listeners implements Listener {
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "add-to-whitelist"));
 
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!enteredName.equalsIgnoreCase(chatInteractionCancelKey)) {
                     OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(enteredName);
                     if (!offlinePlayer.isOnline()) {
@@ -479,8 +479,8 @@ public class Listeners implements Listener {
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "remove-from-whitelist"));
 
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!enteredName.equalsIgnoreCase(chatInteractionCancelKey)) {
                     OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(enteredName);
                     if (!offlinePlayer.isOnline()) {
@@ -518,8 +518,8 @@ public class Listeners implements Listener {
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "add-command"));
 
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!enteredCommand.equalsIgnoreCase(chatInteractionCancelKey)) {
                     List<String> commandList = warp.getCommands();
                     for (int i = -1; ++i < commandList.size(); ) {
@@ -554,8 +554,8 @@ public class Listeners implements Listener {
             Warp warp = getPluginInstance().getManager().getWarp(getPluginInstance().getManager().getChatInteractionValue(e.getPlayer(), "remove-command"));
 
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-            if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                    || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                 if (!enteredIndex.equalsIgnoreCase(chatInteractionCancelKey)) {
                     int index;
 
