@@ -22,10 +22,7 @@ import xzot1k.plugins.hd.core.internals.Metrics;
 import xzot1k.plugins.hd.core.internals.cmds.MainCommands;
 import xzot1k.plugins.hd.core.internals.cmds.TeleportationCommands;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.*;
@@ -59,6 +56,16 @@ public class HyperDrive extends JavaPlugin {
             log(Level.INFO, "The plugin was disabled due to Vault or an economy plugin for it being invalid. " + "(Took " + (System.currentTimeMillis() - startTime) + "ms)");
             getServer().getPluginManager().disablePlugin(this);
             return;
+        }
+
+        File warpsFile = new File(getDataFolder(), "/warps.yml"), backupFile = new File(getDataFolder(), "/warps-backup.yml");
+        if (warpsFile.exists()) {
+            try {
+                copy(warpsFile, backupFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+                log(Level.WARNING, "Unable to backup the warp file as it may not exist. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+            }
         }
 
         setDatabaseWarps(new ArrayList<>());
@@ -845,7 +852,6 @@ public class HyperDrive extends JavaPlugin {
     public boolean saveWarp(Warp warp, boolean useMySQL) {
         if (!useMySQL || getConnection() == null) {
             File file = new File(getDataFolder(), "/warps.yml");
-            if (file.exists()) file.delete();
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
 
             try {
@@ -1102,6 +1108,16 @@ public class HyperDrive extends JavaPlugin {
         }
 
         return false;
+    }
+
+    private static void copy(File source, File destination) throws IOException {
+        try (InputStream is = new FileInputStream(source); OutputStream os = new FileOutputStream(destination)) {
+            byte[] buf = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = is.read(buf)) > 0) {
+                os.write(buf, 0, bytesRead);
+            }
+        }
     }
 
     public void reloadWarps() {
