@@ -527,7 +527,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         getTpaSentMap().remove(enteredPlayer.getUniqueId());
-        player.teleport(enteredPlayer.getLocation());
+        enteredPlayer.teleport(player.getLocation());
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),

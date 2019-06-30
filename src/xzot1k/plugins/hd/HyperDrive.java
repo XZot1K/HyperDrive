@@ -67,8 +67,11 @@ public class HyperDrive extends JavaPlugin {
             attemptMySQLConnection();
             if (getConnection() != null)
                 log(Level.INFO, "The MySQL database connection was formed. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
-            else
+            else {
                 log(Level.WARNING, "The MySQL database connection failed. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
+                getPluginInstance().getServer().getPluginManager().disablePlugin(this);
+                return;
+            }
 
             if (getConfig().getBoolean("mysql-connection.run-flat-file-converter")) runFlatFileConverter();
             else if (getConfig().getBoolean("mysql-connection.run-mysql-converter")) runMySQLConverter();
@@ -546,6 +549,7 @@ public class HyperDrive extends JavaPlugin {
     public void startTasks() {
         long startTime = System.currentTimeMillis();
 
+        boolean useMySQL = getConfig().getBoolean("mysql-connection.use-mysql");
         TeleportationHandler teleportationHandler = new TeleportationHandler(this);
         int thID = getServer().getScheduler().scheduleSyncRepeatingTask(this, teleportationHandler, 0, 20);
         setTeleportationHandlerTaskId(thID);
@@ -553,10 +557,10 @@ public class HyperDrive extends JavaPlugin {
 
         int interval = getConfig().getInt("general-section.auto-save-interval");
         BukkitTask autoSaveTask = getServer().getScheduler().runTaskTimerAsynchronously(this, () ->
-                saveWarps(getConnection() != null), 20 * interval, 20 * interval);
+                saveWarps(useMySQL), 20 * interval, 20 * interval);
         setAutoSaveTaskId(autoSaveTask.getTaskId());
 
-        if (getConnection() != null) {
+        if (useMySQL) {
             HashMap<UUID, Location> locationMap = new HashMap<>();
             int crossServerTeleportTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
             {
@@ -655,7 +659,7 @@ public class HyperDrive extends JavaPlugin {
                                 offlinePlayer.getPlayer());
                     }
                 }
-            }, 20, 20);
+            }, 0, 20);
             setCrossServerTaskId(crossServerTeleportTaskId);
         }
 
@@ -1094,7 +1098,7 @@ public class HyperDrive extends JavaPlugin {
     public boolean doesWarpExistInDatabase(String warpName) {
         for (int i = -1; ++i < getDatabaseWarps().size(); ) {
             String name = getDatabaseWarps().get(i);
-            if (name.equalsIgnoreCase(warpName)) return true;
+            if (name != null && name.equalsIgnoreCase(warpName)) return true;
         }
 
         return false;

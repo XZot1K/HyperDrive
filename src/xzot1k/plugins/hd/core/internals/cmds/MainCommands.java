@@ -535,7 +535,7 @@ public class MainCommands implements CommandExecutor {
                     .replace("{warp}", warpName), player);
         } else {
             warp.register();
-            getPluginInstance().saveWarp(warp, (useMySQL && getPluginInstance().getConnection() != null));
+            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> getPluginInstance().saveWarp(warp, useMySQL));
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-created"))
                     .replace("{warp}", warpName), player);
         }
@@ -749,7 +749,7 @@ public class MainCommands implements CommandExecutor {
                         .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
         }
 
-        int duration = getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration");
+        int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0;
 
         if (warp.getAnimationSet().contains(":")) {
             String[] themeArgs = warp.getAnimationSet().split(":");

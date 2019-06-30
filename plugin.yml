@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.0.8
+version: 5.0.8-C
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -90,6 +90,7 @@ permissions:
       hyperdrive.admin.edit: true
       hyperdrive.admin.rtp: true
       hyperdrive.tpcooldown: true
+      hyperdrive.tpdelaybypass: true
       hyperdrive.rtpbypass: true
       hyperdrive.admin.help: true
       hyperdrive.admin.warp: true
@@ -204,3 +205,6 @@ permissions:
   hyperdrive.updateid:
     default: op
     description: This permission node is used to allow any sender with the node to update warps with the initially defined IP to a new IP.
+  hyperdrive.tpdelaybypass:
+    default: op
+    description: This permission node is used to bypass the warp teleportation delay entirely.
