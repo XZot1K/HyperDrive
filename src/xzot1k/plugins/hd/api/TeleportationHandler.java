@@ -206,6 +206,17 @@ public class TeleportationHandler implements Runnable {
         getTeleportTempMap().remove(player.getUniqueId());
     }
 
+    /**
+     * Warps the player to the specified warp
+     *
+     * @param player    The player to warp
+     * @param warp      The warp to teleport the player to
+     * @param warpDelay The delay before teleportation takes place (Seconds)
+     */
+    public void warpPlayer(Player player, Warp warp, int warpDelay) {
+        updateTeleportTemp(player, "warp", warp.getWarpName(), warpDelay);
+    }
+
     // teleport methods
     public void teleportPlayer(Player player, Location location) {
         boolean teleportVehicle = getPluginInstance().getConfig().getBoolean("teleportation-section.teleport-vehicles");

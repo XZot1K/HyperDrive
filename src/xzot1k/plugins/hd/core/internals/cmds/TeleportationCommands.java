@@ -31,6 +31,7 @@ public class TeleportationCommands implements CommandExecutor {
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
 
         switch (command.getName().toLowerCase()) {
+
             case "crossserver":
 
                 switch (args.length) {
@@ -123,6 +124,7 @@ public class TeleportationCommands implements CommandExecutor {
 
                 getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
                 return true;
+
             case "teleportaccept":
 
                 if (args.length >= 1) {

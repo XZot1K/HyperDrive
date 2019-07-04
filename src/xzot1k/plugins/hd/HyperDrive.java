@@ -48,6 +48,8 @@ public class HyperDrive extends JavaPlugin {
     public void onEnable() {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
+        advertisePebbleHost();
+
         setServerVersion(getPluginInstance().getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
         saveDefaultVersionConfig();
         updateConfig();
@@ -91,8 +93,8 @@ public class HyperDrive extends JavaPlugin {
 
         setMainCommands(new MainCommands(this));
         String[] commandNames = {"warps", "hyperdrive"};
-        for (int i = -1; ++i < commandNames.length; ) {
-            PluginCommand command = getCommand(commandNames[i]);
+        for (String cmd : commandNames) {
+            PluginCommand command = getCommand(cmd);
             if (command != null) command.setExecutor(getMainCommands());
         }
 
@@ -100,8 +102,8 @@ public class HyperDrive extends JavaPlugin {
         String[] teleportCommandNames = {"teleport", "teleporthere", "teleportoverride", "teleportoverridehere",
                 "teleportposition", "teleportask", "teleportaccept", "teleportdeny", "teleporttoggle", "back",
                 "crossserver"};
-        for (int i = -1; ++i < teleportCommandNames.length; ) {
-            PluginCommand command = getCommand(teleportCommandNames[i]);
+        for (String cmd : teleportCommandNames) {
+            PluginCommand command = getCommand(cmd);
             if (command != null) command.setExecutor(getTeleportationCommands());
         }
 
@@ -1136,6 +1138,15 @@ public class HyperDrive extends JavaPlugin {
 
         setVaultEconomy(rsp.getProvider());
         return getVaultEconomy() != null;
+    }
+
+    private void advertisePebbleHost() {
+        log(Level.INFO,
+                "\n===============================================================================\n" +
+                        "        Need a server host? Try PebbleHost! Plans starting at $1/GB!\n" +
+                        "                  Use promo code \"zotdev\" for 5% off!\n" +
+                        "                            www.pebblehost.com\n" +
+                        "===============================================================================");
     }
 
     // getters and setters

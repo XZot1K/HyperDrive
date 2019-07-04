@@ -33,7 +33,6 @@ public class Warp {
         setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setOwner(player.getUniqueId());
         setWarpLocation(location);
-        setTraffic(0);
         if (!getPluginInstance().getServer().getIp().equalsIgnoreCase(""))
             setServerIPAddress((getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp())
                     + ":" + getPluginInstance().getServer().getPort());
@@ -57,6 +56,7 @@ public class Warp {
             newLore.add(getPluginInstance().getManager().colorText(defaultDescription.get(i)));
         setDescription(newLore);
         setUsagePrice(0);
+        setTraffic(0);
         setWhiteList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -90,6 +90,7 @@ public class Warp {
             newLore.add(getPluginInstance().getManager().colorText(defaultDescription.get(i)));
         setDescription(newLore);
         setUsagePrice(0);
+        setTraffic(0);
         setWhiteList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -124,6 +125,7 @@ public class Warp {
             newLore.add(getPluginInstance().getManager().colorText(defaultDescription.get(i)));
         setDescription(newLore);
         setUsagePrice(0);
+        setTraffic(0);
         setWhiteList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -157,6 +159,7 @@ public class Warp {
             newLore.add(getPluginInstance().getManager().colorText(defaultDescription.get(i)));
         setDescription(newLore);
         setUsagePrice(0);
+        setTraffic(0);
         setWhiteList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -350,4 +353,5 @@ public class Warp {
     public void setTraffic(int traffic) {
         this.traffic = traffic;
     }
+
 }

@@ -114,7 +114,6 @@ public class GroupTemp {
                                 }
 
 
-
                                 if (!teleportSound.equalsIgnoreCase(""))
                                     player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
                                 if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
@@ -177,6 +176,7 @@ public class GroupTemp {
                     } else
                         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.group-teleport-fail"), player);
 
+                    getPluginInstance().getManager().returnLastTransactionAmount(player);
                     getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
                     getPluginInstance().getTeleportationHandler().clearGroupTemp(player);
                     cancel();

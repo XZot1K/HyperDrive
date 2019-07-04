@@ -16,6 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import xzot1k.plugins.hd.HyperDrive;
+import xzot1k.plugins.hd.api.events.EconomyReturnEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.internals.Paging;
 import xzot1k.plugins.hd.core.objects.json.JSONExtra;
@@ -269,13 +270,17 @@ public class Manager {
     }
 
     public void returnLastTransactionAmount(OfflinePlayer player) {
-        if (getPluginInstance().getConfig().getBoolean("general-section.use-vault")) {
-            double lastAmount = getLastTransactionAmount(player);
-            if (lastAmount > 0) {
-                getPluginInstance().getVaultEconomy().depositPlayer(player, lastAmount);
-                if (player.isOnline())
-                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.last-transaction-return"))
-                            .replace("{amount}", String.valueOf(lastAmount)), player.getPlayer());
+        double lastAmount = getLastTransactionAmount(player);
+        if (lastAmount > 0) {
+            EconomyReturnEvent economyReturnEvent = new EconomyReturnEvent(getPluginInstance(), player, lastAmount);
+            getPluginInstance().getServer().getPluginManager().callEvent(economyReturnEvent);
+            if (!economyReturnEvent.isCancelled()) {
+                if (getPluginInstance().getConfig().getBoolean("general-section.use-vault")) {
+                    getPluginInstance().getVaultEconomy().depositPlayer(player, lastAmount);
+                    if (player.isOnline())
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.last-transaction-return"))
+                                .replace("{amount}", String.valueOf(lastAmount)), player.getPlayer());
+                }
             }
         }
     }
@@ -515,6 +520,8 @@ public class Manager {
                     return EnumContainer.Status.PRIVATE.name();
                 else if (pulledStatus.equals(getPluginInstance().getConfig().getString("list-menu-section.admin-status-format")))
                     return EnumContainer.Status.ADMIN.name();
+                else if (pulledStatus.equals(getPluginInstance().getConfig().getString("list-menu-section.featured-status-format")))
+                    return "FEATURED";
                 else return ChatColor.stripColor(pulledStatus);
             }
         }
@@ -699,10 +706,10 @@ public class Manager {
         List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection(menuPath + ".items")).getKeys(false));
 
         String ownFormat = getPluginInstance().getConfig().getString("list-menu-section.own-status-format"),
-                everythingFormat = getPluginInstance().getConfig().getString("list-menu-section.everything-status-format"),
                 publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
                 privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
-                adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
+                adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format"),
+                featuredFormat = getPluginInstance().getConfig().getString("list-menu-section.featured-status-format");
 
         int index = 0;
         if (currentFilterStatus.replace("-", " ").replace("_", " ").equalsIgnoreCase(privateFormat)
@@ -713,7 +720,7 @@ public class Manager {
             index = 2;
         else if (currentFilterStatus.replace("-", " ").replace("_", " ").equalsIgnoreCase(ownFormat))
             index = 3;
-        else if (currentFilterStatus.replace("-", " ").replace("_", " ").equalsIgnoreCase(everythingFormat))
+        else if (currentFilterStatus.replace("-", " ").replace("_", " ").equalsIgnoreCase(featuredFormat))
             index = 4;
 
         String statusFormat;
@@ -728,7 +735,7 @@ public class Manager {
                 statusFormat = ownFormat;
                 break;
             case 4:
-                statusFormat = everythingFormat;
+                statusFormat = featuredFormat;
                 break;
             default:
                 statusFormat = publicFormat;
@@ -792,7 +799,8 @@ public class Manager {
         String currentStatus, ownFormat = getPluginInstance().getConfig().getString("list-menu-section.own-status-format"),
                 publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
                 privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
-                adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
+                adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format"),
+                featuredFormat = getPluginInstance().getConfig().getString("list-menu-section.featured-status-format");
 
         switch (defaultFilterIndex) {
             case 1:
@@ -803,6 +811,9 @@ public class Manager {
                 break;
             case 3:
                 currentStatus = ownFormat;
+                break;
+            case 4:
+                currentStatus = featuredFormat;
                 break;
             default:
                 currentStatus = publicFormat;

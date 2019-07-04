@@ -23,6 +23,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
+import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.objects.Destination;
@@ -1011,14 +1012,18 @@ public class Listeners implements Listener {
                                 if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
                                         && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
                                         && (warp.getWhiteList().contains(player.getUniqueId()))) {
-                                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, warp.getUsagePrice());
-                                    if (!economyResponse.transactionSuccess()) {
-                                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
-                                                .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
-                                        return;
-                                    } else
-                                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
-                                                .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
+                                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player, warp.getUsagePrice());
+                                    getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+                                    if (!economyChargeEvent.isCancelled()) {
+                                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, warp.getUsagePrice());
+                                        if (!economyResponse.transactionSuccess()) {
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
+                                            return;
+                                        } else
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
+                                    }
                                 }
 
                                 if (warp.getAnimationSet().contains(":")) {
@@ -1086,14 +1091,18 @@ public class Listeners implements Listener {
                                 if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
                                         && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
                                         && (warp.getWhiteList().contains(player.getUniqueId()))) {
-                                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, warp.getUsagePrice());
-                                    if (!economyResponse.transactionSuccess()) {
-                                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
-                                                .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
-                                        return;
-                                    } else
-                                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
-                                                .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
+                                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player, warp.getUsagePrice());
+                                    getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+                                    if (!economyChargeEvent.isCancelled()) {
+                                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, warp.getUsagePrice());
+                                        if (!economyResponse.transactionSuccess()) {
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
+                                            return;
+                                        } else
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
+                                    }
                                 }
 
                                 Destination destination = new Destination(getPluginInstance(), warp.getWarpLocation());
@@ -1167,17 +1176,21 @@ public class Listeners implements Listener {
                 double itemUsageCost = getPluginInstance().getConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
 
                 if (useVault && itemUsageCost > 0) {
-                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, itemUsageCost);
-                    if (!economyResponse.transactionSuccess()) {
-                        getPluginInstance().getManager().updateLastTransactionAmount(player, itemUsageCost);
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", player.getName()), player);
-                        return;
-                    } else
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", player.getName()), player);
+                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player, itemUsageCost);
+                    getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+                    if (!economyChargeEvent.isCancelled()) {
+                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, itemUsageCost);
+                        if (!economyResponse.transactionSuccess()) {
+                            getPluginInstance().getManager().updateLastTransactionAmount(player, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                    .replace("{amount}", String.valueOf(itemUsageCost))
+                                    .replace("{player}", player.getName()), player);
+                            return;
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                    .replace("{amount}", String.valueOf(itemUsageCost))
+                                    .replace("{player}", player.getName()), player);
+                    }
                 }
 
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".click-message"))
@@ -1186,7 +1199,8 @@ public class Listeners implements Listener {
                 String ownFormat = getPluginInstance().getConfig().getString("list-menu-section.own-status-format"),
                         publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
                         privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
-                        adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
+                        adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format"),
+                        featuredFormat = getPluginInstance().getConfig().getString("list-menu-section.featured-status-format");
 
                 String clickAction = getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".click-action");
                 if (clickAction != null) {
@@ -1322,7 +1336,8 @@ public class Listeners implements Listener {
                                 boolean isOwnFormat = statusFromItem.equalsIgnoreCase(ownFormat),
                                         isPublicFormat = statusFromItem.equalsIgnoreCase(publicFormat),
                                         isPrivateFormat = statusFromItem.equalsIgnoreCase(privateFormat),
-                                        isAdminFormat = statusFromItem.equalsIgnoreCase(adminFormat);
+                                        isAdminFormat = statusFromItem.equalsIgnoreCase(adminFormat),
+                                        isFeaturedFormat = statusFromItem.equalsIgnoreCase(adminFormat);
 
                                 if (isPublicFormat || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PUBLIC.name()))
                                     index = 0;
@@ -1331,6 +1346,7 @@ public class Listeners implements Listener {
                                 else if (isAdminFormat || statusFromItem.equalsIgnoreCase(EnumContainer.Status.ADMIN.name()))
                                     index = 2;
                                 else if (isOwnFormat) index = 3;
+                                else if (isFeaturedFormat) index = 4;
 
                                 int nextIndex = index + 1;
                                 String nextStatus;
@@ -1338,6 +1354,7 @@ public class Listeners implements Listener {
                                 if (nextIndex == 1) nextStatus = EnumContainer.Status.PRIVATE.name();
                                 else if (nextIndex == 2) nextStatus = EnumContainer.Status.ADMIN.name();
                                 else if (nextIndex == 3) nextStatus = ownFormat;
+                                else if (nextIndex == 4) nextStatus = featuredFormat;
                                 else nextStatus = EnumContainer.Status.PUBLIC.name();
 
                                 ItemStack filterItem = getPluginInstance().getManager().buildItemFromId(player, Objects.requireNonNull(nextStatus), "list-menu-section", itemId);
@@ -1428,17 +1445,21 @@ public class Listeners implements Listener {
                 double itemUsageCost = getPluginInstance().getConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost");
 
                 if (useVault && itemUsageCost > 0) {
-                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, itemUsageCost);
-                    if (!economyResponse.transactionSuccess()) {
-                        getPluginInstance().getManager().updateLastTransactionAmount(player, itemUsageCost);
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", player.getName()), player);
-                        return;
-                    } else
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", player.getName()), player);
+                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player, itemUsageCost);
+                    getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+                    if (!economyChargeEvent.isCancelled()) {
+                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, itemUsageCost);
+                        if (!economyResponse.transactionSuccess()) {
+                            getPluginInstance().getManager().updateLastTransactionAmount(player, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                    .replace("{amount}", String.valueOf(itemUsageCost))
+                                    .replace("{player}", player.getName()), player);
+                            return;
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                    .replace("{amount}", String.valueOf(itemUsageCost))
+                                    .replace("{player}", player.getName()), player);
+                    }
                 }
 
                 if (clickAction != null) {
@@ -1883,19 +1904,22 @@ public class Listeners implements Listener {
                 double itemUsageCost = getPluginInstance().getConfig().getDouble("ps-menu-section.items." + itemId + ".usage-cost");
 
                 if (useVault && itemUsageCost > 0) {
-                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, itemUsageCost);
-                    if (!economyResponse.transactionSuccess()) {
-                        getPluginInstance().getManager().updateLastTransactionAmount(player, itemUsageCost);
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", player.getName()), player);
-                        return;
-                    } else
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", player.getName()), player);
+                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player, itemUsageCost);
+                    getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+                    if (!economyChargeEvent.isCancelled()) {
+                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, itemUsageCost);
+                        if (!economyResponse.transactionSuccess()) {
+                            getPluginInstance().getManager().updateLastTransactionAmount(player, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                    .replace("{amount}", String.valueOf(itemUsageCost))
+                                    .replace("{player}", player.getName()), player);
+                            return;
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                    .replace("{amount}", String.valueOf(itemUsageCost))
+                                    .replace("{player}", player.getName()), player);
+                    }
                 }
-
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("ps-menu-section.items." + itemId + ".click-message"))
                         .replace("{player}", player.getName()).replace("{item-id}", itemId), player);
 
@@ -2090,17 +2114,21 @@ public class Listeners implements Listener {
                 double itemUsageCost = getPluginInstance().getConfig().getDouble("custom-menu-section." + menuId + ".items." + itemId + ".usage-cost");
 
                 if (useVault && itemUsageCost > 0) {
-                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, itemUsageCost);
-                    if (!economyResponse.transactionSuccess()) {
-                        getPluginInstance().getManager().updateLastTransactionAmount(player, itemUsageCost);
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", player.getName()), player);
-                        return;
-                    } else
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", player.getName()), player);
+                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player, itemUsageCost);
+                    getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+                    if (!economyChargeEvent.isCancelled()) {
+                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, itemUsageCost);
+                        if (!economyResponse.transactionSuccess()) {
+                            getPluginInstance().getManager().updateLastTransactionAmount(player, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                    .replace("{amount}", String.valueOf(itemUsageCost))
+                                    .replace("{player}", player.getName()), player);
+                            return;
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                    .replace("{amount}", String.valueOf(itemUsageCost))
+                                    .replace("{player}", player.getName()), player);
+                    }
                 }
 
                 String clickAction = getPluginInstance().getConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".click-action");

@@ -40,19 +40,14 @@ public class MainCommands implements CommandExecutor {
 
                 switch (args.length) {
                     case 1:
-
                         switch (args[0].toLowerCase()) {
-
                             case "reload":
                                 runReloadCommand(commandSender);
                                 return true;
-
                             case "info":
                                 runInfoCommand(commandSender);
                                 return true;
-
                             default:
-
                                 if (commandSender.hasPermission("hyperdrive.admin.help"))
                                     sendAdminHelpPage(commandSender, 1);
                                 else {
@@ -61,20 +56,15 @@ public class MainCommands implements CommandExecutor {
                                     else
                                         commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
                                 }
-
                                 return true;
-
                         }
-
                     case 2:
-
                         if (args[0].equalsIgnoreCase("help")) {
                             if (commandSender.hasPermission("hyperdrive.admin.help"))
                                 sendAdminHelpPage(commandSender, getPluginInstance().getManager().isNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
                             else {
                                 commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
                             }
-
                             return true;
                         }
 
@@ -88,9 +78,7 @@ public class MainCommands implements CommandExecutor {
                         }
 
                         return true;
-
                     case 3:
-
                         if (args[0].equalsIgnoreCase("updateip")) {
                             runUpdateIP(commandSender, args);
                             return true;
@@ -106,9 +94,7 @@ public class MainCommands implements CommandExecutor {
                         }
 
                         return true;
-
                     default:
-
                         if (commandSender.hasPermission("hyperdrive.admin.help"))
                             sendAdminHelpPage(commandSender, 1);
                         else {
@@ -122,91 +108,63 @@ public class MainCommands implements CommandExecutor {
                 }
 
             case "warps":
-
                 switch (args.length) {
                     case 0:
-
                         openListMenu(commandSender);
                         break;
-
                     case 1:
-
                         switch (args[0].toLowerCase()) {
-
                             case "help":
                                 sendHelpPage(commandSender, 1);
                                 return true;
-
                             case "rtp":
                                 beginRandomTeleportCommand(commandSender);
                                 return true;
-
                             case "rtpgroup":
                             case "rtpg":
                                 beginGroupRandomTeleportCommand(commandSender);
                                 return true;
-
                             case "list":
                                 runWarpListCommand(commandSender);
                                 return true;
-
                             default:
                                 beginWarpCommand(commandSender, args[0]);
                                 return true;
-
                         }
 
                     case 2:
 
                         switch (args[0].toLowerCase()) {
-
                             case "accept":
                                 beginAcceptCommand(commandSender, args[1]);
                                 return true;
-
                             case "deny":
                                 beginDenyCommand(commandSender, args[1]);
                                 return true;
-
                             case "rtp":
-
                                 beginRandomTeleportCommand(commandSender, args[1]);
                                 return true;
-
                             case "help":
-
                                 sendHelpPage(commandSender, getPluginInstance().getManager().isNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
                                 return true;
-
                             case "create":
-
                                 runWarpCreationCommand(commandSender, args[1]);
                                 return true;
-
                             case "delete":
-
                                 runWarpDeleteCommand(commandSender, args[1]);
                                 return true;
-
                             case "edit":
-
                                 runWarpEditCommand(commandSender, args[1]);
                                 return true;
-
                             default:
-
                                 if (runWarpAdminCommand(commandSender, args[0], args[1])) return true;
-
                                 if (commandSender.hasPermission("hyperdrive.admin.help"))
                                     sendAdminHelpPage(commandSender, 1);
                                 else sendHelpPage(commandSender, 1);
-
                                 return true;
-
                         }
 
                     case 3:
-
                         if ("rtp".equals(args[0].toLowerCase())) {
                             beginRandomTeleportCommand(commandSender, args[1], args[2]);
                             return true;
@@ -214,7 +172,6 @@ public class MainCommands implements CommandExecutor {
 
                         sendHelpPage(commandSender, 1);
                         return true;
-
                     default:
                         break;
                 }
@@ -869,7 +826,7 @@ public class MainCommands implements CommandExecutor {
         page2.add("");
         page2.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a2&e] &e)&m-----------&r&e>");
         page2.add("");
-        page2.add("&7&l*&r &e/tpa <player> &7- &arequests the player if the sender can teleport to them.");
+        page2.add("&7&l*&r &e/tpa <player> &7- &asends a request to teleport to the entered player.");
         page2.add("&7&l*&r &e/tpaccept <player> &7- &aaccepts the found teleport request and teleports the requester to the acceptor.");
         page2.add("&7&l*&r &e/tpdeny <player> &7- &adenies the found teleport request.");
         page2.add("&7&l*&r &e/tptoggle &7- &atoggles teleportation such as TPA requests and forceful teleportation commands.");
