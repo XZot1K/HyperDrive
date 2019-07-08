@@ -184,9 +184,9 @@ public class Warp {
             File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
             if (!file.exists()) return;
 
-            YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(file);
-            yamlConfiguration.set("warps." + getWarpName(), null);
             try {
+                YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(file);
+                yamlConfiguration.set(getWarpName(), null);
                 yamlConfiguration.save(file);
             } catch (IOException e) {
                 e.printStackTrace();

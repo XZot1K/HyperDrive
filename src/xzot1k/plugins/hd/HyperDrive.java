@@ -48,8 +48,6 @@ public class HyperDrive extends JavaPlugin {
     public void onEnable() {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
-        advertisePebbleHost();
-
         setServerVersion(getPluginInstance().getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
         saveDefaultVersionConfig();
         updateConfig();
@@ -108,7 +106,6 @@ public class HyperDrive extends JavaPlugin {
         }
 
         getServer().getPluginManager().registerEvents(new Listeners(getPluginInstance()), getPluginInstance());
-
         loadWarps(getConnection() != null);
         startWarpConverter();
 
@@ -1138,15 +1135,6 @@ public class HyperDrive extends JavaPlugin {
 
         setVaultEconomy(rsp.getProvider());
         return getVaultEconomy() != null;
-    }
-
-    private void advertisePebbleHost() {
-        log(Level.INFO,
-                "\n===============================================================================\n" +
-                        "        Need a server host? Try PebbleHost! Plans starting at $1/GB!\n" +
-                        "                  Use promo code \"zotdev\" for 5% off!\n" +
-                        "                            www.pebblehost.com\n" +
-                        "===============================================================================");
     }
 
     // getters and setters
