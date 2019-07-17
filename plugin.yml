@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.0.9-B
+version: 5.1-SNAPSHOT
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -10,7 +10,7 @@ commands:
     default: op
   warps:
     default: op
-    description: Opens the warp list menu.a
+    description: Opens the warp list menu.
     aliases: [warp]
 
   # REMOVE THE COMMANDS BELOW TO DISABLE STANDALONE TELEPORTATION COMMANDS
@@ -34,6 +34,10 @@ commands:
     default: op
     description: Teleport the send or the defined player to the defined coordinates.
     aliases: [tppos]
+  teleportaskhere:
+    default: op
+    description: Request the player to teleport to the sender.
+    aliases: [tpahere]
   teleportask:
     default: op
     description: Request to teleport to a player.

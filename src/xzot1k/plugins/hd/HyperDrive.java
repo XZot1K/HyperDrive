@@ -99,7 +99,7 @@ public class HyperDrive extends JavaPlugin {
         setTeleportationCommands(new TeleportationCommands(this));
         String[] teleportCommandNames = {"teleport", "teleporthere", "teleportoverride", "teleportoverridehere",
                 "teleportposition", "teleportask", "teleportaccept", "teleportdeny", "teleporttoggle", "back",
-                "crossserver"};
+                "teleportaskhere", "crossserver"};
         for (String cmd : teleportCommandNames) {
             PluginCommand command = getCommand(cmd);
             if (command != null) command.setExecutor(getTeleportationCommands());

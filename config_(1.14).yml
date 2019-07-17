@@ -44,7 +44,6 @@ language-section:
   random-teleport-start: "&ePlease wait while a safe location is found for random teleportation..."
   random-teleport-cooldown: "&cYou must wait &e{duration} &cseconds before beginning another random teleportation process."
   interaction-already-active: "&cYou must complete your current chat interaction in order to begin a new interaction."
-  chat-interaction-cleared: "&cAll of your chat interactions have been cleared."
   chat-interaction-cancelled: "&cYour chat interaction has been cancelled."
   create-warp-interaction: "&ePlease enter the name you wish to give your warp (Type {cancel} to stop the interaction):"
   rename-warp-interaction: "&ePlease enter the name you wish to re-name your warp to (Type {cancel} to stop the interaction):"
@@ -123,6 +122,7 @@ language-section:
   teleport-last-location: "&eYou have teleported to your last location."
   teleported-last-location: "&eThe player &a{player} &ehas been teleported to their last location."
   teleport-self: "&cYou are unable to teleport to yourself. Please use another player's name."
+  teleport-here-self: "&cYou are unable to teleport to yourself to yourself. Please use another player's name."
   teleport-same: "&cBoth player names entered were the same. Please enter two different player names."
   self-teleportation-toggled: "&cYou currently have teleportation disabled. use &e/tptoggle &cto re-enable."
   player-selection-group: "&eSelect all of the players you wish to randomly teleport with. After &a12 &eseconds the players who accepted will be randomly teleported with you."
@@ -214,8 +214,7 @@ filter-section:
   # Strings within the global filter will be remove from warp names, descriptions, and other similar textual features. (Case sensitive)
   # (Note: Phrases can be implemented into this list as well. The list can also be changed to a vertical format like
   # other lists in the configuration.)
-  global-filter: ["@", "%", "{", "}", "&", "`", "'", '"', ";", ":", "fuck", "shit", "cunt", "fag", "faggot",
-                  "bitch", "dick", "damn", "www.", ".com", ".net"]
+  global-filter: ["fuck", "shit", "cunt", "fag", "faggot", "bitch", "dick", "damn", "www.", ".com", ".net"]
 
 # Here is where everything related to teleportation can be customize.
 teleportation-section:
@@ -483,7 +482,7 @@ list-menu-section:
       fill-empty-slots: false
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
-      usage-cost: 0
+      usage-cost: 25
       permission: "hyperdrive.use.create"
       display-name: "&aCreate New Warp"
       lore:

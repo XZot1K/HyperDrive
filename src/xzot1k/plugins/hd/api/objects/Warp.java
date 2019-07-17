@@ -204,6 +204,24 @@ public class Warp {
         }
     }
 
+    /**
+     * '
+     * Renames the warp to the given name (Handles Re-Registration).
+     *
+     * @param newName The new name (Does NOT filter).
+     * @return Whether the rename was successful (Checks if the newName already exists).
+     */
+    public boolean rename(String newName) {
+        if (!getPluginInstance().getManager().doesWarpExist(newName)) {
+            unRegister();
+            setWarpName(newName);
+            register();
+            return true;
+        }
+
+        return false;
+    }
+
     // getters & setters
     public SerializableLocation getWarpLocation() {
         return warpLocation;

@@ -19,6 +19,7 @@ import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.events.EconomyReturnEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.internals.Paging;
+import xzot1k.plugins.hd.core.objects.InteractionModule;
 import xzot1k.plugins.hd.core.objects.json.JSONExtra;
 import xzot1k.plugins.hd.core.objects.json.JSONMessage;
 import xzot1k.plugins.hd.core.packets.actionbars.ActionBarHandler;
@@ -53,7 +54,7 @@ public class Manager {
     private HashMap<String, Warp> warpMap;
     private HashMap<UUID, Double> lastTransactionMap;
     private HashMap<UUID, HashMap<String, Long>> cooldownMap;
-    private HashMap<UUID, HashMap<String, String>> chatInteractionMap;
+    private HashMap<UUID, InteractionModule> chatInteractionMap;
     private HashMap<UUID, List<UUID>> groupMap;
 
     public Manager(HyperDrive pluginInstance) {
@@ -1278,57 +1279,31 @@ public class Manager {
 
 
     // chat interaction map methods
-    public void updateChatInteraction(OfflinePlayer player, String chatInteractionId, String chatInteractionValue) {
-        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId())) {
-            HashMap<String, String> interactionMap = getChatInteractionMap().get(player.getUniqueId());
-            if (interactionMap == null)
-                interactionMap = new HashMap<>();
-
-            interactionMap.put(chatInteractionId, chatInteractionValue);
-            getChatInteractionMap().put(player.getUniqueId(), interactionMap);
-        } else {
-            HashMap<String, String> interactionMap = new HashMap<>();
-            interactionMap.put(chatInteractionId, chatInteractionValue);
-            getChatInteractionMap().put(player.getUniqueId(), interactionMap);
-        }
+    public void updateChatInteraction(OfflinePlayer player, String interactionId, String interactionValue, double interactionPrice) {
+        InteractionModule interactionModule = new InteractionModule(interactionId, interactionValue, interactionPrice);
+        getChatInteractionMap().put(player.getUniqueId(), interactionModule);
     }
 
-    public String getChatInteractionValue(OfflinePlayer player, String chatInteractionId) {
-        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId())) {
-            HashMap<String, String> interactionMap = getChatInteractionMap().get(player.getUniqueId());
-            if (interactionMap != null && !interactionMap.isEmpty() && interactionMap.containsKey(chatInteractionId))
-                return interactionMap.get(chatInteractionId);
-        }
-
+    public InteractionModule getChatInteraction(OfflinePlayer player) {
+        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId()))
+            return getChatInteractionMap().get(player.getUniqueId());
         return null;
     }
 
-    public void clearChatInteraction(OfflinePlayer player, String chatInteractionId) {
-        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId())) {
-            HashMap<String, String> interactionMap = getChatInteractionMap().get(player.getUniqueId());
-            if (interactionMap != null && !interactionMap.isEmpty())
-                interactionMap.remove(chatInteractionId);
-        }
+    public void clearChatInteraction(OfflinePlayer player) {
+        if (!getChatInteractionMap().isEmpty()) getChatInteractionMap().remove(player.getUniqueId());
     }
 
-    public void clearChatInteractions(OfflinePlayer player) {
-        if (!getChatInteractionMap().isEmpty())
-            getChatInteractionMap().remove(player.getUniqueId());
+    public boolean isInChatInteraction(OfflinePlayer player) {
+        return !getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId());
     }
 
-    public boolean isInOtherChatInteraction(OfflinePlayer player, String currentChatInteractionId) {
-        if (!getChatInteractionMap().isEmpty() && getChatInteractionMap().containsKey(player.getUniqueId())) {
-            HashMap<String, String> interactionMap = getChatInteractionMap().get(player.getUniqueId());
-            if (interactionMap != null && !interactionMap.isEmpty()) {
-                List<String> keysetList = new ArrayList<>(interactionMap.keySet());
-                for (int i = -1; ++i < keysetList.size(); ) {
-                    String keyId = keysetList.get(i);
-                    if (keyId != null && !keyId.equalsIgnoreCase(currentChatInteractionId))
-                        return true;
-                }
-            }
-        }
-
+    public boolean isChatInteractionId(String text) {
+        String[] ids = {"create-warp", "rename", "change-status", "change-name-color", "edit-description", "give-ownership",
+                "give-assistant", "remove-assistant", "add-to-whitelist", "remove-from-whitelist", "change-usage-price",
+                "add-command", "remove-command"};
+        for (int i = -1; ++i < ids.length; )
+            if (ids[i].equalsIgnoreCase(text)) return true;
         return false;
     }
 
@@ -1381,14 +1356,6 @@ public class Manager {
         this.warpMap = warpMap;
     }
 
-    private HashMap<UUID, HashMap<String, String>> getChatInteractionMap() {
-        return chatInteractionMap;
-    }
-
-    private void setChatInteractionMap(HashMap<UUID, HashMap<String, String>> chatInteractionMap) {
-        this.chatInteractionMap = chatInteractionMap;
-    }
-
     public Paging getPaging() {
         return paging;
     }
@@ -1427,5 +1394,13 @@ public class Manager {
 
     private void setGroupMap(HashMap<UUID, List<UUID>> groupMap) {
         this.groupMap = groupMap;
+    }
+
+    private HashMap<UUID, InteractionModule> getChatInteractionMap() {
+        return chatInteractionMap;
+    }
+
+    private void setChatInteractionMap(HashMap<UUID, InteractionModule> chatInteractionMap) {
+        this.chatInteractionMap = chatInteractionMap;
     }
 }

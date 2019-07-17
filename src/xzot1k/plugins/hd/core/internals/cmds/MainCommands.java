@@ -630,17 +630,16 @@ public class MainCommands implements CommandExecutor {
 
         getPluginInstance().stopTasks();
         getPluginInstance().reloadConfig();
-        getPluginInstance().reloadWarps();
-        getPluginInstance().startTasks();
-
         getPluginInstance().getManager().setSimpleDateFormat(new SimpleDateFormat(Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
+        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+            getPluginInstance().reloadWarps();
+            getPluginInstance().startTasks();
+        });
 
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.reload")));
-            return;
-        }
-
-        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.reload"), (Player) commandSender);
+        } else
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.reload"), (Player) commandSender);
     }
 
     private void beginWarpCommand(CommandSender commandSender, String warpName) {
@@ -811,7 +810,7 @@ public class MainCommands implements CommandExecutor {
     }
 
     private void setupHelpPages() {
-        ArrayList<String> page1 = new ArrayList<>(), page2 = new ArrayList<>();
+        ArrayList<String> page1 = new ArrayList<>(), page2 = new ArrayList<>(), page3 = new ArrayList<>();
         page1.add("");
         page1.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a1&e] &e)&m-----------&r&e>");
         page1.add("");
@@ -833,6 +832,13 @@ public class MainCommands implements CommandExecutor {
         page2.add("&7&l*&r &e/back &7- &aattempts to teleport the sender to their last teleport location.");
         page2.add("");
         getHelpPages().put(2, page2);
+
+        page3.add("");
+        page3.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a3&e] &e)&m-----------&r&e>");
+        page3.add("");
+        page3.add("&7&l*&r &e/tpahere <player> &7- &asends a request for the player to teleport to you.");
+        page3.add("");
+        getHelpPages().put(3, page3);
     }
 
     public void sendAdminHelpPage(CommandSender commandSender, int page) {
