@@ -102,7 +102,8 @@ public class Listeners implements Listener {
                 enteredName = enteredName.replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
                 for (int i = -1; ++i < globalFilterStrings.size(); ) {
                     String filterString = globalFilterStrings.get(i).replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
-                    enteredName = enteredName.replaceAll("(?i)" + filterString, "");
+                    if (filterString != null && !filterString.equalsIgnoreCase(""))
+                        enteredName = enteredName.replaceAll("(?i)" + filterString, "");
                 }
 
                 if (getPluginInstance().getManager().hasMetWarpLimit(e.getPlayer())) {
@@ -153,7 +154,8 @@ public class Listeners implements Listener {
                 enteredName = enteredName.replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
                 for (int i = -1; ++i < globalFilterStrings.size(); ) {
                     String filterString = globalFilterStrings.get(i).replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
-                    enteredName = enteredName.replaceAll("(?i)" + filterString, "");
+                    if (filterString != null && !filterString.equalsIgnoreCase(""))
+                        enteredName = enteredName.replaceAll("(?i)" + filterString, "");
                 }
 
                 String previousName = interactionModule.getInteractionValue();
@@ -284,7 +286,8 @@ public class Listeners implements Listener {
                             .replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
                     for (int i = -1; ++i < globalFilterStrings.size(); ) {
                         String filterString = globalFilterStrings.get(i).replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
-                        desc = desc.replaceAll("(?i)" + filterString, "");
+                        if (filterString != null && !filterString.equalsIgnoreCase(""))
+                            enteredName = enteredName.replaceAll("(?i)" + filterString, "");
                     }
 
                     warp.setDescription(getPluginInstance().getManager().wrapString(desc, getPluginInstance().getConfig().getInt("warp-icon-section.description-line-cap")));
