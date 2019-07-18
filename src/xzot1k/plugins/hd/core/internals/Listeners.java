@@ -112,6 +112,13 @@ public class Listeners implements Listener {
                     return;
                 }
 
+                if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(enteredName)) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(enteredName))) {
+                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-exists"))
+                            .replace("{warp}", enteredName), e.getPlayer());
+                    return;
+                }
+
                 if (useVault && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(), itemUsageCost);
@@ -129,13 +136,6 @@ public class Listeners implements Listener {
                 }
 
                 warp = new Warp(enteredName, e.getPlayer(), e.getPlayer().getLocation());
-                if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(enteredName))) {
-                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-exists"))
-                            .replace("{warp}", enteredName), e.getPlayer());
-                    return;
-                }
-
                 warp.register();
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> getPluginInstance().saveWarp(warp, useMySQL));

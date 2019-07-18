@@ -861,8 +861,10 @@ public class Manager {
 
                     ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".player-head-name"),
                             displayName, newLore, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                    inventory.setItem(getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"), playerHeadItem);
-                    if (fillEmptySlots) emptySlotFiller = playerHeadItem;
+                    if (playerHeadItem != null) {
+                        inventory.setItem(getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"), playerHeadItem);
+                        if (fillEmptySlots) emptySlotFiller = playerHeadItem;
+                    }
                 } else {
                     String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
                             .getString("list-menu-section.items." + itemId + ".display-name"))
