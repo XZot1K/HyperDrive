@@ -1156,6 +1156,16 @@ public class Listeners implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    public void onQuit(PlayerQuitEvent e) {
+        getPluginInstance().getManager().getPaging().getWarpPageMap().remove(e.getPlayer().getUniqueId());
+        getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(e.getPlayer().getUniqueId());
+        getPluginInstance().getManager().getPaging().getCurrentPageMap().remove(e.getPlayer().getUniqueId());
+        getPluginInstance().getTeleportationCommands().getToggledPlayers().remove(e.getPlayer().getUniqueId());
+        getPluginInstance().getTeleportationCommands().getLastLocationMap().remove(e.getPlayer().getUniqueId());
+        getPluginInstance().getTeleportationCommands().getTpaHereSentPlayers().remove(e.getPlayer().getUniqueId());
+    }
+
     // methods
     private void runListMenuClick(Player player, InventoryClickEvent e) {
         if (e.getCurrentItem() != null && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {

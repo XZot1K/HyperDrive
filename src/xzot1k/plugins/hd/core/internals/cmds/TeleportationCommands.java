@@ -16,7 +16,7 @@ import java.util.*;
 
 public class TeleportationCommands implements CommandExecutor {
     private HyperDrive pluginInstance;
-    private List<UUID> toggledPlayers;
+    private List<UUID> toggledPlayers, tpaHereSentPlayers;
     private HashMap<UUID, UUID> tpaSentMap;
     private HashMap<UUID, SerializableLocation> lastLocationMap;
 
@@ -24,6 +24,7 @@ public class TeleportationCommands implements CommandExecutor {
         setPluginInstance(pluginInstance);
         setToggledPlayers(new ArrayList<>());
         setLastLocationMap(new HashMap<>());
+        setTpaHereSentPlayers(new ArrayList<>());
         setTpaSentMap(new HashMap<>());
     }
 
@@ -538,7 +539,11 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         getTpaSentMap().remove(enteredPlayer.getUniqueId());
-        enteredPlayer.teleport(player.getLocation());
+
+        if (getTpaHereSentPlayers().contains(enteredPlayer.getUniqueId())) {
+            getTpaHereSentPlayers().remove(enteredPlayer.getUniqueId());
+            player.teleport(enteredPlayer.getLocation());
+        } else enteredPlayer.teleport(player.getLocation());
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -594,7 +599,9 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        updateTeleportAskRequest(enteredPlayer, player);
+        updateTeleportAskRequest(player, enteredPlayer);
+        if (!getTpaHereSentPlayers().contains(player.getUniqueId()))
+            getTpaHereSentPlayers().add(player.getUniqueId());
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-sent")
                 .replace("{player}", enteredPlayer.getName()), player);
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-received")
@@ -1035,7 +1042,7 @@ public class TeleportationCommands implements CommandExecutor {
         this.toggledPlayers = toggledPlayers;
     }
 
-    private HashMap<UUID, UUID> getTpaSentMap() {
+    public HashMap<UUID, UUID> getTpaSentMap() {
         return tpaSentMap;
     }
 
@@ -1043,11 +1050,19 @@ public class TeleportationCommands implements CommandExecutor {
         this.tpaSentMap = tpaSentMap;
     }
 
-    private HashMap<UUID, SerializableLocation> getLastLocationMap() {
+    public HashMap<UUID, SerializableLocation> getLastLocationMap() {
         return lastLocationMap;
     }
 
     private void setLastLocationMap(HashMap<UUID, SerializableLocation> lastLocationMap) {
         this.lastLocationMap = lastLocationMap;
+    }
+
+    public List<UUID> getTpaHereSentPlayers() {
+        return tpaHereSentPlayers;
+    }
+
+    private void setTpaHereSentPlayers(List<UUID> tpaHereSentPlayers) {
+        this.tpaHereSentPlayers = tpaHereSentPlayers;
     }
 }

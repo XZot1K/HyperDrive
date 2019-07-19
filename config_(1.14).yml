@@ -136,6 +136,8 @@ language-section:
   ip-ping-fail: "&cUnable to warp to the warp &e{warp} &cbecause the IP Address &e{ip} &cis not responding."
   cross-teleported: "&eYou have been teleported to the server &a{server} &eat World: &a{world} &eX: &a{x}&e, Y: &a{y}&e, Z: &a{z}&e."
   warp-no-longer-exists: "&cThe warp seems to no longer exist."
+  forbidden-world: "&cThe world you are attempting to randomly teleport to is forbidden."
+  random-teleport-admin-forbidden: "&cUnable to randomly teleport &e{player} &cto the world &e{world} &csince it is forbidden."
 
 # Here is where the MySQL connection can be configured.
 # (Note: Database tables are created and managed automatically. There is also no MySQL conversion to YAML file; therefore, use at your own risk.)
@@ -262,6 +264,9 @@ random-teleport-section:
     - "world:0,0,0"
     - "world_the_nether:0,0,0"
     - "world_the_end:0,0,0"
+  # These are the worlds where RTP will not be allowed to take a player.
+  forbidden-worlds:
+    - "world_the_end"
   # This is the bound radius that a player can be teleported within. You can think of this as like a world border.
   # (Note: It is recommended to set this value to the size of your world's world border)
   bounds-radius: 5000

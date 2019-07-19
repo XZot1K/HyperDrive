@@ -549,7 +549,14 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(player, player.getLocation().getWorld());
+        for (String worldName : getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-worlds")) {
+            if (worldName.equalsIgnoreCase(player.getWorld().getName())) {
+                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.forbidden-world"), player);
+                return;
+            }
+        }
+
+        getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(player, player.getWorld());
     }
 
     private void beginRandomTeleportCommand(CommandSender commandSender, String playerName) {
@@ -568,7 +575,15 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(enteredPlayer, enteredPlayer.getLocation().getWorld());
+        for (String worldName : getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-worlds")) {
+            if (worldName.equalsIgnoreCase(enteredPlayer.getWorld().getName())) {
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-admin-forbidden"))
+                        .replace("{player}", enteredPlayer.getName()).replace("{world}", Objects.requireNonNull(enteredPlayer.getLocation().getWorld()).getName())));
+                return;
+            }
+        }
+
+        getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(enteredPlayer, enteredPlayer.getWorld());
         commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-admin"))
                 .replace("{player}", enteredPlayer.getName()).replace("{world}", Objects.requireNonNull(enteredPlayer.getLocation().getWorld()).getName())));
     }
@@ -594,6 +609,14 @@ public class MainCommands implements CommandExecutor {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.world-invalid"))
                     .replace("{world}", worldName)));
             return;
+        }
+
+        for (String wn : getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-worlds")) {
+            if (wn.equalsIgnoreCase(world.getName())) {
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-admin-forbidden"))
+                        .replace("{player}", enteredPlayer.getName()).replace("{world}", world.getName())));
+                return;
+            }
         }
 
         getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(enteredPlayer, world);

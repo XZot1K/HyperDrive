@@ -553,7 +553,7 @@ public class TeleportationHandler implements Runnable {
 
         for (int i = 1; ++i < (world.getMaxHeight() / 2); ) {
             Block block = world.getBlockAt((int) x, i, (int) z);
-            if (block.getType() != Material.AIR && block.getRelative(BlockFace.UP).getType() == Material.AIR
+            if (block.getType() != Material.AIR && block.getType() != Material.BEDROCK && block.getRelative(BlockFace.UP).getType() == Material.AIR
                     && block.getRelative(BlockFace.UP).getRelative(BlockFace.UP).getType() == Material.AIR)
                 return i + 1;
         }
