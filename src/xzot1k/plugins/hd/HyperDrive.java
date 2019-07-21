@@ -723,6 +723,7 @@ public class HyperDrive extends JavaPlugin {
                     }
 
                     savedWarps += 1;
+                    return;
                 }
 
                 StringBuilder description = new StringBuilder(), commands = new StringBuilder(),
