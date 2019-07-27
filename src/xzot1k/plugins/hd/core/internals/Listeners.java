@@ -75,7 +75,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onChat(AsyncPlayerChatEvent e) {
         InteractionModule interactionModule = getPluginInstance().getManager().getChatInteraction(e.getPlayer());
         if (interactionModule == null) return;
