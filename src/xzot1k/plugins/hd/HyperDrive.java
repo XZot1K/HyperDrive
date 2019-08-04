@@ -570,40 +570,33 @@ public class HyperDrive extends JavaPlugin {
             HashMap<UUID, Location> locationMap = new HashMap<>();
             int crossServerTeleportTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(this, () ->
             {
+                Player firstPlayer = getBungeeListener().getFirstPlayer();
+                if (firstPlayer != null) getBungeeListener().requestServers(firstPlayer);
                 getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () ->
                 {
+                    getDatabaseWarps().clear();
                     try {
-                        getDatabaseWarps().clear();
                         Statement statement = getConnection().createStatement();
                         ResultSet resultSet = statement.executeQuery("select * from warps");
-                        while (resultSet.next()) getDatabaseWarps().add(resultSet.getString(1));
+                        while (resultSet.next()) {
+                            String warpName = resultSet.getString(1).toLowerCase();
+                            if (!getDatabaseWarps().contains(warpName)) getDatabaseWarps().add(warpName);
+                        }
+
                         resultSet.close();
                         statement.close();
 
-                        List<Warp> warpList = new ArrayList<>(getManager().getWarpMap().values());
-                        for (int i = -1; ++i < warpList.size(); ) {
-                            Warp warp = warpList.get(i);
-                            if (!doesWarpExistInDatabase(warp.getWarpName()))
-                                warp.unRegister();
-                        }
+                        for (Warp warp : getManager().getWarpMap().values())
+                            if (!getDatabaseWarps().contains(warp.getWarpName().toLowerCase())) warp.unRegister();
 
-                        for (int i = -1; ++i < getDatabaseWarps().size(); ) {
-                            String warpName = getDatabaseWarps().get(i);
-                            if (!getManager().getWarpMap().containsKey(warpName)) {
+                        for (String warpName : getDatabaseWarps())
+                            if (!getManager().getWarpMap().containsKey(warpName))
                                 loadWarp(warpName, (getConnection() != null));
-                            }
-                        }
 
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
-                });
 
-                Player firstPlayer = getBungeeListener().getFirstPlayer();
-                if (firstPlayer != null) getBungeeListener().requestServers(firstPlayer);
-
-                getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () ->
-                {
                     try {
                         Statement statement = getConnection().createStatement();
                         ResultSet resultSet = statement.executeQuery("select * from transfer");
@@ -640,9 +633,7 @@ public class HyperDrive extends JavaPlugin {
                     }
                 });
 
-                List<UUID> playerUniqueIds = new ArrayList<>(locationMap.keySet());
-                for (int i = -1; ++i < playerUniqueIds.size(); ) {
-                    UUID playerUniqueId = playerUniqueIds.get(i);
+                for (UUID playerUniqueId : locationMap.keySet()) {
                     getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () ->
                     {
                         try {
@@ -1202,12 +1193,7 @@ public class HyperDrive extends JavaPlugin {
     }
 
     public boolean doesWarpExistInDatabase(String warpName) {
-        for (int i = -1; ++i < getDatabaseWarps().size(); ) {
-            String name = getDatabaseWarps().get(i);
-            if (name != null && name.equalsIgnoreCase(warpName)) return true;
-        }
-
-        return false;
+        return getDatabaseWarps().contains(warpName.toLowerCase());
     }
 
     private static void copy(File source, File destination) throws IOException {
