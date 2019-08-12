@@ -607,7 +607,9 @@ public class Manager {
             }
 
             String furtherFormattedLine;
-            OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+            OfflinePlayer offlinePlayer = warp.getOwner() != null ? getPluginInstance().getServer().getOfflinePlayer(warp.getOwner()) : null;
+            String invalidRetrieval = getPluginInstance().getConfig().getString("warp-icon-section.invalid-retrieval");
+            if (invalidRetrieval == null) invalidRetrieval = "";
 
             furtherFormattedLine = formatLine.replace("{creation-date}", warp.getCreationDate()).replace("{assistant-count}", String.valueOf(warp.getAssistants().size()))
                     .replace("{usage-price}", String.valueOf(warp.getUsagePrice())).replace("{whitelist-count}", String.valueOf(warp.getWhiteList().size()))
@@ -616,8 +618,7 @@ public class Manager {
                     .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
                     .replace("{player}", Objects.requireNonNull(player.getName()))
                     .replace("{traffic}", String.valueOf(warp.getTraffic()))
-                    .replace("{owner}", offlinePlayer.getName() == null ? Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.invalid-retrieval"))
-                            : Objects.requireNonNull(offlinePlayer.getName()));
+                    .replace("{owner}", offlinePlayer != null ? (offlinePlayer.getName() != null ? offlinePlayer.getName() : invalidRetrieval) : invalidRetrieval);
 
             if (foundEventPlaceholder != null) {
                 switch (foundEventPlaceholder) {
@@ -845,18 +846,19 @@ public class Manager {
             if (itemId != null && !itemId.equalsIgnoreCase("")) {
                 boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
                         fillEmptySlots = getPluginInstance().getConfig().getBoolean("list-menu-section.items." + itemId + ".fill-empty-slots");
+                String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None", replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) : "None";
                 if (usePlayerHead) {
                     String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
                             .getString("list-menu-section.items." + itemId + ".display-name"))
                             .replace("{current-page}", String.valueOf(currentPage))
-                            .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                            .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                            .replace("{previous-page}", replacement)
+                            .replace("{next-page}", replacement1)
                             .replace("{current-status}", Objects.requireNonNull(currentStatus));
                     List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig().getStringList("list-menu-section.items." + itemId + ".lore");
                     for (int j = -1; ++j < lore.size(); )
                         newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
-                                .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                                .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                                .replace("{previous-page}", replacement)
+                                .replace("{next-page}", replacement1)
                                 .replace("{current-status}", currentStatus)));
 
                     ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".player-head-name"),
@@ -869,15 +871,15 @@ public class Manager {
                     String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
                             .getString("list-menu-section.items." + itemId + ".display-name"))
                             .replace("{current-page}", String.valueOf(currentPage))
-                            .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                            .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                            .replace("{previous-page}", replacement)
+                            .replace("{next-page}", replacement1)
                             .replace("{current-status}", Objects.requireNonNull(currentStatus));
                     List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig()
                             .getStringList("list-menu-section.items." + itemId + ".lore");
                     for (int j = -1; ++j < lore.size(); )
                         newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
-                                .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                                .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                                .replace("{previous-page}", replacement)
+                                .replace("{next-page}", replacement1)
                                 .replace("{current-status}", currentStatus)));
                     Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".material"))
                             .toUpperCase().replace(" ", "_").replace("-", "_"));
@@ -940,16 +942,18 @@ public class Manager {
             String itemId = itemIds.get(i);
             boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("ps-menu-section.items." + itemId + ".use-player-head"),
                     fillEmptySlots = getPluginInstance().getConfig().getBoolean("ps-menu-section.items." + itemId + ".fill-empty-slots");
+            String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None", replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) : "None";
+
             if (usePlayerHead) {
                 String displayName = Objects.requireNonNull(getPluginInstance().getConfig().getString("ps-menu-section.items." + itemId + ".display-name"))
                         .replace("{current-page}", String.valueOf(currentPage))
-                        .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                        .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None");
+                        .replace("{previous-page}", replacement)
+                        .replace("{next-page}", replacement1);
                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig().getStringList("ps-menu-section.items." + itemId + ".lore");
                 for (int j = -1; ++j < lore.size(); )
                     newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
-                            .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                            .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")));
+                            .replace("{previous-page}", replacement)
+                            .replace("{next-page}", replacement1)));
 
                 ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getConfig().getString("ps-menu-section.items." + itemId + ".player-head-name"),
                         displayName, newLore, getPluginInstance().getConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
@@ -958,14 +962,14 @@ public class Manager {
             } else {
                 String displayName = Objects.requireNonNull(getPluginInstance().getConfig().getString("ps-menu-section.items." + itemId + ".display-name"))
                         .replace("{current-page}", String.valueOf(currentPage))
-                        .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                        .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None");
+                        .replace("{previous-page}", replacement)
+                        .replace("{next-page}", replacement1);
                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig()
                         .getStringList("ps-menu-section.items." + itemId + ".lore");
                 for (int j = -1; ++j < lore.size(); )
                     newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
-                            .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                            .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")));
+                            .replace("{previous-page}", replacement)
+                            .replace("{next-page}", replacement1)));
                 Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getConfig().getString("ps-menu-section.items." + itemId + ".material"))
                         .toUpperCase().replace(" ", "_").replace("-", "_"));
 
@@ -1114,19 +1118,21 @@ public class Manager {
             String itemId = itemIds.get(i);
             boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("custom-menus-section." + menuId + ".items." + itemId + ".use-player-head"),
                     fillEmptySlots = getPluginInstance().getConfig().getBoolean("custom-menus-section." + menuId + ".items." + itemId + ".fill-empty-slots");
+            String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None", replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) : "None";
+
             if (usePlayerHead) {
                 String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
                         .getString("custom-menus-section." + menuId + ".items." + itemId + ".display-name"))
                         .replace("{current-page}", String.valueOf(currentPage))
-                        .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                        .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                        .replace("{previous-page}", replacement)
+                        .replace("{next-page}", replacement1)
                         .replace("{current-status}", WordUtils.capitalize(currentFilterStatus));
                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig()
                         .getStringList("custom-menus-section." + menuId + ".items." + itemId + ".lore");
                 for (int j = -1; ++j < lore.size(); )
                     newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
-                            .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                            .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                            .replace("{previous-page}", replacement)
+                            .replace("{next-page}", replacement1)
                             .replace("{current-status}", WordUtils.capitalize(currentFilterStatus))));
 
                 ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getConfig().getString("custom-menus-section." + menuId + ".items." + itemId + ".player-head-name"),
@@ -1137,14 +1143,14 @@ public class Manager {
                 String displayName = Objects.requireNonNull(getPluginInstance().getConfig()
                         .getString("custom-menus-section." + menuId + ".items." + itemId + ".display-name"))
                         .replace("{current-page}", String.valueOf(currentPage))
-                        .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                        .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                        .replace("{previous-page}", replacement)
+                        .replace("{next-page}", replacement1)
                         .replace("{current-status}", WordUtils.capitalize(currentFilterStatus));
                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig().getStringList("custom-menus-section." + menuId + ".items." + itemId + ".lore");
                 for (int j = -1; ++j < lore.size(); )
                     newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
-                            .replace("{previous-page}", hasPreviousPage ? String.valueOf((currentPage - 1)) : "None")
-                            .replace("{next-page}", hasNextPage ? String.valueOf((currentPage + 1)) : "None")
+                            .replace("{previous-page}", replacement)
+                            .replace("{next-page}", replacement1)
                             .replace("{current-status}", WordUtils.capitalize(currentFilterStatus))));
                 Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getConfig().getString("custom-menus-section." + menuId + ".items." + itemId + ".material"))
                         .toUpperCase().replace(" ", "_").replace("-", "_"));

@@ -602,7 +602,7 @@ public class HyperDrive extends JavaPlugin {
                         ResultSet resultSet = statement.executeQuery("select * from transfer");
                         while (resultSet.next()) {
                             UUID playerUniqueId = UUID.fromString(resultSet.getString(1));
-                            if (!locationMap.keySet().contains(playerUniqueId)) {
+                            if (!locationMap.containsKey(playerUniqueId)) {
                                 String locationString = resultSet.getString(2), server_ip = resultSet.getString(3);
                                 if (server_ip == null || server_ip.equalsIgnoreCase("")) {
                                     if (locationString.contains(",")) {
@@ -671,6 +671,8 @@ public class HyperDrive extends JavaPlugin {
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
         for (Warp warp : getManager().getWarpMap().values()) {
             try {
+                warp.setWarpName(warp.getWarpName().replace("§", "").replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", ""));
+
                 if (!useMySQL || getConnection() == null) {
                     yaml.set(warp.getWarpName() + ".location.world", warp.getWarpLocation().getWorldName());
                     yaml.set(warp.getWarpName() + ".location.x", warp.getWarpLocation().getX());
@@ -789,7 +791,7 @@ public class HyperDrive extends JavaPlugin {
                 List<String> configurationLines = new ArrayList<>(Objects.requireNonNull(yaml.getConfigurationSection("")).getKeys(false));
                 for (int i = -1; ++i < configurationLines.size(); ) {
                     try {
-                        String warpName = configurationLines.get(i);
+                        String warpName = configurationLines.get(i).replace("§", "").replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
                         UUID uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
 
                         SerializableLocation serializableLocation = new SerializableLocation(yaml.getString(warpName + ".location.world"), yaml.getDouble(warpName + ".location.x"),

@@ -42,7 +42,7 @@ public class Listeners implements Listener {
         setPluginInstance(pluginInstance);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onClick(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
             Player player = (Player) e.getWhoClicked();
@@ -76,7 +76,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onChat(AsyncPlayerChatEvent e) {
         InteractionModule interactionModule = getPluginInstance().getManager().getChatInteraction(e.getPlayer());
         if (interactionModule == null) return;
@@ -283,10 +283,9 @@ public class Listeners implements Listener {
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-cleared"))
                             .replace("{warp}", warp.getWarpName()), e.getPlayer());
                 } else {
-                    String desc = ChatColor.stripColor(getPluginInstance().getManager().colorText(e.getMessage()))
-                            .replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
+                    String desc = ChatColor.stripColor(getPluginInstance().getManager().colorText(e.getMessage()));
                     for (int i = -1; ++i < globalFilterStrings.size(); ) {
-                        String filterString = globalFilterStrings.get(i).replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
+                        String filterString = globalFilterStrings.get(i);
                         if (filterString != null && !filterString.equalsIgnoreCase(""))
                             enteredName = enteredName.replaceAll("(?i)" + filterString, "");
                     }
@@ -794,7 +793,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onMove(PlayerMoveEvent e) {
         if ((e.getFrom().getBlockX() != Objects.requireNonNull(e.getTo()).getBlockX()) || (e.getFrom().getBlockY() != e.getTo().getBlockY()) || (e.getFrom().getBlockZ() != e.getTo().getBlockZ())
                 || !Objects.requireNonNull(e.getFrom().getWorld()).getName().equalsIgnoreCase(Objects.requireNonNull(e.getTo().getWorld()).getName())) {
@@ -860,7 +859,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onDamage(EntityDamageEvent e) {
         if (e.getEntity() instanceof Player) {
             Player player = (Player) e.getEntity();
@@ -926,17 +925,17 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onTeleport(PlayerTeleportEvent e) {
         getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getPlayer().getLocation());
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onDeath(PlayerDeathEvent e) {
         getPluginInstance().getTeleportationCommands().updateLastLocation(e.getEntity(), e.getEntity().getLocation());
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onSignCreate(SignChangeEvent e) {
         String initialLine = e.getLine(0);
         if (initialLine == null || (!initialLine.equalsIgnoreCase("[HyperDrive]") && !initialLine.equalsIgnoreCase("[HD]")))
@@ -955,7 +954,7 @@ public class Listeners implements Listener {
         e.setLine(0, getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("general-section.sign-header-color")) + initialLine);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         Player player = e.getPlayer();
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK && (e.getClickedBlock() != null && (e.getClickedBlock().getType().name().contains("SIGN")))) {
@@ -1144,7 +1143,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent e) {
         List<String> commandStrings = getPluginInstance().getConfig().getStringList("general-section.custom-alias-commands");
         for (int i = -1; ++i < commandStrings.size(); ) {
@@ -1162,7 +1161,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         getPluginInstance().getManager().getPaging().getWarpPageMap().remove(e.getPlayer().getUniqueId());
         getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(e.getPlayer().getUniqueId());
