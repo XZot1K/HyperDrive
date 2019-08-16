@@ -7,28 +7,17 @@ import xzot1k.plugins.hd.api.objects.Warp;
 
 public class Destination {
 
-    private HyperDrive pluginInstance;
     private SerializableLocation location;
     private Warp warp;
 
     public Destination(HyperDrive pluginInstance, Location location) {
-        setPluginInstance(pluginInstance);
         setLocation(location);
         setWarp(null);
     }
 
-    public Destination(HyperDrive pluginInstance, SerializableLocation location) {
-        setPluginInstance(pluginInstance);
+    public Destination(SerializableLocation location) {
         setLocation(location);
         setWarp(null);
-    }
-
-    private HyperDrive getPluginInstance() {
-        return pluginInstance;
-    }
-
-    private void setPluginInstance(HyperDrive pluginInstance) {
-        this.pluginInstance = pluginInstance;
     }
 
     public SerializableLocation getLocation() {
