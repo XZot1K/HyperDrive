@@ -5,63 +5,52 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import xzot1k.plugins.hd.HyperDrive;
 
 public class RandomTeleportEvent extends Event implements Cancellable {
-    private HyperDrive pluginInstance;
-    private static HandlerList handlers;
-    private boolean cancelled;
-    private Location location;
-    private Player player;
+	private static HandlerList handlers;
+	private boolean cancelled;
+	private Location location;
+	private Player player;
 
-    public RandomTeleportEvent(HyperDrive pluginInstance, Location location, Player player) {
-        setPluginInstance(pluginInstance);
-        handlers = new HandlerList();
-        setCancelled(false);
-        setLocation(location);
-        setPlayer(player);
-    }
+	public RandomTeleportEvent(Location location, Player player) {
+		handlers = new HandlerList();
+		setCancelled(false);
+		setLocation(location);
+		setPlayer(player);
+	}
 
-    private HyperDrive getPluginInstance() {
-        return pluginInstance;
-    }
+	@Override
+	public HandlerList getHandlers() {
+		return handlers;
+	}
 
-    private void setPluginInstance(HyperDrive pluginInstance) {
-        this.pluginInstance = pluginInstance;
-    }
+	@Override
+	public boolean isCancelled() {
+		return cancelled;
+	}
 
-    @Override
-    public HandlerList getHandlers() {
-        return handlers;
-    }
+	@Override
+	public void setCancelled(boolean cancelled) {
+		this.cancelled = cancelled;
+	}
 
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
-    }
+	public Location getLocation() {
+		return location;
+	}
 
-    @Override
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
+	public void setLocation(Location location) {
+		this.location = location;
+	}
 
-    public Location getLocation() {
-        return location;
-    }
+	public Player getPlayer() {
+		return player;
+	}
 
-    public void setLocation(Location location) {
-        this.location = location;
-    }
+	private void setPlayer(Player player) {
+		this.player = player;
+	}
 
-    public Player getPlayer() {
-        return player;
-    }
-
-    private void setPlayer(Player player) {
-        this.player = player;
-    }
-
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
+	public static HandlerList getHandlerList() {
+		return handlers;
+	}
 }

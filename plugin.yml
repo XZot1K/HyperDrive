@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.1.7
+version: 5.1.8
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -181,7 +181,7 @@ permissions:
     description: This permission node is used to allow any player with the node to bypass all hook restrictions.
   hyperdrive.admin.status:
     default: op
-    description: This permission node is used to allow any player with the node to change that status of a warp to “ADMIN”.
+    description: This permission node is used to allow any player with the node to change that status of a warp to â€œADMINâ€�.
   hyperdrive.admin.tp:
     default: op
     description: This permission node is used to allow any player with the node to use the /tp <player> <player> standalone teleportation command.

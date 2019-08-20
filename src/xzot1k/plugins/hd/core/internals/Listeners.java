@@ -1,6 +1,13 @@
 package xzot1k.plugins.hd.core.internals;
 
-import net.milkbowl.vault.economy.EconomyResponse;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -19,9 +26,16 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+
+import net.milkbowl.vault.economy.EconomyResponse;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
@@ -30,10 +44,6 @@ import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.objects.Destination;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
 import xzot1k.plugins.hd.core.objects.InteractionModule;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.*;
 
 public class Listeners implements Listener {
 	private HyperDrive pluginInstance;
@@ -322,8 +332,7 @@ public class Listeners implements Listener {
 
 			if (useVault && interactionModule.getPassedChargeAmount() > 0) {
 				double itemUsageCost = interactionModule.getPassedChargeAmount();
-				EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), e.getPlayer(),
-						itemUsageCost);
+				EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(e.getPlayer(), itemUsageCost);
 				getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
 				if (!economyChargeEvent.isCancelled()) {
 					EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
@@ -1216,12 +1225,12 @@ public class Listeners implements Listener {
 		}
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onTeleport(PlayerTeleportEvent e) {
-		getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getPlayer().getLocation());
+		getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onDeath(PlayerDeathEvent e) {
 		getPluginInstance().getTeleportationCommands().updateLastLocation(e.getEntity(), e.getEntity().getLocation());
 	}
@@ -1613,8 +1622,8 @@ public class Listeners implements Listener {
 									&& !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
 									&& !warp.getAssistants().contains(player.getUniqueId())
 									&& (warp.getWhiteList().contains(player.getUniqueId()))) {
-								EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(),
-										player, warp.getUsagePrice());
+								EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player,
+										warp.getUsagePrice());
 								getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
 								if (!economyChargeEvent.isCancelled()) {
 									EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
@@ -1739,8 +1748,8 @@ public class Listeners implements Listener {
 									&& !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
 									&& !warp.getAssistants().contains(player.getUniqueId())
 									&& (warp.getWhiteList().contains(player.getUniqueId()))) {
-								EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(),
-										player, warp.getUsagePrice());
+								EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player,
+										warp.getUsagePrice());
 								getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
 								if (!economyChargeEvent.isCancelled()) {
 									EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
@@ -1875,8 +1884,7 @@ public class Listeners implements Listener {
 							.getDouble("list-menu-section.items." + itemId + ".usage-cost");
 					if (useVault && itemUsageCost > 0
 							&& !getPluginInstance().getManager().isChatInteractionId(action)) {
-						EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player,
-								itemUsageCost);
+						EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
 						getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
 						if (!economyChargeEvent.isCancelled()) {
 							EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
@@ -2198,8 +2206,7 @@ public class Listeners implements Listener {
 							.getDouble("edit-menu-section.items." + itemId + ".usage-cost");
 					if (useVault && itemUsageCost > 0
 							&& !getPluginInstance().getManager().isChatInteractionId(clickAction)) {
-						EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player,
-								itemUsageCost);
+						EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
 						getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
 						if (!economyChargeEvent.isCancelled()) {
 							EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
@@ -2819,8 +2826,7 @@ public class Listeners implements Listener {
 						.getDouble("ps-menu-section.items." + itemId + ".usage-cost");
 
 				if (useVault && itemUsageCost > 0) {
-					EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player,
-							itemUsageCost);
+					EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
 					getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
 					if (!economyChargeEvent.isCancelled()) {
 						EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player,
@@ -3096,8 +3102,7 @@ public class Listeners implements Listener {
 				double itemUsageCost = getPluginInstance().getConfig()
 						.getDouble("custom-menu-section." + menuId + ".items." + itemId + ".usage-cost");
 				if (useVault && itemUsageCost > 0) {
-					EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(getPluginInstance(), player,
-							itemUsageCost);
+					EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
 					getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
 					if (!economyChargeEvent.isCancelled()) {
 						EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player,

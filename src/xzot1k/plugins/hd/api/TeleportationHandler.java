@@ -123,7 +123,7 @@ public class TeleportationHandler implements Runnable {
 										return;
 									}
 
-									WarpEvent warpEvent = new WarpEvent(getPluginInstance(), warpLocation, player);
+									WarpEvent warpEvent = new WarpEvent(warpLocation, player);
 									getPluginInstance().getServer().getPluginManager().callEvent(warpEvent);
 									if (warpEvent.isCancelled()) {
 										getAnimation().stopActiveAnimation(player);
@@ -442,8 +442,7 @@ public class TeleportationHandler implements Runnable {
 						Location newLocation = new Location(finalBasedLocation.getWorld(), x, safeY, z,
 								finalBasedLocation.getYaw(), finalBasedLocation.getPitch());
 
-						RandomTeleportEvent randomTeleportEvent = new RandomTeleportEvent(getPluginInstance(),
-								newLocation, player);
+						RandomTeleportEvent randomTeleportEvent = new RandomTeleportEvent(newLocation, player);
 						getPluginInstance().getServer().getPluginManager().callEvent(randomTeleportEvent);
 						if (randomTeleportEvent.isCancelled()) {
 							getAnimation().stopActiveAnimation(player);
@@ -742,7 +741,7 @@ public class TeleportationHandler implements Runnable {
 				isSafeLocation = false;
 		}
 
-		HookCheckEvent hookCheckEvent = new HookCheckEvent(pluginInstance, location, player, isSafeLocation);
+		HookCheckEvent hookCheckEvent = new HookCheckEvent(location, player, isSafeLocation);
 		getPluginInstance().getServer().getPluginManager().callEvent(hookCheckEvent);
 		isSafeLocation = hookCheckEvent.isSafeLocation();
 

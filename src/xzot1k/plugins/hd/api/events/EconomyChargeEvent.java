@@ -4,29 +4,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import xzot1k.plugins.hd.HyperDrive;
 
 public class EconomyChargeEvent extends Event implements Cancellable {
-    private HyperDrive pluginInstance;
     private static HandlerList handlers;
     private boolean cancelled;
     private double amount;
     private Player player;
 
-    public EconomyChargeEvent(HyperDrive pluginInstance, Player player, double price) {
-        setPluginInstance(pluginInstance);
+    public EconomyChargeEvent(Player player, double price) {
         handlers = new HandlerList();
         setCancelled(false);
         setPlayer(player);
         setAmount(price);
-    }
-
-    private HyperDrive getPluginInstance() {
-        return pluginInstance;
-    }
-
-    private void setPluginInstance(HyperDrive pluginInstance) {
-        this.pluginInstance = pluginInstance;
     }
 
     @Override

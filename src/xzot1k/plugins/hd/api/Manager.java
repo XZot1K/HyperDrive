@@ -282,7 +282,7 @@ public class Manager {
 	public void returnLastTransactionAmount(OfflinePlayer player) {
 		double lastAmount = getLastTransactionAmount(player);
 		if (lastAmount > 0) {
-			EconomyReturnEvent economyReturnEvent = new EconomyReturnEvent(getPluginInstance(), player, lastAmount);
+			EconomyReturnEvent economyReturnEvent = new EconomyReturnEvent(player, lastAmount);
 			getPluginInstance().getServer().getPluginManager().callEvent(economyReturnEvent);
 			if (!economyReturnEvent.isCancelled()) {
 				if (getPluginInstance().getConfig().getBoolean("general-section.use-vault")) {

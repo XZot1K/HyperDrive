@@ -4,63 +4,52 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import xzot1k.plugins.hd.HyperDrive;
 
 public class EconomyReturnEvent extends Event implements Cancellable {
-    private HyperDrive pluginInstance;
-    private static HandlerList handlers;
-    private boolean cancelled;
-    private double amount;
-    private OfflinePlayer player;
+	private static HandlerList handlers;
+	private boolean cancelled;
+	private double amount;
+	private OfflinePlayer player;
 
-    public EconomyReturnEvent(HyperDrive pluginInstance, OfflinePlayer player, double amount) {
-        setPluginInstance(pluginInstance);
-        handlers = new HandlerList();
-        setCancelled(false);
-        setPlayer(player);
-        setAmount(amount);
-    }
+	public EconomyReturnEvent(OfflinePlayer player, double amount) {
+		handlers = new HandlerList();
+		setCancelled(false);
+		setPlayer(player);
+		setAmount(amount);
+	}
 
-    private HyperDrive getPluginInstance() {
-        return pluginInstance;
-    }
+	@Override
+	public boolean isCancelled() {
+		return cancelled;
+	}
 
-    private void setPluginInstance(HyperDrive pluginInstance) {
-        this.pluginInstance = pluginInstance;
-    }
+	@Override
+	public void setCancelled(boolean cancelled) {
+		this.cancelled = cancelled;
+	}
 
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
-    }
+	public OfflinePlayer getPlayer() {
+		return player;
+	}
 
-    @Override
-    public void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
+	private void setPlayer(OfflinePlayer player) {
+		this.player = player;
+	}
 
-    public OfflinePlayer getPlayer() {
-        return player;
-    }
+	@Override
+	public HandlerList getHandlers() {
+		return handlers;
+	}
 
-    private void setPlayer(OfflinePlayer player) {
-        this.player = player;
-    }
+	public static HandlerList getHandlerList() {
+		return handlers;
+	}
 
-    @Override
-    public HandlerList getHandlers() {
-        return handlers;
-    }
+	public double getAmount() {
+		return amount;
+	}
 
-    public static HandlerList getHandlerList() {
-        return handlers;
-    }
-
-    public double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
+	public void setAmount(double amount) {
+		this.amount = amount;
+	}
 }
