@@ -10,7 +10,9 @@ import xzot1k.plugins.hd.api.EnumContainer;
 import java.io.File;
 import java.io.IOException;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -195,12 +197,137 @@ public class Warp {
         }
 
         try {
-            PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement("delete from warps where name = '" + getWarpName() + "'");
+            PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement(
+                    "delete from warps where name = '" + getWarpName() + "'");
             preparedStatement.executeUpdate();
             preparedStatement.close();
         } catch (SQLException e) {
             e.printStackTrace();
             getPluginInstance().log(Level.WARNING, "There was an issue deleting the warp " + getWarpName() + " from the MySQL database.");
+        }
+    }
+
+    public void save(boolean async, boolean useMySQL) {
+        if (async)
+            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> save(useMySQL));
+        else save(useMySQL);
+    }
+
+    private void save(boolean useMySQL) {
+        File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        try {
+            setWarpName(getWarpName().replace("§", "").replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", ""));
+            if (!useMySQL || getPluginInstance().getConnection() == null) {
+                yaml.set(getWarpName() + ".location.world", getWarpLocation().getWorldName());
+                yaml.set(getWarpName() + ".location.x", getWarpLocation().getX());
+                yaml.set(getWarpName() + ".location.y", getWarpLocation().getY());
+                yaml.set(getWarpName() + ".location.z", getWarpLocation().getZ());
+                yaml.set(getWarpName() + ".location.yaw", getWarpLocation().getYaw());
+                yaml.set(getWarpName() + ".location.pitch", getWarpLocation().getPitch());
+
+                try {
+                    List<String> whiteList = new ArrayList<>();
+                    for (int j = -1; ++j < getWhiteList().size(); ) {
+                        UUID uuid = getWhiteList().get(j);
+                        whiteList.add(uuid.toString());
+                    }
+
+                    List<String> assistants = new ArrayList<>();
+                    for (int j = -1; ++j < getAssistants().size(); ) {
+                        UUID uuid = getAssistants().get(j);
+                        assistants.add(uuid.toString());
+                    }
+
+                    yaml.set(getWarpName() + ".traffic", getTraffic());
+                    yaml.set(getWarpName() + ".status", getStatus().toString());
+                    yaml.set(getWarpName() + ".creation-date", getCreationDate());
+                    yaml.set(getWarpName() + ".server-ip",
+                            getServerIPAddress().replace("localhost", "127.0.0.1"));
+                    yaml.set(getWarpName() + ".owner", getOwner().toString());
+                    yaml.set(getWarpName() + ".assistants", assistants);
+                    yaml.set(getWarpName() + ".whitelist", whiteList);
+                    yaml.set(getWarpName() + ".commands", getCommands());
+                    yaml.set(getWarpName() + ".animation-set", getAnimationSet());
+
+                    yaml.set(getWarpName() + ".icon.theme", getIconTheme());
+                    yaml.set(getWarpName() + ".icon.description-color", getDescriptionColor().name());
+                    yaml.set(getWarpName() + ".icon.name-color", getDisplayNameColor().name());
+                    yaml.set(getWarpName() + ".icon.description", getDescription());
+                    yaml.set(getWarpName() + ".icon.use-enchanted-look", hasIconEnchantedLook());
+                    yaml.set(getWarpName() + ".icon.prices.usage", getUsagePrice());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    getPluginInstance().log(Level.INFO, "There was an issue saving the warp " + getWarpName()
+                            + "'s data aside it's location.");
+                }
+
+                return;
+            }
+
+            StringBuilder description = new StringBuilder(), commands = new StringBuilder(),
+                    whitelist = new StringBuilder(), assistants = new StringBuilder();
+            for (int j = -1; ++j < getDescription().size(); )
+                description.append(getDescription().get(j)).append(",");
+            for (int j = -1; ++j < getCommands().size(); )
+                commands.append(getCommands().get(j)).append(",");
+            for (int j = -1; ++j < getWhiteList().size(); )
+                whitelist.append(getWhiteList().get(j).toString()).append(",");
+            for (int j = -1; ++j < getAssistants().size(); )
+                assistants.append(getAssistants().get(j).toString()).append(",");
+
+            Statement statement = getPluginInstance().getConnection().createStatement();
+            ResultSet rs = statement.executeQuery("select * from warps where name='" + getWarpName() + "'");
+            if (rs.next()) {
+                statement.executeUpdate("update warps set location = '"
+                        + (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + ","
+                        + getWarpLocation().getY() + "," + getWarpLocation().getZ() + ","
+                        + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch())
+                        + "', status = '" + getStatus().name() + "', creation_date = '"
+                        + getCreationDate() + "', icon_theme = '" + getIconTheme()
+                        + "', animation_set = '" + getAnimationSet() + "'," + " name_color = '"
+                        + getDisplayNameColor().name() + "', description = '" + description.toString()
+                        + "', commands = '" + commands.toString() + "'," + " owner = '" + getOwner().toString()
+                        + "', white_list = '" + whitelist.toString() + "', assistants = '" + assistants.toString()
+                        + "'," + " usage_price = '" + getUsagePrice() + "', enchanted_look = '"
+                        + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress()
+                        + "' where name = '" + getWarpName() + "';");
+
+                rs.close();
+                statement.close();
+                return;
+            }
+
+            PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement(
+                    "insert into warps (name, location, status, creation_date, icon_theme, animation_set, " +
+                            "description_color, name_color, description, commands, owner, white_list, assistants, " +
+                            "traffic, usage_price, enchanted_look, server_ip) "
+                            + "values ('" + getWarpName() + "', '"
+                            + (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + ","
+                            + getWarpLocation().getY() + "," + getWarpLocation().getZ() + ","
+                            + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch())
+                            + "', '" + getStatus().name() + "', '" + getCreationDate() + "', '"
+                            + getIconTheme() + "', '" + getAnimationSet() + "', '"
+                            + getDescriptionColor().name() + "', '" + getDisplayNameColor().name()
+                            + "', ?, ?, '" + getOwner().toString() + "', ?, ?, " + getTraffic() + ", "
+                            + getUsagePrice() + ", " + hasIconEnchantedLook() + ", '"
+                            + getServerIPAddress().replace("localhost", "127.0.0.1") + "');");
+
+            preparedStatement.setString(1, description.toString());
+            preparedStatement.setString(2, commands.toString());
+            preparedStatement.setString(3, whitelist.toString());
+            preparedStatement.setString(4, assistants.toString());
+
+            preparedStatement.executeUpdate();
+            preparedStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            yaml.save(file);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

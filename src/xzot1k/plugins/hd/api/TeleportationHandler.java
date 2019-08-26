@@ -250,7 +250,6 @@ public class TeleportationHandler implements Runnable {
     }
 
     // teleport methods
-    @SuppressWarnings("deprecation")
     public void teleportPlayer(Player player, Location location) {
         boolean teleportVehicle = getPluginInstance().getConfig().getBoolean("teleportation-section.teleport-vehicles");
         if (player.getVehicle() != null && teleportVehicle) {
@@ -260,8 +259,7 @@ public class TeleportationHandler implements Runnable {
                     || getPluginInstance().getServerVersion().startsWith("v1_13")
                     || getPluginInstance().getServerVersion().startsWith("v1_14"))
                 entity.removePassenger(player);
-            else
-                entity.setPassenger(null);
+
             if (entity.getPassengers().contains(player))
                 entity.eject();
 
@@ -277,7 +275,7 @@ public class TeleportationHandler implements Runnable {
             player.teleport(location);
     }
 
-    public void randomlyTeleportPlayer(Player player, World world) {
+    public boolean randomlyTeleportPlayer(Player player, World world) {
         if (!player.hasPermission("hyperdrive.rtpbypass")) {
             long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp",
                     getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
@@ -286,7 +284,7 @@ public class TeleportationHandler implements Runnable {
                         .requireNonNull(
                                 getPluginInstance().getConfig().getString("language-section.random-teleport-cooldown"))
                         .replace("{duration}", String.valueOf(cooldownDurationLeft)), player);
-                return;
+                return false;
             }
         }
 
@@ -481,10 +479,7 @@ public class TeleportationHandler implements Runnable {
 
                 } else {
                     if (!foundSafeLocation) {
-                        getPluginInstance().getManager()
-                                .sendCustomMessage(Objects
-                                        .requireNonNull(getPluginInstance().getConfig()
-                                                .getString("language-section.random-teleport-fail"))
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-fail"))
                                         .replace("{tries}", String.valueOf(tries - 1)), player);
                     }
 
@@ -493,6 +488,7 @@ public class TeleportationHandler implements Runnable {
                 }
             }
         }.runTaskTimer(getPluginInstance(), 0, 0);
+        return true;
     }
 
     public void updateDestinationWithRandomLocation(Player player, Location baseLocation, World world) {

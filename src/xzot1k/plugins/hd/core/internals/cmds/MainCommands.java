@@ -36,166 +36,166 @@ public class MainCommands implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
 		switch (command.getName().toLowerCase()) {
-		case "hyperdrive":
+			case "hyperdrive":
 
-			switch (args.length) {
-			case 1:
-				switch (args[0].toLowerCase()) {
-				case "reload":
-					runReloadCommand(commandSender);
-					return true;
-				case "info":
-					runInfoCommand(commandSender);
-					return true;
-				default:
-					if (commandSender.hasPermission("hyperdrive.admin.help"))
-						sendAdminHelpPage(commandSender, 1);
-					else {
-						if (commandSender instanceof Player)
-							getPluginInstance().getManager().sendCustomMessage(
-									getPluginInstance().getConfig().getString("language-section.no-permission"),
-									(Player) commandSender);
-						else
-							commandSender.sendMessage(getPluginInstance().getManager().colorText(
-									getPluginInstance().getConfig().getString("language-section.no-permission")));
-					}
-					return true;
-				}
-			case 2:
-				if (args[0].equalsIgnoreCase("help")) {
-					if (commandSender.hasPermission("hyperdrive.admin.help"))
-						sendAdminHelpPage(commandSender,
-								getPluginInstance().getManager().isNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
-					else {
-						commandSender.sendMessage(getPluginInstance().getManager().colorText(
-								getPluginInstance().getConfig().getString("language-section.no-permission")));
-					}
-					return true;
-				}
+				switch (args.length) {
+					case 1:
+						switch (args[0].toLowerCase()) {
+							case "reload":
+								runReloadCommand(commandSender);
+								return true;
+							case "info":
+								runInfoCommand(commandSender);
+								return true;
+							default:
+								if (commandSender.hasPermission("hyperdrive.admin.help"))
+									sendAdminHelpPage(commandSender, 1);
+								else {
+									if (commandSender instanceof Player)
+										getPluginInstance().getManager().sendCustomMessage(
+												getPluginInstance().getConfig().getString("language-section.no-permission"),
+												(Player) commandSender);
+									else
+										commandSender.sendMessage(getPluginInstance().getManager().colorText(
+												getPluginInstance().getConfig().getString("language-section.no-permission")));
+								}
+								return true;
+						}
+					case 2:
+						if (args[0].equalsIgnoreCase("help")) {
+							if (commandSender.hasPermission("hyperdrive.admin.help"))
+								sendAdminHelpPage(commandSender,
+										getPluginInstance().getManager().isNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
+							else {
+								commandSender.sendMessage(getPluginInstance().getManager().colorText(
+										getPluginInstance().getConfig().getString("language-section.no-permission")));
+							}
+							return true;
+						}
 
-				if (commandSender.hasPermission("hyperdrive.admin.help"))
-					sendAdminHelpPage(commandSender, 1);
-				else {
-					if (commandSender instanceof Player)
-						getPluginInstance().getManager().sendCustomMessage(
-								getPluginInstance().getConfig().getString("language-section.no-permission"),
-								(Player) commandSender);
-					else
-						commandSender.sendMessage(getPluginInstance().getManager().colorText(
-								getPluginInstance().getConfig().getString("language-section.no-permission")));
-				}
+						if (commandSender.hasPermission("hyperdrive.admin.help"))
+							sendAdminHelpPage(commandSender, 1);
+						else {
+							if (commandSender instanceof Player)
+								getPluginInstance().getManager().sendCustomMessage(
+										getPluginInstance().getConfig().getString("language-section.no-permission"),
+										(Player) commandSender);
+							else
+								commandSender.sendMessage(getPluginInstance().getManager().colorText(
+										getPluginInstance().getConfig().getString("language-section.no-permission")));
+						}
 
-				return true;
-			case 3:
-				if (args[0].equalsIgnoreCase("updateip")) {
-					runUpdateIP(commandSender, args);
-					return true;
-				}
-
-				if (commandSender.hasPermission("hyperdrive.admin.help"))
-					sendAdminHelpPage(commandSender, 1);
-				else {
-					if (commandSender instanceof Player)
-						getPluginInstance().getManager().sendCustomMessage(
-								getPluginInstance().getConfig().getString("language-section.no-permission"),
-								(Player) commandSender);
-					else
-						commandSender.sendMessage(getPluginInstance().getManager().colorText(
-								getPluginInstance().getConfig().getString("language-section.no-permission")));
-				}
-
-				return true;
-			default:
-				if (commandSender.hasPermission("hyperdrive.admin.help"))
-					sendAdminHelpPage(commandSender, 1);
-				else {
-					if (commandSender instanceof Player)
-						getPluginInstance().getManager().sendCustomMessage(
-								getPluginInstance().getConfig().getString("language-section.no-permission"),
-								(Player) commandSender);
-					else
-						commandSender.sendMessage(getPluginInstance().getManager().colorText(
-								getPluginInstance().getConfig().getString("language-section.no-permission")));
-				}
-
-				return true;
-			}
-
-		case "warps":
-			switch (args.length) {
-			case 0:
-				openListMenu(commandSender);
-				break;
-			case 1:
-				switch (args[0].toLowerCase()) {
-				case "help":
-					sendHelpPage(commandSender, 1);
-					return true;
-				case "rtp":
-					beginRandomTeleportCommand(commandSender);
-					return true;
-				case "rtpgroup":
-				case "rtpg":
-					beginGroupRandomTeleportCommand(commandSender);
-					return true;
-				case "list":
-					runWarpListCommand(commandSender);
-					return true;
-				default:
-					beginWarpCommand(commandSender, args[0]);
-					return true;
-				}
-
-			case 2:
-
-				switch (args[0].toLowerCase()) {
-				case "accept":
-					beginAcceptCommand(commandSender, args[1]);
-					return true;
-				case "deny":
-					beginDenyCommand(commandSender, args[1]);
-					return true;
-				case "rtp":
-					beginRandomTeleportCommand(commandSender, args[1]);
-					return true;
-				case "help":
-					sendHelpPage(commandSender,
-							getPluginInstance().getManager().isNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
-					return true;
-				case "create":
-					runWarpCreationCommand(commandSender, args[1]);
-					return true;
-				case "delete":
-					runWarpDeleteCommand(commandSender, args[1]);
-					return true;
-				case "edit":
-					runWarpEditCommand(commandSender, args[1]);
-					return true;
-				default:
-					if (runWarpAdminCommand(commandSender, args[0], args[1]))
 						return true;
-					if (commandSender.hasPermission("hyperdrive.admin.help"))
-						sendAdminHelpPage(commandSender, 1);
-					else
+					case 3:
+						if (args[0].equalsIgnoreCase("updateip")) {
+							runUpdateIP(commandSender, args);
+							return true;
+						}
+
+						if (commandSender.hasPermission("hyperdrive.admin.help"))
+							sendAdminHelpPage(commandSender, 1);
+						else {
+							if (commandSender instanceof Player)
+								getPluginInstance().getManager().sendCustomMessage(
+										getPluginInstance().getConfig().getString("language-section.no-permission"),
+										(Player) commandSender);
+							else
+								commandSender.sendMessage(getPluginInstance().getManager().colorText(
+										getPluginInstance().getConfig().getString("language-section.no-permission")));
+						}
+
+						return true;
+					default:
+						if (commandSender.hasPermission("hyperdrive.admin.help"))
+							sendAdminHelpPage(commandSender, 1);
+						else {
+							if (commandSender instanceof Player)
+								getPluginInstance().getManager().sendCustomMessage(
+										getPluginInstance().getConfig().getString("language-section.no-permission"),
+										(Player) commandSender);
+							else
+								commandSender.sendMessage(getPluginInstance().getManager().colorText(
+										getPluginInstance().getConfig().getString("language-section.no-permission")));
+						}
+
+						return true;
+				}
+
+			case "warps":
+				switch (args.length) {
+					case 0:
+						openListMenu(commandSender);
+						break;
+					case 1:
+						switch (args[0].toLowerCase()) {
+							case "help":
+								sendHelpPage(commandSender, 1);
+								return true;
+							case "rtp":
+								beginRandomTeleportCommand(commandSender);
+								return true;
+							case "rtpgroup":
+							case "rtpg":
+								beginGroupRandomTeleportCommand(commandSender);
+								return true;
+							case "list":
+								runWarpListCommand(commandSender);
+								return true;
+							default:
+								beginWarpCommand(commandSender, args[0]);
+								return true;
+						}
+
+					case 2:
+
+						switch (args[0].toLowerCase()) {
+							case "accept":
+								beginAcceptCommand(commandSender, args[1]);
+								return true;
+							case "deny":
+								beginDenyCommand(commandSender, args[1]);
+								return true;
+							case "rtp":
+								beginRandomTeleportCommand(commandSender, args[1]);
+								return true;
+							case "help":
+								sendHelpPage(commandSender,
+										getPluginInstance().getManager().isNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
+								return true;
+							case "create":
+								runWarpCreationCommand(commandSender, args[1]);
+								return true;
+							case "delete":
+								runWarpDeleteCommand(commandSender, args[1]);
+								return true;
+							case "edit":
+								runWarpEditCommand(commandSender, args[1]);
+								return true;
+							default:
+								if (runWarpAdminCommand(commandSender, args[0], args[1]))
+									return true;
+								if (commandSender.hasPermission("hyperdrive.admin.help"))
+									sendAdminHelpPage(commandSender, 1);
+								else
+									sendHelpPage(commandSender, 1);
+								return true;
+						}
+
+					case 3:
+						if ("rtp".equals(args[0].toLowerCase())) {
+							beginRandomTeleportCommand(commandSender, args[1], args[2]);
+							return true;
+						}
+
 						sendHelpPage(commandSender, 1);
-					return true;
+						return true;
+					default:
+						break;
 				}
 
-			case 3:
-				if ("rtp".equals(args[0].toLowerCase())) {
-					beginRandomTeleportCommand(commandSender, args[1], args[2]);
-					return true;
-				}
-
-				sendHelpPage(commandSender, 1);
 				return true;
 			default:
 				break;
-			}
-
-			return true;
-		default:
-			break;
 		}
 
 		return false;
@@ -223,7 +223,7 @@ public class MainCommands implements CommandExecutor {
 		else
 			warps = new ArrayList<>(warpCollection);
 
-		for (int i = -1; ++i < warps.size();) {
+		for (int i = -1; ++i < warps.size(); ) {
 			Warp warp = warps.get(i);
 			if (warp != null && warp.getServerIPAddress().equalsIgnoreCase(initialIP))
 				foundWarps.add(warp);
@@ -239,7 +239,7 @@ public class MainCommands implements CommandExecutor {
 			return;
 		}
 
-		for (int i = -1; ++i < foundWarps.size();) {
+		for (int i = -1; ++i < foundWarps.size(); ) {
 			Warp warp = warps.get(i);
 			if (warp != null)
 				warp.setServerIPAddress(setIP);
@@ -423,7 +423,7 @@ public class MainCommands implements CommandExecutor {
 				.sendCustomMessage(
 						Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-list"))
 								.replace("{list}", warpList).replace("{count}",
-										String.valueOf(getPluginInstance().getManager().getWarpMap().keySet().size())),
+								String.valueOf(getPluginInstance().getManager().getWarpMap().keySet().size())),
 						player);
 	}
 
@@ -452,7 +452,7 @@ public class MainCommands implements CommandExecutor {
 		Warp warp = getPluginInstance().getManager().getWarp(warpName);
 		if (!player.hasPermission("hyperdrive.admin.edit")
 				&& (warp.getOwner().toString().equals(player.getUniqueId().toString())
-						|| warp.getAssistants().contains(player.getUniqueId()))) {
+				|| warp.getAssistants().contains(player.getUniqueId()))) {
 			getPluginInstance().getManager().sendCustomMessage(
 					Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-no-access"))
 							.replace("{warp}", warp.getWarpName()),
@@ -573,7 +573,7 @@ public class MainCommands implements CommandExecutor {
 
 		List<String> globalFilterStrings = getPluginInstance().getConfig()
 				.getStringList("filter-section.global-filter");
-		for (int i = -1; ++i < globalFilterStrings.size();) {
+		for (int i = -1; ++i < globalFilterStrings.size(); ) {
 			String filterString = globalFilterStrings.get(i);
 			warpName = warpName.replace(filterString, "");
 		}
@@ -598,8 +598,7 @@ public class MainCommands implements CommandExecutor {
 							.replace("{warp}", warpName), player);
 		} else {
 			warp.register();
-			getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(),
-					() -> getPluginInstance().saveWarp(warp, useMySQL));
+			warp.save(true, getPluginInstance().getConnection() != null);
 			getPluginInstance().getManager()
 					.sendCustomMessage(Objects
 							.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-created"))
@@ -627,10 +626,10 @@ public class MainCommands implements CommandExecutor {
 			String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
 					serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
 							|| getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-									? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":"
-											+ getPluginInstance().getServer().getPort()
-									: (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":"
-											+ getPluginInstance().getServer().getPort());
+							? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":"
+							+ getPluginInstance().getServer().getPort()
+							: (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":"
+							+ getPluginInstance().getServer().getPort());
 
 			if (!warpIP.equalsIgnoreCase(serverIP)) {
 				String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
@@ -715,11 +714,11 @@ public class MainCommands implements CommandExecutor {
 			}
 		}
 
-		getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(enteredPlayer, enteredPlayer.getWorld());
-		commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects
-				.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-admin"))
-				.replace("{player}", enteredPlayer.getName())
-				.replace("{world}", Objects.requireNonNull(enteredPlayer.getLocation().getWorld()).getName())));
+		if (getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(enteredPlayer, enteredPlayer.getWorld()))
+			commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects
+					.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-admin"))
+					.replace("{player}", enteredPlayer.getName())
+					.replace("{world}", Objects.requireNonNull(enteredPlayer.getLocation().getWorld()).getName())));
 	}
 
 	private void beginRandomTeleportCommand(CommandSender commandSender, String playerName, String worldName) {
@@ -780,11 +779,11 @@ public class MainCommands implements CommandExecutor {
 			return;
 		}
 
-		String[] infoLines = { "&e&m-------------------------", "", "&7Plugin Name: &dHyperDrive",
+		String[] infoLines = {"&e&m-------------------------", "", "&7Plugin Name: &dHyperDrive",
 				"&7Version: &a" + getPluginInstance().getDescription().getVersion(), "&7Author(s): &bXZot1K", "",
 				"&7Testing Accommodation(s): &cSikatsu&7, &6JarFiles&7, &dHRZNzero", "",
-				"&e&m-------------------------" };
-		for (int i = -1; ++i < infoLines.length;) {
+				"&e&m-------------------------"};
+		for (int i = -1; ++i < infoLines.length; ) {
 			String infoLine = infoLines[i];
 			commandSender.sendMessage(getPluginInstance().getManager().colorText(infoLine));
 		}
@@ -807,7 +806,11 @@ public class MainCommands implements CommandExecutor {
 		getPluginInstance().getManager().setSimpleDateFormat(new SimpleDateFormat(
 				Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
 		getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-			getPluginInstance().reloadWarps();
+			for (Warp warp : getPluginInstance().getManager().getWarpMap().values())
+				warp.save(true, getPluginInstance().getConnection() != null);
+			getPluginInstance().getManager().getWarpMap().clear();
+			getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(),
+					() -> getPluginInstance().loadWarps(getPluginInstance().getConnection() != null));
 			getPluginInstance().startTasks();
 		});
 
@@ -841,7 +844,7 @@ public class MainCommands implements CommandExecutor {
 				&& !warp.getAssistants().contains(player.getUniqueId())
 				&& !warp.getWhiteList().contains(player.getUniqueId())
 				&& !(player.hasPermission("hyperdrive.warps." + warp.getWarpName())
-						|| player.hasPermission("hyperdrive.warps.*"))) {
+				|| player.hasPermission("hyperdrive.warps.*"))) {
 			getPluginInstance().getManager().sendCustomMessage(
 					getPluginInstance().getConfig().getString("language-section.no-permission"), player);
 			return;
@@ -852,10 +855,10 @@ public class MainCommands implements CommandExecutor {
 			String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
 					serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
 							|| getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-									? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":"
-											+ getPluginInstance().getServer().getPort()
-									: (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":"
-											+ getPluginInstance().getServer().getPort());
+							? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":"
+							+ getPluginInstance().getServer().getPort()
+							: (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":"
+							+ getPluginInstance().getServer().getPort());
 
 			if (!warpIP.equalsIgnoreCase(serverIP)) {
 				String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
@@ -1075,7 +1078,7 @@ public class MainCommands implements CommandExecutor {
 			}
 
 			List<String> lines = getAdminHelpPages().get(page);
-			for (int i = -1; ++i < lines.size();)
+			for (int i = -1; ++i < lines.size(); )
 				commandSender.sendMessage(getPluginInstance().getManager().colorText(lines.get(i)));
 			commandSender.sendMessage(getPluginInstance().getManager()
 					.colorText("&e<&m-------------------------------------------------------&r&e>"));
@@ -1090,7 +1093,7 @@ public class MainCommands implements CommandExecutor {
 		}
 
 		List<String> lines = getAdminHelpPages().get(page);
-		for (int i = -1; ++i < lines.size();)
+		for (int i = -1; ++i < lines.size(); )
 			player.sendMessage(getPluginInstance().getManager().colorText(lines.get(i)));
 
 		if (getAdminHelpPages().containsKey(page + 1) && getAdminHelpPages().containsKey(page - 1)) {
@@ -1147,7 +1150,7 @@ public class MainCommands implements CommandExecutor {
 			}
 
 			List<String> lines = getHelpPages().get(page);
-			for (int i = -1; ++i < lines.size();)
+			for (int i = -1; ++i < lines.size(); )
 				commandSender.sendMessage(getPluginInstance().getManager().colorText(lines.get(i)));
 			commandSender.sendMessage(getPluginInstance().getManager()
 					.colorText("&e<&m-------------------------------------------------------&r&e>"));
@@ -1163,7 +1166,7 @@ public class MainCommands implements CommandExecutor {
 
 		// getPluginInstance().getManager().clearChat(player);
 		List<String> lines = getHelpPages().get(page);
-		for (int i = -1; ++i < lines.size();)
+		for (int i = -1; ++i < lines.size(); )
 			player.sendMessage(getPluginInstance().getManager().colorText(lines.get(i)));
 
 		if (getHelpPages().containsKey(page + 1) && getHelpPages().containsKey(page - 1)) {
