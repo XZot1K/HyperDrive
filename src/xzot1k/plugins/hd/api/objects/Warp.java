@@ -25,7 +25,7 @@ public class Warp {
     private List<String> description, commands;
     private UUID owner;
     private List<UUID> whiteList, assistants;
-    private int traffic;
+    private int traffic, likes, dislikes;
     private double usagePrice;
     private boolean enchantedLook;
 
@@ -59,6 +59,8 @@ public class Warp {
         setDescription(newLore);
         setUsagePrice(0);
         setTraffic(0);
+        setLikes(0);
+        setDislikes(0);
         setWhiteList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -93,6 +95,8 @@ public class Warp {
         setDescription(newLore);
         setUsagePrice(0);
         setTraffic(0);
+        setLikes(0);
+        setDislikes(0);
         setWhiteList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -128,6 +132,8 @@ public class Warp {
         setDescription(newLore);
         setUsagePrice(0);
         setTraffic(0);
+        setLikes(0);
+        setDislikes(0);
         setWhiteList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -162,6 +168,8 @@ public class Warp {
         setDescription(newLore);
         setUsagePrice(0);
         setTraffic(0);
+        setLikes(0);
+        setDislikes(0);
         setWhiteList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -174,6 +182,22 @@ public class Warp {
     public void unRegister() {
         if (!getPluginInstance().getManager().getWarpMap().isEmpty())
             getPluginInstance().getManager().getWarpMap().remove(getWarpName().toLowerCase());
+    }
+
+    public String getLikeBar() {
+        StringBuilder bar = new StringBuilder();
+        int fractionValue = (int) (((double) Math.min(getLikes(), getDislikes()))
+                / ((double) Math.max(getLikes(), getDislikes())) * 12);
+
+        for (int i = -1; ++i < 12; ) {
+            if (fractionValue > 0) {
+                bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&f" : "&a").append("\u25CF");
+                fractionValue -= 1;
+            } else
+                bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&f" : "&c").append("\u25CF");
+        }
+
+        return bar.toString();
     }
 
     public void deleteSaved(boolean async) {
@@ -240,6 +264,8 @@ public class Warp {
                     }
 
                     yaml.set(getWarpName() + ".traffic", getTraffic());
+                    yaml.set(getWarpName() + ".likes", getLikes());
+                    yaml.set(getWarpName() + ".dislikes", getDislikes());
                     yaml.set(getWarpName() + ".status", getStatus().toString());
                     yaml.set(getWarpName() + ".creation-date", getCreationDate());
                     yaml.set(getWarpName() + ".server-ip",
@@ -256,6 +282,8 @@ public class Warp {
                     yaml.set(getWarpName() + ".icon.description", getDescription());
                     yaml.set(getWarpName() + ".icon.use-enchanted-look", hasIconEnchantedLook());
                     yaml.set(getWarpName() + ".icon.prices.usage", getUsagePrice());
+
+                    yaml.save(file);
                 } catch (Exception e) {
                     e.printStackTrace();
                     getPluginInstance().log(Level.INFO, "There was an issue saving the warp " + getWarpName()
@@ -291,7 +319,7 @@ public class Warp {
                         + "', white_list = '" + whitelist.toString() + "', assistants = '" + assistants.toString()
                         + "'," + " usage_price = '" + getUsagePrice() + "', enchanted_look = '"
                         + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress()
-                        + "' where name = '" + getWarpName() + "';");
+                        + "', likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "' where name = '" + getWarpName() + "';");
 
                 rs.close();
                 statement.close();
@@ -301,7 +329,7 @@ public class Warp {
             PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement(
                     "insert into warps (name, location, status, creation_date, icon_theme, animation_set, " +
                             "description_color, name_color, description, commands, owner, white_list, assistants, " +
-                            "traffic, usage_price, enchanted_look, server_ip) "
+                            "traffic, usage_price, enchanted_look, server_ip, likes, dislikes) "
                             + "values ('" + getWarpName() + "', '"
                             + (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + ","
                             + getWarpLocation().getY() + "," + getWarpLocation().getZ() + ","
@@ -311,7 +339,8 @@ public class Warp {
                             + getDescriptionColor().name() + "', '" + getDisplayNameColor().name()
                             + "', ?, ?, '" + getOwner().toString() + "', ?, ?, " + getTraffic() + ", "
                             + getUsagePrice() + ", " + hasIconEnchantedLook() + ", '"
-                            + getServerIPAddress().replace("localhost", "127.0.0.1") + "');");
+                            + getServerIPAddress().replace("localhost", "127.0.0.1") + "'," +
+                            " '" + getLikes() + "', '" + getDislikes() + "');");
 
             preparedStatement.setString(1, description.toString());
             preparedStatement.setString(2, commands.toString());
@@ -321,12 +350,6 @@ public class Warp {
             preparedStatement.executeUpdate();
             preparedStatement.close();
         } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            yaml.save(file);
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -499,4 +522,19 @@ public class Warp {
         this.traffic = traffic;
     }
 
+    public int getLikes() {
+        return likes;
+    }
+
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public int getDislikes() {
+        return dislikes;
+    }
+
+    public void setDislikes(int dislikes) {
+        this.dislikes = dislikes;
+    }
 }

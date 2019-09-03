@@ -20,7 +20,7 @@ public final class EnumContainer
 
     public enum MenuType
     {
-        EDIT, LIST, PLAYER_SELECTION, CUSTOM
+        EDIT, LIST, PLAYER_SELECTION, LIKE, CUSTOM
     }
 
     public enum Status

@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.1.9-B
+version: 5.2
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -109,6 +109,7 @@ permissions:
       hyperdrive.use.createsigns: true
       hyperdrive.admin.crossserver: true
       hyperdrive.updateid: true
+      hyperdrive.likebypass: true
 
   # INTENDED PLAYER PERMISSIONS
   hyperdrive.use:
@@ -150,6 +151,9 @@ permissions:
   hyperdrive.use.signs:
     default: op
     description: This permission node is used to allow any player with the node to create HyperDrive signs.
+  hyperdrive.like:
+    default: op
+    description: This permission node is used to allow any player with the node to like or dislike a warp.
 
   # INTENDED ADMIN PERMISSIONS
   hyperdrive.info:
@@ -212,3 +216,6 @@ permissions:
   hyperdrive.tpdelaybypass:
     default: op
     description: This permission node is used to bypass the warp teleportation delay entirely.
+  hyperdrive.likebypass:
+    default: op
+    description: This permission node is used to bypass the cooldown on liking and disliking a warp.

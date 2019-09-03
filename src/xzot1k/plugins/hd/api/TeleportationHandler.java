@@ -56,8 +56,7 @@ public class TeleportationHandler implements Runnable {
 
     @Override
     public void run() {
-        String teleportSound = Objects
-                .requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
+        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
                 teleportTitle = getPluginInstance().getConfig().getString("teleportation-section.teleport-title"),
                 teleportSubTitle = getPluginInstance().getConfig()
@@ -92,20 +91,16 @@ public class TeleportationHandler implements Runnable {
                                 getPluginInstance().getManager().sendActionBar(player,
                                         Objects.requireNonNull(getPluginInstance().getConfig()
                                                 .getString("teleportation-section.delay-bar-message"))
-                                                .replace("{progress}",
-                                                        getPluginInstance().getManager().getProgressionBar(
-                                                                teleportTemp.getSeconds(), delayDuration, 10))
+                                                .replace("{progress}", getPluginInstance().getManager().getProgressionBar(
+                                                        teleportTemp.getSeconds(), delayDuration, 10))
                                                 .replace("{duration}", String.valueOf(delayDuration))
                                                 .replace("{duration-left}", String.valueOf(teleportTemp.getSeconds()))
                                                 .replace("{warp}", warp.getWarpName()));
 
-                                getPluginInstance().getManager()
-                                        .sendCustomMessage(Objects
-                                                        .requireNonNull(getPluginInstance().getConfig()
-                                                                .getString("language-section.teleportation-delay"))
-                                                        .replace("{warp}", warp.getWarpName()).replace("{duration}",
-                                                        String.valueOf(teleportTemp.getSeconds())),
-                                                player);
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance()
+                                        .getConfig().getString("language-section.teleportation-delay"))
+                                        .replace("{warp}", warp.getWarpName()).replace("{duration}",
+                                                String.valueOf(teleportTemp.getSeconds())), player);
                             }
                         }
                     } else {
@@ -126,8 +121,7 @@ public class TeleportationHandler implements Runnable {
                                             && !warp.getAssistants().contains(player.getUniqueId()))
                                         warp.setTraffic(warp.getTraffic() + 1);
 
-                                    boolean useMySQL = getPluginInstance().getConfig()
-                                            .getBoolean("mysql-connection.use-mysql");
+                                    boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
                                     if (useMySQL && getPluginInstance().getConnection() != null) {
                                         String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
                                                 serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
@@ -138,12 +132,10 @@ public class TeleportationHandler implements Runnable {
                                                         + ":" + getPluginInstance().getServer().getPort());
 
                                         if (!warpIP.equalsIgnoreCase(serverIP)) {
-                                            String server = getPluginInstance().getBungeeListener()
-                                                    .getServerName(warp.getServerIPAddress());
+                                            String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
                                             if (server != null) {
-                                                getPluginInstance().getManager().teleportCrossServer(player,
-                                                        warp.getServerIPAddress(), server,
-                                                        warp.getWarpLocation().asBukkitLocation());
+                                                getPluginInstance().getManager().teleportCrossServer(player, warp.getServerIPAddress(),
+                                                        server, warp.getWarpLocation());
                                                 getPluginInstance().getManager().updateCooldown(player, "warp");
                                                 return;
                                             }
@@ -181,8 +173,7 @@ public class TeleportationHandler implements Runnable {
                                     }
 
                                     if (!teleportSound.equalsIgnoreCase(""))
-                                        player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound),
-                                                1, 1);
+                                        player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
 
                                     if (teleportTitle != null && teleportSubTitle != null)
                                         getPluginInstance().getManager().sendTitle(player,
@@ -480,7 +471,7 @@ public class TeleportationHandler implements Runnable {
                 } else {
                     if (!foundSafeLocation) {
                         getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-fail"))
-                                        .replace("{tries}", String.valueOf(tries - 1)), player);
+                                .replace("{tries}", String.valueOf(tries - 1)), player);
                     }
 
                     getRandomTeleportingPlayers().remove(player.getUniqueId());

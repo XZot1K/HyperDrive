@@ -4,7 +4,9 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -259,21 +261,23 @@ public class HyperDrive extends JavaPlugin {
         if (getConnection() == null)
             try {
                 Class.forName("com.mysql.jdbc.Driver");
-                setConnection(DriverManager.getConnection(
-                        "jdbc:mysql://" + getConfig().getString("mysql-connection.host") + ":"
-                                + getConfig().getString("mysql-connection.port") + "/"
-                                + getConfig().getString("mysql-connection.database-name"),
-                        getConfig().getString("mysql-connection.username"),
-                        getConfig().getString("mysql-connection.password")));
+                setConnection(DriverManager.getConnection("jdbc:mysql://" + getConfig().getString("mysql-connection.host") + ":"
+                                + getConfig().getString("mysql-connection.port") + "/" + getConfig().getString("mysql-connection.database-name"),
+                        getConfig().getString("mysql-connection.username"), getConfig().getString("mysql-connection.password")));
 
                 Statement statement = getConnection().createStatement();
                 statement.executeUpdate(
                         "create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100),"
                                 + "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255),"
-                                + "owner varchar(100),white_list varchar(255),assistants varchar(255), traffic int,usage_price double,enchanted_look int,server_ip varchar(255),primary key (name))");
+                                + "owner varchar(100),white_list varchar(255),assistants varchar(255),traffic int,usage_price double,enchanted_look int,server_ip varchar(255),likes int,"
+                                + "dislikes int, primary key (name))");
                 statement.executeUpdate(
                         "create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
                 statement.executeUpdate("truncate transfer");
+
+                statement.executeUpdate("alter table warps modify if exists likes int");
+                statement.executeUpdate("alter table warps modify if exists dislikes int");
+
                 statement.close();
             } catch (ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
@@ -358,8 +362,16 @@ public class HyperDrive extends JavaPlugin {
             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
             warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
             warp.setTraffic(yaml.getInt(warpName + ".traffic"));
-            warp.setServerIPAddress(
-                    Objects.requireNonNull(yaml.getString(warpName + ".server-ip")).replace("localhost", "127.0.0.1"));
+
+            ConfigurationSection nameSection = yaml.getConfigurationSection(warpName);
+            if (nameSection != null) {
+                if (nameSection.contains("likes"))
+                    warp.setLikes(yaml.getInt(warpName + ".likes"));
+                if (nameSection.contains("dislikes"))
+                    warp.setDislikes(yaml.getInt(warpName + ".dislikes"));
+            }
+
+            warp.setServerIPAddress(Objects.requireNonNull(yaml.getString(warpName + ".server-ip")).replace("localhost", "127.0.0.1"));
         } catch (Exception e) {
             e.printStackTrace();
             log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName()
@@ -649,8 +661,11 @@ public class HyperDrive extends JavaPlugin {
                 Player firstPlayer = getBungeeListener().getFirstPlayer();
                 if (firstPlayer != null)
                     getBungeeListener().requestServers(firstPlayer);
+
                 getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+
                     getDatabaseWarps().clear();
+
                     try {
                         Statement statement = getConnection().createStatement();
                         ResultSet resultSet = statement.executeQuery("select * from warps");
@@ -680,37 +695,32 @@ public class HyperDrive extends JavaPlugin {
                         ResultSet resultSet = statement.executeQuery("select * from transfer");
                         while (resultSet.next()) {
                             UUID playerUniqueId = UUID.fromString(resultSet.getString(1));
-                            if (!locationMap.containsKey(playerUniqueId)) {
-                                String locationString = resultSet.getString(2), server_ip = resultSet.getString(3);
-                                if (server_ip == null || server_ip.equalsIgnoreCase("")) {
-                                    if (locationString.contains(",")) {
-                                        String[] locationStringArgs = locationString.split(",");
-                                        Location location = new Location(
-                                                getPluginInstance().getServer().getWorld(locationStringArgs[0]),
-                                                Double.parseDouble(locationStringArgs[1]),
-                                                Double.parseDouble(locationStringArgs[2]),
-                                                Double.parseDouble(locationStringArgs[3]),
-                                                Float.parseFloat(locationStringArgs[4]),
-                                                Float.parseFloat(locationStringArgs[5]));
-                                        locationMap.put(playerUniqueId, location);
-                                    }
-                                } else {
-                                    if (!server_ip.replace("localhost", "127.0.0.1")
-                                            .equalsIgnoreCase((getServer().getIp() + ":" + getServer().getPort())
-                                                    .replace("localhost", "127.0.0.1")))
-                                        continue;
+                            String locationString = resultSet.getString(2), server_ip = resultSet.getString(3);
+                            if (server_ip == null || server_ip.equalsIgnoreCase("")) {
+                                if (locationString.contains(",")) {
+                                    String[] locationStringArgs = locationString.split(",");
+                                    World world = getPluginInstance().getServer().getWorld(locationStringArgs[0]);
+                                    if (world == null) continue;
+                                    Location location = new Location(world, Double.parseDouble(locationStringArgs[1]), Double.parseDouble(locationStringArgs[2]),
+                                            Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]), Float.parseFloat(locationStringArgs[5]));
+                                    locationMap.put(playerUniqueId, location);
+                                }
+                            } else {
+                                if (!server_ip.replace("localhost", "127.0.0.1")
+                                        .equalsIgnoreCase((getServer().getIp() + ":" + getServer().getPort())
+                                                .replace("localhost", "127.0.0.1")))
+                                    continue;
 
-                                    if (locationString.contains(",")) {
-                                        String[] locationStringArgs = locationString.split(",");
-                                        Location location = new Location(
-                                                getPluginInstance().getServer().getWorld(locationStringArgs[0]),
-                                                Double.parseDouble(locationStringArgs[1]),
-                                                Double.parseDouble(locationStringArgs[2]),
-                                                Double.parseDouble(locationStringArgs[3]),
-                                                Float.parseFloat(locationStringArgs[4]),
-                                                Float.parseFloat(locationStringArgs[5]));
-                                        locationMap.put(playerUniqueId, location);
-                                    }
+                                if (locationString.contains(",")) {
+                                    String[] locationStringArgs = locationString.split(",");
+                                    Location location = new Location(
+                                            getPluginInstance().getServer().getWorld(locationStringArgs[0]),
+                                            Double.parseDouble(locationStringArgs[1]),
+                                            Double.parseDouble(locationStringArgs[2]),
+                                            Double.parseDouble(locationStringArgs[3]),
+                                            Float.parseFloat(locationStringArgs[4]),
+                                            Float.parseFloat(locationStringArgs[5]));
+                                    locationMap.put(playerUniqueId, location);
                                 }
                             }
                         }
@@ -722,7 +732,10 @@ public class HyperDrive extends JavaPlugin {
                     }
                 });
 
-                for (UUID playerUniqueId : locationMap.keySet()) {
+                List<UUID> ids = new ArrayList<>(locationMap.keySet());
+                for (int i = -1; ++i < ids.size(); ) {
+                    UUID playerUniqueId = ids.get(i);
+
                     getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
                         try {
                             PreparedStatement preparedStatement = getConnection().prepareStatement(
@@ -754,7 +767,7 @@ public class HyperDrive extends JavaPlugin {
                 + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
-    private void saveWarps(boolean useMySQL) {
+    public void saveWarps(boolean useMySQL) {
         long startTime = System.currentTimeMillis();
         for (Warp warp : getManager().getWarpMap().values()) warp.save(false, useMySQL);
         log(Level.INFO, "All warps have been saved! (Took " + (System.currentTimeMillis() - startTime) + "ms)");

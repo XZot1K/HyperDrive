@@ -67,6 +67,9 @@ public class Listeners implements Listener {
             else if (ChatColor.stripColor(inventoryName).contains(ChatColor.stripColor(getPluginInstance().getManager()
                     .colorText(getPluginInstance().getConfig().getString("edit-menu-section.title")))))
                 runEditMenuClick(player, inventoryName, e);
+            else if (ChatColor.stripColor(inventoryName).contains(ChatColor.stripColor(getPluginInstance().getManager()
+                    .colorText(getPluginInstance().getConfig().getString("like-menu-section.title")))))
+                runLikeMenuClick(player, inventoryName, e);
             else if (ChatColor.stripColor(inventoryName).equalsIgnoreCase(ChatColor.stripColor(getPluginInstance()
                     .getManager().colorText(getPluginInstance().getConfig().getString("ps-menu-section.title")))))
                 runPlayerSelectionClick(player, e);
@@ -102,11 +105,8 @@ public class Listeners implements Listener {
                         "_");
                 if (e.getMessage().equalsIgnoreCase(chatInteractionCancelKey)) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager()
-                            .sendCustomMessage(Objects
-                                    .requireNonNull(getPluginInstance().getConfig()
-                                            .getString("language-section.chat-interaction-cancelled"))
-                                    .replace("{warp}", enteredName), e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
+                            .replace("{warp}", enteredName), e.getPlayer());
                     return;
                 }
 
@@ -1542,12 +1542,9 @@ public class Listeners implements Listener {
                     switch (clickType) {
                         case LEFT:
 
-                            if (warp.getStatus() == EnumContainer.Status.PUBLIC
-                                    || player.hasPermission("hyperdrive.warps." + warpName)
-                                    || player.hasPermission("hyperdrive.warps.*")
-                                    || warp.getOwner().toString().equals(player.getUniqueId().toString())
-                                    || warp.getAssistants().contains(player.getUniqueId())
-                                    || warp.getWhiteList().contains(player.getUniqueId())) {
+                            if (warp.getStatus() == EnumContainer.Status.PUBLIC || player.hasPermission("hyperdrive.warps." + warpName)
+                                    || player.hasPermission("hyperdrive.warps.*") || warp.getOwner().toString().equals(player.getUniqueId().toString())
+                                    || warp.getAssistants().contains(player.getUniqueId()) || warp.getWhiteList().contains(player.getUniqueId())) {
                                 player.closeInventory();
 
                                 if ((getPluginInstance().getConnection() != null
@@ -1555,69 +1552,43 @@ public class Listeners implements Listener {
                                     String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
                                             serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
                                                     || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                                                    ? getPluginInstance().getConfig()
-                                                    .getString("mysql-connection.default-ip") + ":"
-                                                    + getPluginInstance().getServer().getPort()
-                                                    : (getPluginInstance().getServer().getIp().replace("localhost",
-                                                    "127.0.0.1") + ":"
-                                                    + getPluginInstance().getServer().getPort());
+                                                    ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
+                                                    : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
 
                                     if (!warpIP.equalsIgnoreCase(serverIP)) {
-                                        String server = getPluginInstance().getBungeeListener()
-                                                .getServerName(warp.getServerIPAddress());
+                                        String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
                                         if (server == null) {
-                                            getPluginInstance().getManager()
-                                                    .sendCustomMessage(Objects
-                                                            .requireNonNull(getPluginInstance().getConfig()
-                                                                    .getString("language-section.ip-ping-fail"))
-                                                            .replace("{warp}", warp.getWarpName())
-                                                            .replace("{ip}", warp.getServerIPAddress()), player);
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.ip-ping-fail"))
+                                                    .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress()), player);
                                             return;
                                         }
                                     }
                                 }
 
-                                int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance()
-                                        .getConfig().getInt("teleportation-section.warp-delay-duration") : 0,
-                                        cooldown = getPluginInstance().getConfig()
-                                                .getInt("teleportation-section.cooldown-duration");
+                                int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0,
+                                        cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
 
-                                long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp",
-                                        cooldown);
+                                long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
                                 if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
-                                    getPluginInstance().getManager()
-                                            .sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig()
-                                                    .getString("language-section.warp-cooldown"))
-                                                    .replace("{duration}", String.valueOf(currentCooldown)), player);
+                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-cooldown"))
+                                            .replace("{duration}", String.valueOf(currentCooldown)), player);
                                     return;
                                 }
 
-                                if (getPluginInstance().getConfig().getBoolean("general-section.use-vault")
-                                        && !player.hasPermission("hyperdrive.economybypass")
-                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
-                                        && !warp.getAssistants().contains(player.getUniqueId())
+                                if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
+                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
                                         && (warp.getWhiteList().contains(player.getUniqueId()))) {
-                                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player,
-                                            warp.getUsagePrice());
+                                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
                                     getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                                     if (!economyChargeEvent.isCancelled()) {
-                                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
-                                                .withdrawPlayer(player, warp.getUsagePrice());
+                                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, warp.getUsagePrice());
                                         if (!economyResponse.transactionSuccess()) {
-                                            getPluginInstance().getManager()
-                                                    .sendCustomMessage(Objects
-                                                                    .requireNonNull(getPluginInstance().getConfig()
-                                                                            .getString("language-section.insufficient-funds"))
-                                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())),
-                                                            player);
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
                                             return;
                                         } else
-                                            getPluginInstance().getManager()
-                                                    .sendCustomMessage(Objects
-                                                                    .requireNonNull(getPluginInstance().getConfig()
-                                                                            .getString("language-section.transaction-success"))
-                                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())),
-                                                            player);
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
                                     }
                                 }
 
@@ -1626,20 +1597,14 @@ public class Listeners implements Listener {
                                     String delayTheme = themeArgs[1];
                                     if (delayTheme.contains("/")) {
                                         String[] delayThemeArgs = delayTheme.split("/");
-                                        getPluginInstance().getTeleportationHandler().getAnimation()
-                                                .stopActiveAnimation(player);
-                                        getPluginInstance()
-                                                .getTeleportationHandler().getAnimation().playAnimation(player,
-                                                delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0]
-                                                        .toUpperCase().replace(" ", "_").replace("-", "_")),
-                                                duration);
+                                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0]
+                                                .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
                                     }
                                 }
 
-                                String title = getPluginInstance().getConfig()
-                                        .getString("teleportation-section.start-title"),
-                                        subTitle = getPluginInstance().getConfig()
-                                                .getString("teleportation-section.start-sub-title");
+                                String title = getPluginInstance().getConfig().getString("teleportation-section.start-title"),
+                                        subTitle = getPluginInstance().getConfig().getString("teleportation-section.start-sub-title");
                                 if (title != null && subTitle != null)
                                     getPluginInstance().getManager().sendTitle(player,
                                             title.replace("{duration}", String.valueOf(duration)).replace("{warp}",
@@ -1778,6 +1743,34 @@ public class Listeners implements Listener {
 
                         case SHIFT_LEFT:
 
+                            if (player.hasPermission("hyperdrive.like")) {
+                                if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())) || warp.getAssistants().contains(player.getUniqueId())) {
+                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.like-own")), player);
+                                    return;
+                                }
+
+                                String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
+                                        serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
+                                                || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
+                                                ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
+                                                : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
+
+                                if (!warpIP.equalsIgnoreCase(serverIP)) {
+                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.like-incorrect-server"))
+                                            .replace("{warp}", warp.getWarpName()), player);
+                                    return;
+                                }
+
+                                Inventory inventory = getPluginInstance().getManager().buildLikeMenu(warp);
+                                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIKE, inventory, player.getPlayer());
+                                getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                                if (menuOpenEvent.isCancelled()) return;
+
+                                player.openInventory(inventory);
+                                return;
+                            }
+
+                            break;
                         case SHIFT_RIGHT:
 
                             if (player.hasPermission("hyperdrive.admin.edit") || player.hasPermission("hyperdrive.edit.*")
@@ -1921,14 +1914,9 @@ public class Listeners implements Listener {
                             if (!getPluginInstance().getManager().isInChatInteraction(player)) {
                                 getPluginInstance().getManager().updateChatInteraction(player, "create-warp", "",
                                         !charged ? itemUsageCost : 0);
-                                getPluginInstance().getManager()
-                                        .sendCustomMessage(Objects
-                                                .requireNonNull(getPluginInstance().getConfig()
-                                                        .getString("language-section.create-warp-interaction"))
-                                                .replace("{cancel}",
-                                                        Objects.requireNonNull(getPluginInstance().getConfig()
-                                                                .getString("general-section.chat-interaction-cancel")))
-                                                .replace("{player}", player.getName()), player);
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.create-warp-interaction"))
+                                        .replace("{cancel}", Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel")))
+                                        .replace("{player}", player.getName()), player);
                             } else
                                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig()
                                         .getString("language-section.interaction-already-active"), player);
@@ -2706,6 +2694,166 @@ public class Listeners implements Listener {
                             player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
                             break;
 
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void runLikeMenuClick(Player player, String inventoryName, InventoryClickEvent e) {
+        if (e.getCurrentItem() != null
+                && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
+            e.setCancelled(true);
+            if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE)
+                return;
+
+            String itemId = getPluginInstance().getManager().getIdFromSlot("like-menu-section", e.getSlot());
+            if (itemId != null) {
+                if (getPluginInstance().getConfig().getBoolean("like-menu-section.items." + itemId + ".click-sound")) {
+                    String soundName = getPluginInstance().getConfig()
+                            .getString("like-menu-section.items." + itemId + ".sound-name");
+                    if (soundName != null && !soundName.equalsIgnoreCase(""))
+                        player.playSound(player.getLocation(),
+                                Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+                }
+
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("like-menu-section.items." + itemId + ".click-message"))
+                        .replace("{player}", player.getName()).replace("{item-id}", itemId), player);
+
+                String clickAction = getPluginInstance().getConfig().getString("like-menu-section.items." + itemId + ".click-action"),
+                        warpName = Objects.requireNonNull(ChatColor.stripColor(inventoryName)).replace(ChatColor.stripColor(getPluginInstance().getManager().colorText(
+                                getPluginInstance().getConfig().getString("like-menu-section.title"))), "");
+                Warp warp = getPluginInstance().getManager().getWarp(warpName);
+
+                ConfigurationSection cs = getPluginInstance().getConfig().getConfigurationSection("like-menu-section.items." + itemId);
+                if (cs != null && cs.getKeys(false).contains("permission")) {
+                    String permission = getPluginInstance().getConfig()
+                            .getString("like-menu-section.items." + itemId + ".permission");
+                    if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
+                        getPluginInstance().getManager().sendCustomMessage(
+                                getPluginInstance().getConfig().getString("language-section.no-permission"), player);
+                        return;
+                    }
+                }
+
+                if (clickAction != null) {
+                    boolean useVault = getPluginInstance().getConfig().getBoolean("general-section.use-vault");
+                    double itemUsageCost = getPluginInstance().getConfig().getDouble("like-menu-section.items." + itemId + ".usage-cost");
+                    if (useVault && itemUsageCost > 0
+                            && !getPluginInstance().getManager().isChatInteractionId(clickAction)) {
+                        EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
+                        getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+                        if (!economyChargeEvent.isCancelled()) {
+                            EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, itemUsageCost);
+                            if (!economyResponse.transactionSuccess()) {
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                        .replace("{amount}", String.valueOf(itemUsageCost)).replace("{player}", player.getName()), player);
+                                return;
+                            } else {
+                                getPluginInstance().getManager().updateLastTransactionAmount(player, itemUsageCost);
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                        .replace("{amount}", String.valueOf(itemUsageCost)).replace("{player}", player.getName()), player);
+                            }
+                        }
+                    }
+
+                    if (clickAction.toLowerCase().startsWith("open-menu") && clickAction.contains(":")) {
+                        String[] actionArgs = clickAction.split(":");
+                        if (actionArgs[1].equalsIgnoreCase("List Menu")
+                                || actionArgs[1].equalsIgnoreCase("List-Menu")) {
+                            player.closeInventory();
+                            player.openInventory(getPluginInstance().getManager().buildListMenu(player));
+                            return;
+                        } else {
+                            player.closeInventory();
+                            player.openInventory(getPluginInstance().getManager().buildCustomMenu(player, actionArgs[1]));
+                            return;
+                        }
+                    }
+
+                    String value = "";
+                    if (clickAction.contains(":")) {
+                        String[] actionArgs = clickAction.toLowerCase().split(":");
+                        clickAction = actionArgs[0].replace(" ", "-").replace("_", "-");
+                        value = actionArgs[1].replace("{player}", player.getName());
+                    }
+
+                    switch (clickAction) {
+                        case "dispatch-command-console":
+                            if (!value.equalsIgnoreCase(""))
+                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
+                            break;
+                        case "dispatch-command-player":
+                            if (!value.equalsIgnoreCase(""))
+                                getPluginInstance().getServer().dispatchCommand(player, value);
+                            break;
+                        case "open-custom-menu":
+                            if (!value.equalsIgnoreCase("")) {
+                                if (value.equalsIgnoreCase("List Menu") || value.equalsIgnoreCase("List-Menu")) {
+                                    player.closeInventory();
+
+                                    Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
+
+                                    MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(),
+                                            EnumContainer.MenuType.LIST, inventory, player.getPlayer());
+                                    getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                                    if (menuOpenEvent.isCancelled())
+                                        return;
+
+                                    player.openInventory(inventory);
+                                    return;
+                                } else {
+                                    player.closeInventory();
+                                    Inventory inventory = getPluginInstance().getManager().buildCustomMenu(player, value);
+
+                                    MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(),
+                                            EnumContainer.MenuType.CUSTOM, inventory, player.getPlayer());
+                                    menuOpenEvent.setCustomMenuId(value);
+                                    getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                                    if (menuOpenEvent.isCancelled())
+                                        return;
+
+                                    player.openInventory(inventory);
+                                    return;
+                                }
+                            }
+                            break;
+                        case "like":
+                            player.closeInventory();
+
+                            if (!player.hasPermission("hyperdrive.likebypass")) {
+                                long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "like",
+                                        getPluginInstance().getConfig().getInt("general-section.like-cooldown"));
+                                if (cooldownDurationLeft > 0) {
+                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig()
+                                            .getString("language-section.like-cooldown")).replace("{duration}", String.valueOf(cooldownDurationLeft)), player);
+                                    return;
+                                }
+                            }
+
+                            warp.setLikes(warp.getLikes() + 1);
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.liked-message"))
+                                    .replace("{warp}", warp.getWarpName()), player);
+                            break;
+                        case "dislike":
+                            player.closeInventory();
+
+                            if (!player.hasPermission("hyperdrive.likebypass")) {
+                                long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "like",
+                                        getPluginInstance().getConfig().getInt("general-section.like-cooldown"));
+                                if (cooldownDurationLeft > 0) {
+                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig()
+                                            .getString("language-section.like-cooldown")).replace("{duration}", String.valueOf(cooldownDurationLeft)), player);
+                                    return;
+                                }
+                            }
+
+                            warp.setDislikes(warp.getDislikes() + 1);
+                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.disliked-message"))
+                                    .replace("{warp}", warp.getWarpName()), player);
+                            break;
                         default:
                             break;
                     }

@@ -12,6 +12,7 @@ import xzot1k.plugins.hd.api.objects.SerializableLocation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class GroupTemp {
@@ -114,11 +115,9 @@ public class GroupTemp {
 											String server = getPluginInstance().getBungeeListener()
 													.getServerName(getDestination().getWarp().getServerIPAddress());
 											if (server != null) {
-												getPluginInstance().getManager().teleportCrossServer(
-														offlinePlayer.getPlayer(),
+                                                getPluginInstance().getManager().teleportCrossServer(offlinePlayer.getPlayer(),
 														getDestination().getWarp().getServerIPAddress(), server,
-														getDestination().getWarp().getWarpLocation()
-																.asBukkitLocation());
+                                                        getDestination().getWarp().getWarpLocation());
 												getPluginInstance().getManager()
 														.updateCooldown(offlinePlayer.getPlayer(), "warp");
 												return;
@@ -127,12 +126,12 @@ public class GroupTemp {
 									}
 
 									getPluginInstance().getTeleportationHandler()
-											.teleportPlayer(offlinePlayer.getPlayer(), destinationLocation);
+                                            .teleportPlayer(Objects.requireNonNull(offlinePlayer.getPlayer()), destinationLocation);
 									getPluginInstance().getManager().updateCooldown(offlinePlayer.getPlayer(), "warp");
 									return;
 								} else {
 									getPluginInstance().getTeleportationHandler()
-											.teleportPlayer(offlinePlayer.getPlayer(), destinationLocation);
+                                            .teleportPlayer(Objects.requireNonNull(offlinePlayer.getPlayer()), destinationLocation);
 									getPluginInstance().getManager().updateCooldown(offlinePlayer.getPlayer(), "warp");
 								}
 
@@ -176,9 +175,8 @@ public class GroupTemp {
 										String server = getPluginInstance().getBungeeListener()
 												.getServerName(getDestination().getWarp().getServerIPAddress());
 										if (server != null) {
-											getPluginInstance().getManager().teleportCrossServer(player,
-													getDestination().getWarp().getServerIPAddress(), server,
-													getDestination().getWarp().getWarpLocation().asBukkitLocation());
+                                            getPluginInstance().getManager().teleportCrossServer(player, getDestination().getWarp().getServerIPAddress(), server,
+                                                    getDestination().getWarp().getWarpLocation());
 											getPluginInstance().getManager().updateCooldown(player, "warp");
 											return;
 										}

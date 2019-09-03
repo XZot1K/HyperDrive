@@ -134,10 +134,14 @@ language-section:
   warp-ip-invalid: "&cNo warps with the registered IP Address &e{ip} &cwere found."
   warp-ip-set: "&a{count} &ewarps have had their IP Addresses set to &a{set-ip} &efrom &a{initial-ip}&e."
   ip-ping-fail: "&cUnable to warp to the warp &e{warp} &cbecause the IP Address &e{ip} &cis not responding."
-  cross-teleported: "&eYou have been teleported to the server &a{server} &eat World: &a{world} &eX: &a{x}&e, Y: &a{y}&e, Z: &a{z}&e."
+  cross-teleported: "&eYou have been teleported across servers to World: &a{world} &eX: &a{x}&e, Y: &a{y}&e, Z: &a{z}&e."
   warp-no-longer-exists: "&cThe warp seems to no longer exist."
   forbidden-world: "&cThe world you are attempting to randomly teleport to is forbidden."
   random-teleport-admin-forbidden: "&cUnable to randomly teleport &e{player} &cto the world &e{world} &csince it is forbidden."
+  like-cooldown: "&cYou are unable to like or dislike a warp for another &e{duration} &cseconds."
+  liked-message: "&aYou have liked the &e{warp} &awarp!"
+  disliked-message: "&aYou have disliked the &e{warp} &awarp!"
+  like-incorrect-server: "&cThe warp &e{warp} &cis on another server and therefore can not be liked or disliked from this server."
 
 # Here is where the MySQL connection can be configured.
 # (Note: Database tables are created and managed automatically. There is also no MySQL conversion to YAML file; therefore, use at your own risk.)
@@ -177,6 +181,8 @@ general-section:
   option-toggle-format: "Enabled:Disabled"
   # This is the format that is used for date display and storage within the plugin (Please only change this if you know what you are doing).
   date-format: "MM/dd/yyyy HH:mm:ss"
+  # This is the cooldown a player must wait in between liking and disliking a warp.
+  like-cooldown: 1800
   # This is the default amount of warps a user can own.
   default-warp-limit: 3
   # These are the sounds used throughout the plugin. These will need to be adjusted based on the server's Minecraft version.
@@ -329,6 +335,9 @@ warp-icon-section:
   # {animation-set} - replaced with the name of the animation set.
   # {whitelist-count} - The total of whitelisted players.
   # {assistant-count} - The total of assistant players.
+  # {likes} - The total likes.
+  # {dislikes} - The total dislikes.
+  # {like-bar} - The like ratio as a progress bar.
   ###
   # Unlike other formats in this lore format you are able to hide/show certain lines based on events. To hide/show a line based
   # on an event you must simply ensure that the line contains an event placeholder. Below are the currently available placeholders:
@@ -358,7 +367,10 @@ warp-icon-section:
     - "{no-access}&cYou don't have access to use this warp."
     - "{has-access}&a(Left-Click) &eBegin the teleportation process."
     - "{has-access}&a(Right-Click) &eBegin the group teleportation process."
-    - "{can-edit}&a(Shift-Click) &eBegin the warp edit process."
+    - "{has-access}&a(Shift + Left-Click) &eBegin the warp rating process."
+    - "{can-edit}&a(Shift + Right-Click) &eBegin the warp edit process."
+    - ""
+    - "&a\u2714 &e{likes}   &r{like-bar}   &e{dislikes} &c\u2716"
     - ""
     - "&7Owner: &e{owner}"
     - "&7Whitelist Count: &e{whitelist-count}"
@@ -1191,6 +1203,169 @@ ps-menu-section:
       player-head-name: ""
       material: "STAINED_GLASS_PANE"
       durability: 15
+      amount: 1
+
+# This is where the like menu can be fully customized.
+like-menu-section:
+  # This is the title of the menu. The warp's name and display name color are automatically added to the end of the title.
+  # (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+  title: "&6&lRating: &r"
+  # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+  size: 9
+  # This is the sound the player head will use when clicked. Set to "" to disable.
+  # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+  # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+  player-click-sound: "UI_BUTTON_CLICK"
+  # Under this section unlimited fully customizable items can be created and inserted into the menu.
+  items:
+    # This is the item's id which is used to define each individual item. With this feature unlimited
+    # items can be created and applied to the menu's interface.
+    like-one:
+      # Available click actions: "like", "dislike", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: "like"
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: ""
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "UI_BUTTON_CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 0
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
+      # This is the display name of the item.
+      display-name: "&a&lLike"
+      # This is the lore of the item.
+      lore:
+        - ""
+        - "&eClick to like this warp."
+      # This is the slot in the menu where the item will be placed.
+      slot: 1
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: false
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: ""
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "WOOL"
+      # This is the durability of the item's material.
+      durability: 5
+      # This is the stack count of the item.
+      amount: 1
+    like-two:
+      click-action: "like"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&a&lLike"
+      lore:
+        - ""
+        - "&eClick to like this warp."
+      slot: 2
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 5
+      amount: 1
+    like-three:
+      click-action: "like"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&a&lLike"
+      lore:
+        - ""
+        - "&eClick to like this warp."
+      slot: 3
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 5
+      amount: 1
+    dislike-one:
+      click-action: "dislike"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&c&lDislike"
+      lore:
+        - ""
+        - "&eClick to dislike this warp."
+      slot: 5
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 14
+      amount: 1
+    dislike-two:
+      click-action: "dislike"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&c&lDislike"
+      lore:
+        - ""
+        - "&eClick to dislike this warp."
+      slot: 6
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 14
+      amount: 1
+    dislike-three:
+      click-action: "dislike"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&c&lDislike"
+      lore:
+        - ""
+        - "&eClick to dislike this warp."
+      slot: 7
+      use-player-head: false
+      player-head-name: ""
+      material: "WOOL"
+      durability: 14
+      amount: 1
+    background-items:
+      click-action: ""
+      click-message: ""
+      fill-empty-slots: true
+      click-sound: false
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: ""
+      lore: []
+      slot: 0
+      use-player-head: false
+      player-head-name: ""
+      material: "BLACK_STAINED_GLASS_PANE"
+      durability: 0
       amount: 1
 
 # Under this section unlimited fully customizable menus are able to be created and used within HyperDrive.
