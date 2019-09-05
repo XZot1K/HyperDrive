@@ -134,6 +134,21 @@ public class TeleportationHandler implements Runnable {
                                         if (!warpIP.equalsIgnoreCase(serverIP)) {
                                             String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
                                             if (server != null) {
+                                                for (String command : warp.getCommands()) {
+                                                    if (command.toUpperCase().endsWith(":PLAYER"))
+                                                        getPluginInstance().getServer().dispatchCommand(player, command
+                                                                .replaceAll("(?i):PLAYER", "")
+                                                                .replaceAll("(?i):CONSOLE", ""));
+                                                    else if (command.toUpperCase().endsWith(":CONSOLE"))
+                                                        getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
+                                                                command.replaceAll("(?i):PLAYER", "")
+                                                                        .replaceAll("(?i):CONSOLE", ""));
+                                                    else
+                                                        getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
+                                                                command.replaceAll("(?i):PLAYER", "")
+                                                                        .replaceAll("(?i):CONSOLE", ""));
+                                                }
+
                                                 getPluginInstance().getManager().teleportCrossServer(player, warp.getServerIPAddress(),
                                                         server, warp.getWarpLocation());
                                                 getPluginInstance().getManager().updateCooldown(player, "warp");
@@ -150,9 +165,39 @@ public class TeleportationHandler implements Runnable {
                                             return;
                                         }
 
+                                        for (String command : warp.getCommands()) {
+                                            if (command.toUpperCase().endsWith(":PLAYER"))
+                                                getPluginInstance().getServer().dispatchCommand(player, command
+                                                        .replaceAll("(?i):PLAYER", "")
+                                                        .replaceAll("(?i):CONSOLE", ""));
+                                            else if (command.toUpperCase().endsWith(":CONSOLE"))
+                                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
+                                                        command.replaceAll("(?i):PLAYER", "")
+                                                                .replaceAll("(?i):CONSOLE", ""));
+                                            else
+                                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
+                                                        command.replaceAll("(?i):PLAYER", "")
+                                                                .replaceAll("(?i):CONSOLE", ""));
+                                        }
+
                                         teleportPlayer(player, warpLocation);
                                         getPluginInstance().getManager().updateCooldown(player, "warp");
                                     } else {
+                                        for (String command : warp.getCommands()) {
+                                            if (command.toUpperCase().endsWith(":PLAYER"))
+                                                getPluginInstance().getServer().dispatchCommand(player, command
+                                                        .replaceAll("(?i):PLAYER", "")
+                                                        .replaceAll("(?i):CONSOLE", ""));
+                                            else if (command.toUpperCase().endsWith(":CONSOLE"))
+                                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
+                                                        command.replaceAll("(?i):PLAYER", "")
+                                                                .replaceAll("(?i):CONSOLE", ""));
+                                            else
+                                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
+                                                        command.replaceAll("(?i):PLAYER", "")
+                                                                .replaceAll("(?i):CONSOLE", ""));
+                                        }
+
                                         teleportPlayer(player, warpLocation);
                                         getPluginInstance().getManager().updateCooldown(player, "warp");
                                     }

@@ -174,10 +174,7 @@ public class MainCommands implements CommandExecutor {
                             default:
                                 if (runWarpAdminCommand(commandSender, args[0], args[1]))
                                     return true;
-                                if (commandSender.hasPermission("hyperdrive.admin.help"))
-                                    sendAdminHelpPage(commandSender, 1);
-                                else
-                                    sendHelpPage(commandSender, 1);
+                                sendHelpPage(commandSender, 1);
                                 return true;
                         }
 
@@ -187,12 +184,16 @@ public class MainCommands implements CommandExecutor {
                             return true;
                         }
 
-                        sendHelpPage(commandSender, 1);
+                        if (commandSender.hasPermission("hyperdrive.admin.help"))
+                            sendAdminHelpPage(commandSender, 1);
+                        else
+                            sendHelpPage(commandSender, 1);
                         return true;
                     default:
                         break;
                 }
 
+                sendHelpPage(commandSender, 1);
                 return true;
             default:
                 break;

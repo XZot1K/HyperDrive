@@ -73,7 +73,7 @@ language-section:
   remove-whitelist: "&aThe player &e{player} &ahas been removed from the whitelist of the warp &e{warp}&a."
   add-command-interaction: "&ePlease enter the command you would like to add to the warp (Type &a{cancel} &eto stop the interaction):"
   add-command: "&eThe command &a{command} &eto the warp &a{warp}&e."
-  remove-command-interaction: "&ePlease enter the command you would like to add to the warp (Type &a{cancel} &eto stop the interaction):"
+  remove-command-interaction: "&ePlease enter the index of the command you would like to remove from the warp (Type &a{cancel} &eto stop the interaction):"
   command-already-exists: "&cThe command &e{command} &calready exists for the warp &e{warp}&c."
   invalid-command-index: "&cThe index entered was unable to be found or out of bounds. There is/are currently &e{command-count} &ccommand(s) on this warp."
   remove-command: "&aThe command at the index &e{index} &ahas been removed from the warp &e{warp}&a."
