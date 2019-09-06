@@ -194,7 +194,7 @@ public class Warp {
                 bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&f" : "&a").append("\u25CF");
                 fractionValue -= 1;
             } else
-                bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&f" : "&c").append("\u25CF");
+                bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&7" : "&c").append("\u25CF");
         }
 
         return bar.toString();
@@ -273,7 +273,7 @@ public class Warp {
                     yaml.set(getWarpName() + ".owner", getOwner().toString());
                     yaml.set(getWarpName() + ".assistants", assistants);
                     yaml.set(getWarpName() + ".whitelist", whiteList);
-                    yaml.set(getWarpName() + ".commands", getCommands());
+                    yaml.set(getWarpName() + ".commands", getCommands() != null ? getCommands() : new ArrayList<>());
                     yaml.set(getWarpName() + ".animation-set", getAnimationSet());
 
                     yaml.set(getWarpName() + ".icon.theme", getIconTheme());

@@ -125,7 +125,7 @@ public class MainCommands implements CommandExecutor {
                 switch (args.length) {
                     case 0:
                         openListMenu(commandSender);
-                        break;
+                        return true;
                     case 1:
                         switch (args[0].toLowerCase()) {
                             case "help":
@@ -193,7 +193,9 @@ public class MainCommands implements CommandExecutor {
                         break;
                 }
 
-                sendHelpPage(commandSender, 1);
+                if (commandSender.hasPermission("hyperdrive.admin.help"))
+                    getPluginInstance().getMainCommands().sendAdminHelpPage(commandSender, 1);
+                else getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
                 return true;
             default:
                 break;

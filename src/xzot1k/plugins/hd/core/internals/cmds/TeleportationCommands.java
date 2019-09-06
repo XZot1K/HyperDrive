@@ -770,7 +770,8 @@ public class TeleportationCommands implements CommandExecutor {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-pos")
                     .replace("{player}", enteredPlayer.getName()), (Player) commandSender);
         else
-            commandSender.sendMessage(getPluginInstance().getManager().colorText("language-section.teleport-pos").replace("{player}", enteredPlayer.getName()));
+            commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.teleport-pos"))
+                    .replace("{player}", enteredPlayer.getName()));
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleported-pos")
                 .replace("{world}", world.getName()).replace("{x}", xEntry).replace("{y}", yEntry).replace("{z}", zEntry), enteredPlayer);
     }
