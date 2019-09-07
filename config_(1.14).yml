@@ -274,9 +274,10 @@ random-teleport-section:
   # These are the worlds where RTP will not be allowed to take a player.
   forbidden-worlds:
     - "world_the_end"
-  # This is the bound radius that a player can be teleported within. You can think of this as like a world border.
-  # (Note: It is recommended to set this value to the size of your world's world border)
-  bounds-radius: 5000
+  # This is the bound radius that a player can be teleported within per world. You can think of this as like a world border.
+  # (Note: It is recommended to set this value to the size of your world's world border) (Format: <world name>:<bounds size>>)
+  bounds-radius-list:
+    - "world:5000"
   # This is how many times the random teleportation feature can attempt to teleport the player before aborting the task.
   # (Note: The higher the slower, recommended value is below 30 if "can-load-chunks" is enabled, set to -1 for unlimited)
   max-tries: 300

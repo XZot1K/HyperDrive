@@ -2,10 +2,7 @@ package xzot1k.plugins.hd.api;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -312,6 +309,19 @@ public class Manager {
         }
 
         return bar.toString();
+    }
+
+    public int getBounds(World world) {
+        List<String> boundsList = getPluginInstance().getConfig().getStringList("random-teleportation-section.bounds-radius-list");
+        for (int i = -1; ++i < boundsList.size(); ) {
+            String boundsLine = boundsList.get(i);
+            if (boundsLine != null && !boundsLine.equalsIgnoreCase("") && boundsLine.contains(":")) {
+                String[] boundsArgs = boundsLine.split(":");
+                if (boundsArgs[0].equalsIgnoreCase(world.getName())) return Integer.parseInt(boundsArgs[1]);
+            }
+        }
+
+        return 0;
     }
 
     // cross-server stuff
@@ -640,6 +650,9 @@ public class Manager {
 
         for (int i = -1; ++i < iconLoreFormat.size(); ) {
             String formatLine = iconLoreFormat.get(i), foundEventPlaceholder = null;
+            if ((formatLine.contains("{usage-price}") && warp.getUsagePrice() <= 0)
+                    || (formatLine.contains("{creation-date}") && warp.getStatus() == EnumContainer.Status.ADMIN))
+                continue;
 
             if (formatLine.equalsIgnoreCase("{description}")) {
                 if (warpDescription != null && !warpDescription.isEmpty()) {

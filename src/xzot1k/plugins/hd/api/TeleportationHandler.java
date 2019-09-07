@@ -316,25 +316,19 @@ public class TeleportationHandler implements Runnable {
 
     public boolean randomlyTeleportPlayer(Player player, World world) {
         if (!player.hasPermission("hyperdrive.rtpbypass")) {
-            long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp",
-                    getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
+            long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
             if (cooldownDurationLeft > 0) {
-                getPluginInstance().getManager().sendCustomMessage(Objects
-                        .requireNonNull(
-                                getPluginInstance().getConfig().getString("language-section.random-teleport-cooldown"))
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-cooldown"))
                         .replace("{duration}", String.valueOf(cooldownDurationLeft)), player);
                 return false;
             }
         }
 
-        getPluginInstance().getManager().sendCustomMessage(
-                getPluginInstance().getConfig().getString("language-section.random-teleport-start"), player);
-
+        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.random-teleport-start"), player);
         getRandomTeleportingPlayers().add(player.getUniqueId());
         Location basedLocation = world != null ? world.getSpawnLocation() : player.getLocation();
 
-        List<String> forcedLocationList = getPluginInstance().getConfig()
-                .getStringList("random-teleport-section.forced-location-list");
+        List<String> forcedLocationList = getPluginInstance().getConfig().getStringList("random-teleport-section.forced-location-list");
         for (int i = -1; ++i < forcedLocationList.size(); ) {
             String line = forcedLocationList.get(i);
             if (line.contains(":")) {
@@ -364,16 +358,11 @@ public class TeleportationHandler implements Runnable {
             Random random = new Random();
             List<String> forbiddenMaterialList = getPluginInstance().getConfig()
                     .getStringList("random-teleport-section.forbidden-materials");
-            double boundsRadius = getPluginInstance().getConfig().getDouble("random-teleport-section.bounds-radius");
-            int tries = 0, maxTries = getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"), x, z,
-                    smartLimit = 0;
-            boolean foundSafeLocation = false,
-                    canLoadChunks = getPluginInstance().getConfig()
-                            .getBoolean("random-teleport-section.can-load-chunks"),
-                    canGenerateChunks = getPluginInstance().getConfig()
-                            .getBoolean("random-teleport-section.can-generate-chunks");
-            String teleportSound = Objects
-                    .requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
+            double boundsRadius = getPluginInstance().getManager().getBounds(world);
+            int tries = 0, maxTries = getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"), x, z, smartLimit = 0;
+            boolean foundSafeLocation = false, canLoadChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-load-chunks"),
+                    canGenerateChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-generate-chunks");
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                     .toUpperCase().replace(" ", "_").replace("-", "_");
 
             @SuppressWarnings("deprecation")
@@ -533,8 +522,7 @@ public class TeleportationHandler implements Runnable {
     public void updateDestinationWithRandomLocation(Player player, Location baseLocation, World world) {
         Location basedLocation = world != null ? world.getSpawnLocation() : baseLocation;
 
-        List<String> forcedLocationList = getPluginInstance().getConfig()
-                .getStringList("random-teleport-section.forced-location-list");
+        List<String> forcedLocationList = getPluginInstance().getConfig().getStringList("random-teleport-section.forced-location-list");
         for (int i = -1; ++i < forcedLocationList.size(); ) {
             String line = forcedLocationList.get(i);
             if (line.contains(":")) {
@@ -562,9 +550,8 @@ public class TeleportationHandler implements Runnable {
         Location finalBasedLocation = basedLocation.clone();
         new BukkitRunnable() {
             Random random = new Random();
-            List<String> forbiddenMaterialList = getPluginInstance().getConfig()
-                    .getStringList("random-teleport-section.forbidden-materials");
-            double boundsRadius = getPluginInstance().getConfig().getDouble("random-teleport-section.bounds-radius");
+            List<String> forbiddenMaterialList = getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-materials");
+            double boundsRadius = getPluginInstance().getManager().getBounds(world);
             int tries = 0, maxTries = getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"), x, z,
                     smartLimit = 0;
             boolean foundSafeLocation = false,
