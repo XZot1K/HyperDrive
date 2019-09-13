@@ -685,7 +685,7 @@ public class MainCommands implements CommandExecutor {
     }
 
     private void beginRandomTeleportCommand(CommandSender commandSender, String playerName) {
-        if (!commandSender.hasPermission("hyperdrive.admin.rtp")) {
+        if (!commandSender.hasPermission("hyperdrive.admin.rtp") && !commandSender.hasPermission("hyperdrive.rtp")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(
                         getPluginInstance().getConfig().getString("language-section.no-permission"),
@@ -693,6 +693,27 @@ public class MainCommands implements CommandExecutor {
             else
                 commandSender.sendMessage(getPluginInstance().getManager()
                         .colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
+            return;
+        } else if (!commandSender.hasPermission("hyperdrive.admin.rtp") && commandSender.hasPermission("hyperdrive.rtp")
+                && commandSender instanceof Player) {
+            Player player = (Player) commandSender;
+
+            World world = getPluginInstance().getServer().getWorld(playerName);
+            if (world == null) {
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig()
+                        .getString("language-section.world-invalid")).replace("{world}", playerName)));
+                return;
+            }
+
+            for (String worldName : getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-worlds")) {
+                if (worldName.equalsIgnoreCase(player.getWorld().getName())) {
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig()
+                            .getString("language-section.random-teleport-admin-forbidden")).replace("{world}", playerName)));
+                    return;
+                }
+            }
+
+            getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(player, world);
             return;
         }
 
@@ -991,6 +1012,7 @@ public class MainCommands implements CommandExecutor {
         page2.add(
                 "&7&l*&r &e/warps <name> <player> &7- &aattempts to teleport the entered player to the entered warp.");
         page2.add("&7&l*&r &e/warps rtp &7- &abegins the random teleportation process on the sender.");
+        page2.add("&7&l*&r &e/warps rtp <world> &7- &abegins the random teleportation process on the sender to the specified world.");
         page2.add("&7&l*&r &e/warps rtp <player> &7- &abegins the random teleportation process on the entered player.");
         page2.add("");
         getAdminHelpPages().put(2, page2);
@@ -1053,11 +1075,9 @@ public class MainCommands implements CommandExecutor {
         page2.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a2&e] &e)&m-----------&r&e>");
         page2.add("");
         page2.add("&7&l*&r &e/tpa <player> &7- &asends a request to teleport to the entered player.");
-        page2.add(
-                "&7&l*&r &e/tpaccept <player> &7- &aaccepts the found teleport request and teleports the requester to the acceptor.");
+        page2.add("&7&l*&r &e/tpaccept <player> &7- &aaccepts the found teleport request and teleports the requester to the acceptor.");
         page2.add("&7&l*&r &e/tpdeny <player> &7- &adenies the found teleport request.");
-        page2.add(
-                "&7&l*&r &e/tptoggle &7- &atoggles teleportation such as TPA requests and forceful teleportation commands.");
+        page2.add("&7&l*&r &e/tptoggle &7- &atoggles teleportation such as TPA requests and forceful teleportation commands.");
         page2.add("&7&l*&r &e/back &7- &aattempts to teleport the sender to their last teleport location.");
         page2.add("");
         getHelpPages().put(2, page2);
@@ -1066,6 +1086,8 @@ public class MainCommands implements CommandExecutor {
         page3.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a3&e] &e)&m-----------&r&e>");
         page3.add("");
         page3.add("&7&l*&r &e/tpahere <player> &7- &asends a request for the player to teleport to you.");
+        page3.add("&7&l*&r &e/warps rtp &7- &abegins the random teleportation process on the sender.");
+        page3.add("&7&l*&r &e/warps rtp <world> &7- &abegins the random teleportation process on the sender to the specified world.");
         page3.add("");
         getHelpPages().put(3, page3);
     }
