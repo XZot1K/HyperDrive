@@ -139,23 +139,16 @@ public class Listeners implements Listener {
 
                 if (useVault && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
-                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
-                            itemUsageCost);
+                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(), itemUsageCost);
                     if (!economyResponse.transactionSuccess()) {
                         getPluginInstance().getManager().updateLastTransactionAmount(e.getPlayer(), itemUsageCost);
                         getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                        getPluginInstance().getManager().sendCustomMessage(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", e.getPlayer().getName()), e.getPlayer());
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                .replace("{amount}", String.valueOf(itemUsageCost)).replace("{player}", e.getPlayer().getName()), e.getPlayer());
                         return;
                     } else
-                        getPluginInstance().getManager().sendCustomMessage(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.transaction-success"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", e.getPlayer().getName()), e.getPlayer());
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                .replace("{amount}", String.valueOf(itemUsageCost)).replace("{player}", e.getPlayer().getName()), e.getPlayer());
                 }
 
                 warp = new Warp(enteredName, e.getPlayer(), e.getPlayer().getLocation());
@@ -317,29 +310,17 @@ public class Listeners implements Listener {
 
                 if (useVault && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
-                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(e.getPlayer(), itemUsageCost);
-                    getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
-                    if (!economyChargeEvent.isCancelled()) {
-                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
-                                .withdrawPlayer(e.getPlayer(), itemUsageCost);
-                        if (!economyResponse.transactionSuccess()) {
-                            getPluginInstance().getManager().updateLastTransactionAmount(e.getPlayer(), itemUsageCost);
-                            getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                            getPluginInstance().getManager()
-                                    .sendCustomMessage(Objects
-                                            .requireNonNull(getPluginInstance().getConfig()
-                                                    .getString("language-section.insufficient-funds"))
-                                            .replace("{amount}", String.valueOf(itemUsageCost))
-                                            .replace("{player}", e.getPlayer().getName()), e.getPlayer());
-                            return;
-                        } else
-                            getPluginInstance().getManager()
-                                    .sendCustomMessage(Objects
-                                            .requireNonNull(getPluginInstance().getConfig()
-                                                    .getString("language-section.transaction-success"))
-                                            .replace("{amount}", String.valueOf(itemUsageCost))
-                                            .replace("{player}", e.getPlayer().getName()), e.getPlayer());
-                    }
+                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
+                            .withdrawPlayer(e.getPlayer(), itemUsageCost);
+                    if (!economyResponse.transactionSuccess()) {
+                        getPluginInstance().getManager().updateLastTransactionAmount(e.getPlayer(), itemUsageCost);
+                        getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                .replace("{amount}", String.valueOf(itemUsageCost)).replace("{player}", e.getPlayer().getName()), e.getPlayer());
+                        return;
+                    } else
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                .replace("{amount}", String.valueOf(itemUsageCost)).replace("{player}", e.getPlayer().getName()), e.getPlayer());
                 }
 
                 if (e.getMessage().equalsIgnoreCase(

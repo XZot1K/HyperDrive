@@ -293,10 +293,9 @@ public class TeleportationHandler implements Runnable {
         boolean teleportVehicle = getPluginInstance().getConfig().getBoolean("teleportation-section.teleport-vehicles");
         if (player.getVehicle() != null && teleportVehicle) {
             Entity entity = player.getVehicle();
-            if (getPluginInstance().getServerVersion().startsWith("v1_11")
-                    || getPluginInstance().getServerVersion().startsWith("v1_12")
-                    || getPluginInstance().getServerVersion().startsWith("v1_13")
-                    || getPluginInstance().getServerVersion().startsWith("v1_14"))
+            if (getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_12")
+                    || getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
+                    || getPluginInstance().getServerVersion().startsWith("v1_15"))
                 entity.removePassenger(player);
 
             if (entity.getPassengers().contains(player))
@@ -326,7 +325,7 @@ public class TeleportationHandler implements Runnable {
 
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.random-teleport-start"), player);
         getRandomTeleportingPlayers().add(player.getUniqueId());
-        Location basedLocation = world != null ? world.getSpawnLocation() : player.getLocation();
+        Location basedLocation = player.getLocation();
 
         List<String> forcedLocationList = getPluginInstance().getConfig().getStringList("random-teleport-section.forced-location-list");
         for (int i = -1; ++i < forcedLocationList.size(); ) {
@@ -336,15 +335,11 @@ public class TeleportationHandler implements Runnable {
                 if ((lineArgs.length >= 2 && lineArgs[1].contains(","))) {
                     String[] coordinateArgs = lineArgs[1].split(",");
                     if (coordinateArgs.length >= 3) {
-                        if (getPluginInstance().getManager().isNumeric(coordinateArgs[0])
-                                && getPluginInstance().getManager().isNumeric(coordinateArgs[1])
+                        if (getPluginInstance().getManager().isNumeric(coordinateArgs[0]) && getPluginInstance().getManager().isNumeric(coordinateArgs[1])
                                 && getPluginInstance().getManager().isNumeric(coordinateArgs[2])) {
-                            if (basedLocation.getWorld() != null
-                                    && basedLocation.getWorld().getName().equalsIgnoreCase(lineArgs[0])) {
-                                basedLocation = new Location(getPluginInstance().getServer().getWorld(lineArgs[0]),
-                                        Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
-                                        Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(),
-                                        player.getLocation().getPitch());
+                            if (basedLocation.getWorld() != null && basedLocation.getWorld().getName().equalsIgnoreCase(lineArgs[0])) {
+                                basedLocation = new Location(getPluginInstance().getServer().getWorld(lineArgs[0]), Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
+                                        Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(), player.getLocation().getPitch());
                                 break;
                             }
                         }
@@ -353,12 +348,11 @@ public class TeleportationHandler implements Runnable {
             }
         }
 
+        final double boundsRadius = getPluginInstance().getManager().getBounds(world);
         Location finalBasedLocation = basedLocation;
         new BukkitRunnable() {
             Random random = new Random();
-            List<String> forbiddenMaterialList = getPluginInstance().getConfig()
-                    .getStringList("random-teleport-section.forbidden-materials");
-            double boundsRadius = getPluginInstance().getManager().getBounds(world);
+            List<String> forbiddenMaterialList = getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-materials");
             int tries = 0, maxTries = getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"), x, z, smartLimit = 0;
             boolean foundSafeLocation = false, canLoadChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-load-chunks"),
                     canGenerateChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-generate-chunks");
@@ -388,8 +382,8 @@ public class TeleportationHandler implements Runnable {
                     if (smartLimit < boundsRadius)
                         smartLimit += (boundsRadius * 0.005);
 
-                    if (getPluginInstance().getServerVersion().startsWith("v1_13")
-                            || getPluginInstance().getServerVersion().startsWith("v1_14")) {
+                    if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
+                            || getPluginInstance().getServerVersion().startsWith("v1_15")) {
                         if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(x >> 4, z >> 4))
                             return;
                     } else {
@@ -398,8 +392,8 @@ public class TeleportationHandler implements Runnable {
                             return;
                     }
 
-                    if (getPluginInstance().getServerVersion().startsWith("v1_13")
-                            || getPluginInstance().getServerVersion().startsWith("v1_14"))
+                    if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
+                            || getPluginInstance().getServerVersion().startsWith("v1_15"))
                         if (!canGenerateChunks && !finalBasedLocation.getWorld().isChunkGenerated(x >> 4, z >> 4))
                             return;
 
@@ -520,7 +514,7 @@ public class TeleportationHandler implements Runnable {
     }
 
     public void updateDestinationWithRandomLocation(Player player, Location baseLocation, World world) {
-        Location basedLocation = world != null ? world.getSpawnLocation() : baseLocation;
+        Location basedLocation = baseLocation;
 
         List<String> forcedLocationList = getPluginInstance().getConfig().getStringList("random-teleport-section.forced-location-list");
         for (int i = -1; ++i < forcedLocationList.size(); ) {
@@ -530,14 +524,11 @@ public class TeleportationHandler implements Runnable {
                 if ((lineArgs.length >= 2 && lineArgs[1].contains(","))) {
                     String[] coordinateArgs = lineArgs[1].split(",");
                     if (coordinateArgs.length >= 3) {
-                        if (getPluginInstance().getManager().isNumeric(coordinateArgs[0])
-                                && getPluginInstance().getManager().isNumeric(coordinateArgs[1])
+                        if (getPluginInstance().getManager().isNumeric(coordinateArgs[0]) && getPluginInstance().getManager().isNumeric(coordinateArgs[1])
                                 && getPluginInstance().getManager().isNumeric(coordinateArgs[2])) {
-                            if (basedLocation.getWorld() != null
-                                    && basedLocation.getWorld().getName().equalsIgnoreCase(lineArgs[0])) {
-                                basedLocation = new Location(getPluginInstance().getServer().getWorld(lineArgs[0]),
-                                        Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
-                                        Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(),
+                            if (basedLocation.getWorld() != null && basedLocation.getWorld().getName().equalsIgnoreCase(lineArgs[0])) {
+                                basedLocation = new Location(getPluginInstance().getServer().getWorld(lineArgs[0]), Double.parseDouble(coordinateArgs[0]),
+                                        Double.parseDouble(coordinateArgs[1]), Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(),
                                         player.getLocation().getPitch());
                                 break;
                             }
@@ -547,18 +538,14 @@ public class TeleportationHandler implements Runnable {
             }
         }
 
+        final double boundsRadius = getPluginInstance().getManager().getBounds(world);
         Location finalBasedLocation = basedLocation.clone();
         new BukkitRunnable() {
             Random random = new Random();
             List<String> forbiddenMaterialList = getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-materials");
-            double boundsRadius = getPluginInstance().getManager().getBounds(world);
-            int tries = 0, maxTries = getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"), x, z,
-                    smartLimit = 0;
-            boolean foundSafeLocation = false,
-                    canLoadChunks = getPluginInstance().getConfig()
-                            .getBoolean("random-teleport-section.can-load-chunks"),
-                    canGenerateChunks = getPluginInstance().getConfig()
-                            .getBoolean("random-teleport-section.can-generated-chunks");
+            int tries = 0, maxTries = getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"), x, z, smartLimit = 0;
+            boolean foundSafeLocation = false, canLoadChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-load-chunks"),
+                    canGenerateChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-generated-chunks");
 
             @SuppressWarnings("deprecation")
             @Override
@@ -578,8 +565,8 @@ public class TeleportationHandler implements Runnable {
                     if (smartLimit < boundsRadius)
                         smartLimit += (boundsRadius * 0.005);
 
-                    if (getPluginInstance().getServerVersion().startsWith("v1_13")
-                            || getPluginInstance().getServerVersion().startsWith("v1_14")) {
+                    if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
+                            || getPluginInstance().getServerVersion().startsWith("v1_15")) {
                         if (!canLoadChunks && !finalBasedLocation.getWorld().isChunkLoaded(x >> 4, z >> 4))
                             return;
                     } else {
@@ -588,8 +575,8 @@ public class TeleportationHandler implements Runnable {
                             return;
                     }
 
-                    if (getPluginInstance().getServerVersion().startsWith("v1_13")
-                            || getPluginInstance().getServerVersion().startsWith("v1_14"))
+                    if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
+                            || getPluginInstance().getServerVersion().startsWith("v1_15"))
                         if (!canGenerateChunks && !finalBasedLocation.getWorld().isChunkGenerated(x >> 4, z >> 4))
                             return;
 

@@ -1,10 +1,3 @@
-# ================================================= #
-#  This configuration is made for Minecraft 1.14.x  #
-# ================================================= #
-#      Please reset config if this is not your      #
-#                  server's version.                #
-# ================================================= #
-
 # Here is where every message can be customized including the prefix.
 # (Note: each message can have custom JSON clickable text and be disabled by being set to "".)
 # For JSON clickable text use the format <message:command:tooltip>.
@@ -278,6 +271,8 @@ random-teleport-section:
   # (Note: It is recommended to set this value to the size of your world's world border) (Format: <world name>:<bounds size>>)
   bounds-radius-list:
     - "world:5000"
+  # If for any reason bounds are unable to be found for a specific world this bound size will be used.
+  default-bounds: 5000
   # This is how many times the random teleportation feature can attempt to teleport the player before aborting the task.
   # (Note: The higher the slower, recommended value is below 30 if "can-load-chunks" is enabled, set to -1 for unlimited)
   max-tries: 300
@@ -319,11 +314,11 @@ warp-icon-section:
   # These are the icon themes a player can choose for the warps. By default, the first in the list will be the default theme for new warps.
   # Please follow the format <Theme Name>:<Material>:<Durability>:<Amount> (Note: There must be at least one icon theme in the list and the theme names can contain color codes).
   icon-theme-list:
-    - "&6A Little Grassy:GRASS_BLOCK:0:1"
+    - "&fMore of Me:PLAYER_HEAD:0:1"
+    - "&6Feeling Ritch:GOLD_INGOT:0:1"
     - "&cRock Hard:STONE:0:1"
     - "&bNeed Diamonds?:DIAMOND:0:1"
     - "&dQuantity?:ARROW:0:15"
-    - "&fMore of Me:PLAYER_HEAD:0:1"
   # This is the lore the warp icon is given inside of menus.
   # Current Placeholders:
   # {description} - replaces the line with the first description line while adding the remaining lines below it.

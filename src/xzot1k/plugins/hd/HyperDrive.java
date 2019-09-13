@@ -180,8 +180,8 @@ public class HyperDrive extends JavaPlugin {
             return;
 
         if (getServerVersion().startsWith("v1_14")) {
-            saveResource("config_(1.14).yml", false);
-            File file = new File(getDataFolder(), "config_(1.14).yml");
+            saveResource("config.yml", false);
+            File file = new File(getDataFolder(), "config.yml");
             file.renameTo(new File(getDataFolder(), "config.yml"));
         } else if (getServerVersion().startsWith("v1_13")) {
             saveResource("config_(1.13).yml", false);
@@ -202,58 +202,157 @@ public class HyperDrive extends JavaPlugin {
     }
 
     private void updateConfig() {
+        long startTime = System.currentTimeMillis();
         int updateCount = 0;
-        File latestConfigFile;
+        saveResource("latest-config.yml", true);
+        File file = new File(getDataFolder(), "/latest-config.yml");
+        FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
 
-        if (getServerVersion().startsWith("v1_14")) {
-            saveResource("config_(1.14).yml", true);
-            latestConfigFile = new File(getDataFolder(), "config_(1.14).yml");
-        } else if (getServerVersion().startsWith("v1_13")) {
-            saveResource("config_(1.13).yml", true);
-            latestConfigFile = new File(getDataFolder(), "config_(1.13).yml");
-        } else if (getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_10")
-                || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_12")) {
-            saveResource("config_(1.9-1.12).yml", true);
-            latestConfigFile = new File(getDataFolder(), "config_(1.9-1.12).yml");
-        } else {
-            saveResource("config_(1.8).yml", true);
-            latestConfigFile = new File(getDataFolder(), "config_(1.8).yml");
-        }
+        ConfigurationSection currentConfigurationSection = getConfig().getConfigurationSection(""),
+                latestConfigurationSection = yaml.getConfigurationSection("");
+        if (currentConfigurationSection != null && latestConfigurationSection != null) {
+            Set<String> newKeys = latestConfigurationSection.getKeys(true),
+                    currentKeys = currentConfigurationSection.getKeys(true);
+            for (String updatedKey : newKeys) {
+                if (!currentKeys.contains(updatedKey) && !currentKeys.contains(".items")) {
+                    getConfig().set(updatedKey, yaml.get(updatedKey));
+                    updateCount++;
+                }
+            }
 
-        FileConfiguration updatedYaml = YamlConfiguration.loadConfiguration(latestConfigFile);
-        List<String> currentKeys = new ArrayList<>(
-                Objects.requireNonNull(getConfig().getConfigurationSection("")).getKeys(true)),
-                updatedKeys = new ArrayList<>(
-                        Objects.requireNonNull(updatedYaml.getConfigurationSection("")).getKeys(true));
-        for (int i = -1; ++i < updatedKeys.size(); ) {
-            String updatedKey = updatedKeys.get(i);
-            if (!currentKeys.contains(updatedKey) && !updatedKey.contains(".items.")
-                    && !updatedKey.contains("custom-menus-section.")) {
-                getConfig().set(updatedKey, updatedYaml.get(updatedKey));
-                updateCount += 1;
-                log(Level.INFO, "Updated the '" + updatedKey + "' key within the configuration since it wasn't found.");
+            for (String currentKey : currentKeys) {
+                if (!newKeys.contains(currentKey) && !currentKeys.contains(".items")) {
+                    getConfig().set(currentKey, null);
+                    updateCount++;
+                }
             }
         }
 
-        for (int i = -1; ++i < currentKeys.size(); ) {
-            String currentKey = currentKeys.get(i);
-            if (!updatedKeys.contains(currentKey)) {
-                getConfig().set(currentKey, null);
-                updateCount += 1;
-                log(Level.INFO, "Removed the '" + currentKey + "' key within the configuration since it was invalid.");
+        // Fix Sounds
+        if (getServerVersion().startsWith("v1_13") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
+            String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
+            if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
+                getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
+                updateCount++;
+            }
+
+            String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
+            if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("CLICK")) {
+                getConfig().set("warp-icon-section.click-sound", "UI_BUTTON_CLICK");
+                updateCount++;
             }
         }
 
+        updateCount = fixItems(updateCount);
         if (updateCount > 0) {
             saveConfig();
-            log(Level.INFO, "The configuration has been updated using the " + latestConfigFile.getName() + " file.");
-            log(Level.WARNING,
-                    "Please go check out the configuration and customize these newly generated options to your liking. "
-                            + "Messages and similar values may not appear the same as they did in the default configuration "
-                            + "(P.S. Configuration comments have more than likely been removed to ensure proper syntax).");
+            reloadConfig();
+            log(Level.INFO, updateCount + " thing(s) were/was fixed, updated, or removed in the configuration " + "using the " + file.getName() + " file.");
+            log(Level.WARNING, "Please go check out the configuration and customize these newly generated options to your liking. Messages and " +
+                    "similar values may not appear the same as they did in the default configuration (P.S. Configuration comments have more than likely " +
+                    "been removed to ensure proper syntax).");
         } else
             log(Level.INFO, "Everything inside the configuration seems to be up to date.");
-        latestConfigFile.delete();
+        file.delete();
+        log(Level.INFO, "The configuration update checker process took " + (System.currentTimeMillis() - startTime) + "ms to complete.");
+    }
+
+    private int fixItems(int updateCount) {
+        ConfigurationSection configurationSection = getConfig().getConfigurationSection("");
+        if (configurationSection == null) return updateCount;
+
+        boolean isOffhandVersion = (getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_11")
+                || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_13") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15"));
+        for (String key : configurationSection.getKeys(true)) {
+            if (key.contains(".items.") && key.endsWith(".Material")) {
+                String keyValue = getConfig().getString(key);
+                if (keyValue == null || keyValue.equalsIgnoreCase("")) {
+                    getConfig().set(key, "ARROW");
+                    updateCount++;
+                }
+
+                if (keyValue != null)
+                    switch (keyValue.replace(" ", "_").replace("-", "_")) {
+                        case "ROSE_RED":
+                            if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
+                                getConfig().set(key, "RED_DYE");
+                                updateCount++;
+                            } else if (!getServerVersion().startsWith("v1_13")) {
+                                getConfig().set(key, "INK_SAC");
+                                updateCount++;
+                            }
+                            break;
+                        case "RED_DYE":
+                            if (getServerVersion().startsWith("v1_13")) {
+                                getConfig().set(key, "ROSE_RED");
+                                updateCount++;
+                            } else if (!getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15")) {
+                                getConfig().set(key, "INK_SAC");
+                                updateCount++;
+                            }
+                            break;
+                        case "CLOCK":
+                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                                getConfig().set(key, "WATCH");
+                                updateCount++;
+                            }
+                            break;
+                        case "WATCH":
+                            if (getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")) {
+                                getConfig().set(key, "CLOCK");
+                                updateCount++;
+                            }
+                            break;
+                        case "BLACK_STAINED_GLASS_PANE":
+                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                                getConfig().set(key, "STAINED_GLASS_PANE");
+                                updateCount++;
+                            }
+                            break;
+                        case "STAINED_GLASS_PANE":
+                            if (getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")) {
+                                getConfig().set(key, "BLACK_STAINED_GLASS_PANE");
+                                updateCount++;
+                            }
+                            break;
+                        case "OAK_SIGN":
+                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14")) {
+                                getConfig().set(key, "SIGN");
+                                updateCount++;
+                            }
+                            break;
+                        case "SIGN":
+                            if (getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14")) {
+                                getConfig().set(key, "OAK_SIGN");
+                                updateCount++;
+                            }
+                            break;
+                        case "GREEN_WOOL":
+                        case "LIME_WOOL":
+                        case "RED_WOOL":
+                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                                getConfig().set(key, "WOOL");
+                                updateCount++;
+                            }
+                            break;
+                        case "GRASS_BLOCK":
+                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                                getConfig().set(key, "GRASS");
+                                updateCount++;
+                            }
+                            break;
+                    }
+            } else if (key.contains(".items.") && key.endsWith(".sound-name")) {
+                String keyValue = getConfig().getString(key);
+                if ((keyValue == null || keyValue.equalsIgnoreCase("")) || (isOffhandVersion && keyValue.equalsIgnoreCase("CLICK"))
+                        || (!isOffhandVersion && keyValue.equalsIgnoreCase("UI_BUTTON_CLICK"))) {
+                    getConfig().set(key, isOffhandVersion ? "UI_BUTTON_CLICK" : "CLICK");
+                    updateCount++;
+                }
+            }
+        }
+
+        return updateCount;
     }
 
     // core methods

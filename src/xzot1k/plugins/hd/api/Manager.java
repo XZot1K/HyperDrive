@@ -312,7 +312,7 @@ public class Manager {
     }
 
     public int getBounds(World world) {
-        List<String> boundsList = getPluginInstance().getConfig().getStringList("random-teleportation-section.bounds-radius-list");
+        List<String> boundsList = getPluginInstance().getConfig().getStringList("random-teleport-section.bounds-radius-list");
         for (int i = -1; ++i < boundsList.size(); ) {
             String boundsLine = boundsList.get(i);
             if (boundsLine != null && !boundsLine.equalsIgnoreCase("") && boundsLine.contains(":")) {
@@ -321,7 +321,7 @@ public class Manager {
             }
         }
 
-        return 0;
+        return getPluginInstance().getConfig().getInt("random-teleport-section.default-bounds");
     }
 
     // cross-server stuff
