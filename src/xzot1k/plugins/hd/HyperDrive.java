@@ -52,7 +52,7 @@ public class HyperDrive extends JavaPlugin {
         setPluginInstance(this);
         setServerVersion(
                 getPluginInstance().getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
-        saveDefaultVersionConfig();
+        saveDefaultConfig();
         updateConfig();
 
         if (getConfig().getBoolean("general-section.use-vault") && !setupVaultEconomy()) {
@@ -175,32 +175,6 @@ public class HyperDrive extends JavaPlugin {
     }
 
     // configuration methods
-    private void saveDefaultVersionConfig() {
-        if (new File(getDataFolder(), "config.yml").exists())
-            return;
-
-        if (getServerVersion().startsWith("v1_14")) {
-            saveResource("config.yml", false);
-            File file = new File(getDataFolder(), "config.yml");
-            file.renameTo(new File(getDataFolder(), "config.yml"));
-        } else if (getServerVersion().startsWith("v1_13")) {
-            saveResource("config_(1.13).yml", false);
-            File file = new File(getDataFolder(), "config_(1.13).yml");
-            file.renameTo(new File(getDataFolder(), "config.yml"));
-        } else if (getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_10")
-                || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_12")) {
-            saveResource("config_(1.9-1.12).yml", false);
-            File file = new File(getDataFolder(), "config_(1.9-1.12).yml");
-            file.renameTo(new File(getDataFolder(), "config.yml"));
-        } else {
-            saveResource("config_(1.8).yml", false);
-            File file = new File(getDataFolder(), "config_(1.8).yml");
-            file.renameTo(new File(getDataFolder(), "config.yml"));
-        }
-
-        log(Level.INFO, getServerVersion() + " has been detected. Configuration created!");
-    }
-
     private void updateConfig() {
         long startTime = System.currentTimeMillis();
         int updateCount = 0;

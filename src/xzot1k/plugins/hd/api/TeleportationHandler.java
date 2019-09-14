@@ -334,16 +334,14 @@ public class TeleportationHandler implements Runnable {
                 String[] lineArgs = line.split(":");
                 if ((lineArgs.length >= 2 && lineArgs[1].contains(","))) {
                     String[] coordinateArgs = lineArgs[1].split(",");
-                    if (coordinateArgs.length >= 3) {
                         if (getPluginInstance().getManager().isNumeric(coordinateArgs[0]) && getPluginInstance().getManager().isNumeric(coordinateArgs[1])
                                 && getPluginInstance().getManager().isNumeric(coordinateArgs[2])) {
-                            if (basedLocation.getWorld() != null && basedLocation.getWorld().getName().equalsIgnoreCase(lineArgs[0])) {
-                                basedLocation = new Location(getPluginInstance().getServer().getWorld(lineArgs[0]), Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
+                            if (world != null && world.getName().equalsIgnoreCase(lineArgs[0])) {
+                                basedLocation = new Location(world, Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
                                         Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(), player.getLocation().getPitch());
                                 break;
                             }
                         }
-                    }
                 }
             }
         }
@@ -376,11 +374,8 @@ public class TeleportationHandler implements Runnable {
                     x = (int) (finalBasedLocation.getX() + xAddition);
                     z = (int) (finalBasedLocation.getZ() + zAddition);
 
-                    if (finalBasedLocation.getWorld() == null)
-                        return;
-
-                    if (smartLimit < boundsRadius)
-                        smartLimit += (boundsRadius * 0.005);
+                    if (finalBasedLocation.getWorld() == null || x >= boundsRadius || z >= boundsRadius) return;
+                    if (smartLimit < boundsRadius) smartLimit += (boundsRadius * 0.005);
 
                     if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
                             || getPluginInstance().getServerVersion().startsWith("v1_15")) {
