@@ -968,6 +968,7 @@ public class Manager {
                 .getKeys(false));
         for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i);
+            System.out.println(itemId);
             if (itemId != null && !itemId.equalsIgnoreCase("")) {
                 boolean usePlayerHead = getPluginInstance().getConfig()
                         .getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
@@ -994,13 +995,11 @@ public class Manager {
                                     "list-menu-section.items." + itemId + ".player-head-name"),
                             displayName, newLore,
                             getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                    if (playerHeadItem != null) {
-                        inventory.setItem(
-                                getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"),
-                                playerHeadItem);
-                        if (fillEmptySlots)
-                            emptySlotFiller = playerHeadItem;
-                    }
+                    inventory.setItem(
+                            getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"),
+                            playerHeadItem);
+                    if (fillEmptySlots)
+                        emptySlotFiller = playerHeadItem;
                 } else {
                     String displayName = Objects
                             .requireNonNull(getPluginInstance().getConfig()

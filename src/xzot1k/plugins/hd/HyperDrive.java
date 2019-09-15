@@ -50,8 +50,7 @@ public class HyperDrive extends JavaPlugin {
     public void onEnable() {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
-        setServerVersion(
-                getPluginInstance().getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
+        setServerVersion(getPluginInstance().getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
         saveDefaultConfig();
         updateConfig();
 
@@ -182,6 +181,8 @@ public class HyperDrive extends JavaPlugin {
         File file = new File(getDataFolder(), "/latest-config.yml");
         FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
 
+        boolean isOffhandVersion = (getServerVersion().startsWith("v1_13") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")
+                || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"));
         ConfigurationSection currentConfigurationSection = getConfig().getConfigurationSection(""),
                 latestConfigurationSection = yaml.getConfigurationSection("");
         if (currentConfigurationSection != null && latestConfigurationSection != null) {
@@ -203,7 +204,7 @@ public class HyperDrive extends JavaPlugin {
         }
 
         // Fix Sounds
-        if (getServerVersion().startsWith("v1_13") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
+        if (isOffhandVersion) {
             String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
             if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
                 getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
@@ -215,9 +216,21 @@ public class HyperDrive extends JavaPlugin {
                 getConfig().set("warp-icon-section.click-sound", "UI_BUTTON_CLICK");
                 updateCount++;
             }
+        } else {
+            String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
+            if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT")) {
+                getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
+                updateCount++;
+            }
+
+            String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
+            if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("UI_BUTTON_CLICK")) {
+                getConfig().set("warp-icon-section.click-sound", "CLICK");
+                updateCount++;
+            }
         }
 
-        updateCount = fixItems(updateCount);
+        updateCount = fixItems(updateCount, isOffhandVersion);
         if (updateCount > 0) {
             saveConfig();
             reloadConfig();
@@ -231,14 +244,12 @@ public class HyperDrive extends JavaPlugin {
         log(Level.INFO, "The configuration update checker process took " + (System.currentTimeMillis() - startTime) + "ms to complete.");
     }
 
-    private int fixItems(int updateCount) {
+    private int fixItems(int updateCount, boolean isOffhandVersion) {
         ConfigurationSection configurationSection = getConfig().getConfigurationSection("");
         if (configurationSection == null) return updateCount;
 
-        boolean isOffhandVersion = (getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_11")
-                || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_13") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15"));
         for (String key : configurationSection.getKeys(true)) {
-            if (key.contains(".items.") && key.endsWith(".Material")) {
+            if (key.contains(".items.") && key.endsWith(".material")) {
                 String keyValue = getConfig().getString(key);
                 if (keyValue == null || keyValue.equalsIgnoreCase("")) {
                     getConfig().set(key, "ARROW");
@@ -247,11 +258,35 @@ public class HyperDrive extends JavaPlugin {
 
                 if (keyValue != null)
                     switch (keyValue.replace(" ", "_").replace("-", "_")) {
+                        case "INK_SAC":
+                            if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
+                                getConfig().set(key, "RED_DYE");
+                                updateCount++;
+                            } else if (getServerVersion().startsWith("v1_13")) {
+                                getConfig().set(key, "ROSE_RED");
+                                updateCount++;
+                            } else if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
+                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
+                                getConfig().set(key, "INK_SACK");
+                                updateCount++;
+                            }
+                            break;
+                        case "INK_SACK":
+                            if (!getServerVersion().startsWith("v1_12") && !getServerVersion().startsWith("v1_9") && !getServerVersion().startsWith("v1_11") && !getServerVersion().startsWith("v1_10")
+                                    && !getServerVersion().startsWith("v1_13") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15")) {
+                                getConfig().set(key, "INK_SAC");
+                                updateCount++;
+                            }
+                            break;
                         case "ROSE_RED":
                             if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
                                 getConfig().set(key, "RED_DYE");
                                 updateCount++;
-                            } else if (!getServerVersion().startsWith("v1_13")) {
+                            } else if (!getServerVersion().startsWith("v1_13") && (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
+                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10"))) {
+                                getConfig().set(key, "INK_SACK");
+                                updateCount++;
+                            } else {
                                 getConfig().set(key, "INK_SAC");
                                 updateCount++;
                             }
@@ -260,8 +295,15 @@ public class HyperDrive extends JavaPlugin {
                             if (getServerVersion().startsWith("v1_13")) {
                                 getConfig().set(key, "ROSE_RED");
                                 updateCount++;
-                            } else if (!getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15")) {
+                            } else if (!isOffhandVersion && (getServerVersion().startsWith("v1_12") || !getServerVersion().startsWith("v1_9")
+                                    || !getServerVersion().startsWith("v1_11") || !getServerVersion().startsWith("v1_10"))) {
+                                getConfig().set(key, "INK_SACK");
+                                updateCount++;
+                            } else if (!isOffhandVersion) {
                                 getConfig().set(key, "INK_SAC");
+                                updateCount++;
+                            } else if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
+                                getConfig().set(key, "RED_DYE");
                                 updateCount++;
                             }
                             break;
