@@ -968,7 +968,6 @@ public class Manager {
                 .getKeys(false));
         for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i);
-            System.out.println(itemId);
             if (itemId != null && !itemId.equalsIgnoreCase("")) {
                 boolean usePlayerHead = getPluginInstance().getConfig()
                         .getBoolean("list-menu-section.items." + itemId + ".use-player-head"),

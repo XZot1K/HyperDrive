@@ -179,7 +179,7 @@ public class MainCommands implements CommandExecutor {
                         }
 
                     case 3:
-                        if ("rtp".equals(args[0].toLowerCase())) {
+                        if (args[0].equalsIgnoreCase("rtp")) {
                             beginRandomTeleportCommand(commandSender, args[1], args[2]);
                             return true;
                         }
@@ -767,10 +767,8 @@ public class MainCommands implements CommandExecutor {
 
         World world = getPluginInstance().getServer().getWorld(worldName);
         if (world == null) {
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.world-invalid"))
-                            .replace("{world}", worldName)));
+            commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.world-invalid"))
+                    .replace("{world}", worldName)));
             return;
         }
 
@@ -1040,6 +1038,8 @@ public class MainCommands implements CommandExecutor {
                 "&7&l*&r &e/tppos <x> <y> <z> <world> &7- &ateleports the sender to the defined coordinates in the defined world.");
         page4.add(
                 "&7&l*&r &e/tppos <player> <x> <y> <z> <world> &7- &ateleports the entered player to the defined coordinates in the defined world.");
+        page4.add(
+                "&7&l*&r &e/tppos <x> <y> <z> &7- &athe sender will be teleported to the defined coordinates in the current world.");
         page4.add("");
         getAdminHelpPages().put(4, page4);
 

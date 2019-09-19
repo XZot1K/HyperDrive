@@ -1725,7 +1725,7 @@ public class Listeners implements Listener {
                         case SHIFT_LEFT:
 
                             if (player.hasPermission("hyperdrive.like")) {
-                                if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())) || warp.getAssistants().contains(player.getUniqueId())) {
+                                if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())) && !warp.getAssistants().contains(player.getUniqueId())) {
                                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.like-own")), player);
                                     return;
                                 }
@@ -1803,21 +1803,13 @@ public class Listeners implements Listener {
                 }
 
                 String ownFormat = getPluginInstance().getConfig().getString("list-menu-section.own-status-format"),
-                        publicFormat = getPluginInstance().getConfig()
-                                .getString("list-menu-section.public-status-format"),
-                        privateFormat = getPluginInstance().getConfig()
-                                .getString("list-menu-section.private-status-format"),
-                        adminFormat = getPluginInstance().getConfig()
-                                .getString("list-menu-section.admin-status-format"),
-                        featuredFormat = getPluginInstance().getConfig()
-                                .getString("list-menu-section.featured-status-format"),
-                        clickAction = getPluginInstance().getConfig()
-                                .getString("list-menu-section.items." + itemId + ".click-action");
-                getPluginInstance().getManager()
-                        .sendCustomMessage(Objects
-                                .requireNonNull(getPluginInstance().getConfig()
-                                        .getString("list-menu-section.items." + itemId + ".click-message"))
-                                .replace("{player}", player.getName()).replace("{item-id}", itemId), player);
+                        publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
+                        privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
+                        adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format"),
+                        featuredFormat = getPluginInstance().getConfig().getString("list-menu-section.featured-status-format"),
+                        clickAction = getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".click-action");
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".click-message"))
+                        .replace("{player}", player.getName()).replace("{item-id}", itemId), player);
 
                 if (clickAction != null) {
                     String action = clickAction, value = "";

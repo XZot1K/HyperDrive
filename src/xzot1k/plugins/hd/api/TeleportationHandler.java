@@ -325,7 +325,7 @@ public class TeleportationHandler implements Runnable {
 
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.random-teleport-start"), player);
         getRandomTeleportingPlayers().add(player.getUniqueId());
-        Location basedLocation = player.getLocation();
+        Location basedLocation = Objects.requireNonNull(player.getLocation().getWorld()).getName().equalsIgnoreCase(world.getName()) ? player.getLocation() : world.getSpawnLocation();
 
         List<String> forcedLocationList = getPluginInstance().getConfig().getStringList("random-teleport-section.forced-location-list");
         for (int i = -1; ++i < forcedLocationList.size(); ) {
@@ -334,14 +334,14 @@ public class TeleportationHandler implements Runnable {
                 String[] lineArgs = line.split(":");
                 if ((lineArgs.length >= 2 && lineArgs[1].contains(","))) {
                     String[] coordinateArgs = lineArgs[1].split(",");
-                        if (getPluginInstance().getManager().isNumeric(coordinateArgs[0]) && getPluginInstance().getManager().isNumeric(coordinateArgs[1])
-                                && getPluginInstance().getManager().isNumeric(coordinateArgs[2])) {
-                            if (world != null && world.getName().equalsIgnoreCase(lineArgs[0])) {
-                                basedLocation = new Location(world, Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
-                                        Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(), player.getLocation().getPitch());
-                                break;
-                            }
+                    if (getPluginInstance().getManager().isNumeric(coordinateArgs[0]) && getPluginInstance().getManager().isNumeric(coordinateArgs[1])
+                            && getPluginInstance().getManager().isNumeric(coordinateArgs[2])) {
+                        if (world.getName().equalsIgnoreCase(lineArgs[0])) {
+                            basedLocation = new Location(world, Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
+                                    Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(), player.getLocation().getPitch());
+                            break;
                         }
+                    }
                 }
             }
         }
