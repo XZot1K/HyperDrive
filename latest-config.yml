@@ -136,6 +136,7 @@ language-section:
   disliked-message: "&aYou have disliked the &e{warp} &awarp!"
   like-incorrect-server: "&cThe warp &e{warp} &cis on another server and therefore can not be liked or disliked from this server."
   like-own: "&cYou can't like or dislike a warp you own."
+  player-tpa-empty: "&cYou currently have no teleportation requests."
 
 # Here is where the MySQL connection can be configured.
 # (Note: Database tables are created and managed automatically. There is also no MySQL conversion to YAML file; therefore, use at your own risk.)

@@ -49,7 +49,7 @@ public class Listeners implements Listener {
             String inventoryName;
 
             try {
-                if (getPluginInstance().getServerVersion().startsWith("v1_14"))
+                if (getPluginInstance().getServerVersion().startsWith("v1_14") || getPluginInstance().getServerVersion().startsWith("v1_15"))
                     inventoryName = e.getView().getTitle();
                 else {
                     Method method = e.getInventory().getClass().getMethod("getName");
@@ -1500,11 +1500,9 @@ public class Listeners implements Listener {
 
     // methods
     private void runListMenuClick(Player player, InventoryClickEvent e) {
-        if (e.getCurrentItem() != null
-                && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
+        if (e.getCurrentItem() != null && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
             e.setCancelled(true);
-            if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE)
-                return;
+            if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
 
             List<Integer> warpSlots = getPluginInstance().getConfig().getIntegerList("list-menu-section.warp-slots");
             if (warpSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta()) {
@@ -1926,15 +1924,12 @@ public class Listeners implements Listener {
                             break;
                         case "next-page":
                             if (getPluginInstance().getManager().getPaging().hasNextWarpPage(player)) {
-                                warpPageMap = getPluginInstance().getManager().getPaging().getWarpPages(player,
-                                        "list-menu-section", getPluginInstance().getManager()
-                                                .getCurrentFilterStatus("list-menu-section", e.getInventory()));
-                                getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(),
-                                        warpPageMap);
+                                warpPageMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
+                                        getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", e.getInventory()));
+                                getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), warpPageMap);
                                 currentPage = getPluginInstance().getManager().getPaging().getCurrentPage(player);
                                 pageWarpList = new ArrayList<>();
-                                if (warpPageMap != null && !warpPageMap.isEmpty()
-                                        && warpPageMap.containsKey(currentPage + 1))
+                                if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(currentPage + 1))
                                     pageWarpList = new ArrayList<>(warpPageMap.get(currentPage + 1));
 
                                 if (!pageWarpList.isEmpty()) {
@@ -1950,21 +1945,14 @@ public class Listeners implements Listener {
                                     }
                                 }
                             } else
-                                getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getConfig().getString("language-section.no-next-page"), player);
-
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-next-page"), player);
                             break;
                         case "previous-page":
                             if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player)) {
-                                warpPageMap = getPluginInstance().getManager().getPaging()
-                                        .getCurrentWarpPages(player) == null
-                                        ? getPluginInstance().getManager().getPaging().getWarpPages(player,
-                                        "list-menu-section",
-                                        getPluginInstance().getManager().getCurrentFilterStatus(
-                                                "list-menu-section", e.getInventory()))
+                                warpPageMap = getPluginInstance().getManager().getPaging().getCurrentWarpPages(player) == null ? getPluginInstance().getManager().getPaging().getWarpPages(player,
+                                        "list-menu-section", getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", e.getInventory()))
                                         : getPluginInstance().getManager().getPaging().getCurrentWarpPages(player);
-                                getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(),
-                                        warpPageMap);
+                                getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), warpPageMap);
 
                                 currentPage = getPluginInstance().getManager().getPaging().getCurrentPage(player);
                                 pageWarpList = new ArrayList<>();
@@ -1985,10 +1973,7 @@ public class Listeners implements Listener {
                                     }
                                 }
                             } else
-                                getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getConfig().getString("language-section.no-previous-page"),
-                                        player);
-
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-previous-page"), player);
                             break;
                         case "filter-switch":
                             String statusFromItem = getPluginInstance().getManager()
@@ -2038,11 +2023,8 @@ public class Listeners implements Listener {
                                 }
 
                                 getPluginInstance().getManager().getPaging().resetWarpPages(player);
-                                warpPageMap = getPluginInstance().getManager().getPaging().getWarpPages(player,
-                                        "list-menu-section", nextStatus);
-
-                                getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(),
-                                        warpPageMap);
+                                warpPageMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", nextStatus);
+                                getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), warpPageMap);
                                 currentPage = getPluginInstance().getManager().getPaging().getCurrentPage(player);
                                 pageWarpList = new ArrayList<>();
                                 if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(currentPage))
@@ -2052,8 +2034,7 @@ public class Listeners implements Listener {
                                     for (int i = -1; ++i < warpSlots.size(); ) {
                                         if (pageWarpList.size() >= 1) {
                                             Warp warp = pageWarpList.get(0);
-                                            e.getInventory().setItem(warpSlots.get(i),
-                                                    getPluginInstance().getManager().buildWarpIcon(player, warp));
+                                            e.getInventory().setItem(warpSlots.get(i), getPluginInstance().getManager().buildWarpIcon(player, warp));
                                             pageWarpList.remove(warp);
                                         }
                                     }

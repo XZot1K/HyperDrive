@@ -1077,14 +1077,16 @@ public class MainCommands implements CommandExecutor {
         page2.add("&7&l*&r &e/tpa <player> &7- &asends a request to teleport to the entered player.");
         page2.add("&7&l*&r &e/tpaccept <player> &7- &aaccepts the found teleport request and teleports the requester to the acceptor.");
         page2.add("&7&l*&r &e/tpdeny <player> &7- &adenies the found teleport request.");
-        page2.add("&7&l*&r &e/tptoggle &7- &atoggles teleportation such as TPA requests and forceful teleportation commands.");
-        page2.add("&7&l*&r &e/back &7- &aattempts to teleport the sender to their last teleport location.");
+        page2.add("&7&l*&r &e/tpaccept &7- &aaccepts the first found teleport request and teleports the requester to the acceptor.");
+        page2.add("&7&l*&r &e/tpdeny &7- &adenies the first found teleport request.");
         page2.add("");
         getHelpPages().put(2, page2);
 
         page3.add("");
         page3.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a3&e] &e)&m-----------&r&e>");
         page3.add("");
+        page3.add("&7&l*&r &e/tptoggle &7- &atoggles teleportation such as TPA requests and forceful teleportation commands.");
+        page3.add("&7&l*&r &e/back &7- &aattempts to teleport the sender to their last teleport location.");
         page3.add("&7&l*&r &e/tpahere <player> &7- &asends a request for the player to teleport to you.");
         page3.add("&7&l*&r &e/warps rtp &7- &abegins the random teleportation process on the sender.");
         page3.add("&7&l*&r &e/warps rtp <world> &7- &abegins the random teleportation process on the sender to the specified world.");

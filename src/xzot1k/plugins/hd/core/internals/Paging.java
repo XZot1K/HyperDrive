@@ -167,10 +167,8 @@ public class Paging {
 
     // warp paging
     public void resetWarpPages(OfflinePlayer player) {
-        if (!getWarpPageMap().isEmpty())
-            getWarpPageMap().remove(player.getUniqueId());
-        if (!getCurrentPageMap().isEmpty())
-            getCurrentPageMap().remove(player.getUniqueId());
+        getWarpPageMap().remove(player.getUniqueId());
+        getCurrentPageMap().remove(player.getUniqueId());
     }
 
     public void updateCurrentWarpPage(OfflinePlayer player, boolean isNext) {
@@ -245,8 +243,8 @@ public class Paging {
                         if (currentWarpList.size() < slotCount)
                             currentWarpList.add(warp);
                         else {
-                            finalMap.put(currentPage, currentWarpList);
-                            currentWarpList = new ArrayList<>();
+                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                            currentWarpList.clear();
                             currentPage += 1;
                         }
 
@@ -257,8 +255,8 @@ public class Paging {
                         if (currentWarpList.size() < slotCount)
                             currentWarpList.add(warp);
                         else {
-                            finalMap.put(currentPage, currentWarpList);
-                            currentWarpList = new ArrayList<>();
+                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                            currentWarpList.clear();
                             currentPage += 1;
                         }
 
@@ -268,8 +266,8 @@ public class Paging {
                         if (currentWarpList.size() < slotCount)
                             currentWarpList.add(warp);
                         else {
-                            finalMap.put(currentPage, currentWarpList);
-                            currentWarpList = new ArrayList<>();
+                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                            currentWarpList.clear();
                             currentPage += 1;
                         }
 
@@ -279,8 +277,8 @@ public class Paging {
                         if (currentWarpList.size() < slotCount)
                             currentWarpList.add(warp);
                         else {
-                            finalMap.put(currentPage, currentWarpList);
-                            currentWarpList = new ArrayList<>();
+                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                            currentWarpList.clear();
                             currentPage += 1;
                         }
 
@@ -290,8 +288,8 @@ public class Paging {
                         if (currentWarpList.size() < slotCount)
                             currentWarpList.add(warp);
                         else {
-                            finalMap.put(currentPage, currentWarpList);
-                            currentWarpList = new ArrayList<>();
+                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                            currentWarpList.clear();
                             currentPage += 1;
                         }
 
@@ -301,8 +299,8 @@ public class Paging {
                 if (currentWarpList.size() < slotCount)
                     currentWarpList.add(warp);
                 else {
-                    finalMap.put(currentPage, currentWarpList);
-                    currentWarpList = new ArrayList<>();
+                    finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                    currentWarpList.clear();
                     currentPage += 1;
                 }
             }

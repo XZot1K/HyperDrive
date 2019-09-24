@@ -164,8 +164,7 @@ public class HyperDrive extends JavaPlugin {
 
     private String getLatestVersion() {
         try {
-            HttpURLConnection c = (HttpURLConnection) new URL(
-                    "https://api.spigotmc.org/legacy/update.php?resource=17184").openConnection();
+            HttpURLConnection c = (HttpURLConnection) new URL("https://api.spigotmc.org/legacy/update.php?resource=17184").openConnection();
             c.setRequestMethod("GET");
             return new BufferedReader(new InputStreamReader(c.getInputStream())).readLine();
         } catch (Exception ex) {
@@ -190,6 +189,7 @@ public class HyperDrive extends JavaPlugin {
                     currentKeys = currentConfigurationSection.getKeys(true);
             for (String updatedKey : newKeys) {
                 if (!currentKeys.contains(updatedKey) && !currentKeys.contains(".items")) {
+                    System.out.println(updatedKey + " was set");
                     getConfig().set(updatedKey, yaml.get(updatedKey));
                     updateCount++;
                 }
@@ -197,6 +197,7 @@ public class HyperDrive extends JavaPlugin {
 
             for (String currentKey : currentKeys) {
                 if (!newKeys.contains(currentKey) && !currentKeys.contains(".items")) {
+                    System.out.println(currentKey + " was set");
                     getConfig().set(currentKey, null);
                     updateCount++;
                 }
