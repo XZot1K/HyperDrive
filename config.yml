@@ -71,8 +71,8 @@ language-section:
   invalid-command-index: "&cThe index entered was unable to be found or out of bounds. There is/are currently &e{command-count} &ccommand(s) on this warp."
   remove-command: "&aThe command at the index &e{index} &ahas been removed from the warp &e{warp}&a."
   enchanted-look-toggle: "&aThe icon enchanted look has been &e{status} &afor the warp &e{warp}&a!"
-  theme-invalid: "&cThe next icon theme was unable to be found. The original icon theme has been kept."
-  theme-changed: "&aThe icon theme of the warp &e{warp} &ahas been changed to &e{theme}&a."
+  invalid-item: "&cYou must be holding the item you want your warp icon to look like."
+  icon-changed: "&aThe warp icon has been transmogrified to the item in your hand."
   animation-set-changed: "&aThe animation set of the warp &e{warp} &ahas been changed to &e{animation-set}&a."
   animation-set-invalid: "&cThe next animation set was unable to be found. The original animation set has been kept."
   no-next-page: "&cThere are no more pages. You are on the final page."
@@ -131,7 +131,7 @@ language-section:
   warp-no-longer-exists: "&cThe warp seems to no longer exist."
   forbidden-world: "&cThe world you are attempting to randomly teleport to is forbidden."
   random-teleport-admin-forbidden: "&cUnable to randomly teleport &e{player} &cto the world &e{world} &csince it is forbidden."
-  like-cooldown: "&cYou are unable to like or dislike a warp for another &e{duration} &cseconds."
+  already-liked: "&cYou have already liked or disliked this warp."
   liked-message: "&aYou have liked the &e{warp} &awarp!"
   disliked-message: "&aYou have disliked the &e{warp} &awarp!"
   like-incorrect-server: "&cThe warp &e{warp} &cis on another server and therefore can not be liked or disliked from this server."
@@ -176,8 +176,6 @@ general-section:
   option-toggle-format: "Enabled:Disabled"
   # This is the format that is used for date display and storage within the plugin (Please only change this if you know what you are doing).
   date-format: "MM/dd/yyyy HH:mm:ss"
-  # This is the cooldown a player must wait in between liking and disliking a warp.
-  like-cooldown: 1800
   # This is the default amount of warps a user can own.
   default-warp-limit: 3
   # These are the sounds used throughout the plugin. These will need to be adjusted based on the server's Minecraft version.
@@ -312,14 +310,6 @@ warp-icon-section:
   default-description:
     - "&7This is the default HyperDrive warp description."
     - "&7(Note: This can be changed inside the edit menu)"
-  # These are the icon themes a player can choose for the warps. By default, the first in the list will be the default theme for new warps.
-  # Please follow the format <Theme Name>:<Material>:<Durability>:<Amount> (Note: There must be at least one icon theme in the list and the theme names can contain color codes).
-  icon-theme-list:
-    - "&fMore of Me:PLAYER_HEAD:0:1"
-    - "&6Feeling Ritch:GOLD_INGOT:0:1"
-    - "&cRock Hard:STONE:0:1"
-    - "&bNeed Diamonds?:DIAMOND:0:1"
-    - "&dQuantity?:ARROW:0:15"
   # This is the lore the warp icon is given inside of menus.
   # Current Placeholders:
   # {description} - replaces the line with the first description line while adding the remaining lines below it.
@@ -975,22 +965,21 @@ edit-menu-section:
       material: "RED_WOOL"
       durability: 0
       amount: 1
-    change-icon-theme:
-      click-action: "change-icon-theme"
+    change-icon:
+      click-action: "change-icon"
       click-message: ""
       fill-empty-slots: false
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
       permission: ""
-      display-name: "&aChange Icon Theme"
+      display-name: "&aChange Warp Icon"
       lore:
         - ""
-        - "&7Next Icon Theme: &e{next-theme}"
         - "&7Usage Price: &e{usage-price}"
         - ""
-        - "&eClick to change the icon theme of"
-        - "&ethe warp &a{warp-name}&e."
+        - "&eClick to change the warp icon to"
+        - "&ethe item material you are holding."
       slot: 21
       use-player-head: false
       player-head-name: ""

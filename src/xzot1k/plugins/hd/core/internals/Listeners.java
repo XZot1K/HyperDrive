@@ -2,10 +2,7 @@ package xzot1k.plugins.hd.core.internals;
 
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.apache.commons.lang.WordUtils;
-import org.bukkit.ChatColor;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Sound;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -2599,24 +2596,23 @@ public class Listeners implements Listener {
                             player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
                             break;
 
-                        case "change-icon-theme":
+                        case "change-icon":
 
                             player.closeInventory();
                             if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                                     || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
-                                String nextIconTheme = getPluginInstance().getManager().getNextIconTheme(warp);
-                                if (nextIconTheme != null && nextIconTheme.contains(":")) {
-                                    warp.setIconTheme(nextIconTheme);
-                                    getPluginInstance().getManager()
-                                            .sendCustomMessage(Objects
-                                                    .requireNonNull(getPluginInstance().getConfig()
-                                                            .getString("language-section.theme-changed"))
-                                                    .replace("{warp}", warp.getWarpName())
-                                                    .replace("{theme}", nextIconTheme.split(":")[0]), player);
-                                } else
-                                    getPluginInstance().getManager().sendCustomMessage(
-                                            getPluginInstance().getConfig().getString("language-section.theme-invalid"),
-                                            player);
+                                ItemStack handItem = getPluginInstance().getManager().getHandItem(player);
+
+                                if (handItem == null || handItem.getType() == Material.AIR) {
+                                    getPluginInstance().getManager().returnLastTransactionAmount(player);
+                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-item"))
+                                            .replace("{warp}", warp.getWarpName()), player);
+                                    return;
+                                }
+
+                                warp.setIconTheme(handItem.getType().name() + ":" + handItem.getDurability() + ":" + handItem.getAmount());
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.icon-changed"))
+                                        .replace("{warp}", warp.getWarpName()), player);
                                 warp.save(true, getPluginInstance().getConnection() != null);
                             }
 
@@ -2776,35 +2772,27 @@ public class Listeners implements Listener {
                             break;
                         case "like":
                             player.closeInventory();
-
-                            if (!player.hasPermission("hyperdrive.likebypass")) {
-                                long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "like",
-                                        getPluginInstance().getConfig().getInt("general-section.like-cooldown"));
-                                if (cooldownDurationLeft > 0) {
-                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig()
-                                            .getString("language-section.like-cooldown")).replace("{duration}", String.valueOf(cooldownDurationLeft)), player);
-                                    return;
-                                }
+                            if (!player.hasPermission("hyperdrive.likebypass") && warp.getVoters().contains(player.getUniqueId())) {
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig()
+                                        .getString("language-section.already-liked")), player);
+                                return;
                             }
 
                             warp.setLikes(warp.getLikes() + 1);
+                            warp.getVoters().add(player.getUniqueId());
                             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.liked-message"))
                                     .replace("{warp}", warp.getWarpName()), player);
                             break;
                         case "dislike":
                             player.closeInventory();
-
-                            if (!player.hasPermission("hyperdrive.likebypass")) {
-                                long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "like",
-                                        getPluginInstance().getConfig().getInt("general-section.like-cooldown"));
-                                if (cooldownDurationLeft > 0) {
-                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig()
-                                            .getString("language-section.like-cooldown")).replace("{duration}", String.valueOf(cooldownDurationLeft)), player);
-                                    return;
-                                }
+                            if (!player.hasPermission("hyperdrive.likebypass") && warp.getVoters().contains(player.getUniqueId())) {
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig()
+                                        .getString("language-section.already-liked")), player);
+                                return;
                             }
 
                             warp.setDislikes(warp.getDislikes() + 1);
+                            warp.getVoters().add(player.getUniqueId());
                             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.disliked-message"))
                                     .replace("{warp}", warp.getWarpName()), player);
                             break;

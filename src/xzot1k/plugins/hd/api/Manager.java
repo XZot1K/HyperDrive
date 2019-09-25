@@ -154,6 +154,15 @@ public class Manager {
                             + "related. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
+    public ItemStack getHandItem(Player player) {
+        if (getPluginInstance().getServerVersion().startsWith("v1_9") || getPluginInstance().getServerVersion().startsWith("v1_10")
+                || getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_12")
+                || getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
+                || getPluginInstance().getServerVersion().startsWith("v1_15"))
+            return player.getInventory().getItemInMainHand();
+        else return player.getItemInHand();
+    }
+
     public boolean isNumeric(String string) {
         return string.matches("-?\\d+(\\.\\d+)?");
     }
@@ -681,25 +690,19 @@ public class Manager {
             }
 
             String furtherFormattedLine;
-            OfflinePlayer offlinePlayer = warp.getOwner() != null
-                    ? getPluginInstance().getServer().getOfflinePlayer(warp.getOwner())
-                    : null;
+            OfflinePlayer offlinePlayer = warp.getOwner() != null ? getPluginInstance().getServer().getOfflinePlayer(warp.getOwner()) : null;
             String invalidRetrieval = getPluginInstance().getConfig().getString("warp-icon-section.invalid-retrieval");
-            if (invalidRetrieval == null)
-                invalidRetrieval = "";
+            if (invalidRetrieval == null) invalidRetrieval = "";
 
             furtherFormattedLine = formatLine.replace("{creation-date}", warp.getCreationDate())
                     .replace("{assistant-count}", String.valueOf(warp.getAssistants().size()))
                     .replace("{usage-price}", String.valueOf(warp.getUsagePrice()))
                     .replace("{whitelist-count}", String.valueOf(warp.getWhiteList().size()))
                     .replace("{status}", Objects.requireNonNull(statusName))
-                    .replace("{theme}", warp.getIconTheme() != null && warp.getIconTheme().contains(":")
-                            ? warp.getIconTheme().split(":")[0] : "")
-                    .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":")
-                            ? warp.getAnimationSet().split(":")[0] : "")
+                    .replace("{theme}", warp.getIconTheme() != null && warp.getIconTheme().contains(":") ? warp.getIconTheme().split(":")[0] : "")
+                    .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
                     .replace("{player}", Objects.requireNonNull(player.getName()))
-                    .replace("{traffic}", String.valueOf(warp.getTraffic())).replace("{owner}", offlinePlayer != null
-                            ? (offlinePlayer.getName() != null ? offlinePlayer.getName() : invalidRetrieval) : invalidRetrieval)
+                    .replace("{traffic}", String.valueOf(warp.getTraffic())).replace("{owner}", offlinePlayer != null ? (offlinePlayer.getName() != null ? offlinePlayer.getName() : invalidRetrieval) : invalidRetrieval)
                     .replace("{likes}", String.valueOf(warp.getLikes())).replace("{dislikes}", String.valueOf(warp.getDislikes()))
                     .replace("{like-bar}", warp.getLikeBar());
 
@@ -757,14 +760,13 @@ public class Manager {
 
         if (warp.getIconTheme() != null && warp.getIconTheme().contains(":")) {
             String[] themeArgs = warp.getIconTheme().split(":");
-            Material material = Material.getMaterial(themeArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"));
-            int durability = Integer.parseInt(themeArgs[2]), amount = Integer.parseInt(themeArgs[3]);
+            Material material = Material.getMaterial(themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
+            if (material == null) material = Material.ARROW;
+            int durability = Integer.parseInt(themeArgs[1]), amount = Integer.parseInt(themeArgs[2]);
 
-            if (material != null && (material.name().equalsIgnoreCase("SKULL_ITEM")
-                    || material.name().equalsIgnoreCase("PLAYER_HEAD"))) {
+            if (material.name().equalsIgnoreCase("SKULL_ITEM") || material.name().equalsIgnoreCase("PLAYER_HEAD")) {
                 OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(),
-                        newLore, amount);
+                ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
                 ItemMeta itemMeta = item.getItemMeta();
                 if (warp.hasIconEnchantedLook() && itemMeta != null) {
                     itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
@@ -773,8 +775,7 @@ public class Manager {
                 }
                 return item;
             } else {
-                ItemStack item = buildItem(material, durability, warp.getDisplayNameColor() + warp.getWarpName(),
-                        newLore, amount);
+                ItemStack item = buildItem(material, durability, warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
                 ItemMeta itemMeta = item.getItemMeta();
                 if (warp.hasIconEnchantedLook() && itemMeta != null) {
                     itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
@@ -979,16 +980,10 @@ public class Manager {
                                 .replace("{previous-page}", replacement).replace("{next-page}", replacement1)
                                 .replace("{current-status}", currentStatus)));
 
-                    ItemStack playerHeadItem = getPlayerHead(
-                            getPluginInstance().getConfig().getString(
-                                    "list-menu-section.items." + itemId + ".player-head-name"),
-                            displayName, newLore,
-                            getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                    inventory.setItem(
-                            getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"),
-                            playerHeadItem);
-                    if (fillEmptySlots)
-                        emptySlotFiller = playerHeadItem;
+                    ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getConfig().getString("list-menu-section.items." + itemId + ".player-head-name"),
+                            displayName, newLore, getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".amount"));
+                    inventory.setItem(getPluginInstance().getConfig().getInt("list-menu-section.items." + itemId + ".slot"), playerHeadItem);
+                    if (fillEmptySlots) emptySlotFiller = playerHeadItem;
                 } else {
                     String displayName = Objects
                             .requireNonNull(getPluginInstance().getConfig()

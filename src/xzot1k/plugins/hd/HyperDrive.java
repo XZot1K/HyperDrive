@@ -188,16 +188,16 @@ public class HyperDrive extends JavaPlugin {
             Set<String> newKeys = latestConfigurationSection.getKeys(true),
                     currentKeys = currentConfigurationSection.getKeys(true);
             for (String updatedKey : newKeys) {
-                if (!currentKeys.contains(updatedKey) && !currentKeys.contains(".items")) {
-                    System.out.println(updatedKey + " was set");
+                if (updatedKey.contains(".items") || updatedKey.startsWith("custom-menus-section")) continue;
+                if (!currentKeys.contains(updatedKey)) {
                     getConfig().set(updatedKey, yaml.get(updatedKey));
                     updateCount++;
                 }
             }
 
             for (String currentKey : currentKeys) {
-                if (!newKeys.contains(currentKey) && !currentKeys.contains(".items")) {
-                    System.out.println(currentKey + " was set");
+                if (currentKey.contains(".items") || currentKey.startsWith("custom-menus-section")) continue;
+                if (!newKeys.contains(currentKey)) {
                     getConfig().set(currentKey, null);
                     updateCount++;
                 }
@@ -303,10 +303,8 @@ public class HyperDrive extends JavaPlugin {
                             } else if (!isOffhandVersion) {
                                 getConfig().set(key, "INK_SAC");
                                 updateCount++;
-                            } else if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
-                                getConfig().set(key, "RED_DYE");
-                                updateCount++;
                             }
+
                             break;
                         case "CLOCK":
                             if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
@@ -386,13 +384,14 @@ public class HyperDrive extends JavaPlugin {
                         "create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100),"
                                 + "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255),"
                                 + "owner varchar(100),white_list varchar(255),assistants varchar(255),traffic int,usage_price double,enchanted_look int,server_ip varchar(255),likes int,"
-                                + "dislikes int, primary key (name))");
+                                + "dislikes int, voters longtext, primary key (name))");
                 statement.executeUpdate(
                         "create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
                 statement.executeUpdate("truncate transfer");
 
                 statement.executeUpdate("alter table warps modify if exists likes int");
                 statement.executeUpdate("alter table warps modify if exists dislikes int");
+                statement.executeUpdate("alter table warps modify if exists voters longtext");
 
                 statement.close();
             } catch (ClassNotFoundException | SQLException e) {
@@ -444,7 +443,7 @@ public class HyperDrive extends JavaPlugin {
 
     private void converterWarpSpecifics(YamlConfiguration yaml, String warpName, Warp warp) {
         try {
-            List<UUID> assistantList = new ArrayList<>(), whiteListPlayers = new ArrayList<>();
+            List<UUID> assistantList = new ArrayList<>(), whiteListPlayers = new ArrayList<>(), voters = new ArrayList<>();
             List<String> assistants = yaml.getStringList(warpName + ".assistants"),
                     whiteList = yaml.getStringList(warpName + ".whitelist");
             for (int j = -1; ++j < assistants.size(); ) {
@@ -455,6 +454,15 @@ public class HyperDrive extends JavaPlugin {
             for (int j = -1; ++j < whiteList.size(); ) {
                 UUID uniqueId = UUID.fromString(whiteList.get(j));
                 whiteListPlayers.add(uniqueId);
+            }
+
+            ConfigurationSection cs = yaml.getConfigurationSection(warpName);
+            if (cs != null && cs.getKeys(false).contains("voters")) {
+                List<String> voterList = yaml.getStringList(warpName + ".voters");
+                for (int j = -1; ++j < voterList.size(); ) {
+                    UUID uniqueId = UUID.fromString(voterList.get(j));
+                    voters.add(uniqueId);
+                }
             }
 
             String statusString = yaml.getString(warpName + ".status");
@@ -478,6 +486,9 @@ public class HyperDrive extends JavaPlugin {
             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
             warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
             warp.setTraffic(yaml.getInt(warpName + ".traffic"));
+            warp.setVoters(voters);
+            warp.setLikes(yaml.getInt(warpName + ".likes"));
+            warp.setDislikes(yaml.getInt(warpName + ".dislikes"));
 
             ConfigurationSection nameSection = yaml.getConfigurationSection(warpName);
             if (nameSection != null) {
@@ -488,11 +499,13 @@ public class HyperDrive extends JavaPlugin {
             }
 
             warp.setServerIPAddress(Objects.requireNonNull(yaml.getString(warpName + ".server-ip")).replace("localhost", "127.0.0.1"));
-        } catch (Exception e) {
+        } catch (
+                Exception e) {
             e.printStackTrace();
             log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName()
                     + "'s data aside it's location.");
         }
+
     }
 
     private void runMySQLConverter() {
@@ -597,9 +610,20 @@ public class HyperDrive extends JavaPlugin {
                 warp.setAssistants(assistants);
             }
 
+            String votersString = resultSet.getString(13);
+            if (votersString.contains(",")) {
+                List<UUID> voters = new ArrayList<>();
+                String[] votersStringArgs = votersString.split(",");
+                for (int i = -1; ++i < votersStringArgs.length; )
+                    voters.add(UUID.fromString(votersStringArgs[i]));
+                warp.setVoters(voters);
+            }
+
             warp.setTraffic(resultSet.getInt(14));
             warp.setUsagePrice(resultSet.getDouble(15));
             warp.setIconEnchantedLook(resultSet.getInt(16) >= 1);
+            warp.setLikes(resultSet.getInt(17));
+            warp.setDislikes(resultSet.getInt(18));
             warp.setServerIPAddress(ipAddress);
         } catch (Exception e) {
             e.printStackTrace();
