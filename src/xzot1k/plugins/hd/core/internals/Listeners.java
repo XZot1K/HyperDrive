@@ -2610,7 +2610,7 @@ public class Listeners implements Listener {
                                     return;
                                 }
 
-                                warp.setIconTheme(handItem.getType().name() + ":" + handItem.getDurability() + ":" + handItem.getAmount());
+                                warp.setIconTheme(handItem.getType().name() + "," + handItem.getDurability() + "," + handItem.getAmount());
                                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.icon-changed"))
                                         .replace("{warp}", warp.getWarpName()), player);
                                 warp.save(true, getPluginInstance().getConnection() != null);

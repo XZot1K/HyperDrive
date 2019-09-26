@@ -422,19 +422,6 @@ public class Manager {
     }
 
     // inventory stuff
-    public String getNextIconTheme(Warp warp) {
-        List<String> themeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
-        int currentIndex = 0;
-        for (int i = -1; ++i < themeList.size(); )
-            if (themeList.get(i).equalsIgnoreCase(warp.getIconTheme())) {
-                currentIndex = i;
-                break;
-            }
-
-        int nextTheme = (currentIndex + 1);
-        return nextTheme < themeList.size() ? themeList.get(nextTheme) : themeList.get(0);
-    }
-
     @SuppressWarnings("deprecation")
     private ItemStack buildItem(Material material, int durability, String displayName, List<String> lore, int amount) {
         ItemStack itemStack = new ItemStack(material, amount);
@@ -758,8 +745,8 @@ public class Manager {
                 newLore.add(colorText(furtherFormattedLine));
         }
 
-        if (warp.getIconTheme() != null && warp.getIconTheme().contains(":")) {
-            String[] themeArgs = warp.getIconTheme().split(":");
+        if (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) {
+            String[] themeArgs = warp.getIconTheme().split(",");
             Material material = Material.getMaterial(themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
             if (material == null) material = Material.ARROW;
             int durability = Integer.parseInt(themeArgs[1]), amount = Integer.parseInt(themeArgs[2]);
@@ -786,6 +773,7 @@ public class Manager {
                 return item;
             }
         } else {
+            warp.setIconTheme("");
             OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
             ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
             ItemMeta itemMeta = item.getItemMeta();
@@ -1179,55 +1167,33 @@ public class Manager {
                 break;
         }
 
-        List<String> itemIds = new ArrayList<>(Objects
-                .requireNonNull(getPluginInstance().getConfig().getConfigurationSection("edit-menu-section.items"))
-                .getKeys(false));
+        List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getConfig().getConfigurationSection("edit-menu-section.items")).getKeys(false));
         for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i);
-            boolean usePlayerHead = getPluginInstance().getConfig()
-                    .getBoolean("edit-menu-section.items." + itemId + ".use-player-head"),
-                    fillEmptySlots = getPluginInstance().getConfig()
-                            .getBoolean("edit-menu-section.items." + itemId + ".fill-empty-slots");
+            boolean usePlayerHead = getPluginInstance().getConfig().getBoolean("edit-menu-section.items." + itemId + ".use-player-head"),
+                    fillEmptySlots = getPluginInstance().getConfig().getBoolean("edit-menu-section.items." + itemId + ".fill-empty-slots");
             if (usePlayerHead) {
-                String displayName = getPluginInstance().getConfig()
-                        .getString("edit-menu-section.items." + itemId + ".display-name"),
-                        nextThemeLine = getPluginInstance().getManager().getNextIconTheme(warp),
+                String displayName = getPluginInstance().getConfig().getString("edit-menu-section.items." + itemId + ".display-name"),
                         nextAnimationSet = getPluginInstance().getManager().getNextAnimationSet(warp);
                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig()
                         .getStringList("edit-menu-section.items." + itemId + ".lore");
                 for (int j = -1; ++j < lore.size(); )
                     newLore.add(colorText(
                             lore.get(j).replace("{warp-name}", warp.getWarpName()).replace("{warp}", warp.getWarpName())
-                                    .replace("{enchant-status}", (toggleFormat != null && toggleFormat.contains(":"))
-                                            ? warp.hasIconEnchantedLook() ? toggleFormat.split(":")[0]
-                                            : toggleFormat.split(":")[1]
-                                            : "")
+                                    .replace("{enchant-status}", (toggleFormat != null && toggleFormat.contains(":")) ? warp.hasIconEnchantedLook()
+                                            ? toggleFormat.split(":")[0] : toggleFormat.split(":")[1] : "")
                                     .replace("{current-status}", Objects.requireNonNull(currentStatusName))
                                     .replace("{next-status}", Objects.requireNonNull(nextStatusName))
-                                    .replace("{next-theme}",
-                                            nextThemeLine != null && nextThemeLine.contains(":")
-                                                    ? nextThemeLine.split(":")[0]
-                                                    : "")
-                                    .replace("{animation-set}",
-                                            nextAnimationSet != null && nextAnimationSet.contains(":")
-                                                    ? nextAnimationSet.split(":")[0]
-                                                    : "")
-                                    .replace("{usage-price}", String.valueOf(getPluginInstance().getConfig()
-                                            .getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
+                                    .replace("{animation-set}", nextAnimationSet != null && nextAnimationSet.contains(":") ? nextAnimationSet.split(":")[0] : "")
+                                    .replace("{usage-price}", String.valueOf(getPluginInstance().getConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
 
-                ItemStack playerHeadItem = getPlayerHead(
-                        getPluginInstance().getConfig().getString(
-                                "edit-menu-section.items." + itemId + ".player-head-name"),
-                        displayName, newLore,
-                        getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
-                inventory.setItem(getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".slot"),
-                        playerHeadItem);
+                ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getConfig().getString("edit-menu-section.items." + itemId + ".player-head-name"),
+                        displayName, newLore, getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
+                inventory.setItem(getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".slot"), playerHeadItem);
                 if (fillEmptySlots)
                     emptySlotFiller = playerHeadItem;
             } else {
-                String displayName = getPluginInstance().getConfig()
-                        .getString("edit-menu-section.items." + itemId + ".display-name"),
-                        nextThemeLine = getPluginInstance().getManager().getNextIconTheme(warp),
+                String displayName = getPluginInstance().getConfig().getString("edit-menu-section.items." + itemId + ".display-name"),
                         nextAnimationSet = getPluginInstance().getManager().getNextAnimationSet(warp);
                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getConfig()
                         .getStringList("edit-menu-section.items." + itemId + ".lore");
@@ -1235,34 +1201,18 @@ public class Manager {
                     newLore.add(colorText(
                             lore.get(j).replace("{warp-name}", warp.getWarpName()).replace("{warp}", warp.getWarpName())
                                     .replace("{enchant-status}", (toggleFormat != null && toggleFormat.contains(":"))
-                                            ? warp.hasIconEnchantedLook() ? toggleFormat.split(":")[0]
-                                            : toggleFormat.split(":")[1]
-                                            : "")
+                                            ? warp.hasIconEnchantedLook() ? toggleFormat.split(":")[0] : toggleFormat.split(":")[1] : "")
                                     .replace("{current-status}", Objects.requireNonNull(currentStatusName))
                                     .replace("{next-status}", Objects.requireNonNull(nextStatusName))
-                                    .replace("{next-theme}",
-                                            nextThemeLine != null && nextThemeLine.contains(":")
-                                                    ? nextThemeLine.split(":")[0]
-                                                    : "")
-                                    .replace("{animation-set}",
-                                            nextAnimationSet != null && nextAnimationSet.contains(":")
-                                                    ? nextAnimationSet.split(":")[0]
-                                                    : "")
-                                    .replace("{usage-price}", String.valueOf(getPluginInstance().getConfig()
-                                            .getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
-                Material material = Material.getMaterial(Objects
-                        .requireNonNull(getPluginInstance().getConfig()
-                                .getString("edit-menu-section.items." + itemId + ".material"))
+                                    .replace("{animation-set}", nextAnimationSet != null && nextAnimationSet.contains(":") ? nextAnimationSet.split(":")[0] : "")
+                                    .replace("{usage-price}", String.valueOf(getPluginInstance().getConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
+                Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getConfig().getString("edit-menu-section.items." + itemId + ".material"))
                         .toUpperCase().replace(" ", "_").replace("-", "_"));
 
-                ItemStack itemStack = buildItem(material,
-                        getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".durability"),
-                        displayName, newLore,
-                        getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
-                inventory.setItem(getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".slot"),
-                        itemStack);
-                if (fillEmptySlots)
-                    emptySlotFiller = itemStack;
+                ItemStack itemStack = buildItem(material, getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".durability"),
+                        displayName, newLore, getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
+                inventory.setItem(getPluginInstance().getConfig().getInt("edit-menu-section.items." + itemId + ".slot"), itemStack);
+                if (fillEmptySlots) emptySlotFiller = itemStack;
             }
         }
 
