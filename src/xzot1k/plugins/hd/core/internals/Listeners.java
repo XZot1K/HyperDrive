@@ -220,10 +220,7 @@ public class Listeners implements Listener {
                 e.setCancelled(true);
                 if (enteredName.equalsIgnoreCase(chatInteractionCancelKey)) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager()
-                            .sendCustomMessage(Objects
-                                    .requireNonNull(getPluginInstance().getConfig()
-                                            .getString("language-section.chat-interaction-cancelled"))
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
                                     .replace("{warp}", enteredName), e.getPlayer());
                     return;
                 }
@@ -231,31 +228,23 @@ public class Listeners implements Listener {
                 offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(enteredName);
                 if (!offlinePlayer.isOnline()) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager()
-                            .sendCustomMessage(Objects
-                                    .requireNonNull(
-                                            getPluginInstance().getConfig().getString("language-section.player-invalid"))
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-invalid"))
                                     .replace("{player}", enteredName), e.getPlayer());
                     return;
                 }
 
                 previousName = interactionModule.getInteractionValue();
                 warp = getPluginInstance().getManager().getWarp(previousName);
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(enteredName))
-                        || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(enteredName))) {
+                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(enteredName)) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(enteredName))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager()
-                            .sendCustomMessage(Objects
-                                    .requireNonNull(
-                                            getPluginInstance().getConfig().getString("language-section.warp-invalid"))
-                                    .replace("{warp}", enteredName), e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-invalid"))
+                            .replace("{warp}", enteredName), e.getPlayer());
                     return;
                 }
 
                 if (useVault && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
-                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
-                            itemUsageCost);
+                    EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(), itemUsageCost);
                     if (!economyResponse.transactionSuccess()) {
                         getPluginInstance().getManager().updateLastTransactionAmount(e.getPlayer(), itemUsageCost);
                         getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
@@ -266,20 +255,15 @@ public class Listeners implements Listener {
                                 .replace("{player}", e.getPlayer().getName()), e.getPlayer());
                         return;
                     } else
-                        getPluginInstance().getManager().sendCustomMessage(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.transaction-success"))
-                                .replace("{amount}", String.valueOf(itemUsageCost))
-                                .replace("{player}", e.getPlayer().getName()), e.getPlayer());
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                .replace("{amount}", String.valueOf(itemUsageCost)).replace("{player}", e.getPlayer().getName()), e.getPlayer());
                 }
 
                 warp.setOwner(offlinePlayer.getUniqueId());
                 warp.save(true, getPluginInstance().getConnection() != null);
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                getPluginInstance().getManager().sendCustomMessage(
-                        Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-renamed"))
-                                .replace("{previous-name}", previousName).replace("{new-name}", enteredName),
-                        e.getPlayer());
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-renamed"))
+                        .replace("{previous-name}", previousName).replace("{new-name}", enteredName), e.getPlayer());
                 break;
             case "edit-description":
                 e.setCancelled(true);
@@ -2344,14 +2328,10 @@ public class Listeners implements Listener {
                             if (!getPluginInstance().getManager().isInChatInteraction(player)) {
                                 getPluginInstance().getManager().updateChatInteraction(player, "give-ownership",
                                         warp != null ? warp.getWarpName() : warpName, !charged ? itemUsageCost : 0);
-                                getPluginInstance().getManager()
-                                        .sendCustomMessage(Objects
-                                                .requireNonNull(getPluginInstance().getConfig()
-                                                        .getString("language-section.give-ownership-interaction"))
-                                                .replace("{cancel}",
-                                                        Objects.requireNonNull(getPluginInstance().getConfig()
-                                                                .getString("general-section.chat-interaction-cancel")))
-                                                .replace("{player}", player.getName()), player);
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.give-ownership-interaction"))
+                                        .replace("{warp}", warp != null ? warp.getWarpName() : "")
+                                        .replace("{cancel}", Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel")))
+                                        .replace("{player}", player.getName()), player);
                             } else
                                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig()
                                         .getString("language-section.interaction-already-active"), player);
