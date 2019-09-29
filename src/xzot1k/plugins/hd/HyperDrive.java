@@ -375,13 +375,23 @@ public class HyperDrive extends JavaPlugin {
         if (getConnection() == null)
             try {
                 Class.forName("com.mysql.jdbc.Driver");
-                setConnection(DriverManager.getConnection("jdbc:mysql://" + getConfig().getString("mysql-connection.host") + ":"
-                                + getConfig().getString("mysql-connection.port") + "/" + getConfig().getString("mysql-connection.database-name"),
-                        getConfig().getString("mysql-connection.username"), getConfig().getString("mysql-connection.password")));
+
+                String databaseName = getConfig().getString("mysql-connection.database-name"), host = getConfig().getString("mysql-connection.host"),
+                        port = getConfig().getString("mysql-connection.port"), username = getConfig().getString("mysql-connection.username"),
+                        password = getConfig().getString("mysql-connection.password");
+                setConnection(DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/?user=" + username + "&password=" + password));
 
                 Statement statement = getConnection().createStatement();
-                statement.executeUpdate(
-                        "create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100),"
+                statement.executeUpdate("create database if not exists " + databaseName);
+                statement.close();
+                getConnection().close();
+
+                setConnection(DriverManager.getConnection("jdbc:mysql://" + getConfig().getString("mysql-connection.host") + ":"
+                                + getConfig().getString("mysql-connection.port") + "/" + databaseName,
+                        getConfig().getString("mysql-connection.username"), getConfig().getString("mysql-connection.password")));
+
+                statement = getConnection().createStatement();
+                statement.executeUpdate("create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100),"
                                 + "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255),"
                                 + "owner varchar(100),white_list varchar(255),assistants varchar(255),traffic int,usage_price double,enchanted_look int,server_ip varchar(255),likes int,"
                                 + "dislikes int, voters longtext, primary key (name))");

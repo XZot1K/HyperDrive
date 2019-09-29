@@ -326,7 +326,7 @@ public class Warp {
                         + "', white_list = '" + whitelist.toString() + "', assistants = '" + assistants.toString()
                         + "'," + " usage_price = '" + getUsagePrice() + "', enchanted_look = '"
                         + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress()
-                        + "', likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', '" + voters.toString()
+                        + "', likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters.toString()
                         + "' where name = '" + getWarpName() + "';");
 
                 rs.close();

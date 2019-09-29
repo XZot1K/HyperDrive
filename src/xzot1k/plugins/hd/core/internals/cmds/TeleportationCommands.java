@@ -587,11 +587,6 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        if (getTpaSentMap().isEmpty() || !getTpaSentMap().containsValue(player.getUniqueId())) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-empty"), player);
-            return;
-        }
-
         Player foundPlayer = null;
         for (UUID senderId : getTpaSentMap().keySet()) {
             UUID requestedPlayer = getTpaSentMap().get(senderId);
@@ -604,11 +599,24 @@ public class TeleportationCommands implements CommandExecutor {
                     return;
                 }
 
-                if (getTpaHereSentPlayers().contains(requestedPlayer)) {
-                    getTpaHereSentPlayers().remove(requestedPlayer);
+                if (!getTpaSentMap().isEmpty() && getTpaSentMap().containsKey(foundPlayer.getUniqueId())) {
+                    UUID playerUniqueId = getTpaSentMap().get(foundPlayer.getUniqueId());
+                    if (playerUniqueId == null) {
+                        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-empty")
+                                .replace("{player}", foundPlayer.getName()), player);
+                        return;
+                    }
+                } else if (getTpaSentMap().isEmpty() || !getTpaSentMap().containsKey(foundPlayer.getUniqueId())) {
+                    getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-empty")
+                            .replace("{player}", foundPlayer.getName()), player);
+                    return;
+                }
+
+                getTpaSentMap().remove(foundPlayer.getUniqueId());
+                if (getTpaHereSentPlayers().contains(foundPlayer.getUniqueId())) {
+                    getTpaHereSentPlayers().remove(foundPlayer.getUniqueId());
                     player.teleport(foundPlayer.getLocation());
                 } else foundPlayer.teleport(player.getLocation());
-                getTpaSentMap().remove(requestedPlayer);
                 break;
             }
         }
