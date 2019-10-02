@@ -255,16 +255,18 @@ public class Warp {
                 yaml.set(getWarpName() + ".location.pitch", getWarpLocation().getPitch());
 
                 try {
-                    List<String> whiteList = new ArrayList<>();
+                    List<String> whiteList = new ArrayList<>(), assistants = new ArrayList<>(), voters = new ArrayList<>();
                     for (int j = -1; ++j < getWhiteList().size(); ) {
                         UUID uuid = getWhiteList().get(j);
                         whiteList.add(uuid.toString());
                     }
-
-                    List<String> assistants = new ArrayList<>();
                     for (int j = -1; ++j < getAssistants().size(); ) {
                         UUID uuid = getAssistants().get(j);
                         assistants.add(uuid.toString());
+                    }
+                    for (int j = -1; ++j < getVoters().size(); ) {
+                        UUID uuid = getVoters().get(j);
+                        voters.add(uuid.toString());
                     }
 
                     yaml.set(getWarpName() + ".traffic", getTraffic());
@@ -277,6 +279,7 @@ public class Warp {
                     yaml.set(getWarpName() + ".owner", getOwner().toString());
                     yaml.set(getWarpName() + ".assistants", assistants);
                     yaml.set(getWarpName() + ".whitelist", whiteList);
+                    yaml.set(getWarpName() + ".voters", voters);
                     yaml.set(getWarpName() + ".commands", getCommands() != null ? getCommands() : new ArrayList<>());
                     yaml.set(getWarpName() + ".animation-set", getAnimationSet());
 
@@ -286,7 +289,6 @@ public class Warp {
                     yaml.set(getWarpName() + ".icon.description", getDescription());
                     yaml.set(getWarpName() + ".icon.use-enchanted-look", hasIconEnchantedLook());
                     yaml.set(getWarpName() + ".icon.prices.usage", getUsagePrice());
-                    yaml.set(getWarpName() + ".voters", getVoters());
 
                     yaml.save(file);
                 } catch (Exception e) {

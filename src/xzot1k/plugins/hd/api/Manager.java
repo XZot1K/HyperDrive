@@ -207,13 +207,13 @@ public class Manager {
         if (message != null && !message.equalsIgnoreCase("")) {
             String prefix = getPluginInstance().getConfig().getString("language-section.prefix");
             if (message.contains("<") && message.contains(">")) {
-                message = prefix + message;
+                message = (prefix != null && !prefix.equalsIgnoreCase("") ? prefix : "") + message;
                 String jsonFormat = StringUtils.substringBetween(message, "<", ">");
                 String[] jsonFormatArgs = jsonFormat.split(":");
 
                 String splitMessage = message.replace("<" + jsonFormat + ">", "_.SPLIT._");
                 String[] splitMessageArgs = splitMessage.split("_.SPLIT._");
-                JSONMessage jm1 = new JSONMessage(getPluginInstance(), prefix + splitMessageArgs[0]);
+                JSONMessage jm1 = new JSONMessage(getPluginInstance(), splitMessageArgs[0]);
                 JSONExtra je1 = new JSONExtra(getPluginInstance(), jsonFormatArgs[0]);
                 if (jsonFormatArgs.length >= 2)
                     je1.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, jsonFormatArgs[1]);

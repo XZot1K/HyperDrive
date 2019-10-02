@@ -63,7 +63,7 @@ public class HyperDrive extends JavaPlugin {
 
         File warpsFile = new File(getDataFolder(), "/warps.yml"),
                 backupFile = new File(getDataFolder(), "/warps-backup.yml");
-        if (warpsFile.exists()) {
+        if (warpsFile.exists() && !backupFile.exists()) {
             try {
                 copy(warpsFile, backupFile);
             } catch (IOException e) {
@@ -392,16 +392,16 @@ public class HyperDrive extends JavaPlugin {
 
                 statement = getConnection().createStatement();
                 statement.executeUpdate("create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100),"
-                                + "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255),"
-                                + "owner varchar(100),white_list varchar(255),assistants varchar(255),traffic int,usage_price double,enchanted_look int,server_ip varchar(255),likes int,"
-                                + "dislikes int, voters longtext, primary key (name))");
+                        + "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255),"
+                        + "owner varchar(100),white_list varchar(255),assistants varchar(255),traffic int,usage_price double,enchanted_look int,server_ip varchar(255),likes int,"
+                        + "dislikes int, voters longtext, primary key (name))");
                 statement.executeUpdate(
                         "create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
                 statement.executeUpdate("truncate transfer");
 
-                statement.executeUpdate("alter table warps modify if exists likes int");
-                statement.executeUpdate("alter table warps modify if exists dislikes int");
-                statement.executeUpdate("alter table warps modify if exists voters longtext");
+                statement.executeUpdate("alter table warps modify if not exists likes int");
+                statement.executeUpdate("alter table warps modify if not exists dislikes int");
+                statement.executeUpdate("alter table warps modify if not exists voters longtext");
 
                 statement.close();
             } catch (ClassNotFoundException | SQLException e) {
