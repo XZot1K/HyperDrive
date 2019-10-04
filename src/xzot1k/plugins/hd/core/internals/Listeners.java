@@ -221,7 +221,7 @@ public class Listeners implements Listener {
                 if (enteredName.equalsIgnoreCase(chatInteractionCancelKey)) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.chat-interaction-cancelled"))
-                                    .replace("{warp}", enteredName), e.getPlayer());
+                            .replace("{warp}", enteredName), e.getPlayer());
                     return;
                 }
 
@@ -229,7 +229,7 @@ public class Listeners implements Listener {
                 if (!offlinePlayer.isOnline()) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-invalid"))
-                                    .replace("{player}", enteredName), e.getPlayer());
+                            .replace("{player}", enteredName), e.getPlayer());
                     return;
                 }
 
@@ -1412,9 +1412,9 @@ public class Listeners implements Listener {
                         return;
                     }
 
+                    int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0;
                     World world = getPluginInstance().getServer().getWorld(sign.getLine(2));
-                    getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(player,
-                            world != null ? world : player.getLocation().getWorld());
+                    getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "rtp", world != null ? world.getName() : player.getWorld().getName(), duration);
                     break;
 
                 case "group rtp":
@@ -1433,14 +1433,11 @@ public class Listeners implements Listener {
                         return;
                     }
 
-                    getPluginInstance().getManager().sendCustomMessage(
-                            getPluginInstance().getConfig().getString("language-section.random-teleport-start"), player);
+                    getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.random-teleport-start"), player);
                     getPluginInstance().getTeleportationHandler().getDestinationMap().remove(player.getUniqueId());
-                    getPluginInstance().getTeleportationHandler().updateDestinationWithRandomLocation(player,
-                            player.getLocation(), player.getWorld());
+                    getPluginInstance().getTeleportationHandler().updateDestinationWithRandomLocation(player, player.getLocation(), player.getWorld());
                     player.openInventory(getPluginInstance().getManager().buildPlayerSelectionMenu(player));
-                    getPluginInstance().getManager().sendCustomMessage(
-                            getPluginInstance().getConfig().getString("language-section.player-selection-group"), player);
+                    getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-selection-group"), player);
                     break;
 
                 default:
@@ -1451,8 +1448,7 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent e) {
-        List<String> commandStrings = getPluginInstance().getConfig()
-                .getStringList("general-section.custom-alias-commands");
+        List<String> commandStrings = getPluginInstance().getConfig().getStringList("general-section.custom-alias-commands");
         for (int i = -1; ++i < commandStrings.size(); ) {
             String commandString = commandStrings.get(i);
             if (!commandString.contains(":"))
@@ -1535,6 +1531,12 @@ public class Listeners implements Listener {
                                     return;
                                 }
 
+                                if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
+                                    player.closeInventory();
+                                    getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.already-teleporting"), player);
+                                    return;
+                                }
+
                                 if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
                                         && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
                                         && (warp.getWhiteList().contains(player.getUniqueId()))) {
@@ -1566,28 +1568,16 @@ public class Listeners implements Listener {
                                 String title = getPluginInstance().getConfig().getString("teleportation-section.start-title"),
                                         subTitle = getPluginInstance().getConfig().getString("teleportation-section.start-sub-title");
                                 if (title != null && subTitle != null)
-                                    getPluginInstance().getManager().sendTitle(player,
-                                            title.replace("{duration}", String.valueOf(duration)).replace("{warp}",
-                                                    warp.getWarpName()),
-                                            subTitle.replace("{duration}", String.valueOf(duration)).replace("{warp}",
-                                                    warp.getWarpName()),
-                                            0, 5, 0);
+                                    getPluginInstance().getManager().sendTitle(player, title.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()),
+                                            subTitle.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()), 0, 5, 0);
 
-                                getPluginInstance().getManager().sendActionBar(player,
-                                        Objects.requireNonNull(getPluginInstance().getConfig()
-                                                .getString("teleportation-section.start-bar-message"))
-                                                .replace("{duration}", String.valueOf(duration))
-                                                .replace("{warp}", warp.getWarpName()));
+                                getPluginInstance().getManager().sendActionBar(player, Objects.requireNonNull(getPluginInstance().getConfig().getString("teleportation-section.start-bar-message"))
+                                        .replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
 
-                                getPluginInstance().getManager()
-                                        .sendCustomMessage(Objects
-                                                .requireNonNull(getPluginInstance().getConfig()
-                                                        .getString("language-section.teleportation-start"))
-                                                .replace("{warp}", warp.getWarpName())
-                                                .replace("{duration}", String.valueOf(duration)), player);
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.teleportation-start"))
+                                        .replace("{warp}", warp.getWarpName()).replace("{duration}", String.valueOf(duration)), player);
 
-                                getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp",
-                                        warp.getWarpName(), duration);
+                                getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(), duration);
                                 return;
                             }
 
@@ -1640,6 +1630,12 @@ public class Listeners implements Listener {
                                             .sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig()
                                                     .getString("language-section.warp-cooldown"))
                                                     .replace("{duration}", String.valueOf(currentCooldown)), player);
+                                    return;
+                                }
+
+                                if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
+                                    player.closeInventory();
+                                    getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.already-teleporting"), player);
                                     return;
                                 }
 
@@ -2264,8 +2260,7 @@ public class Listeners implements Listener {
                             if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                                     || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                                 EnumContainer.Status[] statusList = EnumContainer.Status.values();
-                                EnumContainer.Status nextStatus = EnumContainer.Status.PUBLIC,
-                                        previousStatus = warp.getStatus();
+                                EnumContainer.Status nextStatus = EnumContainer.Status.PUBLIC, previousStatus = warp.getStatus();
                                 for (int i = -1; ++i < statusList.length; ) {
                                     EnumContainer.Status status = statusList[i];
                                     if (status == previousStatus) {
@@ -2906,35 +2901,25 @@ public class Listeners implements Listener {
                         case "confirm":
 
                             player.closeInventory();
-                            List<UUID> selectedPlayers = getPluginInstance().getManager().getPaging()
-                                    .getSelectedPlayers(player);
+                            List<UUID> selectedPlayers = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
                             if (selectedPlayers != null && selectedPlayers.size() >= 1) {
                                 for (int i = -1; ++i < selectedPlayers.size(); ) {
                                     UUID selectedPlayerId = selectedPlayers.get(i);
-                                    if (selectedPlayerId == null)
+                                    if (selectedPlayerId == null) continue;
+
+                                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(selectedPlayerId);
+                                    if (!offlinePlayer.isOnline()) continue;
+
+                                    if (getPluginInstance().getTeleportationHandler().isTeleporting(offlinePlayer.getPlayer()))
                                         continue;
 
-                                    OfflinePlayer offlinePlayer = getPluginInstance().getServer()
-                                            .getOfflinePlayer(selectedPlayerId);
-                                    if (!offlinePlayer.isOnline())
-                                        continue;
-
-                                    getPluginInstance().getManager()
-                                            .sendCustomMessage(Objects
-                                                    .requireNonNull(getPluginInstance().getConfig()
-                                                            .getString("language-section.player-selected-teleport"))
-                                                    .replace("{player}", player.getName()), offlinePlayer.getPlayer());
+                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-selected-teleport"))
+                                            .replace("{player}", player.getName()), offlinePlayer.getPlayer());
                                 }
-
-                                getPluginInstance().getTeleportationHandler().createGroupTemp(player,
-                                        getPluginInstance().getTeleportationHandler().getDestination(player));
-                                getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getConfig().getString("language-section.group-teleport-sent"),
-                                        player);
+                                getPluginInstance().getTeleportationHandler().createGroupTemp(player, getPluginInstance().getTeleportationHandler().getDestination(player));
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.group-teleport-sent"), player);
                             } else
-                                getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getConfig().getString("language-section.player-selection-fail"),
-                                        player);
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-selection-fail"), player);
 
                             break;
                         case "refresh":

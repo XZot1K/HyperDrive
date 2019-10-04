@@ -32,9 +32,10 @@ language-section:
   teleportation-start: "&eYou will be teleported to the &a{warp} &ewarp in approximately &a{duration} &eseconds."
   warp-cooldown: "&cYou are unable to warp for another &e{duration} &cseconds."
   random-teleport-fail: "&cUnable to find a safe location for teleportation after &e{tries} &cattempt(s)."
-  random-teleport-admin: "&eThe player &a{player} &eis now undergoing random teleportation to the &a{world} &eworld."
+  random-teleport-admin: "&eThe player &a{player} &eis now attempting to randomly teleport to the &a{world} &eworld."
   random-teleported: "&eYou have been teleported to &aWorld: &c{world} &aX: &c{x} &aY: &c{y} &aZ: &c{z} &eafter &a{tries} &eattempts."
   random-teleport-start: "&ePlease wait while a safe location is found for random teleportation..."
+  random-teleport-begin: "&eThe random teleportation process has begun!"
   random-teleport-cooldown: "&cYou must wait &e{duration} &cseconds before beginning another random teleportation process."
   interaction-already-active: "&cYou must complete your current chat interaction in order to begin a new interaction."
   chat-interaction-cancelled: "&cYour chat interaction has been cancelled."
@@ -137,6 +138,9 @@ language-section:
   like-incorrect-server: "&cThe warp &e{warp} &cis on another server and therefore can not be liked or disliked from this server."
   like-own: "&cYou can't like or dislike a warp you own."
   player-tpa-empty: "&cYou currently have no teleportation requests."
+  random-teleport-delay: "&eRandom teleportation will engage in approximately &a{duration} &eseconds."
+  already-teleporting: "&cYou are already in the process of teleporting to another location."
+  player-already-teleporting: "&cThe player &e{player} &cis in the process of teleporting to another location."
 
 # Here is where the MySQL connection can be configured.
 # (Note: Database tables are created and managed automatically. There is also no MySQL conversion to YAML file; therefore, use at your own risk.)
@@ -219,6 +223,8 @@ filter-section:
 
 # Here is where everything related to teleportation can be customize.
 teleportation-section:
+  # This is the warp cooldown that a player must wait before warping again (In seconds).
+  cooldown-duration: 5
   # If the player teleports while in a vehicle should they be dismounted and teleported?
   # (Note: The mount will be teleported as well, but half a second after to prevent faulty chunk loading)
   teleport-vehicles: true
@@ -256,6 +262,16 @@ random-teleport-section:
   can-generate-chunks: false
   # How long in between random teleportation processes should the player have to wait before beginning another in seconds.
   cooldown: 10
+  # These are the title and sub-title that are sent to the player 5 seconds before the random teleportation is engaged (Note: Set to "" to disable).
+  delay-title: "&eRandom teleportation will be engaged"
+  delay-sub-title: "&ein approximately &a{duration} &eseconds."
+  # These are the title and sub-title that are sent to the player when the random teleportation process has begun (Note: Set to "" to disable).
+  start-title: "&eYou will be randomly teleported"
+  start-sub-title: "&ein approximately &a{duration} &eseconds."
+  # This is the message display on the player's action bar while the random teleportation process is counting down (Set to "" to disable).
+  delay-bar-message: "&eRandom teleportation will engage in: &r{progress} &e- &a{duration-left} &eSeconds"
+  # This is the message display on the player's action bar when a random teleportation process has begun (Set to "" to disable).
+  start-bar-message: "&eRandom teleportation will engage in &a{duration} &eseconds."
   # This is the forced location list which is used to force the random teleportation to generate off of the defined location
   # instead of using the player's base location. This will only work if the world name is found in the list for where the player
   # is being teleported. (Format: <world name>:<x>,<y>,<z>)
@@ -285,7 +301,6 @@ random-teleport-section:
     - "LILY_PAD:-1"
     - "WATER_LILY:-1"
     - "AIR:-1"
-
 
 warp-icon-section:
   # This is the sound that is played when a warp icon is selected. This option can be set to "" to disable.
@@ -389,6 +404,10 @@ special-effects-section:
   # Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
   # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
   random-teleport-animation: "CIRCLE:SMOKE_NORMAL"
+  # This is the animation that is displayed when the player is successfully teleported through a standalone teleportation command such as /TP or /TPO.
+  # (Format: <type>:<effect>) Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
+  # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
+  random-teleport-delay-animation: "VORTEX:FIREWORKS_SPARK"
 
 # This is where the list menu can be fully customized.
 list-menu-section:

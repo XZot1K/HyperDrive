@@ -1044,6 +1044,8 @@ public class Manager {
                 if (!offlinePlayer.isOnline())
                     continue;
 
+                if (getPluginInstance().getTeleportationHandler().isTeleporting(offlinePlayer.getPlayer())) continue;
+
                 inventory.setItem(i, getPlayerSelectionHead(offlinePlayer,
                         selectedPlayers != null && selectedPlayers.contains(playerUniqueId)));
                 pageOnePlayerList.remove(playerUniqueId);
@@ -1511,8 +1513,7 @@ public class Manager {
     }
 
     // chat interaction map methods
-    public void updateChatInteraction(OfflinePlayer player, String interactionId, String interactionValue,
-                                      double interactionPrice) {
+    public void updateChatInteraction(OfflinePlayer player, String interactionId, String interactionValue, double interactionPrice) {
         InteractionModule interactionModule = new InteractionModule(interactionId, interactionValue, interactionPrice);
         getChatInteractionMap().put(player.getUniqueId(), interactionModule);
     }
