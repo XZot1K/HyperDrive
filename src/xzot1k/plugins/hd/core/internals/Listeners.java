@@ -179,10 +179,7 @@ public class Listeners implements Listener {
                 if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(enteredName))
                         || (!useMySQL && getPluginInstance().getManager().doesWarpExist(enteredName))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager()
-                            .sendCustomMessage(Objects
-                                    .requireNonNull(
-                                            getPluginInstance().getConfig().getString("language-section.warp-exists"))
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-exists"))
                                     .replace("{warp}", enteredName), e.getPlayer());
                     return;
                 }
@@ -211,10 +208,8 @@ public class Listeners implements Listener {
                 warp.rename(enteredName);
                 warp.save(true, getPluginInstance().getConnection() != null);
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                getPluginInstance().getManager().sendCustomMessage(
-                        Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-renamed"))
-                                .replace("{previous-name}", previousName).replace("{new-name}", enteredName),
-                        e.getPlayer());
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-renamed"))
+                        .replace("{previous-name}", previousName).replace("{new-name}", enteredName), e.getPlayer());
                 break;
             case "give-ownership":
                 e.setCancelled(true);
@@ -235,7 +230,7 @@ public class Listeners implements Listener {
 
                 previousName = interactionModule.getInteractionValue();
                 warp = getPluginInstance().getManager().getWarp(previousName);
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(enteredName)) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(enteredName))) {
+                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-invalid"))
                             .replace("{warp}", enteredName), e.getPlayer());
@@ -2044,8 +2039,7 @@ public class Listeners implements Listener {
     }
 
     private void runEditMenuClick(Player player, String inventoryName, InventoryClickEvent e) {
-        if (e.getCurrentItem() != null
-                && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
+        if (e.getCurrentItem() != null && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
             e.setCancelled(true);
             if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE)
                 return;

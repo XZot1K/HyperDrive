@@ -375,6 +375,7 @@ public class Warp {
     public boolean rename(String newName) {
         if (!getPluginInstance().getManager().doesWarpExist(newName)) {
             unRegister();
+            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), this::delete);
             setWarpName(newName);
             register();
             return true;
