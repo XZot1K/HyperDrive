@@ -44,8 +44,7 @@ public class TeleportationHandler implements Runnable {
     private HashMap<UUID, TeleportTemp> teleportTempMap;
     private HashMap<UUID, Destination> destinationMap;
     private List<UUID> randomTeleportingPlayers;
-    private String teleportSound, teleportTitle, teleportSubTitle, delayTitle, delaySubTitle, randomTeleportTitle,
-            randomTeleportSubTitle, randomTeleportDelayTitle, randomTeleportSubDelayTitle;
+    private String teleportSound, teleportTitle, teleportSubTitle, delayTitle, delaySubTitle, randomTeleportDelayTitle, randomTeleportSubDelayTitle;
 
     public TeleportationHandler(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
@@ -54,8 +53,6 @@ public class TeleportationHandler implements Runnable {
         this.teleportSubTitle = getPluginInstance().getConfig().getString("teleportation-section.teleport-sub-title");
         this.delayTitle = getPluginInstance().getConfig().getString("teleportation-section.delay-title");
         this.delaySubTitle = getPluginInstance().getConfig().getString("teleportation-section.delay-sub-title");
-        this.randomTeleportTitle = getPluginInstance().getConfig().getString("random-teleport-section.delay-title");
-        this.randomTeleportSubTitle = getPluginInstance().getConfig().getString("random-teleport-section.delay-sub-title");
         this.randomTeleportDelayTitle = getPluginInstance().getConfig().getString("random-teleport-section.delay-title");
         this.randomTeleportSubDelayTitle = getPluginInstance().getConfig().getString("random-teleport-section.delay-sub-title");
         setPluginInstance(pluginInstance);
@@ -486,9 +483,7 @@ public class TeleportationHandler implements Runnable {
                             Objects.requireNonNull(newLocation.getWorld()).playSound(newLocation,
                                     Sound.valueOf(teleportSound), 1, 1);
 
-                        getPluginInstance().getManager().sendCustomMessage(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.random-teleported"))
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleported"))
                                 .replace("{tries}", String.valueOf(tries - 1))
                                 .replace("{x}", String.valueOf(newLocation.getBlockX()))
                                 .replace("{y}", String.valueOf(newLocation.getBlockY()))
@@ -506,6 +501,7 @@ public class TeleportationHandler implements Runnable {
                                 .replace("{tries}", String.valueOf(tries - 1)), player);
                     }
 
+                    getPluginInstance().getManager().clearCooldown(player, "rtp");
                     getRandomTeleportingPlayers().remove(player.getUniqueId());
                     cancel();
                 }
@@ -645,14 +641,9 @@ public class TeleportationHandler implements Runnable {
                     }
 
                 } else {
-                    if (!foundSafeLocation) {
-                        getPluginInstance().getManager()
-                                .sendCustomMessage(Objects
-                                        .requireNonNull(getPluginInstance().getConfig()
-                                                .getString("language-section.random-teleport-fail"))
-                                        .replace("{tries}", String.valueOf(tries - 1)), player);
-                    }
-
+                    if (!foundSafeLocation)
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-fail"))
+                                .replace("{tries}", String.valueOf(tries - 1)), player);
                     cancel();
                 }
             }

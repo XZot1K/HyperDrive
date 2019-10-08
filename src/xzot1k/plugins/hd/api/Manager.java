@@ -402,8 +402,10 @@ public class Manager {
     public void updateCooldown(OfflinePlayer player, String cooldownId) {
         if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId())) {
             HashMap<String, Long> playerCooldownMap = getCooldownMap().get(player.getUniqueId());
-            if (playerCooldownMap != null)
+            if (playerCooldownMap != null) {
                 playerCooldownMap.put(cooldownId.toUpperCase(), System.currentTimeMillis());
+                return;
+            }
         }
 
         getCooldownMap().put(player.getUniqueId(), new HashMap<>());
@@ -419,6 +421,14 @@ public class Manager {
         }
 
         return 0;
+    }
+
+    public void clearCooldown(OfflinePlayer player, String cooldownId) {
+        if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId())) {
+            HashMap<String, Long> playerCooldownMap = getCooldownMap().get(player.getUniqueId());
+            if (playerCooldownMap != null && !playerCooldownMap.isEmpty())
+                playerCooldownMap.remove(cooldownId);
+        }
     }
 
     // inventory stuff

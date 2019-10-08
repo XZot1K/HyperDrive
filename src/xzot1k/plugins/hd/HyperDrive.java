@@ -399,9 +399,9 @@ public class HyperDrive extends JavaPlugin {
                         "create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
                 statement.executeUpdate("truncate transfer");
 
-                statement.executeUpdate("alter table warps modify if not exists likes int");
-                statement.executeUpdate("alter table warps modify if not exists dislikes int");
-                statement.executeUpdate("alter table warps modify if not exists voters longtext");
+                statement.executeUpdate("alter table warps add likes int NOT NULL default '0'");
+                statement.executeUpdate("alter table warps add dislikes int NOT NULL default '0'");
+                statement.executeUpdate("alter table warps add voters longtext NOT NULL default ''");
 
                 statement.close();
             } catch (ClassNotFoundException | SQLException e) {
