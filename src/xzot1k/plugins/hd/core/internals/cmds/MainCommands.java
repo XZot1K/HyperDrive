@@ -692,7 +692,7 @@ public class MainCommands implements CommandExecutor {
         }
 
         getPluginInstance().getManager().updateCooldown(player, "rtp");
-        int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0;
+        int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration") : 0;
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "rtp", player.getWorld().getName(), duration);
 
         String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"), subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
@@ -785,7 +785,7 @@ public class MainCommands implements CommandExecutor {
             }
         }
 
-        int duration = !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0;
+        int duration = !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration") : 0;
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(enteredPlayer, "rtp", enteredPlayer.getWorld().getName(), duration);
 
         String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"), subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
@@ -858,8 +858,8 @@ public class MainCommands implements CommandExecutor {
             }
         }
 
-        int duration = !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0;
-        getPluginInstance().getTeleportationHandler().updateTeleportTemp(enteredPlayer, "rtp", enteredPlayer.getWorld().getName(), duration);
+        int duration = !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration") : 0;
+        getPluginInstance().getTeleportationHandler().updateTeleportTemp(enteredPlayer, "rtp", world.getName(), duration);
 
         String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"), subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
         if (title != null && subTitle != null)

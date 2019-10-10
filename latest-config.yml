@@ -262,6 +262,8 @@ random-teleport-section:
   can-generate-chunks: false
   # How long in between random teleportation processes should the player have to wait before beginning another in seconds.
   cooldown: 10
+  # This is the duration the player must wait before engaging random teleportation (In seconds).
+  delay-duration: 10
   # These are the title and sub-title that are sent to the player 5 seconds before the random teleportation is engaged (Note: Set to "" to disable).
   delay-title: "&eRandom teleportation will be engaged"
   delay-sub-title: "&ein approximately &a{duration} &eseconds."

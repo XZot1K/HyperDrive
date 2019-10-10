@@ -283,12 +283,8 @@ public class HyperDrive extends JavaPlugin {
                             if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
                                 getConfig().set(key, "RED_DYE");
                                 updateCount++;
-                            } else if (!getServerVersion().startsWith("v1_13") && (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
-                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10"))) {
+                            } else if (!getServerVersion().startsWith("v1_13")) {
                                 getConfig().set(key, "INK_SACK");
-                                updateCount++;
-                            } else {
-                                getConfig().set(key, "INK_SAC");
                                 updateCount++;
                             }
                             break;
@@ -296,12 +292,8 @@ public class HyperDrive extends JavaPlugin {
                             if (getServerVersion().startsWith("v1_13")) {
                                 getConfig().set(key, "ROSE_RED");
                                 updateCount++;
-                            } else if (!isOffhandVersion && (getServerVersion().startsWith("v1_12") || !getServerVersion().startsWith("v1_9")
-                                    || !getServerVersion().startsWith("v1_11") || !getServerVersion().startsWith("v1_10"))) {
+                            } else if (!getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15")) {
                                 getConfig().set(key, "INK_SACK");
-                                updateCount++;
-                            } else if (!isOffhandVersion) {
-                                getConfig().set(key, "INK_SAC");
                                 updateCount++;
                             }
 
@@ -399,10 +391,28 @@ public class HyperDrive extends JavaPlugin {
                         "create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
                 statement.executeUpdate("truncate transfer");
 
-                statement.executeUpdate("alter table warps add likes int NOT NULL default '0'");
-                statement.executeUpdate("alter table warps add dislikes int NOT NULL default '0'");
-                statement.executeUpdate("alter table warps add voters longtext NOT NULL default ''");
 
+                ResultSet resultSet = statement.executeQuery("select * from warps");
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                int rowCount = metaData.getColumnCount();
+
+                boolean foundLikes, foundDislikes, foundVoters;
+                foundLikes = foundDislikes = foundVoters = false;
+                for (int i = -1; ++i < rowCount; ) {
+                    String columnName = metaData.getColumnName(i);
+                    if (columnName.equalsIgnoreCase("likes")) foundLikes = true;
+                    else if (columnName.equalsIgnoreCase("dislikes")) foundDislikes = true;
+                    else if (columnName.equalsIgnoreCase("voters")) foundVoters = true;
+                }
+
+                if (!foundLikes)
+                    statement.executeUpdate("alter table warps add likes int NOT NULL default '0'");
+                if (!foundDislikes)
+                    statement.executeUpdate("alter table warps add dislikes int NOT NULL default '0'");
+                if (!foundVoters)
+                    statement.executeUpdate("alter table warps add voters longtext NOT NULL default ''");
+
+                resultSet.close();
                 statement.close();
             } catch (ClassNotFoundException | SQLException e) {
                 e.printStackTrace();

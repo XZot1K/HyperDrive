@@ -3,6 +3,7 @@ package xzot1k.plugins.hd.api.objects;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
@@ -375,7 +376,18 @@ public class Warp {
     public boolean rename(String newName) {
         if (!getPluginInstance().getManager().doesWarpExist(newName)) {
             unRegister();
-            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), this::delete);
+            final String finalWarpName = getWarpName();
+            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                try {
+                    File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
+                    FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+                    yaml.set(finalWarpName, null);
+                    yaml.save(file);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    getPluginInstance().log(Level.WARNING, "Failed to delete the warp '" + finalWarpName + "' from the warps.yml.");
+                }
+            });
             setWarpName(newName);
             register();
             return true;
