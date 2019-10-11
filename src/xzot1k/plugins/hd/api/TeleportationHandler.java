@@ -244,7 +244,6 @@ public class TeleportationHandler implements Runnable {
                                 World world = getPluginInstance().getServer().getWorld(teleportTemp.getTeleportValue());
                                 getTeleportTempMap().remove(uuid);
                                 randomlyTeleportPlayer(player, (world == null || world.getName().equalsIgnoreCase("")) ? player.getWorld() : world);
-                                getPluginInstance().getManager().updateCooldown(player, "rtp");
 
                                 String randomTeleportDelayAnimation = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-delay-animation");
                                 if (randomTeleportDelayAnimation != null && randomTeleportDelayAnimation.contains(":")) {
@@ -465,6 +464,7 @@ public class TeleportationHandler implements Runnable {
                         }
 
                         teleportPlayer(player, newLocation.add(0.5, 0, 0.5));
+                        getPluginInstance().getManager().updateCooldown(player, "rtp");
 
                         String animationLine = getPluginInstance().getConfig()
                                 .getString("special-effects-section.random-teleport-animation");
