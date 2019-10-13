@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.2.9-C
+version: 5.3-SNAPSHOT
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive

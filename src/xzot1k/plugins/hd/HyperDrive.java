@@ -390,29 +390,6 @@ public class HyperDrive extends JavaPlugin {
                 statement.executeUpdate(
                         "create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
                 statement.executeUpdate("truncate transfer");
-
-
-                ResultSet resultSet = statement.executeQuery("select * from warps");
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                int rowCount = metaData.getColumnCount();
-
-                boolean foundLikes, foundDislikes, foundVoters;
-                foundLikes = foundDislikes = foundVoters = false;
-                for (int i = -1; ++i < rowCount; ) {
-                    String columnName = metaData.getColumnName(i);
-                    if (columnName.equalsIgnoreCase("likes")) foundLikes = true;
-                    else if (columnName.equalsIgnoreCase("dislikes")) foundDislikes = true;
-                    else if (columnName.equalsIgnoreCase("voters")) foundVoters = true;
-                }
-
-                if (!foundLikes)
-                    statement.executeUpdate("alter table warps add likes int NOT NULL default '0'");
-                if (!foundDislikes)
-                    statement.executeUpdate("alter table warps add dislikes int NOT NULL default '0'");
-                if (!foundVoters)
-                    statement.executeUpdate("alter table warps add voters longtext NOT NULL default ''");
-
-                resultSet.close();
                 statement.close();
             } catch (ClassNotFoundException | SQLException e) {
                 e.printStackTrace();

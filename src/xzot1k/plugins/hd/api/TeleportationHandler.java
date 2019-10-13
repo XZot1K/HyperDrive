@@ -353,7 +353,8 @@ public class TeleportationHandler implements Runnable {
         Location finalBasedLocation = basedLocation;
         new BukkitRunnable() {
             Random random = new Random();
-            List<String> forbiddenMaterialList = getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-materials");
+            List<String> forbiddenMaterialList = getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-materials"),
+                    biomeBlacklist = getPluginInstance().getConfig().getStringList("random-teleport-section.biome-blacklist");
             int tries = 0, maxTries = getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"), x, z, smartLimit = 0;
             boolean foundSafeLocation = false, canLoadChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-load-chunks"),
                     canGenerateChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-generate-chunks");
@@ -400,6 +401,11 @@ public class TeleportationHandler implements Runnable {
                         return;
 
                     Block foundBlock = Objects.requireNonNull(finalBasedLocation.getWorld()).getBlockAt(x, safeY, z);
+
+                    if (!biomeBlacklist.isEmpty())
+                        for (int i = -1; ++i < biomeBlacklist.size(); )
+                            if (foundBlock.getBiome().name().equalsIgnoreCase(biomeBlacklist.get(i).replace(" ", "_").replace("-", "_")))
+                                return;
 
                     if (!isLocationHookSafe(player, foundBlock.getLocation()))
                         return;
@@ -539,7 +545,8 @@ public class TeleportationHandler implements Runnable {
         Location finalBasedLocation = basedLocation.clone();
         new BukkitRunnable() {
             Random random = new Random();
-            List<String> forbiddenMaterialList = getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-materials");
+            List<String> forbiddenMaterialList = getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-materials"),
+                    biomeBlacklist = getPluginInstance().getConfig().getStringList("random-teleport-section.biome-blacklist");
             int tries = 0, maxTries = getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"), x, z, smartLimit = 0;
             boolean foundSafeLocation = false, canLoadChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-load-chunks"),
                     canGenerateChunks = getPluginInstance().getConfig().getBoolean("random-teleport-section.can-generated-chunks");
@@ -582,6 +589,11 @@ public class TeleportationHandler implements Runnable {
                         return;
 
                     Block foundBlock = Objects.requireNonNull(finalBasedLocation.getWorld()).getBlockAt(x, safeY, z);
+
+                    if (!biomeBlacklist.isEmpty())
+                        for (int i = -1; ++i < biomeBlacklist.size(); )
+                            if (foundBlock.getBiome().name().equalsIgnoreCase(biomeBlacklist.get(i).replace(" ", "_").replace("-", "_")))
+                                return;
 
                     if (!isLocationHookSafe(player, foundBlock.getLocation()))
                         return;

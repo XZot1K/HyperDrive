@@ -1080,27 +1080,26 @@ public class MainCommands implements CommandExecutor {
         page2.add(
                 "&7&l*&r &e/warps <name> <player> &7- &aattempts to teleport the entered player to the entered warp.");
         page2.add("&7&l*&r &e/warps rtp &7- &abegins the random teleportation process on the sender.");
-        page2.add("&7&l*&r &e/warps rtp <world> &7- &abegins the random teleportation process on the sender to the specified world.");
         page2.add("&7&l*&r &e/warps rtp <player> &7- &abegins the random teleportation process on the entered player.");
+        page2.add(
+                "&7&l*&r &e/warps rtp <player> <world> &7- &abegins the random teleportation process on the entered player to the entered world.");
         page2.add("");
         getAdminHelpPages().put(2, page2);
 
         page3.add("");
         page3.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a3&e] &e)&m-----------&r&e>");
         page3.add("");
-        page3.add(
-                "&7&l*&r &e/warps rtp <player> <world> &7- &abegins the random teleportation process on the entered player to the entered world.");
         page3.add("&7&l*&r &e/warps create <name> &7- &aattempts to create a warp with the entered name.");
         page3.add("&7&l*&r &e/warps delete <name> &7- &aattempts to delete a warp with the entered name.");
         page3.add("&7&l*&r &e/tp <player> &7- &ateleports the sender to the entered player.");
         page3.add("&7&l*&r &e/tp <player1> <player2> &7- &ateleports player 1 to player 2.");
+        page3.add("&7&l*&r &e/tpo <player> &7- &ateleports to the player unnoticed and overriding teleport toggle.");
         page3.add("");
         getAdminHelpPages().put(3, page3);
 
         page4.add("");
         page4.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a4&e] &e)&m-----------&r&e>");
         page4.add("");
-        page4.add("&7&l*&r &e/tpo <player> &7- &ateleports to the player unnoticed and overriding teleport toggle.");
         page4.add(
                 "&7&l*&r &e/tpohere <player> &7- &ateleports the player to the sender's location unnoticed and overriding teleport toggle.");
         page4.add("&7&l*&r &e/tphere <player> &7- &ateleports the player to the sender's location.");
@@ -1110,14 +1109,14 @@ public class MainCommands implements CommandExecutor {
                 "&7&l*&r &e/tppos <player> <x> <y> <z> <world> &7- &ateleports the entered player to the defined coordinates in the defined world.");
         page4.add(
                 "&7&l*&r &e/tppos <x> <y> <z> &7- &athe sender will be teleported to the defined coordinates in the current world.");
+        page4.add(
+                "&7&l*&r &e/back <player> &7- &aattempts to teleport the entered player to their last teleport location.");
         page4.add("");
         getAdminHelpPages().put(4, page4);
 
         page5.add("");
         page5.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a4&e] &e)&m-----------&r&e>");
         page5.add("");
-        page5.add(
-                "&7&l*&r &e/back <player> &7- &aattempts to teleport the entered player to their last teleport location.");
         page5.add(
                 "&7&l*&r &e/crossserver <player> <server> <world> <x> <y> <z> &7- &aattempts to teleport the defined player to the server at the defined coordinates.");
         page5.add(

@@ -293,6 +293,19 @@ random-teleport-section:
   # This is how many times the random teleportation feature can attempt to teleport the player before aborting the task.
   # (Note: The higher the slower, recommended value is below 30 if "can-load-chunks" is enabled, set to -1 for unlimited)
   max-tries: 300
+  # If a biome name is contained in this list, that biome will be avoided.
+  # Here is a list of biomes: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/block/Biome.html
+  biome-blacklist:
+    - "DEEP_OCEAN"
+    - "DEEP_COLD_OCEAN"
+    - "DEEP_FROZEN_OCEAN"
+    - "DEEP_LUKEWARM_OCEAN"
+    - "DEEP_WARM_OCEAN"
+    - "COLD_OCEAN"
+    - "FROZEN_OCEAN"
+    - "OCEAN"
+    - "THE_VOID"
+    - "WARM_OCEAN"
   # Materials in this list will be avoided while a player is undergoing random teleportation.
   # (Format: <material>:<durability>)
   forbidden-materials:
