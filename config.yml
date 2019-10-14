@@ -141,6 +141,9 @@ language-section:
   random-teleport-delay: "&eRandom teleportation will engage in approximately &a{duration} &eseconds."
   already-teleporting: "&cYou are already in the process of teleporting to another location."
   player-already-teleporting: "&cThe player &e{player} &cis in the process of teleporting to another location."
+  blocked-world: "&cThis world is currently blocking warp actions."
+  invalid-status: "&cThat status you entered was invalid. The available statuses are: &e{statuses}"
+  status-set: "&aThe status of the warp &e{warp} &ahas been set to &e{status}&a!"
 
 # Here is where the MySQL connection can be configured.
 # (Note: Database tables are created and managed automatically. There is also no MySQL conversion to YAML file; therefore, use at your own risk.)
@@ -196,6 +199,8 @@ general-section:
   # player and CONSOLE to send as console. Don't use the initial command / if it is set to CONSOLE)
   custom-alias-commands:
     - "/rtp:/warps rtp:PLAYER"
+  # Worlds found in this list will not allow warp creation.
+  world-blacklist: []
 
 hooks-section:
   # If this option is enabled, HyperDrive will hook accordingly into WorldGuard, if needed.
@@ -331,6 +336,8 @@ warp-icon-section:
   default-description-color: "GRAY"
   # This is the default display name color that is used when a warp is created.
   default-name-color: "GREEN"
+  # This is the default material a warp icon will be set to upon creation.
+  default-icon-material: "PLAYER_HEAD:0"
   # When the player sets the description to only this symbol, the description will be cleared.
   description-clear-symbol: "-"
   # This is the maximum character count per description line when setting it. All characters past this count will be

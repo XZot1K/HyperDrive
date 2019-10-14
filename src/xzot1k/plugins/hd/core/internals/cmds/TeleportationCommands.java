@@ -39,39 +39,30 @@ public class TeleportationCommands implements CommandExecutor {
                     case 8:
                         runCrossServer(commandSender, args);
                         return true;
-
                     case 6:
                         runCrossServerShortened(commandSender, args);
                         return true;
-
-                    default:
-                        if (commandSender.hasPermission("hyperdrive.admin.help"))
-                            getPluginInstance().getMainCommands().sendAdminHelpPage(commandSender, 1);
-                        else getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
-
-                        return true;
                 }
 
+                if (commandSender.hasPermission("hyperdrive.admin.help"))
+                    getPluginInstance().getMainCommands().sendAdminHelpPage(commandSender, 1);
+                else getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
+                return true;
             case "teleport":
 
                 switch (args.length) {
                     case 1:
                         runTeleportCommand(commandSender, args[0]);
                         return true;
-
                     case 2:
                         runTeleportCommand(commandSender, args[0], args[1]);
                         return true;
-
-                    default:
-
-                        if (commandSender.hasPermission("hyperdrive.admin.help"))
-                            getPluginInstance().getMainCommands().sendAdminHelpPage(commandSender, 1);
-                        else getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
-
-                        return true;
                 }
 
+                if (commandSender.hasPermission("hyperdrive.admin.help"))
+                    getPluginInstance().getMainCommands().sendAdminHelpPage(commandSender, 1);
+                else getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
+                return true;
             case "teleporthere":
 
                 if (args.length >= 1) {
@@ -1146,7 +1137,7 @@ public class TeleportationCommands implements CommandExecutor {
 
         player.teleport(enteredPlayer.getLocation());
 
-        String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
+        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
                 animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
         if (!teleportSound.equalsIgnoreCase(""))

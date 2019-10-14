@@ -164,7 +164,12 @@ public class Manager {
     }
 
     public boolean isNumeric(String string) {
-        return string.matches("-?\\d+(\\.\\d+)?");
+        try {
+            Double.parseDouble(string);
+        } catch (NumberFormatException | NullPointerException nfe) {
+            return false;
+        }
+        return true;
     }
 
     public List<String> wrapString(String text, int lineSize) {
@@ -755,13 +760,15 @@ public class Manager {
                 newLore.add(colorText(furtherFormattedLine));
         }
 
-        if (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) {
-            String[] themeArgs = warp.getIconTheme().split(",");
-            Material material = Material.getMaterial(themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
+        if (warp.getIconTheme() != null && warp.getIconTheme().contains(":")) {
+            String[] themeArgs = warp.getIconTheme().split(":");
+
+            String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
+            Material material = Material.getMaterial(materialName);
             if (material == null) material = Material.ARROW;
             int durability = Integer.parseInt(themeArgs[1]), amount = Integer.parseInt(themeArgs[2]);
 
-            if (material.name().equalsIgnoreCase("SKULL_ITEM") || material.name().equalsIgnoreCase("PLAYER_HEAD")) {
+            if (materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) {
                 OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
                 ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
                 ItemMeta itemMeta = item.getItemMeta();
@@ -1492,6 +1499,14 @@ public class Manager {
         }
 
         return permittedWarpNames;
+    }
+
+    public boolean isBlockedWorld(World world) {
+        if (world == null) return false;
+        List<String> worldNames = getPluginInstance().getConfig().getStringList("general-section.world-blacklist");
+        for (int i = -1; ++i < worldNames.size(); )
+            if (worldNames.get(i).equalsIgnoreCase(world.getName())) return true;
+        return false;
     }
 
     // group methods

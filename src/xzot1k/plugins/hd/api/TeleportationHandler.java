@@ -220,8 +220,8 @@ public class TeleportationHandler implements Runnable {
                                         }
                                     }
 
-                                    if (!teleportSound.equalsIgnoreCase(""))
-                                        player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+                                    if (!teleportSound.equalsIgnoreCase("") && warpLocation.getWorld() != null)
+                                        warpLocation.getWorld().playSound(warpLocation, Sound.valueOf(teleportSound), 1, 1);
 
                                     if (teleportTitle != null && teleportSubTitle != null)
                                         getPluginInstance().getManager().sendTitle(player,

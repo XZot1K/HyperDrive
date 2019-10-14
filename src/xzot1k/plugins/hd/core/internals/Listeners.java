@@ -299,13 +299,10 @@ public class Listeners implements Listener {
                                 .replace("{amount}", String.valueOf(itemUsageCost)).replace("{player}", e.getPlayer().getName()), e.getPlayer());
                 }
 
-                if (e.getMessage().equalsIgnoreCase(
-                        getPluginInstance().getConfig().getString("warp-icon-section.description-clear-symbol"))) {
+                if (e.getMessage().equalsIgnoreCase(getPluginInstance().getConfig().getString("warp-icon-section.description-clear-symbol"))) {
                     warp.getDescription().clear();
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage(Objects
-                            .requireNonNull(
-                                    getPluginInstance().getConfig().getString("language-section.description-cleared"))
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-cleared"))
                             .replace("{warp}", warp.getWarpName()), e.getPlayer());
                 } else {
                     String desc = ChatColor.stripColor(getPluginInstance().getManager().colorText(e.getMessage()));
@@ -315,16 +312,12 @@ public class Listeners implements Listener {
                             enteredName = enteredName.replaceAll("(?i)" + filterString, "");
                     }
 
-                    warp.setDescription(getPluginInstance().getManager().wrapString(desc,
-                            getPluginInstance().getConfig().getInt("warp-icon-section.description-line-cap")));
+                    warp.setDescription(getPluginInstance().getManager().wrapString(desc, getPluginInstance().getConfig().getInt("warp-icon-section.description-line-cap")));
                     warp.save(true, getPluginInstance().getConnection() != null);
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage(Objects
-                                    .requireNonNull(getPluginInstance().getConfig().getString("language-section.description-set"))
-                                    .replace("{warp}", warp.getWarpName()).replace("{description}",
-                                    warp.getDescriptionColor() + ChatColor
-                                            .stripColor(getPluginInstance().getManager().colorText(e.getMessage()))),
-                            e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.description-set"))
+                            .replace("{warp}", warp.getWarpName()).replace("{description}", warp.getDescriptionColor()
+                                    + ChatColor.stripColor(getPluginInstance().getManager().colorText(e.getMessage()))), e.getPlayer());
                 }
 
                 break;
@@ -480,7 +473,7 @@ public class Listeners implements Listener {
                 break;
             case "change-usage-price":
                 e.setCancelled(true);
-                enteredText = e.getMessage().replace(" ", "_");
+                enteredText = e.getMessage().replace(" ", "_").replace("$", "");
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
 
                 if (enteredText.equalsIgnoreCase(chatInteractionCancelKey)) {
@@ -1839,11 +1832,13 @@ public class Listeners implements Listener {
                         case "create-warp":
                             player.closeInventory();
 
-                            if (!getPluginInstance().getTeleportationHandler().isLocationHookSafe(player,
-                                    player.getLocation())) {
-                                getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getConfig().getString("language-section.not-hook-safe"),
-                                        player);
+                            if (getPluginInstance().getManager().isBlockedWorld(player.getWorld())) {
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.blocked-world"), player);
+                                return;
+                            }
+
+                            if (!getPluginInstance().getTeleportationHandler().isLocationHookSafe(player, player.getLocation())) {
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.not-hook-safe"), player);
                                 break;
                             }
 

@@ -496,8 +496,7 @@ public class HyperDrive extends JavaPlugin {
             }
 
             warp.setServerIPAddress(Objects.requireNonNull(yaml.getString(warpName + ".server-ip")).replace("localhost", "127.0.0.1"));
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName()
                     + "'s data aside it's location.");
@@ -574,7 +573,7 @@ public class HyperDrive extends JavaPlugin {
                 List<String> description = new ArrayList<>();
                 String[] descriptionStringArgs = descriptionString.split(",");
                 for (int i = -1; ++i < descriptionStringArgs.length; )
-                    description.add(descriptionStringArgs[i]);
+                    description.add(ChatColor.stripColor(descriptionStringArgs[i]));
                 warp.setDescription(description);
             }
 

@@ -42,8 +42,8 @@ public class Warp {
         else
             setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
 
-        List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
-        setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
+        String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
+        setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
 
@@ -79,8 +79,8 @@ public class Warp {
         else
             setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
 
-        List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
-        setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
+        String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
+        setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
 
@@ -117,8 +117,8 @@ public class Warp {
         else
             setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
 
-        List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
-        setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
+        String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
+        setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
 
@@ -154,8 +154,8 @@ public class Warp {
         else
             setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
 
-        List<String> iconThemeList = getPluginInstance().getConfig().getStringList("warp-icon-section.icon-theme-list");
-        setIconTheme(iconThemeList.size() > 0 ? iconThemeList.get(0) : "");
+        String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
+        setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
 
@@ -287,6 +287,12 @@ public class Warp {
                     yaml.set(getWarpName() + ".icon.theme", getIconTheme());
                     yaml.set(getWarpName() + ".icon.description-color", getDescriptionColor().name());
                     yaml.set(getWarpName() + ".icon.name-color", getDisplayNameColor().name());
+
+                    List<String> desc = getDescription();
+                    for (int i = -1; ++i < desc.size(); )
+                        desc.set(i, ChatColor.stripColor(desc.get(i)));
+                    setDescription(desc);
+
                     yaml.set(getWarpName() + ".icon.description", getDescription());
                     yaml.set(getWarpName() + ".icon.use-enchanted-look", hasIconEnchantedLook());
                     yaml.set(getWarpName() + ".icon.prices.usage", getUsagePrice());
@@ -304,7 +310,7 @@ public class Warp {
             StringBuilder description = new StringBuilder(), commands = new StringBuilder(),
                     whitelist = new StringBuilder(), assistants = new StringBuilder(), voters = new StringBuilder();
             for (int j = -1; ++j < getDescription().size(); )
-                description.append(getDescription().get(j)).append(",");
+                description.append(ChatColor.stripColor(getDescription().get(j))).append(",");
             for (int j = -1; ++j < getCommands().size(); )
                 commands.append(getCommands().get(j)).append(",");
             for (int j = -1; ++j < getWhiteList().size(); )
