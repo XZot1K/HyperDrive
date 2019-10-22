@@ -337,7 +337,7 @@ warp-icon-section:
   # This is the default display name color that is used when a warp is created.
   default-name-color: "GREEN"
   # This is the default material a warp icon will be set to upon creation.
-  default-icon-material: "PLAYER_HEAD:0"
+  default-icon-material: "PLAYER_HEAD,0,1"
   # When the player sets the description to only this symbol, the description will be cleared.
   description-clear-symbol: "-"
   # This is the maximum character count per description line when setting it. All characters past this count will be

@@ -776,6 +776,15 @@ public class MainCommands implements CommandExecutor {
                 return;
             }
 
+            if (!player.hasPermission("hyperdrive.rtpbypass")) {
+                long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
+                if (cooldownDurationLeft > 0) {
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-cooldown"))
+                            .replace("{duration}", String.valueOf(cooldownDurationLeft)), player);
+                    return;
+                }
+            }
+
             if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.already-teleporting"), player);
                 return;

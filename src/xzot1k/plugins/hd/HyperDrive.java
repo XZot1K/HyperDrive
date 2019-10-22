@@ -475,9 +475,8 @@ public class HyperDrive extends JavaPlugin {
             warp.setCommands(yaml.getStringList(warpName + ".commands"));
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
 
-            warp.setIconTheme(yaml.getString(warpName + ".icon.theme"));
-            warp.setDescriptionColor(
-                    ChatColor.valueOf(yaml.getString(warpName + ".icon.description-color")));
+            warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
+            warp.setDescriptionColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.description-color")));
             warp.setDisplayNameColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.name-color")));
             warp.setDescription(yaml.getStringList(warpName + ".icon.description"));
             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
@@ -556,7 +555,7 @@ public class HyperDrive extends JavaPlugin {
                     .valueOf(statusString.toUpperCase().replace(" ", "_").replace("-", "_"));
             warp.setStatus(status);
             warp.setCreationDate(resultSet.getString(4));
-            warp.setIconTheme(resultSet.getString(5));
+            warp.setIconTheme(resultSet.getString(5).replace(":", ","));
             warp.setAnimationSet(resultSet.getString(6));
 
             String descriptionColor = resultSet.getString(7);

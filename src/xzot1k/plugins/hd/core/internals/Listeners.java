@@ -180,7 +180,7 @@ public class Listeners implements Listener {
                         || (!useMySQL && getPluginInstance().getManager().doesWarpExist(enteredName))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-exists"))
-                                    .replace("{warp}", enteredName), e.getPlayer());
+                            .replace("{warp}", enteredName), e.getPlayer());
                     return;
                 }
 
@@ -1527,7 +1527,7 @@ public class Listeners implements Listener {
 
                                 if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
                                         && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
-                                        && (warp.getWhiteList().contains(player.getUniqueId()))) {
+                                        && !warp.getWhiteList().contains(player.getUniqueId())) {
                                     EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
                                     getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                                     if (!economyChargeEvent.isCancelled()) {
@@ -1627,32 +1627,20 @@ public class Listeners implements Listener {
                                     return;
                                 }
 
-                                if (getPluginInstance().getConfig().getBoolean("general-section.use-vault")
-                                        && !player.hasPermission("hyperdrive.economybypass")
-                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
-                                        && !warp.getAssistants().contains(player.getUniqueId())
-                                        && (warp.getWhiteList().contains(player.getUniqueId()))) {
-                                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player,
-                                            warp.getUsagePrice());
+                                if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
+                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
+                                        && !warp.getWhiteList().contains(player.getUniqueId())) {
+                                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
                                     getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                                     if (!economyChargeEvent.isCancelled()) {
-                                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
-                                                .withdrawPlayer(player, warp.getUsagePrice());
+                                        EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player, warp.getUsagePrice());
                                         if (!economyResponse.transactionSuccess()) {
-                                            getPluginInstance().getManager()
-                                                    .sendCustomMessage(Objects
-                                                                    .requireNonNull(getPluginInstance().getConfig()
-                                                                            .getString("language-section.insufficient-funds"))
-                                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())),
-                                                            player);
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
                                             return;
                                         } else
-                                            getPluginInstance().getManager()
-                                                    .sendCustomMessage(Objects
-                                                                    .requireNonNull(getPluginInstance().getConfig()
-                                                                            .getString("language-section.transaction-success"))
-                                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())),
-                                                            player);
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                                                    .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
                                     }
                                 }
 
@@ -2219,8 +2207,12 @@ public class Listeners implements Listener {
                             break;
 
                         case "relocate":
-
                             player.closeInventory();
+                            if (getPluginInstance().getManager().isBlockedWorld(player.getWorld())) {
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.blocked-world"), player);
+                                return;
+                            }
+
                             if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                                     || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                                 warp.setWarpLocation(player.getLocation());

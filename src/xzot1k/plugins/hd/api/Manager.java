@@ -405,16 +405,19 @@ public class Manager {
 
     // cooldown stuff
     public void updateCooldown(OfflinePlayer player, String cooldownId) {
+        HashMap<String, Long> cooldownMap;
+
         if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId())) {
-            HashMap<String, Long> playerCooldownMap = getCooldownMap().get(player.getUniqueId());
-            if (playerCooldownMap != null) {
-                playerCooldownMap.put(cooldownId.toUpperCase(), System.currentTimeMillis());
+            cooldownMap = getCooldownMap().get(player.getUniqueId());
+            if (cooldownMap != null) {
+                cooldownMap.put(cooldownId, System.currentTimeMillis());
                 return;
             }
         }
 
-        getCooldownMap().put(player.getUniqueId(), new HashMap<>());
-        getCooldownMap().get(player.getUniqueId()).put(cooldownId, System.currentTimeMillis());
+        cooldownMap = new HashMap<>();
+        cooldownMap.put(cooldownId, System.currentTimeMillis());
+        getCooldownMap().put(player.getUniqueId(), cooldownMap);
     }
 
     public long getCooldownDuration(OfflinePlayer player, String cooldownId, int cooldownDuration) {
@@ -431,8 +434,7 @@ public class Manager {
     public void clearCooldown(OfflinePlayer player, String cooldownId) {
         if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId())) {
             HashMap<String, Long> playerCooldownMap = getCooldownMap().get(player.getUniqueId());
-            if (playerCooldownMap != null && !playerCooldownMap.isEmpty())
-                playerCooldownMap.remove(cooldownId);
+            if (playerCooldownMap != null) playerCooldownMap.remove(cooldownId);
         }
     }
 
@@ -760,14 +762,12 @@ public class Manager {
                 newLore.add(colorText(furtherFormattedLine));
         }
 
-        if (warp.getIconTheme() != null && warp.getIconTheme().contains(":")) {
-            String[] themeArgs = warp.getIconTheme().split(":");
+        if (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) {
+            String[] themeArgs = warp.getIconTheme().split(",");
 
             String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
-            Material material = Material.getMaterial(materialName);
-            if (material == null) material = Material.ARROW;
-            int durability = Integer.parseInt(themeArgs[1]), amount = Integer.parseInt(themeArgs[2]);
 
+            int durability = Integer.parseInt(themeArgs[1]), amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
             if (materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) {
                 OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
                 ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
@@ -779,6 +779,13 @@ public class Manager {
                 }
                 return item;
             } else {
+                Material material;
+                try {
+                    material = Material.getMaterial(materialName);
+                } catch (Exception ignored) {
+                    material = Material.ARROW;
+                }
+
                 ItemStack item = buildItem(material, durability, warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
                 ItemMeta itemMeta = item.getItemMeta();
                 if (warp.hasIconEnchantedLook() && itemMeta != null) {
