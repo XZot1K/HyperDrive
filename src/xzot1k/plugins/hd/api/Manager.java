@@ -645,170 +645,196 @@ public class Manager {
     }
 
     public ItemStack buildWarpIcon(OfflinePlayer player, Warp warp) {
-        String publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
-                privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
-                adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
+        try {
+            String publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
+                    privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
+                    adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format");
 
-        String[] eventPlaceholders = {"{is-owner}", "{has-access}", "{no-access}", "{can-edit}", "{is-private}",
-                "{is-public}", "{is-admin}"};
-        List<String> iconLoreFormat = getPluginInstance().getConfig()
-                .getStringList("warp-icon-section.list-lore-format"), newLore = new ArrayList<>(),
-                warpDescription = warp.getDescription();
+            String[] eventPlaceholders = {"{is-owner}", "{has-access}", "{no-access}", "{can-edit}", "{is-private}",
+                    "{is-public}", "{is-admin}"};
+            List<String> iconLoreFormat = getPluginInstance().getConfig().getStringList("warp-icon-section.list-lore-format"), newLore = new ArrayList<>(),
+                    warpDescription = warp.getDescription();
 
-        for (int i = -1; ++i < iconLoreFormat.size(); ) {
-            String formatLine = iconLoreFormat.get(i), foundEventPlaceholder = null;
-            if ((formatLine.contains("{usage-price}") && warp.getUsagePrice() <= 0)
-                    || (formatLine.contains("{creation-date}") && warp.getStatus() == EnumContainer.Status.ADMIN))
-                continue;
+            for (int i = -1; ++i < iconLoreFormat.size(); ) {
+                String formatLine = iconLoreFormat.get(i), foundEventPlaceholder = null;
+                if ((formatLine.contains("{usage-price}") && warp.getUsagePrice() <= 0)
+                        || (formatLine.contains("{creation-date}") && warp.getStatus() == EnumContainer.Status.ADMIN))
+                    continue;
 
-            if (formatLine.equalsIgnoreCase("{description}")) {
-                if (warpDescription != null && !warpDescription.isEmpty()) {
-                    for (int j = -1; ++j < warpDescription.size(); )
-                        newLore.add(warp.getDescriptionColor() + ChatColor.stripColor(warpDescription.get(j)));
+                if (formatLine.equalsIgnoreCase("{description}")) {
+                    if (warpDescription != null && !warpDescription.isEmpty()) {
+                        for (int j = -1; ++j < warpDescription.size(); )
+                            newLore.add(warp.getDescriptionColor() + ChatColor.stripColor(warpDescription.get(j)));
+                    }
+
+                    continue;
                 }
 
-                continue;
-            }
-
-            for (int j = -1; ++j < eventPlaceholders.length; ) {
-                String eventPlaceholder = eventPlaceholders[j];
-                if (formatLine.toLowerCase().contains(eventPlaceholder.toLowerCase())) {
-                    foundEventPlaceholder = eventPlaceholder;
-                    formatLine = formatLine.replace(eventPlaceholder, "");
-                    break;
+                for (int j = -1; ++j < eventPlaceholders.length; ) {
+                    String eventPlaceholder = eventPlaceholders[j];
+                    if (formatLine.toLowerCase().contains(eventPlaceholder.toLowerCase())) {
+                        foundEventPlaceholder = eventPlaceholder;
+                        formatLine = formatLine.replace(eventPlaceholder, "");
+                        break;
+                    }
                 }
-            }
 
-            String statusName;
+                String statusName;
 
-            switch (warp.getStatus()) {
-                case PRIVATE:
-                    statusName = privateFormat;
-                    break;
-                case ADMIN:
-                    statusName = adminFormat;
-                    break;
-                default:
-                    statusName = publicFormat;
-                    break;
-            }
-
-            String furtherFormattedLine;
-            OfflinePlayer offlinePlayer = warp.getOwner() != null ? getPluginInstance().getServer().getOfflinePlayer(warp.getOwner()) : null;
-            String invalidRetrieval = getPluginInstance().getConfig().getString("warp-icon-section.invalid-retrieval");
-            if (invalidRetrieval == null) invalidRetrieval = "";
-
-            furtherFormattedLine = formatLine.replace("{creation-date}", warp.getCreationDate())
-                    .replace("{assistant-count}", String.valueOf(warp.getAssistants().size()))
-                    .replace("{usage-price}", String.valueOf(warp.getUsagePrice()))
-                    .replace("{whitelist-count}", String.valueOf(warp.getWhiteList().size()))
-                    .replace("{status}", Objects.requireNonNull(statusName))
-                    .replace("{theme}", warp.getIconTheme() != null && warp.getIconTheme().contains(":") ? warp.getIconTheme().split(":")[0] : "")
-                    .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
-                    .replace("{player}", Objects.requireNonNull(player.getName()))
-                    .replace("{traffic}", String.valueOf(warp.getTraffic())).replace("{owner}", offlinePlayer != null ? (offlinePlayer.getName() != null ? offlinePlayer.getName() : invalidRetrieval) : invalidRetrieval)
-                    .replace("{likes}", String.valueOf(warp.getLikes())).replace("{dislikes}", String.valueOf(warp.getDislikes()))
-                    .replace("{like-bar}", warp.getLikeBar());
-
-            if (foundEventPlaceholder != null) {
-                switch (foundEventPlaceholder) {
-                    case "{is-owner}":
-                        if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
-                            newLore.add(colorText(furtherFormattedLine));
+                switch (warp.getStatus()) {
+                    case PRIVATE:
+                        statusName = privateFormat;
                         break;
-                    case "{can-edit}":
-                        if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())
-                                || warp.getAssistants().contains(player.getUniqueId()))
-                            newLore.add(colorText(furtherFormattedLine));
-                        break;
-                    case "{has-access}":
-                        if (warp.getStatus() == EnumContainer.Status.PUBLIC
-                                || ((warp.getOwner() != null
-                                && warp.getOwner().toString().equals(player.getUniqueId().toString()))
-                                || warp.getAssistants().contains(player.getUniqueId())
-                                || warp.getWhiteList().contains(player.getUniqueId()))
-                                || (Objects.requireNonNull(player.getPlayer())
-                                .hasPermission("hyperdrive.warps." + warp.getWarpName())
-                                || player.getPlayer().hasPermission("hyperdrive.warps.*")))
-                            newLore.add(colorText(furtherFormattedLine));
-                        break;
-                    case "{no-access}":
-                        if (warp.getStatus() != EnumContainer.Status.PUBLIC
-                                && (warp.getOwner() != null
-                                && !warp.getOwner().toString().equals(player.getUniqueId().toString()))
-                                && !warp.getAssistants().contains(player.getUniqueId())
-                                && !warp.getWhiteList().contains(player.getUniqueId())
-                                && (!Objects.requireNonNull(player.getPlayer())
-                                .hasPermission("hyperdrive.warps." + warp.getWarpName())
-                                && !player.getPlayer().hasPermission("hyperdrive.warps.*")))
-                            newLore.add(colorText(furtherFormattedLine));
-                        break;
-                    case "{is-private}":
-                        if (warp.getStatus() == EnumContainer.Status.PRIVATE)
-                            newLore.add(colorText(furtherFormattedLine));
-                        break;
-                    case "{is-public}":
-                        if (warp.getStatus() == EnumContainer.Status.PUBLIC)
-                            newLore.add(colorText(furtherFormattedLine));
-                        break;
-                    case "{is-admin}":
-                        if (warp.getStatus() == EnumContainer.Status.ADMIN)
-                            newLore.add(colorText(furtherFormattedLine));
+                    case ADMIN:
+                        statusName = adminFormat;
                         break;
                     default:
+                        statusName = publicFormat;
                         break;
                 }
-            } else
-                newLore.add(colorText(furtherFormattedLine));
-        }
 
-        if (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) {
-            String[] themeArgs = warp.getIconTheme().split(",");
+                String furtherFormattedLine;
+                OfflinePlayer offlinePlayer = warp.getOwner() != null ? getPluginInstance().getServer().getOfflinePlayer(warp.getOwner()) : null;
+                String invalidRetrieval = getPluginInstance().getConfig().getString("warp-icon-section.invalid-retrieval");
+                if (invalidRetrieval == null) invalidRetrieval = "";
 
-            String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
+                furtherFormattedLine = formatLine.replace("{creation-date}", warp.getCreationDate())
+                        .replace("{assistant-count}", String.valueOf(warp.getAssistants().size()))
+                        .replace("{usage-price}", String.valueOf(warp.getUsagePrice()))
+                        .replace("{whitelist-count}", String.valueOf(warp.getWhiteList().size()))
+                        .replace("{status}", Objects.requireNonNull(statusName))
+                        .replace("{theme}", warp.getIconTheme() != null && warp.getIconTheme().contains(":") ? warp.getIconTheme().split(":")[0] : "")
+                        .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
+                        .replace("{player}", Objects.requireNonNull(player.getName()))
+                        .replace("{traffic}", String.valueOf(warp.getTraffic())).replace("{owner}", offlinePlayer != null ? (offlinePlayer.getName() != null ? offlinePlayer.getName() : invalidRetrieval) : invalidRetrieval)
+                        .replace("{likes}", String.valueOf(warp.getLikes())).replace("{dislikes}", String.valueOf(warp.getDislikes()))
+                        .replace("{like-bar}", warp.getLikeBar());
 
-            int durability = Integer.parseInt(themeArgs[1]), amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
-            if (materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) {
-                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
-                ItemMeta itemMeta = item.getItemMeta();
-                if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                    itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                    itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                    item.setItemMeta(itemMeta);
+                if (foundEventPlaceholder != null) {
+                    switch (foundEventPlaceholder) {
+                        case "{is-owner}":
+                            if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                                newLore.add(colorText(furtherFormattedLine));
+                            break;
+                        case "{can-edit}":
+                            if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())
+                                    || warp.getAssistants().contains(player.getUniqueId()))
+                                newLore.add(colorText(furtherFormattedLine));
+                            break;
+                        case "{has-access}":
+                            if (warp.getStatus() == EnumContainer.Status.PUBLIC
+                                    || ((warp.getOwner() != null
+                                    && warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                                    || warp.getAssistants().contains(player.getUniqueId())
+                                    || warp.getWhiteList().contains(player.getUniqueId()))
+                                    || (Objects.requireNonNull(player.getPlayer())
+                                    .hasPermission("hyperdrive.warps." + warp.getWarpName())
+                                    || player.getPlayer().hasPermission("hyperdrive.warps.*")))
+                                newLore.add(colorText(furtherFormattedLine));
+                            break;
+                        case "{no-access}":
+                            if (warp.getStatus() != EnumContainer.Status.PUBLIC
+                                    && (warp.getOwner() != null
+                                    && !warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                                    && !warp.getAssistants().contains(player.getUniqueId())
+                                    && !warp.getWhiteList().contains(player.getUniqueId())
+                                    && (!Objects.requireNonNull(player.getPlayer())
+                                    .hasPermission("hyperdrive.warps." + warp.getWarpName())
+                                    && !player.getPlayer().hasPermission("hyperdrive.warps.*")))
+                                newLore.add(colorText(furtherFormattedLine));
+                            break;
+                        case "{is-private}":
+                            if (warp.getStatus() == EnumContainer.Status.PRIVATE)
+                                newLore.add(colorText(furtherFormattedLine));
+                            break;
+                        case "{is-public}":
+                            if (warp.getStatus() == EnumContainer.Status.PUBLIC)
+                                newLore.add(colorText(furtherFormattedLine));
+                            break;
+                        case "{is-admin}":
+                            if (warp.getStatus() == EnumContainer.Status.ADMIN)
+                                newLore.add(colorText(furtherFormattedLine));
+                            break;
+                        default:
+                            break;
+                    }
+                } else
+                    newLore.add(colorText(furtherFormattedLine));
+            }
+
+            if (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) {
+                String[] themeArgs = warp.getIconTheme().split(",");
+
+                String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
+
+                int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
+                if (materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) {
+                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+                    ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
+                    ItemMeta itemMeta = item.getItemMeta();
+                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
+                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        item.setItemMeta(itemMeta);
+                    }
+                    return item;
+                } else {
+                    Material material;
+                    try {
+                        material = Material.getMaterial(materialName);
+                    } catch (Exception ignored) {
+                        material = Material.ARROW;
+                    }
+
+                    ItemStack item = buildItem(material, durability, warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
+                    ItemMeta itemMeta = item.getItemMeta();
+                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
+                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        item.setItemMeta(itemMeta);
+                    }
+
+                    return item;
                 }
-                return item;
             } else {
-                Material material;
-                try {
-                    material = Material.getMaterial(materialName);
-                } catch (Exception ignored) {
-                    material = Material.ARROW;
-                }
+                warp.setIconTheme("");
+                ItemStack item;
+                if (warp.getOwner() != null) {
+                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+                    item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
+                    ItemMeta itemMeta = item.getItemMeta();
+                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
+                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        item.setItemMeta(itemMeta);
+                    }
+                } else {
+                    if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14") || getPluginInstance().getServerVersion().startsWith("v1_15"))
+                        item = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), 1);
+                    else item = new ItemStack(Objects.requireNonNull(Material.getMaterial("SKULL_ITEM")), 1, (short) 3);
 
-                ItemStack item = buildItem(material, durability, warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
-                ItemMeta itemMeta = item.getItemMeta();
-                if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                    itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                    itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                    item.setItemMeta(itemMeta);
+                    ItemMeta itemMeta = item.getItemMeta();
+                    if (itemMeta != null) {
+
+                        itemMeta.setDisplayName(colorText(warp.getDisplayNameColor() + warp.getWarpName()));
+                        itemMeta.setLore(newLore);
+
+                        if (warp.hasIconEnchantedLook()) {
+                            itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                            itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        }
+
+                        item.setItemMeta(itemMeta);
+                    }
                 }
 
                 return item;
             }
-        } else {
-            warp.setIconTheme("");
-            OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-            ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
-            ItemMeta itemMeta = item.getItemMeta();
-            if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                item.setItemMeta(itemMeta);
-            }
-
-            return item;
+        } catch (Exception e) {
+            getPluginInstance().log(Level.WARNING, "There was an issue creating the warp icon for the warp '" + warp.getWarpName() + "'.");
         }
+
+        return null;
     }
 
     public ItemStack buildItemFromId(OfflinePlayer player, String currentFilterStatus, String menuPath, String itemId) {

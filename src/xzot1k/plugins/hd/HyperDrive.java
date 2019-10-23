@@ -208,7 +208,10 @@ public class HyperDrive extends JavaPlugin {
         if (isOffhandVersion) {
             String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
             if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
-                getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
+
+                if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"))
+                    getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMEN_TELEPORT");
+                else getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
                 updateCount++;
             }
 
@@ -219,7 +222,7 @@ public class HyperDrive extends JavaPlugin {
             }
         } else {
             String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
-            if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT")) {
+            if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
                 getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
                 updateCount++;
             }
