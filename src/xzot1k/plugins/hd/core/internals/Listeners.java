@@ -54,7 +54,7 @@ public class Listeners implements Listener {
                         method = e.getInventory().getClass().getMethod("getTitle");
                     inventoryName = (String) method.invoke(e.getInventory());
                 }
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+            } catch (NoSuchMethodException | IllegalStateException | IllegalAccessException | InvocationTargetException ex) {
                 return;
             }
 

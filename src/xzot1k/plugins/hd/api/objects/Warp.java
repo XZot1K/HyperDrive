@@ -275,9 +275,8 @@ public class Warp {
                     yaml.set(getWarpName() + ".dislikes", getDislikes());
                     yaml.set(getWarpName() + ".status", getStatus().toString());
                     yaml.set(getWarpName() + ".creation-date", getCreationDate());
-                    yaml.set(getWarpName() + ".server-ip",
-                            getServerIPAddress().replace("localhost", "127.0.0.1"));
-                    yaml.set(getWarpName() + ".owner", getOwner().toString());
+                    yaml.set(getWarpName() + ".server-ip", getServerIPAddress().replace("localhost", "127.0.0.1"));
+                    yaml.set(getWarpName() + ".owner", getOwner() != null ? getOwner().toString() : "");
                     yaml.set(getWarpName() + ".assistants", assistants);
                     yaml.set(getWarpName() + ".whitelist", whiteList);
                     yaml.set(getWarpName() + ".voters", voters);
@@ -331,7 +330,7 @@ public class Warp {
                         + getCreationDate() + "', icon_theme = '" + getIconTheme()
                         + "', animation_set = '" + getAnimationSet() + "'," + " name_color = '"
                         + getDisplayNameColor().name() + "', description = '" + description.toString()
-                        + "', commands = '" + commands.toString() + "'," + " owner = '" + getOwner().toString()
+                        + "', commands = '" + commands.toString() + "'," + " owner = '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', white_list = '" + whitelist.toString() + "', assistants = '" + assistants.toString()
                         + "'," + " usage_price = '" + getUsagePrice() + "', enchanted_look = '"
                         + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress()
@@ -354,7 +353,7 @@ public class Warp {
                             + "', '" + getStatus().name() + "', '" + getCreationDate() + "', '"
                             + getIconTheme() + "', '" + getAnimationSet() + "', '"
                             + getDescriptionColor().name() + "', '" + getDisplayNameColor().name()
-                            + "', ?, ?, '" + getOwner().toString() + "', ?, ?, " + getTraffic() + ", "
+                            + "', ?, ?, '" + (getOwner() != null ? getOwner().toString() : "") + "', ?, ?, " + getTraffic() + ", "
                             + getUsagePrice() + ", " + hasIconEnchantedLook() + ", '"
                             + getServerIPAddress().replace("localhost", "127.0.0.1") + "'," +
                             " '" + getLikes() + "', '" + getDislikes() + "', ?);");

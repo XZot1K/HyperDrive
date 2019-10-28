@@ -130,9 +130,10 @@ public class TeleportationHandler implements Runnable {
                                         return;
                                     }
 
-                                    if (!warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString())
-                                            && !warp.getAssistants().contains(player.getUniqueId()))
-                                        warp.setTraffic(warp.getTraffic() + 1);
+                                    if (warp.getOwner() != null)
+                                        if (!warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString())
+                                                && !warp.getAssistants().contains(player.getUniqueId()))
+                                            warp.setTraffic(warp.getTraffic() + 1);
 
                                     boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
                                     if (useMySQL && getPluginInstance().getConnection() != null) {

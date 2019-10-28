@@ -588,7 +588,8 @@ public class HyperDrive extends JavaPlugin {
                 warp.setCommands(commands);
             }
 
-            warp.setOwner(UUID.fromString(resultSet.getString(11)));
+            if (resultSet.getString(11) != null && !resultSet.getString(11).equalsIgnoreCase(""))
+                warp.setOwner(UUID.fromString(resultSet.getString(11)));
 
             String whitelistString = resultSet.getString(12);
             if (whitelistString.contains(",")) {
@@ -736,17 +737,17 @@ public class HyperDrive extends JavaPlugin {
 
                                     try {
                                         String warpName = ymlFile.getString("name");
-                                        if (getManager().getWarp(warpName) != null)
-                                            continue;
+                                        if (getManager().getWarp(warpName) != null) continue;
 
                                         double x = ymlFile.getDouble("x"), y = ymlFile.getDouble("y"),
                                                 z = ymlFile.getDouble("z");
                                         float yaw = (float) ymlFile.getDouble("yaw"),
                                                 pitch = (float) ymlFile.getDouble("pitch");
                                         SerializableLocation serializableLocation = new SerializableLocation(
-                                                ymlFile.getString("Location.World"), x, y, z, yaw, pitch);
+                                                ymlFile.getString("world"), x, y, z, yaw, pitch);
 
                                         Warp warp = new Warp(warpName, serializableLocation);
+                                        warp.setIconTheme("ARROW,0,1");
                                         warp.register();
                                         convertedWarpCount += 1;
                                     } catch (Exception ignored) {
@@ -924,7 +925,11 @@ public class HyperDrive extends JavaPlugin {
                     try {
                         String warpName = configurationLines.get(i).replace("§", "")
                                 .replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
-                        UUID uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
+                        UUID uuid = null;
+
+                        String ownerId = yaml.getString(warpName + ".owner");
+                        if (ownerId != null && !ownerId.equalsIgnoreCase(""))
+                            uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
 
                         SerializableLocation serializableLocation = new SerializableLocation(
                                 yaml.getString(warpName + ".location.world"), yaml.getDouble(warpName + ".location.x"),
@@ -932,8 +937,10 @@ public class HyperDrive extends JavaPlugin {
                                 (float) yaml.getDouble(warpName + ".location.yaw"),
                                 (float) yaml.getDouble(warpName + ".location.pitch"));
 
-                        Warp warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid),
-                                serializableLocation);
+                        Warp warp;
+                        if (uuid == null) warp = new Warp(warpName, serializableLocation);
+                        else
+                            warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
                         warp.register();
                         loadedWarps += 1;
 
@@ -944,10 +951,9 @@ public class HyperDrive extends JavaPlugin {
                 }
             }
 
-            log(Level.INFO,
-                    loadedWarps + " " + ((loadedWarps == 1) ? "warp was" : "warps were") + " loaded and "
-                            + failedToLoadWarps + " " + ((failedToLoadWarps == 1) ? "warp" : "warps")
-                            + " failed to load. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+            log(Level.INFO, loadedWarps + " " + ((loadedWarps == 1) ? "warp was" : "warps were") + " loaded and "
+                    + failedToLoadWarps + " " + ((failedToLoadWarps == 1) ? "warp" : "warps")
+                    + " failed to load. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
             return;
         }
 
@@ -965,8 +971,15 @@ public class HyperDrive extends JavaPlugin {
                             Double.parseDouble(locationStringArgs[1]), Double.parseDouble(locationStringArgs[2]),
                             Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]),
                             Float.parseFloat(locationStringArgs[5]));
+                    UUID uuid = null;
+                    String ownerId = resultSet.getString("owner");
+                    if (ownerId != null && !ownerId.equalsIgnoreCase(""))
+                        uuid = UUID.fromString(ownerId);
 
-                    Warp warp = new Warp(warpName, serializableLocation);
+                    Warp warp;
+                    if (uuid == null) warp = new Warp(warpName, serializableLocation);
+                    else
+                        warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
                     warp.register();
                     loadedWarps += 1;
 
@@ -991,7 +1004,11 @@ public class HyperDrive extends JavaPlugin {
             File file = new File(getDataFolder(), "/warps.yml");
             if (file.exists()) {
                 YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-                UUID uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
+                UUID uuid = null;
+
+                String ownerId = yaml.getString(warpName + ".owner");
+                if (ownerId != null && !ownerId.equalsIgnoreCase(""))
+                    uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
 
                 SerializableLocation serializableLocation = new SerializableLocation(
                         yaml.getString(warpName + ".location.world"), yaml.getDouble(warpName + ".location.x"),
@@ -999,8 +1016,11 @@ public class HyperDrive extends JavaPlugin {
                         (float) yaml.getDouble(warpName + ".location.yaw"),
                         (float) yaml.getDouble(warpName + ".location.pitch"));
 
-                Warp warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid),
-                        serializableLocation);
+                Warp warp;
+                if (uuid == null)
+                    warp = new Warp(warpName, serializableLocation);
+                else
+                    warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
                 warp.register();
 
                 converterWarpSpecifics(yaml, warpName, warp);
@@ -1021,10 +1041,17 @@ public class HyperDrive extends JavaPlugin {
                             Double.parseDouble(locationStringArgs[1]), Double.parseDouble(locationStringArgs[2]),
                             Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]),
                             Float.parseFloat(locationStringArgs[5]));
+                    UUID uuid = null;
+                    String ownerId = resultSet.getString("owner");
+                    if (ownerId != null && !ownerId.equalsIgnoreCase(""))
+                        uuid = UUID.fromString(ownerId);
 
-                    Warp warp = new Warp(warpName, serializableLocation);
+                    Warp warp;
+                    if (uuid == null)
+                        warp = new Warp(warpName, serializableLocation);
+                    else
+                        warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
                     warp.register();
-
                     converterWarpSpecifics(resultSet, ipAddress, warp);
                 }
             }
