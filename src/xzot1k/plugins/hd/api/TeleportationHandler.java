@@ -93,14 +93,6 @@ public class TeleportationHandler implements Runnable {
                                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.teleportation-delay"))
                                         .replace("{warp}", warp.getWarpName()).replace("{duration}", String.valueOf(teleportTemp.getSeconds())), player);
                             } else if (teleportTemp.getTeleportTypeId().equalsIgnoreCase("rtp")) {
-                                if (!player.hasPermission("hyperdrive.rtpbypass")) {
-                                    long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
-                                    if (cooldownDurationLeft > 0) {
-                                        getTeleportTempMap().remove(player.getUniqueId());
-                                        continue;
-                                    }
-                                }
-
                                 if (randomTeleportDelayTitle != null && randomTeleportSubDelayTitle != null)
                                     getPluginInstance().getManager().sendTitle(player, randomTeleportDelayTitle.replace("{duration}", String.valueOf(teleportTemp.getSeconds())),
                                             randomTeleportSubDelayTitle.replace("{duration}", String.valueOf(teleportTemp.getSeconds())), 0, 5, 0);
@@ -249,17 +241,9 @@ public class TeleportationHandler implements Runnable {
                                 }
                             }
                         } else if (teleportTemp.getTeleportTypeId().equalsIgnoreCase("rtp")) {
-                            if (!player.hasPermission("hyperdrive.rtpbypass")) {
-                                long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
-                                if (cooldownDurationLeft > 0) {
-                                    getTeleportTempMap().remove(player.getUniqueId());
-                                    continue;
-                                }
-                            }
-
                             if (teleportTemp.getTeleportValue() != null) {
-                                World world = getPluginInstance().getServer().getWorld(teleportTemp.getTeleportValue());
                                 getTeleportTempMap().remove(uuid);
+                                World world = getPluginInstance().getServer().getWorld(teleportTemp.getTeleportValue());
                                 randomlyTeleportPlayer(player, (world == null || world.getName().equalsIgnoreCase("")) ? player.getWorld() : world);
 
                                 String randomTeleportDelayAnimation = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-delay-animation");
