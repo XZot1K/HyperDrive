@@ -909,7 +909,8 @@ public class HyperDrive extends JavaPlugin {
     public void saveWarps(boolean useMySQL) {
         long startTime = System.currentTimeMillis();
         for (Warp warp : getManager().getWarpMap().values()) warp.save(false, useMySQL);
-        log(Level.INFO, "All warps have been saved! (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+        if (getConfig().getBoolean("general-section.auto-save-log"))
+            log(Level.INFO, "All warps have been saved! (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
     public void loadWarps(boolean useMySQL) {

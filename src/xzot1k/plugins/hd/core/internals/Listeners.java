@@ -134,7 +134,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(), itemUsageCost);
                     if (!economyResponse.transactionSuccess()) {
@@ -184,7 +184,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -237,7 +237,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(), itemUsageCost);
                     if (!economyResponse.transactionSuccess()) {
@@ -284,7 +284,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy()
                             .withdrawPlayer(e.getPlayer(), itemUsageCost);
@@ -365,7 +365,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -432,7 +432,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -505,7 +505,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -577,7 +577,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -652,7 +652,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -725,7 +725,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -799,7 +799,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -867,7 +867,7 @@ public class Listeners implements Listener {
                     }
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -941,7 +941,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (useVault && interactionModule.getPassedChargeAmount() > 0) {
+                if (useVault && !e.getPlayer().hasPermission("hyperdrive.economybypass") && interactionModule.getPassedChargeAmount() > 0) {
                     double itemUsageCost = interactionModule.getPassedChargeAmount();
                     EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(e.getPlayer(),
                             itemUsageCost);
@@ -1774,8 +1774,7 @@ public class Listeners implements Listener {
                             charged = false;
                     double itemUsageCost = getPluginInstance().getConfig()
                             .getDouble("list-menu-section.items." + itemId + ".usage-cost");
-                    if (useVault && itemUsageCost > 0
-                            && !getPluginInstance().getManager().isChatInteractionId(action)) {
+                    if (useVault && !player.hasPermission("hyperdrive.economybypass") && itemUsageCost > 0 && !getPluginInstance().getManager().isChatInteractionId(action)) {
                         EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
                         getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                         if (!economyChargeEvent.isCancelled()) {
@@ -2071,8 +2070,7 @@ public class Listeners implements Listener {
                     boolean useVault = getPluginInstance().getConfig().getBoolean("general-section.use-vault"), charged = false;
                     double itemUsageCost = getPluginInstance().getConfig()
                             .getDouble("edit-menu-section.items." + itemId + ".usage-cost");
-                    if (useVault && itemUsageCost > 0
-                            && !getPluginInstance().getManager().isChatInteractionId(clickAction)) {
+                    if (useVault && !player.hasPermission("hyperdrive.economybypass") && itemUsageCost > 0 && !getPluginInstance().getManager().isChatInteractionId(clickAction)) {
                         EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
                         getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                         if (!economyChargeEvent.isCancelled()) {
@@ -2647,8 +2645,7 @@ public class Listeners implements Listener {
                 if (clickAction != null) {
                     boolean useVault = getPluginInstance().getConfig().getBoolean("general-section.use-vault");
                     double itemUsageCost = getPluginInstance().getConfig().getDouble("like-menu-section.items." + itemId + ".usage-cost");
-                    if (useVault && itemUsageCost > 0
-                            && !getPluginInstance().getManager().isChatInteractionId(clickAction)) {
+                    if (useVault && !player.hasPermission("hyperdrive.economybypass") && itemUsageCost > 0 && !getPluginInstance().getManager().isChatInteractionId(clickAction)) {
                         EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
                         getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                         if (!economyChargeEvent.isCancelled()) {
@@ -2820,7 +2817,7 @@ public class Listeners implements Listener {
                 double itemUsageCost = getPluginInstance().getConfig()
                         .getDouble("ps-menu-section.items." + itemId + ".usage-cost");
 
-                if (useVault && itemUsageCost > 0) {
+                if (useVault && !player.hasPermission("hyperdrive.economybypass") && itemUsageCost > 0) {
                     EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
                     getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                     if (!economyChargeEvent.isCancelled()) {
@@ -3086,7 +3083,7 @@ public class Listeners implements Listener {
                 boolean useVault = getPluginInstance().getConfig().getBoolean("general-section.use-vault");
                 double itemUsageCost = getPluginInstance().getConfig()
                         .getDouble("custom-menu-section." + menuId + ".items." + itemId + ".usage-cost");
-                if (useVault && itemUsageCost > 0) {
+                if (useVault && !player.hasPermission("hyperdrive.economybypass") && itemUsageCost > 0) {
                     EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, itemUsageCost);
                     getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                     if (!economyChargeEvent.isCancelled()) {
