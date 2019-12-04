@@ -25,10 +25,10 @@ public class Warp {
     private ChatColor displayNameColor, descriptionColor;
     private List<String> description, commands;
     private UUID owner;
-    private List<UUID> whiteList, assistants, voters;
+    private List<UUID> playerList, assistants, voters;
     private int traffic, likes, dislikes;
     private double usagePrice;
-    private boolean enchantedLook;
+    private boolean enchantedLook, whiteListMode;
 
     public Warp(String warpName, OfflinePlayer player, Location location) {
         setPluginInstance(HyperDrive.getPluginInstance());
@@ -63,9 +63,11 @@ public class Warp {
         setLikes(0);
         setDislikes(0);
         setVoters(new ArrayList<>());
-        setWhiteList(new ArrayList<>());
+        setPlayerList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
+        setWhiteListMode(true);
+        setIconEnchantedLook(false);
     }
 
     public Warp(String warpName, Location location) {
@@ -100,9 +102,11 @@ public class Warp {
         setLikes(0);
         setDislikes(0);
         setVoters(new ArrayList<>());
-        setWhiteList(new ArrayList<>());
+        setPlayerList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
+        setWhiteListMode(true);
+        setIconEnchantedLook(false);
     }
 
     public Warp(String warpName, OfflinePlayer player, SerializableLocation serializableLocation) {
@@ -138,9 +142,11 @@ public class Warp {
         setLikes(0);
         setDislikes(0);
         setVoters(new ArrayList<>());
-        setWhiteList(new ArrayList<>());
+        setPlayerList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
+        setWhiteListMode(true);
+        setIconEnchantedLook(false);
     }
 
     public Warp(String warpName, SerializableLocation serializableLocation) {
@@ -175,9 +181,11 @@ public class Warp {
         setLikes(0);
         setDislikes(0);
         setVoters(new ArrayList<>());
-        setWhiteList(new ArrayList<>());
+        setPlayerList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
+        setWhiteListMode(true);
+        setIconEnchantedLook(false);
     }
 
     public void register() {
@@ -246,7 +254,7 @@ public class Warp {
         File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
         try {
-            setWarpName(getWarpName().replace("§", "").replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", ""));
+            setWarpName(getWarpName().replace("§", "").replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", ""));
             if (!useMySQL || getPluginInstance().getConnection() == null) {
                 yaml.set(getWarpName() + ".location.world", getWarpLocation().getWorldName());
                 yaml.set(getWarpName() + ".location.x", getWarpLocation().getX());
@@ -256,10 +264,10 @@ public class Warp {
                 yaml.set(getWarpName() + ".location.pitch", getWarpLocation().getPitch());
 
                 try {
-                    List<String> whiteList = new ArrayList<>(), assistants = new ArrayList<>(), voters = new ArrayList<>();
-                    for (int j = -1; ++j < getWhiteList().size(); ) {
-                        UUID uuid = getWhiteList().get(j);
-                        whiteList.add(uuid.toString());
+                    List<String> playerList = new ArrayList<>(), assistants = new ArrayList<>(), voters = new ArrayList<>();
+                    for (int j = -1; ++j < getPlayerList().size(); ) {
+                        UUID uuid = getPlayerList().get(j);
+                        playerList.add(uuid.toString());
                     }
                     for (int j = -1; ++j < getAssistants().size(); ) {
                         UUID uuid = getAssistants().get(j);
@@ -278,7 +286,8 @@ public class Warp {
                     yaml.set(getWarpName() + ".server-ip", getServerIPAddress().replace("localhost", "127.0.0.1"));
                     yaml.set(getWarpName() + ".owner", getOwner() != null ? getOwner().toString() : "");
                     yaml.set(getWarpName() + ".assistants", assistants);
-                    yaml.set(getWarpName() + ".whitelist", whiteList);
+                    yaml.set(getWarpName() + ".player-list", playerList);
+                    yaml.set(getWarpName() + ".white-list-mode", isWhiteListMode());
                     yaml.set(getWarpName() + ".voters", voters);
                     yaml.set(getWarpName() + ".commands", getCommands() != null ? getCommands() : new ArrayList<>());
                     yaml.set(getWarpName() + ".animation-set", getAnimationSet());
@@ -307,13 +316,13 @@ public class Warp {
             }
 
             StringBuilder description = new StringBuilder(), commands = new StringBuilder(),
-                    whitelist = new StringBuilder(), assistants = new StringBuilder(), voters = new StringBuilder();
+                    playerList = new StringBuilder(), assistants = new StringBuilder(), voters = new StringBuilder();
             for (int j = -1; ++j < getDescription().size(); )
                 description.append(ChatColor.stripColor(getDescription().get(j))).append(",");
             for (int j = -1; ++j < getCommands().size(); )
                 commands.append(getCommands().get(j)).append(",");
-            for (int j = -1; ++j < getWhiteList().size(); )
-                whitelist.append(getWhiteList().get(j).toString()).append(",");
+            for (int j = -1; ++j < getPlayerList().size(); )
+                playerList.append(getPlayerList().get(j).toString()).append(",");
             for (int j = -1; ++j < getAssistants().size(); )
                 assistants.append(getAssistants().get(j).toString()).append(",");
             for (int j = -1; ++j < getVoters().size(); )
@@ -331,11 +340,11 @@ public class Warp {
                         + "', animation_set = '" + getAnimationSet() + "'," + " name_color = '"
                         + getDisplayNameColor().name() + "', description = '" + description.toString()
                         + "', commands = '" + commands.toString() + "'," + " owner = '" + (getOwner() != null ? getOwner().toString() : "")
-                        + "', white_list = '" + whitelist.toString() + "', assistants = '" + assistants.toString()
+                        + "', player_list = '" + playerList.toString() + "', assistants = '" + assistants.toString()
                         + "'," + " usage_price = '" + getUsagePrice() + "', enchanted_look = '"
                         + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress()
                         + "', likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters.toString()
-                        + "' where name = '" + getWarpName() + "';");
+                        + "', white_list_mode = '" + (isWhiteListMode() ? 1 : 0) + "' where name = '" + getWarpName() + "';");
 
                 rs.close();
                 statement.close();
@@ -344,23 +353,19 @@ public class Warp {
 
             PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement(
                     "insert into warps (name, location, status, creation_date, icon_theme, animation_set, " +
-                            "description_color, name_color, description, commands, owner, white_list, assistants, " +
-                            "traffic, usage_price, enchanted_look, server_ip, likes, dislikes, voters) "
-                            + "values ('" + getWarpName() + "', '"
-                            + (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + ","
-                            + getWarpLocation().getY() + "," + getWarpLocation().getZ() + ","
-                            + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch())
-                            + "', '" + getStatus().name() + "', '" + getCreationDate() + "', '"
-                            + getIconTheme() + "', '" + getAnimationSet() + "', '"
-                            + getDescriptionColor().name() + "', '" + getDisplayNameColor().name()
-                            + "', ?, ?, '" + (getOwner() != null ? getOwner().toString() : "") + "', ?, ?, " + getTraffic() + ", "
-                            + getUsagePrice() + ", " + hasIconEnchantedLook() + ", '"
-                            + getServerIPAddress().replace("localhost", "127.0.0.1") + "'," +
-                            " '" + getLikes() + "', '" + getDislikes() + "', ?);");
+                            "description_color, name_color, description, commands, owner, player_list, assistants, " +
+                            "traffic, usage_price, enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) "
+                            + "values ('" + getWarpName() + "', '" + (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + ","
+                            + getWarpLocation().getY() + "," + getWarpLocation().getZ() + "," + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch())
+                            + "', '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '"
+                            + getDescriptionColor().name() + "', '" + getDisplayNameColor().name() + "', ?, ?, '" + (getOwner() != null ? getOwner().toString() : "")
+                            + "', ?, ?, " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0) + ", '"
+                            + getServerIPAddress().replace("localhost", "127.0.0.1") + "'," + " '" + getLikes() + "', '" + getDislikes() + "', ?, '"
+                            + (isWhiteListMode() ? 1 : 0) + "');");
 
             preparedStatement.setString(1, description.toString());
             preparedStatement.setString(2, commands.toString());
-            preparedStatement.setString(3, whitelist.toString());
+            preparedStatement.setString(3, playerList.toString());
             preparedStatement.setString(4, assistants.toString());
             preparedStatement.setString(5, voters.toString());
 
@@ -470,14 +475,6 @@ public class Warp {
         this.usagePrice = usagePrice;
     }
 
-    public List<UUID> getWhiteList() {
-        return whiteList;
-    }
-
-    public void setWhiteList(List<UUID> whiteList) {
-        this.whiteList = whiteList;
-    }
-
     public boolean hasIconEnchantedLook() {
         return enchantedLook;
     }
@@ -573,5 +570,21 @@ public class Warp {
 
     public void setVoters(List<UUID> voters) {
         this.voters = voters;
+    }
+
+    public List<UUID> getPlayerList() {
+        return playerList;
+    }
+
+    public void setPlayerList(List<UUID> playerList) {
+        this.playerList = playerList;
+    }
+
+    public boolean isWhiteListMode() {
+        return whiteListMode;
+    }
+
+    public void setWhiteListMode(boolean whiteListMode) {
+        this.whiteListMode = whiteListMode;
     }
 }

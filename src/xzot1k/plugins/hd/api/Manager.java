@@ -701,7 +701,7 @@ public class Manager {
                 furtherFormattedLine = formatLine.replace("{creation-date}", warp.getCreationDate())
                         .replace("{assistant-count}", String.valueOf(warp.getAssistants().size()))
                         .replace("{usage-price}", String.valueOf(warp.getUsagePrice()))
-                        .replace("{whitelist-count}", String.valueOf(warp.getWhiteList().size()))
+                        .replace("{list-count}", String.valueOf(warp.getPlayerList().size()))
                         .replace("{status}", Objects.requireNonNull(statusName))
                         .replace("{theme}", warp.getIconTheme() != null && warp.getIconTheme().contains(":") ? warp.getIconTheme().split(":")[0] : "")
                         .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
@@ -726,7 +726,7 @@ public class Manager {
                                     || ((warp.getOwner() != null
                                     && warp.getOwner().toString().equals(player.getUniqueId().toString()))
                                     || warp.getAssistants().contains(player.getUniqueId())
-                                    || warp.getWhiteList().contains(player.getUniqueId()))
+                                    || (warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()))
                                     || (Objects.requireNonNull(player.getPlayer())
                                     .hasPermission("hyperdrive.warps." + warp.getWarpName())
                                     || player.getPlayer().hasPermission("hyperdrive.warps.*")))
@@ -737,7 +737,7 @@ public class Manager {
                                     && (warp.getOwner() != null
                                     && !warp.getOwner().toString().equals(player.getUniqueId().toString()))
                                     && !warp.getAssistants().contains(player.getUniqueId())
-                                    && !warp.getWhiteList().contains(player.getUniqueId())
+                                    && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())
                                     && (!Objects.requireNonNull(player.getPlayer())
                                     .hasPermission("hyperdrive.warps." + warp.getWarpName())
                                     && !player.getPlayer().hasPermission("hyperdrive.warps.*")))
@@ -1236,6 +1236,7 @@ public class Manager {
                                             ? toggleFormat.split(":")[0] : toggleFormat.split(":")[1] : "")
                                     .replace("{current-status}", Objects.requireNonNull(currentStatusName))
                                     .replace("{next-status}", Objects.requireNonNull(nextStatusName))
+                                    .replace("{next-list-type}", warp.isWhiteListMode() ? "Blacklist" : "Whitelist")
                                     .replace("{animation-set}", nextAnimationSet != null && nextAnimationSet.contains(":") ? nextAnimationSet.split(":")[0] : "")
                                     .replace("{usage-price}", String.valueOf(getPluginInstance().getConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
 
@@ -1256,6 +1257,7 @@ public class Manager {
                                             ? warp.hasIconEnchantedLook() ? toggleFormat.split(":")[0] : toggleFormat.split(":")[1] : "")
                                     .replace("{current-status}", Objects.requireNonNull(currentStatusName))
                                     .replace("{next-status}", Objects.requireNonNull(nextStatusName))
+                                    .replace("{next-list-type}", warp.isWhiteListMode() ? "Blacklist" : "Whitelist")
                                     .replace("{animation-set}", nextAnimationSet != null && nextAnimationSet.contains(":") ? nextAnimationSet.split(":")[0] : "")
                                     .replace("{usage-price}", String.valueOf(getPluginInstance().getConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
                 Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getConfig().getString("edit-menu-section.items." + itemId + ".material"))
@@ -1697,4 +1699,5 @@ public class Manager {
     private void setChatInteractionMap(HashMap<UUID, InteractionModule> chatInteractionMap) {
         this.chatInteractionMap = chatInteractionMap;
     }
+
 }

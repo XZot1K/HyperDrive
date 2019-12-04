@@ -6,13 +6,18 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
 
+import java.io.File;
 import java.util.*;
 
 public class TeleportationCommands implements CommandExecutor {
@@ -20,6 +25,7 @@ public class TeleportationCommands implements CommandExecutor {
     private List<UUID> toggledPlayers, tpaHereSentPlayers;
     private HashMap<UUID, UUID> tpaSentMap;
     private HashMap<UUID, SerializableLocation> lastLocationMap;
+    private SerializableLocation spawnLocation, firstJoinLocation;
 
     public TeleportationCommands(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
@@ -27,12 +33,41 @@ public class TeleportationCommands implements CommandExecutor {
         setLastLocationMap(new HashMap<>());
         setTpaHereSentPlayers(new ArrayList<>());
         setTpaSentMap(new HashMap<>());
+
+        File file = new File(getPluginInstance().getDataFolder(), "/data.yml");
+        FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        ConfigurationSection cs = yaml.getConfigurationSection("");
+        if (cs == null) return;
+
+        Collection<String> keys = cs.getKeys(false);
+        if (keys.isEmpty()) return;
+
+        if (keys.contains("spawn"))
+            setSpawnLocation(new SerializableLocation(yaml.getString("spawn.world"), yaml.getDouble("spawn.x"), yaml.getDouble("spawn.y"),
+                    yaml.getDouble("spawn.z"), (float) yaml.getDouble("spawn.yaw"), (float) yaml.getDouble("spawn.pitch")));
+        if (keys.contains("first-join-spawn"))
+            setFirstJoinLocation(new SerializableLocation(yaml.getString("first-join-spawn.world"), yaml.getDouble("first-join-spawn.x"), yaml.getDouble("first-join-spawn.y"),
+                    yaml.getDouble("first-join-spawn.z"), (float) yaml.getDouble("first-join-spawn.yaw"), (float) yaml.getDouble("first-join-spawn.pitch")));
     }
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
 
         switch (command.getName().toLowerCase()) {
+            case "spawn":
+                switch (args.length) {
+                    case 0:
+                        runSpawnCommand(commandSender, null);
+                        return true;
+                    case 1:
+                        runSpawnCommand(commandSender, args[0]);
+                        return true;
+                }
+
+                if (commandSender.hasPermission("hyperdrive.admin.help"))
+                    getPluginInstance().getMainCommands().sendAdminHelpPage(commandSender, 1);
+                else getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
+                return true;
             case "crossserver":
 
                 switch (args.length) {
@@ -162,6 +197,58 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         return false;
+    }
+
+    private void runSpawnCommand(CommandSender commandSender, String firstArg) {
+        if (!(commandSender instanceof Player)) {
+            commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
+            return;
+        }
+
+        Player player = (Player) commandSender;
+        if (!player.hasPermission("hyperdrive.spawn")) {
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
+            return;
+        }
+
+        if (!player.hasPermission("hyperdrive.admin.spawn") || (firstArg == null || firstArg.equalsIgnoreCase(""))) {
+            if (getSpawnLocation() == null) {
+                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.spawn-invalid"), player);
+                return;
+            }
+
+            Location spawnLocation = getSpawnLocation().asBukkitLocation();
+            player.setVelocity(new Vector(0, 0, 0));
+            player.teleport(spawnLocation, PlayerTeleportEvent.TeleportCause.COMMAND);
+
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
+
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.teleport-spawn"), player);
+            return;
+        }
+
+        if (firstArg.equalsIgnoreCase("set")) {
+            setSpawnLocation(new SerializableLocation(player.getLocation()));
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.spawn-set"), player);
+        } else if (firstArg.equalsIgnoreCase("setfirstjoin") || firstArg.equalsIgnoreCase("sfj")) {
+            setFirstJoinLocation(new SerializableLocation(player.getLocation()));
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.spawn-set-first-join"), player);
+        } else if (firstArg.equalsIgnoreCase("clear")) {
+            setFirstJoinLocation(null);
+            setSpawnLocation(null);
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.spawns-cleared"), player);
+        }
     }
 
     private void runCrossServerShortened(CommandSender commandSender, String[] args) {
@@ -372,7 +459,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         enteredPlayer.setVelocity(new Vector(0, 0, 0));
-        enteredPlayer.teleport(lastLocation);
+        enteredPlayer.teleport(lastLocation, PlayerTeleportEvent.TeleportCause.COMMAND);
         if (commandSender instanceof Player && !((Player) commandSender).getUniqueId().toString().equals(enteredPlayer.getUniqueId().toString()))
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.teleported-last-location"))
                     .replace("{player}", enteredPlayer.getName()), (Player) commandSender);
@@ -406,7 +493,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         player.setVelocity(new Vector(0, 0, 0));
-        player.teleport(lastLocation);
+        player.teleport(lastLocation, PlayerTeleportEvent.TeleportCause.COMMAND);
 
         String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -539,8 +626,8 @@ public class TeleportationCommands implements CommandExecutor {
         getTpaSentMap().remove(enteredPlayer.getUniqueId());
         if (getTpaHereSentPlayers().contains(enteredPlayer.getUniqueId())) {
             getTpaHereSentPlayers().remove(enteredPlayer.getUniqueId());
-            player.teleport(enteredPlayer.getLocation());
-        } else enteredPlayer.teleport(player.getLocation());
+            player.teleport(enteredPlayer.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
+        } else enteredPlayer.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -606,8 +693,8 @@ public class TeleportationCommands implements CommandExecutor {
                 getTpaSentMap().remove(foundPlayer.getUniqueId());
                 if (getTpaHereSentPlayers().contains(foundPlayer.getUniqueId())) {
                     getTpaHereSentPlayers().remove(foundPlayer.getUniqueId());
-                    player.teleport(foundPlayer.getLocation());
-                } else foundPlayer.teleport(player.getLocation());
+                    player.teleport(foundPlayer.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
+                } else foundPlayer.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
                 break;
             }
         }
@@ -802,7 +889,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         player.teleport(new Location(player.getWorld(), Double.parseDouble(xEntry), Double.parseDouble(yEntry), Double.parseDouble(zEntry),
-                player.getLocation().getYaw(), player.getLocation().getPitch()));
+                player.getLocation().getYaw(), player.getLocation().getPitch()), PlayerTeleportEvent.TeleportCause.COMMAND);
 
         String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -850,7 +937,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         player.teleport(new Location(world, Double.parseDouble(xEntry), Double.parseDouble(yEntry), Double.parseDouble(zEntry),
-                player.getLocation().getYaw(), player.getLocation().getPitch()));
+                player.getLocation().getYaw(), player.getLocation().getPitch()), PlayerTeleportEvent.TeleportCause.COMMAND);
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -908,7 +995,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         enteredPlayer.teleport(new Location(world, Double.parseDouble(xEntry), Double.parseDouble(yEntry), Double.parseDouble(zEntry),
-                enteredPlayer.getLocation().getYaw(), enteredPlayer.getLocation().getPitch()));
+                enteredPlayer.getLocation().getYaw(), enteredPlayer.getLocation().getPitch()), PlayerTeleportEvent.TeleportCause.COMMAND);
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -957,7 +1044,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        enteredPlayer.teleport(player.getLocation());
+        enteredPlayer.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.tp-receiver")
                 .replace("{player}", enteredPlayer.getName()), player);
     }
@@ -986,7 +1073,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        player.teleport(enteredPlayer.getLocation());
+        player.teleport(enteredPlayer.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.tp-victim")
                 .replace("{player}", enteredPlayer.getName()), player);
     }
@@ -1026,7 +1113,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        enteredPlayer.teleport(player.getLocation());
+        enteredPlayer.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
 
         String teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -1079,7 +1166,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        enteredPlayer1.teleport(enteredPlayer2);
+        enteredPlayer1.teleport(enteredPlayer2, PlayerTeleportEvent.TeleportCause.COMMAND);
 
         String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -1135,7 +1222,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        player.teleport(enteredPlayer.getLocation());
+        player.teleport(enteredPlayer.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
 
         String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -1222,5 +1309,21 @@ public class TeleportationCommands implements CommandExecutor {
 
     private void setTpaHereSentPlayers(List<UUID> tpaHereSentPlayers) {
         this.tpaHereSentPlayers = tpaHereSentPlayers;
+    }
+
+    public SerializableLocation getSpawnLocation() {
+        return spawnLocation;
+    }
+
+    private void setSpawnLocation(SerializableLocation spawnLocation) {
+        this.spawnLocation = spawnLocation;
+    }
+
+    public SerializableLocation getFirstJoinLocation() {
+        return firstJoinLocation;
+    }
+
+    private void setFirstJoinLocation(SerializableLocation firstJoinLocation) {
+        this.firstJoinLocation = firstJoinLocation;
     }
 }

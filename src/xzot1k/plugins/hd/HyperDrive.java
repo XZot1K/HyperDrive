@@ -110,7 +110,7 @@ public class HyperDrive extends JavaPlugin {
         setTeleportationCommands(new TeleportationCommands(this));
         String[] teleportCommandNames = {"teleport", "teleporthere", "teleportoverride", "teleportoverridehere",
                 "teleportposition", "teleportask", "teleportaccept", "teleportdeny", "teleporttoggle", "back",
-                "teleportaskhere", "crossserver"};
+                "teleportaskhere", "crossserver", "spawn"};
         for (String cmd : teleportCommandNames) {
             PluginCommand command = getCommand(cmd);
             if (command != null)
@@ -137,6 +137,8 @@ public class HyperDrive extends JavaPlugin {
     @Override
     public void onDisable() {
         saveWarps(getConnection() != null);
+        saveData();
+
         if (getConnection() != null)
             try {
                 getConnection().close();
@@ -205,8 +207,8 @@ public class HyperDrive extends JavaPlugin {
         }
 
         // Fix Sounds
+        String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
         if (isOffhandVersion) {
-            String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
             if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
 
                 if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"))
@@ -221,7 +223,6 @@ public class HyperDrive extends JavaPlugin {
                 updateCount++;
             }
         } else {
-            String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
             if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
                 getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
                 updateCount++;
@@ -385,13 +386,32 @@ public class HyperDrive extends JavaPlugin {
                                 + getConfig().getString("mysql-connection.port") + "/" + databaseName,
                         getConfig().getString("mysql-connection.username"), getConfig().getString("mysql-connection.password")));
 
-                statement = getConnection().createStatement();
-                statement.executeUpdate("create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100),"
-                        + "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255),"
-                        + "owner varchar(100),white_list varchar(255),assistants varchar(255),traffic int,usage_price double,enchanted_look int,server_ip varchar(255),likes int,"
-                        + "dislikes int, voters longtext, primary key (name))");
-                statement.executeUpdate(
-                        "create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
+                String[] columnNames = {"name varchar(100)", "location varchar(255)", "status varchar(100)", "creation_date varchar(100)", "icon_theme varchar(100)", "animation_set varchar(100)",
+                        "description_color varchar(100)", "name_color varchar(100)", "description varchar(255)", "commands varchar(255)", "owner varchar(100)", "player_list varchar(255)", "assistants varchar(255)",
+                        "traffic int", "usage_price double", "enchanted_look int", "server_ip varchar(255)", "likes int", "dislikes int", "voters longtext", "white_list_mode int"};
+
+
+                DatabaseMetaData databaseMetaData = getConnection().getMetaData();
+                ResultSet tables = databaseMetaData.getTables(null, null, "warps", null);
+                if (tables.next()) {
+                    statement = getConnection().createStatement();
+                    ResultSet columnResults = statement.executeQuery("select * from warps");
+                    ResultSetMetaData columnData = columnResults.getMetaData();
+
+                    List<String> columnDataNames = new ArrayList<>();
+                    for (int i = 0; ++i < columnData.getColumnCount(); )
+                        columnDataNames.add(columnData.getColumnName(i));
+
+                    for (String columnName : columnDataNames) performColumnCleanup(statement, columnName, columnNames);
+                } else {
+                    statement.executeUpdate("create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100),"
+                            + "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255),"
+                            + "owner varchar(100),player_list varchar(255),assistants varchar(255),traffic int,usage_price double,enchanted_look int,server_ip varchar(255),likes int,"
+                            + "dislikes int, voters longtext, white_list_mode int, primary key (name))");
+                }
+
+                tables.close();
+                statement.executeUpdate("create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
                 statement.executeUpdate("truncate transfer");
                 statement.close();
             } catch (ClassNotFoundException | SQLException e) {
@@ -441,19 +461,19 @@ public class HyperDrive extends JavaPlugin {
                         + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
-    private void converterWarpSpecifics(YamlConfiguration yaml, String warpName, Warp warp) {
+    private void converterWarpSpecifics(FileConfiguration yaml, String warpName, Warp warp) {
         try {
-            List<UUID> assistantList = new ArrayList<>(), whiteListPlayers = new ArrayList<>(), voters = new ArrayList<>();
+            List<UUID> assistantList = new ArrayList<>(), playerList = new ArrayList<>(), voters = new ArrayList<>();
             List<String> assistants = yaml.getStringList(warpName + ".assistants"),
-                    whiteList = yaml.getStringList(warpName + ".whitelist");
+                    playerListData = yaml.getStringList(warpName + ".player-list");
             for (int j = -1; ++j < assistants.size(); ) {
                 UUID uniqueId = UUID.fromString(assistants.get(j));
                 assistantList.add(uniqueId);
             }
 
-            for (int j = -1; ++j < whiteList.size(); ) {
-                UUID uniqueId = UUID.fromString(whiteList.get(j));
-                whiteListPlayers.add(uniqueId);
+            for (int j = -1; ++j < playerListData.size(); ) {
+                UUID uniqueId = UUID.fromString(playerListData.get(j));
+                playerList.add(uniqueId);
             }
 
             ConfigurationSection cs = yaml.getConfigurationSection(warpName);
@@ -473,7 +493,7 @@ public class HyperDrive extends JavaPlugin {
                     .valueOf(statusString.toUpperCase().replace(" ", "_").replace("-", "_"));
             warp.setStatus(status);
             warp.setAssistants(assistantList);
-            warp.setWhiteList(whiteListPlayers);
+            warp.setPlayerList(playerList);
             warp.setCreationDate(yaml.getString(warpName + ".creation-date"));
             warp.setCommands(yaml.getStringList(warpName + ".commands"));
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
@@ -495,6 +515,8 @@ public class HyperDrive extends JavaPlugin {
                     warp.setLikes(yaml.getInt(warpName + ".likes"));
                 if (nameSection.contains("dislikes"))
                     warp.setDislikes(yaml.getInt(warpName + ".dislikes"));
+                if (nameSection.contains("white-list-mode"))
+                    warp.setWhiteListMode(yaml.getBoolean(warpName + ".white-list-mode"));
             }
 
             warp.setServerIPAddress(Objects.requireNonNull(yaml.getString(warpName + ".server-ip")).replace("localhost", "127.0.0.1"));
@@ -591,13 +613,13 @@ public class HyperDrive extends JavaPlugin {
             if (resultSet.getString(11) != null && !resultSet.getString(11).equalsIgnoreCase(""))
                 warp.setOwner(UUID.fromString(resultSet.getString(11)));
 
-            String whitelistString = resultSet.getString(12);
-            if (whitelistString.contains(",")) {
-                List<UUID> whitelist = new ArrayList<>();
-                String[] whitelistStringArgs = whitelistString.split(",");
-                for (int i = -1; ++i < whitelistStringArgs.length; )
-                    whitelist.add(UUID.fromString(whitelistStringArgs[i]));
-                warp.setWhiteList(whitelist);
+            String playerListString = resultSet.getString(12);
+            if (playerListString.contains(",")) {
+                List<UUID> playerList = new ArrayList<>();
+                String[] playerListStringArgs = playerListString.split(",");
+                for (int i = -1; ++i < playerListStringArgs.length; )
+                    playerList.add(UUID.fromString(playerListStringArgs[i]));
+                warp.setPlayerList(playerList);
             }
 
             String assistantsString = resultSet.getString(13);
@@ -624,6 +646,7 @@ public class HyperDrive extends JavaPlugin {
             warp.setLikes(resultSet.getInt(17));
             warp.setDislikes(resultSet.getInt(18));
             warp.setServerIPAddress(ipAddress);
+            warp.setWhiteListMode(resultSet.getInt(19) >= 1);
         } catch (Exception e) {
             e.printStackTrace();
             log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName()
@@ -906,6 +929,33 @@ public class HyperDrive extends JavaPlugin {
                 + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
+    private void saveData() {
+        File file = new File(getDataFolder(), "/data.yml");
+        FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        try {
+            if (getTeleportationCommands().getSpawnLocation() != null) {
+                yaml.set("spawn.world", getTeleportationCommands().getSpawnLocation().getWorldName());
+                yaml.set("spawn.x", getTeleportationCommands().getSpawnLocation().getX());
+                yaml.set("spawn.y", getTeleportationCommands().getSpawnLocation().getY());
+                yaml.set("spawn.z", getTeleportationCommands().getSpawnLocation().getZ());
+                yaml.set("spawn.yaw", getTeleportationCommands().getSpawnLocation().getYaw());
+                yaml.set("spawn.pitch", getTeleportationCommands().getSpawnLocation().getPitch());
+            } else yaml.set("spawn", null);
+
+            if (getTeleportationCommands().getFirstJoinLocation() != null) {
+                yaml.set("first-join-spawn.world", getTeleportationCommands().getFirstJoinLocation().getWorldName());
+                yaml.set("first-join-spawn.x", getTeleportationCommands().getFirstJoinLocation().getX());
+                yaml.set("first-join-spawn.y", getTeleportationCommands().getFirstJoinLocation().getY());
+                yaml.set("first-join-spawn.z", getTeleportationCommands().getFirstJoinLocation().getZ());
+                yaml.set("first-join-spawn.yaw", getTeleportationCommands().getFirstJoinLocation().getYaw());
+                yaml.set("first-join-spawn.pitch", getTeleportationCommands().getFirstJoinLocation().getPitch());
+            } else yaml.set("first-join-spawn", null);
+
+            yaml.save(file);
+        } catch (IOException ignored) {
+        }
+    }
+
     public void saveWarps(boolean useMySQL) {
         long startTime = System.currentTimeMillis();
         for (Warp warp : getManager().getWarpMap().values()) warp.save(false, useMySQL);
@@ -919,13 +969,13 @@ public class HyperDrive extends JavaPlugin {
         if (!useMySQL || getConnection() == null) {
             File file = new File(getDataFolder(), "/warps.yml");
             if (file.exists()) {
-                YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+                FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
                 List<String> configurationLines = new ArrayList<>(
                         Objects.requireNonNull(yaml.getConfigurationSection("")).getKeys(false));
                 for (int i = -1; ++i < configurationLines.size(); ) {
                     try {
                         String warpName = configurationLines.get(i).replace("§", "")
-                                .replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
+                                .replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", "");
                         UUID uuid = null;
 
                         String ownerId = yaml.getString(warpName + ".owner");
@@ -1092,6 +1142,15 @@ public class HyperDrive extends JavaPlugin {
 
         setVaultEconomy(rsp.getProvider());
         return getVaultEconomy() != null;
+    }
+
+    private void performColumnCleanup(Statement statement, String columnName, String[] columnNames) throws SQLException {
+        for (int i = -1; ++i < columnNames.length; ) {
+            String[] columnArgs = columnNames[i].split(" ");
+            if (!columnName.equalsIgnoreCase(columnArgs[0]))
+                statement.executeUpdate("alter table warps drop column " + columnArgs[0] + "");
+            else statement.executeUpdate("alter table warps add column " + columnArgs[0] + " " + columnArgs[1]);
+        }
     }
 
     // getters and setters

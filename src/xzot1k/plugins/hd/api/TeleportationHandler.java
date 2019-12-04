@@ -21,6 +21,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import xzot1k.plugins.hd.HyperDrive;
@@ -314,16 +315,16 @@ public class TeleportationHandler implements Runnable {
             if (entity.getPassengers().contains(player))
                 entity.eject();
 
-            player.teleport(location);
+            player.teleport(location, PlayerTeleportEvent.TeleportCause.PLUGIN);
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    entity.teleport(player.getLocation());
+                    entity.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
                     entity.addPassenger(player);
                 }
             }.runTaskLater(getPluginInstance(), 1);
         } else
-            player.teleport(location);
+            player.teleport(location, PlayerTeleportEvent.TeleportCause.PLUGIN);
     }
 
     public boolean randomlyTeleportPlayer(Player player, World world) {

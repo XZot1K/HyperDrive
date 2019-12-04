@@ -1011,7 +1011,7 @@ public class MainCommands implements CommandExecutor {
         if (warp.getStatus() != EnumContainer.Status.PUBLIC
                 && !warp.getOwner().toString().equals(player.getUniqueId().toString())
                 && !warp.getAssistants().contains(player.getUniqueId())
-                && !warp.getWhiteList().contains(player.getUniqueId())
+                && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())
                 && !(player.hasPermission("hyperdrive.warps." + warp.getWarpName())
                 || player.hasPermission("hyperdrive.warps.*"))) {
             getPluginInstance().getManager().sendCustomMessage(
@@ -1056,7 +1056,7 @@ public class MainCommands implements CommandExecutor {
                 && !player.hasPermission("hyperdrive.economybypass")
                 && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
                 && !warp.getAssistants().contains(player.getUniqueId())
-                && (warp.getWhiteList().contains(player.getUniqueId()))) {
+                && (warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
             EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player,
                     warp.getUsagePrice());
             if (!economyResponse.transactionSuccess()) {
@@ -1181,6 +1181,8 @@ public class MainCommands implements CommandExecutor {
         page5.add("&7&l*&r &e/crossserver <player> <server> <world> <x> <y> <z> <yaw> <pitch> &7- &aattempts to teleport the " +
                 "defined player to the server at the defined coordinates.");
         page5.add("&7&l*&r &e/warps setstatus <warp> <status> &7- &asets the warp status of the defined warp to the defined status.");
+        page5.add("&7&l*&r &e/spawn &7- &ateleports the sender to the normal spawn, if it exists.");
+        page5.add("&7&l*&r &e/spawn <set/setfirstjoin/clear> &7- &asets the first join spawn, normal spawn, or clears both spawns based on the entered argument.");
         page5.add("");
         getAdminHelpPages().put(5, page5);
     }
@@ -1213,10 +1215,11 @@ public class MainCommands implements CommandExecutor {
         page3.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a3&e] &e)&m-----------&r&e>");
         page3.add("");
         page3.add("&7&l*&r &e/tptoggle &7- &atoggles teleportation such as TPA requests and forceful teleportation commands.");
-        page3.add("&7&l*&r &e/back &7- &aattempts to teleport the sender to their last teleport location.");
+        page3.add("&7&l*&r &e/back &7- &aattempts to teleport to the last teleport location.");
         page3.add("&7&l*&r &e/tpahere <player> &7- &asends a request for the player to teleport to you.");
-        page3.add("&7&l*&r &e/warps rtp &7- &abegins the random teleportation process on the sender.");
-        page3.add("&7&l*&r &e/warps rtp <world> &7- &abegins the random teleportation process on the sender to the specified world.");
+        page3.add("&7&l*&r &e/warps rtp &7- &abegins the random teleportation process.");
+        page3.add("&7&l*&r &e/warps rtp <world> &7- &abegins the random teleportation process to the specified world.");
+        page3.add("&7&l*&r &e/spawn &7- &ateleports to the normal spawn, if it exists.");
         page3.add("");
         getHelpPages().put(3, page3);
     }

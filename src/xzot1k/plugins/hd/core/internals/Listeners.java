@@ -19,6 +19,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
@@ -107,9 +108,9 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                enteredName = enteredName.replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
+                enteredName = enteredName.replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", "");
                 for (int i = -1; ++i < globalFilterStrings.size(); ) {
-                    String filterString = globalFilterStrings.get(i).replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
+                    String filterString = globalFilterStrings.get(i).replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", "");
                     if (!filterString.equalsIgnoreCase(""))
                         enteredName = enteredName.replaceAll("(?i)" + filterString, "");
                 }
@@ -167,9 +168,9 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                enteredName = enteredName.replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
+                enteredName = enteredName.replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", "");
                 for (int i = -1; ++i < globalFilterStrings.size(); ) {
-                    String filterString = globalFilterStrings.get(i).replaceAll("[.,?:;\'\"\\\\|`~!@#$%^&*()+=/<>]", "");
+                    String filterString = globalFilterStrings.get(i).replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", "");
                     if (!filterString.equalsIgnoreCase(""))
                         enteredName = enteredName.replaceAll("(?i)" + filterString, "");
                 }
@@ -681,7 +682,7 @@ public class Listeners implements Listener {
                         .replace("{warp}", warp.getWarpName())
                         .replace("{player}", Objects.requireNonNull(offlinePlayer.getName())), e.getPlayer());
                 break;
-            case "add-to-whitelist":
+            case "add-to-list":
                 e.setCancelled(true);
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (enteredName.equalsIgnoreCase(chatInteractionCancelKey)) {
@@ -716,11 +717,11 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (warp.getWhiteList().contains(offlinePlayer.getUniqueId())) {
+                if (warp.getPlayerList().contains(offlinePlayer.getUniqueId())) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage(Objects
                             .requireNonNull(
-                                    getPluginInstance().getConfig().getString("language-section.player-whitelisted"))
+                                    getPluginInstance().getConfig().getString("language-section.player-in-list"))
                             .replace("{player}", enteredName), e.getPlayer());
                     return;
                 }
@@ -746,16 +747,16 @@ public class Listeners implements Listener {
                                 .replace("{player}", e.getPlayer().getName()), e.getPlayer());
                 }
 
-                warp.getWhiteList().add(offlinePlayer.getUniqueId());
+                warp.getPlayerList().add(offlinePlayer.getUniqueId());
                 warp.save(true, getPluginInstance().getConnection() != null);
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager()
                         .sendCustomMessage(Objects
-                                .requireNonNull(getPluginInstance().getConfig().getString("language-section.add-whitelist"))
+                                .requireNonNull(getPluginInstance().getConfig().getString("language-section.add-list"))
                                 .replace("{warp}", warp.getWarpName())
                                 .replace("{player}", Objects.requireNonNull(offlinePlayer.getName())), e.getPlayer());
                 break;
-            case "remove-from-whitelist":
+            case "remove-from-list":
                 e.setCancelled(true);
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (enteredName.equalsIgnoreCase(chatInteractionCancelKey)) {
@@ -790,11 +791,11 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if (!warp.getWhiteList().contains(offlinePlayer.getUniqueId())) {
+                if (!warp.getPlayerList().contains(offlinePlayer.getUniqueId())) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage(Objects
                             .requireNonNull(
-                                    getPluginInstance().getConfig().getString("language-section.player-not-whitelisted"))
+                                    getPluginInstance().getConfig().getString("language-section.player-not-listed"))
                             .replace("{player}", enteredName), e.getPlayer());
                     return;
                 }
@@ -820,11 +821,11 @@ public class Listeners implements Listener {
                                 .replace("{player}", e.getPlayer().getName()), e.getPlayer());
                 }
 
-                warp.getWhiteList().remove(offlinePlayer.getUniqueId());
+                warp.getPlayerList().remove(offlinePlayer.getUniqueId());
                 warp.save(true, getPluginInstance().getConnection() != null);
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects
-                        .requireNonNull(getPluginInstance().getConfig().getString("language-section.remove-whitelist"))
+                        .requireNonNull(getPluginInstance().getConfig().getString("language-section.remove-list"))
                         .replace("{warp}", warp.getWarpName())
                         .replace("{player}", Objects.requireNonNull(offlinePlayer.getName())), e.getPlayer());
                 break;
@@ -1150,9 +1151,58 @@ public class Listeners implements Listener {
         }
     }
 
+    @EventHandler
+    public void onTeleport(PlayerJoinEvent e) {
+        if (getPluginInstance().getConfig().getBoolean("general-section.force-spawn"))
+            if (!e.getPlayer().hasPlayedBefore() && getPluginInstance().getTeleportationCommands().getFirstJoinLocation() != null) {
+                e.getPlayer().setVelocity(new Vector(0, 0, 0));
+                e.getPlayer().teleport(getPluginInstance().getTeleportationCommands().getFirstJoinLocation().asBukkitLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+
+                String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
+                        .toUpperCase().replace(" ", "_").replace("-", "_"),
+                        animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+                if (!teleportSound.equalsIgnoreCase(""))
+                    e.getPlayer().getWorld().playSound(e.getPlayer().getLocation(), Sound.valueOf(teleportSound), 1, 1);
+                if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                    String[] themeArgs = animationSet.split(":");
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
+
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.teleport-first-join-spawn"))
+                        .replace("{player}", e.getPlayer().getName()), e.getPlayer());
+
+                List<String> commandList = getPluginInstance().getConfig().getStringList("general-section.first-join-commands");
+                for (int i = -1; ++i < commandList.size(); )
+                    getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), commandList.get(i).replace("{player}", e.getPlayer().getName()));
+            } else if (!getPluginInstance().getConfig().getBoolean("general-section.force-only-first-join") && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null) {
+                e.getPlayer().setVelocity(new Vector(0, 0, 0));
+                e.getPlayer().teleport(getPluginInstance().getTeleportationCommands().getSpawnLocation().asBukkitLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+
+                String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
+                        .toUpperCase().replace(" ", "_").replace("-", "_"),
+                        animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+                if (!teleportSound.equalsIgnoreCase(""))
+                    e.getPlayer().getWorld().playSound(e.getPlayer().getLocation(), Sound.valueOf(teleportSound), 1, 1);
+                if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                    String[] themeArgs = animationSet.split(":");
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
+
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.teleport-spawn"))
+                        .replace("{player}", e.getPlayer().getName()), e.getPlayer());
+            }
+    }
+
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent e) {
-        getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
+        if (e.getCause() == PlayerTeleportEvent.TeleportCause.PLUGIN || e.getCause() == PlayerTeleportEvent.TeleportCause.COMMAND)
+            getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -1222,12 +1272,9 @@ public class Listeners implements Listener {
                     }
 
                     warp = getPluginInstance().getManager().getWarp(warpName);
-                    if (warp.getStatus() == EnumContainer.Status.PUBLIC
-                            || (player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
-                            || warp.getAssistants().contains(player.getUniqueId())
-                            || player.hasPermission("hyperdrive.warps." + warpName)
-                            || player.hasPermission("hyperdrive.warps.*")
-                            || (warp.getWhiteList().contains(player.getUniqueId())))) {
+                    if (warp.getStatus() == EnumContainer.Status.PUBLIC || (player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
+                            || warp.getAssistants().contains(player.getUniqueId()) || player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive.warps.*")
+                            || (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()) || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode()))))) {
                         player.closeInventory();
                         int duration = getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration"),
                                 cooldown = getPluginInstance().getConfig()
@@ -1247,7 +1294,7 @@ public class Listeners implements Listener {
                                 && !player.hasPermission("hyperdrive.economybypass")
                                 && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
                                 && !warp.getAssistants().contains(player.getUniqueId())
-                                && (warp.getWhiteList().contains(player.getUniqueId()))) {
+                                && (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()) || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode())))) {
                             EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player,
                                     warp.getUsagePrice());
                             if (!economyResponse.transactionSuccess()) {
@@ -1325,7 +1372,7 @@ public class Listeners implements Listener {
                             || warp.getAssistants().contains(player.getUniqueId())
                             || player.hasPermission("hyperdrive.warps." + warpName)
                             || player.hasPermission("hyperdrive.warps.*")
-                            || (warp.getWhiteList().contains(player.getUniqueId())))
+                            || (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()) || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode()))))
                             && player.hasPermission("hyperdrive.groups.use"))) {
                         player.closeInventory();
 
@@ -1344,7 +1391,7 @@ public class Listeners implements Listener {
                                 && !player.hasPermission("hyperdrive.economybypass")
                                 && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
                                 && !warp.getAssistants().contains(player.getUniqueId())
-                                && (warp.getWhiteList().contains(player.getUniqueId()))) {
+                                && (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()) || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode())))) {
                             EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player,
                                     warp.getUsagePrice());
                             if (!economyResponse.transactionSuccess()) {
@@ -1488,7 +1535,8 @@ public class Listeners implements Listener {
 
                             if (warp.getStatus() == EnumContainer.Status.PUBLIC || player.hasPermission("hyperdrive.warps." + warpName)
                                     || player.hasPermission("hyperdrive.warps.*") || warp.getOwner().toString().equals(player.getUniqueId().toString())
-                                    || warp.getAssistants().contains(player.getUniqueId()) || warp.getWhiteList().contains(player.getUniqueId())) {
+                                    || warp.getAssistants().contains(player.getUniqueId()) || (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())
+                                    || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode())))) {
                                 player.closeInventory();
 
                                 if ((getPluginInstance().getConnection() != null
@@ -1527,7 +1575,7 @@ public class Listeners implements Listener {
 
                                 if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
                                         && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
-                                        && !warp.getWhiteList().contains(player.getUniqueId())) {
+                                        && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
                                     EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
                                     getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                                     if (!economyChargeEvent.isCancelled()) {
@@ -1573,12 +1621,9 @@ public class Listeners implements Listener {
 
                         case RIGHT:
 
-                            if ((warp.getStatus() == EnumContainer.Status.PUBLIC
-                                    || player.hasPermission("hyperdrive.warps." + warpName)
-                                    || player.hasPermission("hyperdrive.warps.*")
-                                    || warp.getOwner().toString().equals(player.getUniqueId().toString())
-                                    || warp.getAssistants().contains(player.getUniqueId())
-                                    || warp.getWhiteList().contains(player.getUniqueId()))
+                            if ((warp.getStatus() == EnumContainer.Status.PUBLIC || player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive.warps.*")
+                                    || warp.getOwner().toString().equals(player.getUniqueId().toString()) || warp.getAssistants().contains(player.getUniqueId())
+                                    || (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()) || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode()))))
                                     && player.hasPermission("hyperdrive.groups.use")) {
                                 player.closeInventory();
 
@@ -1629,7 +1674,7 @@ public class Listeners implements Listener {
 
                                 if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
                                         && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
-                                        && !warp.getWhiteList().contains(player.getUniqueId())) {
+                                        && (!warp.getPlayerList().isEmpty() && !warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
                                     EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
                                     getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                                     if (!economyChargeEvent.isCancelled()) {
@@ -2437,16 +2482,16 @@ public class Listeners implements Listener {
 
                             break;
 
-                        case "add-to-whitelist":
+                        case "add-to-list":
 
                             player.closeInventory();
                             if (!getPluginInstance().getManager().isInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "add-to-whitelist",
+                                getPluginInstance().getManager().updateChatInteraction(player, "add-to-list",
                                         warp != null ? warp.getWarpName() : warpName, !charged ? itemUsageCost : 0);
                                 getPluginInstance().getManager()
                                         .sendCustomMessage(Objects
                                                 .requireNonNull(getPluginInstance().getConfig()
-                                                        .getString("language-section.add-whitelist-interaction"))
+                                                        .getString("language-section.add-list-interaction"))
                                                 .replace("{cancel}",
                                                         Objects.requireNonNull(getPluginInstance().getConfig()
                                                                 .getString("general-section.chat-interaction-cancel")))
@@ -2457,16 +2502,16 @@ public class Listeners implements Listener {
 
                             break;
 
-                        case "remove-from-whitelist":
+                        case "remove-from-list":
 
                             player.closeInventory();
                             if (!getPluginInstance().getManager().isInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "remove-from-whitelist",
+                                getPluginInstance().getManager().updateChatInteraction(player, "remove-from-list",
                                         warp != null ? warp.getWarpName() : warpName, !charged ? itemUsageCost : 0);
                                 getPluginInstance().getManager()
                                         .sendCustomMessage(Objects
                                                 .requireNonNull(getPluginInstance().getConfig()
-                                                        .getString("language-section.remove-whitelist-interaction"))
+                                                        .getString("language-section.remove-list-interaction"))
                                                 .replace("{cancel}",
                                                         Objects.requireNonNull(getPluginInstance().getConfig()
                                                                 .getString("general-section.chat-interaction-cancel")))
@@ -2475,6 +2520,16 @@ public class Listeners implements Listener {
                                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig()
                                         .getString("language-section.interaction-already-active"), player);
 
+                            break;
+
+                        case "toggle-white-list":
+
+                            player.closeInventory();
+                            warp.setWhiteListMode(!warp.isWhiteListMode());
+                            getPluginInstance().getManager().sendCustomMessage(warp.isWhiteListMode() ? Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.white-list"))
+                                    : Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.black-list"))
+                                    .replace("{cancel}", Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel")))
+                                    .replace("{player}", player.getName()), player);
                             break;
 
                         case "add-command":

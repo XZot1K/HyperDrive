@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.3.3
+version: 5.3.4-SNAPSHOT
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -14,6 +14,9 @@ commands:
     aliases: [warp]
 
   # REMOVE THE COMMANDS BELOW TO DISABLE STANDALONE TELEPORTATION COMMANDS
+  spawn:
+    default: op
+    description: The traditional spawn command.
   teleport:
     default: op
     description: The basic teleportation command.
@@ -79,6 +82,7 @@ permissions:
       hyperdrive.tpt: true
       hyperdrive.use.rtpgroup: true
       hyperdrive.use.signs: true
+      hyperdrive.spawn: true
 
   # ADMIN STAR PERMISSION
   hyperdrive.admin.*:
@@ -110,6 +114,7 @@ permissions:
       hyperdrive.admin.crossserver: true
       hyperdrive.updateid: true
       hyperdrive.likebypass: true
+      hyperdrive.admin.spawn: true
 
   # INTENDED PLAYER PERMISSIONS
   hyperdrive.use:
@@ -154,6 +159,9 @@ permissions:
   hyperdrive.like:
     default: op
     description: This permission node is used to allow any player with the node to like or dislike a warp.
+  hyperdrive.spawn:
+    default: op
+    description: This permission node allows any player to use the /spawn command.
 
   # INTENDED ADMIN PERMISSIONS
   hyperdrive.info:
@@ -219,3 +227,6 @@ permissions:
   hyperdrive.likebypass:
     default: op
     description: This permission node is used to bypass the cooldown on liking and disliking a warp.
+  hyperdrive.admin.spawn:
+    default: op
+    description: This permission node allows any player to use the /spawn with extra (admin) args in the command.
