@@ -1206,6 +1206,30 @@ public class Listeners implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onRespawn(PlayerRespawnEvent e) {
+        if (getPluginInstance().getConfig().getBoolean("general-section.force-death-spawn") && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null) {
+            e.getPlayer().setVelocity(new Vector(0, 0, 0));
+            e.getPlayer().teleport(getPluginInstance().getTeleportationCommands().getSpawnLocation().asBukkitLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                e.getPlayer().getWorld().playSound(e.getPlayer().getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
+
+            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.teleport-spawn"))
+                    .replace("{player}", e.getPlayer().getName()), e.getPlayer());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onDeath(PlayerDeathEvent e) {
         getPluginInstance().getTeleportationCommands().updateLastLocation(e.getEntity(), e.getEntity().getLocation());
     }
@@ -1350,12 +1374,11 @@ public class Listeners implements Listener {
 
                         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(),
                                 duration);
-                        return;
                     } else {
                         getPluginInstance().getManager().sendCustomMessage(
                                 getPluginInstance().getConfig().getString("language-section.no-permission"), player);
-                        return;
                     }
+                    return;
 
                 case "group warp":
 
@@ -2275,6 +2298,7 @@ public class Listeners implements Listener {
                                                 .replace("{warp}", warp.getWarpName()), player);
                             }
 
+                            player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
                             break;
 
                         case "change-status":
@@ -2530,6 +2554,8 @@ public class Listeners implements Listener {
                                     : Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.black-list"))
                                     .replace("{cancel}", Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel")))
                                     .replace("{player}", player.getName()), player);
+
+                            player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
                             break;
 
                         case "add-command":

@@ -183,6 +183,8 @@ general-section:
   auto-save-interval: 900
   # If this is enabled, players will be forcefully sent to spawn on join (First join spawn will be skipped if invalid).
   force-spawn: true
+  # If this is enabled, players will be forced back to spawn on death.
+  force-death-spawn: true
   # If this is enabled and the option above is enabled, the player will only be sent to the first join spawn on there first log-in.
   # (Note: If false and the option above is true, the player will be sent to a spawn regardless even if they have already joined before)
   force-only-first-join: true

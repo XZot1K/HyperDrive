@@ -1051,6 +1051,8 @@ public class HyperDrive extends JavaPlugin {
     }
 
     private void loadWarp(String warpName, boolean useMySQL) {
+        if (getManager().doesWarpExist(warpName)) return;
+
         if (!useMySQL || getConnection() == null) {
             File file = new File(getDataFolder(), "/warps.yml");
             if (file.exists()) {

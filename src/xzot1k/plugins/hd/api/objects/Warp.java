@@ -199,12 +199,12 @@ public class Warp {
 
     public String getLikeBar() {
         StringBuilder bar = new StringBuilder();
-        int fractionValue = (int) (((double) Math.min(getLikes(), getDislikes()))
-                / ((double) Math.max(getLikes(), getDislikes())) * 12);
+        int sum = (getLikes() + getDislikes()), difference = (Math.max(getLikes(), getDislikes()) - Math.min(getLikes(), getDislikes())),
+                fractionValue = (int) Math.round((((double) (sum - difference)) * 0.01) * 12);
 
         for (int i = -1; ++i < 12; ) {
             if (fractionValue > 0) {
-                bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&f" : "&a").append("\u25CF");
+                bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&7" : "&a").append("\u25CF");
                 fractionValue -= 1;
             } else
                 bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&7" : "&c").append("\u25CF");
