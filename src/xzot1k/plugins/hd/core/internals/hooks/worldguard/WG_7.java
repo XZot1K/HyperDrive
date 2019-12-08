@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019. All rights reserved.
+ */
+
 package xzot1k.plugins.hd.core.internals.hooks.worldguard;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -14,8 +18,7 @@ import java.util.List;
 public class WG_7
 {
 
-    public static boolean passedWorldGuardHook(Location location)
-    {
+    public static boolean passedWorldGuardHook(Location location) {
         RegionQuery query = WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery();
         com.sk89q.worldedit.util.Location worldEditLocation = BukkitAdapter.adapt(location);
 
@@ -24,8 +27,7 @@ public class WG_7
         List<ProtectedRegion> regionList = new ArrayList<>(regionsAtLocation.getRegions());
         List<String> whitelistedRegions = HyperDrive.getPluginInstance().getConfig().getStringList("hooks-section.world-guard.whitelist");
 
-        for (int i = -1; ++i < regionList.size(); )
-        {
+        for (int i = -1; ++i < regionList.size(); ) {
             ProtectedRegion protectedRegion = regionList.get(i);
             if (!isInList(whitelistedRegions, protectedRegion.getId())) return false;
         }
@@ -33,8 +35,7 @@ public class WG_7
         return true;
     }
 
-    private static boolean isInList(List<String> stringList, String string)
-    {
+    private static boolean isInList(List<String> stringList, String string) {
         for (int i = -1; ++i < stringList.size(); ) if (stringList.get(i).equalsIgnoreCase(string)) return true;
         return false;
     }

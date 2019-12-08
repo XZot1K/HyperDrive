@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019. All rights reserved.
+ */
+
 package xzot1k.plugins.hd.api.objects;
 
 import org.bukkit.Location;
@@ -5,14 +9,12 @@ import xzot1k.plugins.hd.HyperDrive;
 
 import java.util.Objects;
 
-public class SerializableLocation
-{
+public class SerializableLocation {
     private HyperDrive pluginInstance;
     private double x, y, z, yaw, pitch;
     private String worldName;
 
-    public SerializableLocation(Location location)
-    {
+    public SerializableLocation(Location location) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWorldName(Objects.requireNonNull(location.getWorld()).getName());
         setX(location.getX());
@@ -22,8 +24,7 @@ public class SerializableLocation
         setPitch(location.getPitch());
     }
 
-    public SerializableLocation(String worldName, double x, double y, double z, float yaw, float pitch)
-    {
+    public SerializableLocation(String worldName, double x, double y, double z, float yaw, float pitch) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWorldName(worldName);
         setX(x);
@@ -33,78 +34,63 @@ public class SerializableLocation
         setPitch(pitch);
     }
 
-    public Location asBukkitLocation()
-    {
+    public Location asBukkitLocation() {
         return new Location(getPluginInstance().getServer().getWorld(getWorldName()), getX(), getY(), getZ(), (float) getYaw(), (float) getPitch());
     }
 
-    private HyperDrive getPluginInstance()
-    {
+    private HyperDrive getPluginInstance() {
         return pluginInstance;
     }
 
-    private void setPluginInstance(HyperDrive pluginInstance)
-    {
+    private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
     }
 
-    public String getWorldName()
-    {
+    public String getWorldName() {
         return worldName;
     }
 
-    public void setWorldName(String worldName)
-    {
+    public void setWorldName(String worldName) {
         this.worldName = worldName;
     }
 
-    public double getX()
-    {
+    public double getX() {
         return x;
     }
 
-    private void setX(double x)
-    {
+    private void setX(double x) {
         this.x = x;
     }
 
-    public double getY()
-    {
+    public double getY() {
         return y;
     }
 
-    private void setY(double y)
-    {
+    private void setY(double y) {
         this.y = y;
     }
 
-    public double getZ()
-    {
+    public double getZ() {
         return z;
     }
 
-    private void setZ(double z)
-    {
+    private void setZ(double z) {
         this.z = z;
     }
 
-    public double getYaw()
-    {
+    public double getYaw() {
         return yaw;
     }
 
-    private void setYaw(double yaw)
-    {
+    private void setYaw(double yaw) {
         this.yaw = yaw;
     }
 
-    public double getPitch()
-    {
+    public double getPitch() {
         return pitch;
     }
 
-    private void setPitch(double pitch)
-    {
+    private void setPitch(double pitch) {
         this.pitch = pitch;
     }
 }

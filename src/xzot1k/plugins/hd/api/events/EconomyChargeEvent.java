@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019. All rights reserved.
+ */
+
 package xzot1k.plugins.hd.api.events;
 
 import org.bukkit.entity.Player;

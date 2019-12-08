@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019. All rights reserved.
+ */
+
 package xzot1k.plugins.hd.api.events;
 
 import org.bukkit.Location;
@@ -7,50 +11,50 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 public class RandomTeleportEvent extends Event implements Cancellable {
-	private static HandlerList handlers;
-	private boolean cancelled;
-	private Location location;
-	private Player player;
+    private static HandlerList handlers;
+    private boolean cancelled;
+    private Location location;
+    private Player player;
 
-	public RandomTeleportEvent(Location location, Player player) {
-		handlers = new HandlerList();
-		setCancelled(false);
-		setLocation(location);
-		setPlayer(player);
-	}
+    public RandomTeleportEvent(Location location, Player player) {
+        handlers = new HandlerList();
+        setCancelled(false);
+        setLocation(location);
+        setPlayer(player);
+    }
 
-	@Override
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
+    }
 
-	@Override
-	public boolean isCancelled() {
-		return cancelled;
-	}
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
 
-	@Override
-	public void setCancelled(boolean cancelled) {
-		this.cancelled = cancelled;
-	}
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
 
-	public Location getLocation() {
-		return location;
-	}
+    public Location getLocation() {
+        return location;
+    }
 
-	public void setLocation(Location location) {
-		this.location = location;
-	}
+    public void setLocation(Location location) {
+        this.location = location;
+    }
 
-	public Player getPlayer() {
-		return player;
-	}
+    public Player getPlayer() {
+        return player;
+    }
 
-	private void setPlayer(Player player) {
-		this.player = player;
-	}
+    private void setPlayer(Player player) {
+        this.player = player;
+    }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+    public static HandlerList getHandlerList() {
+        return handlers;
+    }
 }

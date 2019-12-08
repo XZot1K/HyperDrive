@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019. All rights reserved.
+ */
+
 package xzot1k.plugins.hd.api.events;
 
 import org.bukkit.entity.Player;
@@ -5,76 +9,75 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Inventory;
-
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 
 public class MenuOpenEvent extends Event implements Cancellable {
-	private static HandlerList handlers;
-	private boolean cancelled;
-	private Inventory openedMenu;
-	private EnumContainer.MenuType menuType;
-	private String customMenuId;
-	private Player player;
+    private static HandlerList handlers;
+    private boolean cancelled;
+    private Inventory openedMenu;
+    private EnumContainer.MenuType menuType;
+    private String customMenuId;
+    private Player player;
 
-	public MenuOpenEvent(HyperDrive pluginInstance, EnumContainer.MenuType menuType, Inventory openedMenu,
-			Player player) {
-		handlers = new HandlerList();
-		setCancelled(false);
-		setOpenedMenu(openedMenu);
-		setPlayer(player);
-		setMenuType(menuType);
-		setCustomMenuId(null);
-	}
+    public MenuOpenEvent(HyperDrive pluginInstance, EnumContainer.MenuType menuType, Inventory openedMenu,
+                         Player player) {
+        handlers = new HandlerList();
+        setCancelled(false);
+        setOpenedMenu(openedMenu);
+        setPlayer(player);
+        setMenuType(menuType);
+        setCustomMenuId(null);
+    }
 
-	@Override
-	public HandlerList getHandlers() {
-		return handlers;
-	}
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
+    }
 
-	@Override
-	public boolean isCancelled() {
-		return cancelled;
-	}
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
 
-	@Override
-	public void setCancelled(boolean cancelled) {
-		this.cancelled = cancelled;
-	}
+    @Override
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
 
-	public Player getPlayer() {
-		return player;
-	}
+    public Player getPlayer() {
+        return player;
+    }
 
-	private void setPlayer(Player player) {
-		this.player = player;
-	}
+    private void setPlayer(Player player) {
+        this.player = player;
+    }
 
-	public Inventory getOpenedMenu() {
-		return openedMenu;
-	}
+    public Inventory getOpenedMenu() {
+        return openedMenu;
+    }
 
-	private void setOpenedMenu(Inventory openedMenu) {
-		this.openedMenu = openedMenu;
-	}
+    private void setOpenedMenu(Inventory openedMenu) {
+        this.openedMenu = openedMenu;
+    }
 
-	public EnumContainer.MenuType getMenuType() {
-		return menuType;
-	}
+    public EnumContainer.MenuType getMenuType() {
+        return menuType;
+    }
 
-	private void setMenuType(EnumContainer.MenuType menuType) {
-		this.menuType = menuType;
-	}
+    private void setMenuType(EnumContainer.MenuType menuType) {
+        this.menuType = menuType;
+    }
 
-	public String getCustomMenuId() {
-		return customMenuId;
-	}
+    public String getCustomMenuId() {
+        return customMenuId;
+    }
 
-	public void setCustomMenuId(String customMenuId) {
-		this.customMenuId = customMenuId;
-	}
+    public void setCustomMenuId(String customMenuId) {
+        this.customMenuId = customMenuId;
+    }
 
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
+    public static HandlerList getHandlerList() {
+        return handlers;
+    }
 }

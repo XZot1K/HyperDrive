@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019. All rights reserved.
+ */
+
 package xzot1k.plugins.hd.core.internals.cmds;
 
 import net.milkbowl.vault.economy.EconomyResponse;

@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019. All rights reserved.
+ */
+
 package xzot1k.plugins.hd.core.packets.actionbars.versions;
 
 import net.minecraft.server.v1_8_R1.ChatSerializer;
@@ -12,8 +16,7 @@ public class ABH_1_8R1 implements ActionBarHandler
 {
     @Override
 
-    public void sendActionBar(Player player, String message)
-    {
+    public void sendActionBar(Player player, String message) {
         IChatBaseComponent iChatBaseComponent = ChatSerializer.a("{\"text\": \""
                 + ChatColor.translateAlternateColorCodes('&', message) + "\"}");
         PacketPlayOutChat bar = new PacketPlayOutChat(iChatBaseComponent, (byte) 2);

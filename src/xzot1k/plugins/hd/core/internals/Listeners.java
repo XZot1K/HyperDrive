@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019. All rights reserved.
+ */
+
 package xzot1k.plugins.hd.core.internals;
 
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -1199,17 +1203,20 @@ public class Listeners implements Listener {
             }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent e) {
         if (e.getCause() == PlayerTeleportEvent.TeleportCause.PLUGIN || e.getCause() == PlayerTeleportEvent.TeleportCause.COMMAND)
             getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true)
     public void onRespawn(PlayerRespawnEvent e) {
         if (getPluginInstance().getConfig().getBoolean("general-section.force-death-spawn") && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null) {
             e.getPlayer().setVelocity(new Vector(0, 0, 0));
-            e.getPlayer().teleport(getPluginInstance().getTeleportationCommands().getSpawnLocation().asBukkitLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+
+            Location location = getPluginInstance().getTeleportationCommands().getSpawnLocation().asBukkitLocation();
+            e.setRespawnLocation(location);
+            getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), location);
 
             String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                     .toUpperCase().replace(" ", "_").replace("-", "_"),
@@ -1229,7 +1236,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true)
     public void onDeath(PlayerDeathEvent e) {
         getPluginInstance().getTeleportationCommands().updateLastLocation(e.getEntity(), e.getEntity().getLocation());
     }

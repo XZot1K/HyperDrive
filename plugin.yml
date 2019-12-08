@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.3.4
+version: 5.3.5
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -115,6 +115,7 @@ permissions:
       hyperdrive.updateid: true
       hyperdrive.likebypass: true
       hyperdrive.admin.spawn: true
+      hyperdrive.admin.tab: true
 
   # INTENDED PLAYER PERMISSIONS
   hyperdrive.use:
@@ -230,3 +231,6 @@ permissions:
   hyperdrive.admin.spawn:
     default: op
     description: This permission node allows any player to use the /spawn with extra (admin) args in the command.
+  hyperdrive.admin.tab:
+    default: op
+    description: This permission allows the player to tab through all existing warps.

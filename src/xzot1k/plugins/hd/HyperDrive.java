@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2019. All rights reserved.
+ */
+
 package xzot1k.plugins.hd;
 
 import net.milkbowl.vault.economy.Economy;
@@ -23,6 +27,7 @@ import xzot1k.plugins.hd.core.internals.Listeners;
 import xzot1k.plugins.hd.core.internals.Metrics;
 import xzot1k.plugins.hd.core.internals.cmds.MainCommands;
 import xzot1k.plugins.hd.core.internals.cmds.TeleportationCommands;
+import xzot1k.plugins.hd.core.internals.tabs.WarpTabComplete;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -103,8 +108,10 @@ public class HyperDrive extends JavaPlugin {
         String[] commandNames = {"warps", "hyperdrive"};
         for (String cmd : commandNames) {
             PluginCommand command = getCommand(cmd);
-            if (command != null)
+            if (command != null) {
                 command.setExecutor(getMainCommands());
+                if (cmd.equalsIgnoreCase("warps")) command.setTabCompleter(new WarpTabComplete(this));
+            }
         }
 
         setTeleportationCommands(new TeleportationCommands(this));
