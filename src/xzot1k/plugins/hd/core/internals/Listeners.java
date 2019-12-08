@@ -1216,7 +1216,6 @@ public class Listeners implements Listener {
 
             Location location = getPluginInstance().getTeleportationCommands().getSpawnLocation().asBukkitLocation();
             e.setRespawnLocation(location);
-            getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), location);
 
             String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                     .toUpperCase().replace(" ", "_").replace("-", "_"),
