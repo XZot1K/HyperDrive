@@ -78,6 +78,12 @@ public class Manager {
         boolean succeeded = true;
         long startTime = System.currentTimeMillis();
         switch (getPluginInstance().getServerVersion()) {
+            case "v1_15_R1":
+                setParticleHandler(new Particle_Latest());
+                setJsonHandler(new JSONHandler1_15R1());
+                setTitleHandler(new Titles_Latest(getPluginInstance()));
+                setActionBarHandler(new ABH_1_15R1());
+                break;
             case "v1_14_R1":
                 setParticleHandler(new Particle_Latest());
                 setJsonHandler(new JSONHandler1_14R1());
