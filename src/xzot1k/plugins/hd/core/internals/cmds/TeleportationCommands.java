@@ -681,14 +681,8 @@ public class TeleportationCommands implements CommandExecutor {
                     return;
                 }
 
-                if (!getTpaSentMap().isEmpty() && getTpaSentMap().containsKey(foundPlayer.getUniqueId())) {
-                    UUID playerUniqueId = getTpaSentMap().get(foundPlayer.getUniqueId());
-                    if (playerUniqueId == null) {
-                        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-empty")
-                                .replace("{player}", foundPlayer.getName()), player);
-                        return;
-                    }
-                } else if (getTpaSentMap().isEmpty() || !getTpaSentMap().containsKey(foundPlayer.getUniqueId())) {
+                UUID playerUniqueId = getTpaSentMap().get(foundPlayer.getUniqueId());
+                if (playerUniqueId == null) {
                     getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.player-tpa-empty")
                             .replace("{player}", foundPlayer.getName()), player);
                     return;
@@ -702,6 +696,7 @@ public class TeleportationCommands implements CommandExecutor {
                 break;
             }
         }
+
         String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"),
                 animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
