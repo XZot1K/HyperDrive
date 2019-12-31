@@ -8,7 +8,6 @@ import net.milkbowl.vault.economy.EconomyResponse;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -58,11 +57,11 @@ public class MainCommands implements CommandExecutor {
                                 else {
                                     if (commandSender instanceof Player)
                                         getPluginInstance().getManager().sendCustomMessage(
-                                                getPluginInstance().getConfig().getString("language-section.no-permission"),
+                                                getPluginInstance().getLangConfig().getString("no-permission"),
                                                 (Player) commandSender);
                                     else
                                         commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                                getPluginInstance().getConfig().getString("language-section.no-permission")));
+                                                getPluginInstance().getLangConfig().getString("no-permission")));
                                 }
                                 return true;
                         }
@@ -73,7 +72,7 @@ public class MainCommands implements CommandExecutor {
                                         getPluginInstance().getManager().isNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
                             else {
                                 commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                        getPluginInstance().getConfig().getString("language-section.no-permission")));
+                                        getPluginInstance().getLangConfig().getString("no-permission")));
                             }
                             return true;
                         }
@@ -83,11 +82,11 @@ public class MainCommands implements CommandExecutor {
                         else {
                             if (commandSender instanceof Player)
                                 getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getConfig().getString("language-section.no-permission"),
+                                        getPluginInstance().getLangConfig().getString("no-permission"),
                                         (Player) commandSender);
                             else
                                 commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                        getPluginInstance().getConfig().getString("language-section.no-permission")));
+                                        getPluginInstance().getLangConfig().getString("no-permission")));
                         }
 
                         return true;
@@ -102,11 +101,11 @@ public class MainCommands implements CommandExecutor {
                         else {
                             if (commandSender instanceof Player)
                                 getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getConfig().getString("language-section.no-permission"),
+                                        getPluginInstance().getLangConfig().getString("no-permission"),
                                         (Player) commandSender);
                             else
                                 commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                        getPluginInstance().getConfig().getString("language-section.no-permission")));
+                                        getPluginInstance().getLangConfig().getString("no-permission")));
                         }
 
                         return true;
@@ -116,11 +115,11 @@ public class MainCommands implements CommandExecutor {
                         else {
                             if (commandSender instanceof Player)
                                 getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getConfig().getString("language-section.no-permission"),
+                                        getPluginInstance().getLangConfig().getString("no-permission"),
                                         (Player) commandSender);
                             else
                                 commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                        getPluginInstance().getConfig().getString("language-section.no-permission")));
+                                        getPluginInstance().getLangConfig().getString("no-permission")));
                         }
 
                         return true;
@@ -135,13 +134,6 @@ public class MainCommands implements CommandExecutor {
                         switch (args[0].toLowerCase()) {
                             case "help":
                                 sendHelpPage(commandSender, 1);
-                                return true;
-                            case "rtp":
-                                beginRandomTeleportCommand(commandSender);
-                                return true;
-                            case "rtpgroup":
-                            case "rtpg":
-                                beginGroupRandomTeleportCommand(commandSender);
                                 return true;
                             case "list":
                                 runWarpListCommand(commandSender);
@@ -159,9 +151,6 @@ public class MainCommands implements CommandExecutor {
                                 return true;
                             case "deny":
                                 beginDenyCommand(commandSender, args[1]);
-                                return true;
-                            case "rtp":
-                                beginRandomTeleportCommand(commandSender, args[1]);
                                 return true;
                             case "help":
                                 sendHelpPage(commandSender,
@@ -184,10 +173,7 @@ public class MainCommands implements CommandExecutor {
                         }
 
                     case 3:
-                        if (args[0].equalsIgnoreCase("rtp")) {
-                            beginRandomTeleportCommand(commandSender, args[1], args[2]);
-                            return true;
-                        } else if (args[0].equalsIgnoreCase("setstatus")) {
+                        if (args[0].equalsIgnoreCase("setstatus")) {
                             beginStatusSetCommand(commandSender, args[1], args[2]);
                             return true;
                         }
@@ -214,7 +200,7 @@ public class MainCommands implements CommandExecutor {
 
     private void beginStatusSetCommand(CommandSender commandSender, String warpName, String status) {
         if (!commandSender.hasPermission("hyperdrive.admin.status")) {
-            String message = getPluginInstance().getConfig().getString("language-section.no-permission");
+            String message = getPluginInstance().getLangConfig().getString("no-permission");
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
             else
@@ -227,10 +213,10 @@ public class MainCommands implements CommandExecutor {
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                 || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-invalid"))
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
                         .replace("{warp}", warpName), (Player) commandSender);
             else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-invalid"))
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
                         .replace("{warp}", warpName)));
             return;
         }
@@ -243,7 +229,7 @@ public class MainCommands implements CommandExecutor {
             }
 
         if (enteredStatus == null) {
-            String message = Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.invalid-status"))
+            String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("invalid-status"))
                     .replace("{statuses}", Arrays.toString(EnumContainer.Status.values()));
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
@@ -254,7 +240,7 @@ public class MainCommands implements CommandExecutor {
 
         warp.setStatus(enteredStatus);
         warp.save(true, getPluginInstance().getConnection() != null);
-        String message = Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.status-set"))
+        String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("status-set"))
                 .replace("{warp}", warp.getWarpName()).replace("{status}", WordUtils.capitalize(enteredStatus.name().toLowerCase()));
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
@@ -264,7 +250,7 @@ public class MainCommands implements CommandExecutor {
 
     private void runUpdateIP(CommandSender commandSender, String[] args) {
         if (!commandSender.hasPermission("hyperdrive.updateid")) {
-            String message = getPluginInstance().getConfig().getString("language-section.no-permission");
+            String message = getPluginInstance().getLangConfig().getString("no-permission");
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
             else
@@ -291,7 +277,7 @@ public class MainCommands implements CommandExecutor {
         }
 
         if (foundWarps.size() <= 0) {
-            String message = getPluginInstance().getConfig().getString("language-section.warp-ip-invalid")
+            String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-ip-invalid"))
                     .replace("{ip}", initialIP);
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
@@ -306,7 +292,7 @@ public class MainCommands implements CommandExecutor {
                 warp.setServerIPAddress(setIP);
         }
 
-        String message = getPluginInstance().getConfig().getString("language-section.warp-ip-set")
+        String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-ip-set"))
                 .replace("{initial-ip}", initialIP).replace("{set-ip}", setIP)
                 .replace("{count}", String.valueOf(foundWarps.size()));
         if (commandSender instanceof Player)
@@ -315,53 +301,17 @@ public class MainCommands implements CommandExecutor {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
     }
 
-    private void beginGroupRandomTeleportCommand(CommandSender commandSender) {
-        if (!(commandSender instanceof Player)) {
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
-            return;
-        }
-
-        Player player = (Player) commandSender;
-        if (!player.hasPermission("hyperdrive.use.rtpgroup")) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.no-permission"), player);
-            return;
-        }
-
-        List<UUID> onlinePlayers = getPluginInstance().getManager().getPlayerUUIDs();
-        onlinePlayers.remove(player.getUniqueId());
-        if (onlinePlayers.size() <= 0) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.no-players-found"), player);
-            return;
-        }
-
-        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.random-teleport-start"), player);
-        getPluginInstance().getTeleportationHandler().getDestinationMap().remove(player.getUniqueId());
-        getPluginInstance().getTeleportationHandler().updateDestinationWithRandomLocation(player, player.getLocation(), player.getWorld());
-
-        Inventory inventory = getPluginInstance().getManager().buildPlayerSelectionMenu(player);
-        MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.PLAYER_SELECTION, inventory, player);
-        getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-        if (!menuOpenEvent.isCancelled()) {
-            player.openInventory(inventory);
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.player-selection-group"), player);
-        }
-    }
-
     private void beginDenyCommand(CommandSender commandSender, String playerName) {
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
+                    .colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!player.hasPermission("hyperdrive.use.deny")) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.no-permission"), player);
+                    getPluginInstance().getLangConfig().getString("no-permission"), player);
             return;
         }
 
@@ -369,7 +319,7 @@ public class MainCommands implements CommandExecutor {
         OfflinePlayer enteredPlayer = getPluginInstance().getServer().getOfflinePlayer(playerName);
         if (!enteredPlayer.isOnline()) {
             getPluginInstance().getManager().sendCustomMessage(
-                    Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-invalid"))
+                    Objects.requireNonNull(getPluginInstance().getLangConfig().getString("player-invalid"))
                             .replace("{player}", playerName),
                     player);
             return;
@@ -379,7 +329,7 @@ public class MainCommands implements CommandExecutor {
         if (!requesterList.contains(enteredPlayer.getUniqueId())) {
             getPluginInstance().getManager()
                     .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.no-request"))
+                            .requireNonNull(getPluginInstance().getLangConfig().getString("no-request"))
                             .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
             return;
         }
@@ -389,7 +339,7 @@ public class MainCommands implements CommandExecutor {
             getPluginInstance().getManager()
                     .sendCustomMessage(Objects
                             .requireNonNull(
-                                    getPluginInstance().getConfig().getString("language-section.request-deny-fail"))
+                                    getPluginInstance().getLangConfig().getString("request-deny-fail"))
                             .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
             return;
         }
@@ -397,21 +347,21 @@ public class MainCommands implements CommandExecutor {
         groupTemp.getAcceptedPlayers().remove(player.getUniqueId());
         getPluginInstance().getManager()
                 .sendCustomMessage(Objects
-                        .requireNonNull(getPluginInstance().getConfig().getString("language-section.request-denied"))
+                        .requireNonNull(getPluginInstance().getLangConfig().getString("request-denied"))
                         .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
     }
 
     private void beginAcceptCommand(CommandSender commandSender, String playerName) {
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
+                    .colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!commandSender.hasPermission("hyperdrive.use.accept")) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.no-permission"), player);
+                    getPluginInstance().getLangConfig().getString("no-permission"), player);
             return;
         }
 
@@ -419,7 +369,7 @@ public class MainCommands implements CommandExecutor {
         OfflinePlayer enteredPlayer = getPluginInstance().getServer().getOfflinePlayer(playerName);
         if (!enteredPlayer.isOnline()) {
             getPluginInstance().getManager().sendCustomMessage(
-                    Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-invalid"))
+                    Objects.requireNonNull(getPluginInstance().getLangConfig().getString("player-invalid"))
                             .replace("{player}", playerName),
                     player);
             return;
@@ -429,7 +379,7 @@ public class MainCommands implements CommandExecutor {
         if (!requesterList.contains(enteredPlayer.getUniqueId())) {
             getPluginInstance().getManager()
                     .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.no-request"))
+                            .requireNonNull(getPluginInstance().getLangConfig().getString("no-request"))
                             .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
             return;
         }
@@ -439,7 +389,7 @@ public class MainCommands implements CommandExecutor {
             getPluginInstance().getManager()
                     .sendCustomMessage(Objects
                             .requireNonNull(
-                                    getPluginInstance().getConfig().getString("language-section.request-accept-fail"))
+                                    getPluginInstance().getLangConfig().getString("request-accept-fail"))
                             .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
             return;
         }
@@ -447,7 +397,7 @@ public class MainCommands implements CommandExecutor {
         groupTemp.getAcceptedPlayers().add(player.getUniqueId());
         getPluginInstance().getManager()
                 .sendCustomMessage(Objects
-                        .requireNonNull(getPluginInstance().getConfig().getString("language-section.request-accepted"))
+                        .requireNonNull(getPluginInstance().getLangConfig().getString("request-accepted"))
                         .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
     }
 
@@ -455,11 +405,11 @@ public class MainCommands implements CommandExecutor {
         if (!commandSender.hasPermission("hyperdrive.use.list")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getConfig().getString("language-section.no-permission"),
+                        getPluginInstance().getLangConfig().getString("no-permission"),
                         (Player) commandSender);
             else
                 commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
+                        .colorText(getPluginInstance().getLangConfig().getString("no-permission")));
             return;
         }
 
@@ -468,7 +418,7 @@ public class MainCommands implements CommandExecutor {
                     .replace("[", "").replace("]", "");
             commandSender.sendMessage(getPluginInstance().getManager()
                     .colorText(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-list"))
+                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-list"))
                             .replace("{list}", warpList).replace("{count}",
                                     String.valueOf(getPluginInstance().getManager().getWarpMap().keySet().size()))));
             return;
@@ -479,7 +429,7 @@ public class MainCommands implements CommandExecutor {
         String warpList = permittedWarpNames.toString().replace("[", "").replace("]", "");
         getPluginInstance().getManager()
                 .sendCustomMessage(
-                        Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-list"))
+                        Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-list"))
                                 .replace("{list}", warpList).replace("{count}",
                                 String.valueOf(getPluginInstance().getManager().getWarpMap().keySet().size())),
                         player);
@@ -488,21 +438,21 @@ public class MainCommands implements CommandExecutor {
     private void runWarpEditCommand(CommandSender commandSender, String warpName) {
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
+                    .colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!player.hasPermission("hyperdrive.use.edit") || !player.hasPermission("hyperdrive.admin.edit")) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.no-permission"), player);
+                    getPluginInstance().getLangConfig().getString("no-permission"), player);
             return;
         }
 
         if (!getPluginInstance().getManager().doesWarpExist(warpName)) {
             getPluginInstance().getManager()
                     .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-invalid"))
+                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
                             .replace("{warp}", warpName), player);
             return;
         }
@@ -512,7 +462,7 @@ public class MainCommands implements CommandExecutor {
                 && (warp.getOwner().toString().equals(player.getUniqueId().toString())
                 || warp.getAssistants().contains(player.getUniqueId()))) {
             getPluginInstance().getManager().sendCustomMessage(
-                    Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-no-access"))
+                    Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-no-access"))
                             .replace("{warp}", warp.getWarpName()),
                     player);
             return;
@@ -532,11 +482,11 @@ public class MainCommands implements CommandExecutor {
         if (!commandSender.hasPermission("hyperdrive.use.delete")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getConfig().getString("language-section.no-permission"),
+                        getPluginInstance().getLangConfig().getString("no-permission"),
                         (Player) commandSender);
             else
                 commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
+                        .colorText(getPluginInstance().getLangConfig().getString("no-permission")));
             return;
         }
 
@@ -545,13 +495,13 @@ public class MainCommands implements CommandExecutor {
                 getPluginInstance().getManager()
                         .sendCustomMessage(Objects
                                 .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.warp-invalid"))
+                                        getPluginInstance().getLangConfig().getString("warp-invalid"))
                                 .replace("{warp}", warpName), (Player) commandSender);
             else
                 commandSender.sendMessage(getPluginInstance().getManager()
                         .colorText(Objects
                                 .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.warp-invalid"))
+                                        getPluginInstance().getLangConfig().getString("warp-invalid"))
                                 .replace("{warp}", warpName)));
             return;
         }
@@ -564,13 +514,13 @@ public class MainCommands implements CommandExecutor {
                 getPluginInstance().getManager()
                         .sendCustomMessage(Objects
                                 .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.warp-invalid"))
+                                        getPluginInstance().getLangConfig().getString("warp-invalid"))
                                 .replace("{warp}", warpName), (Player) commandSender);
             else
                 commandSender.sendMessage(getPluginInstance().getManager()
                         .colorText(Objects
                                 .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.warp-invalid"))
+                                        getPluginInstance().getLangConfig().getString("warp-invalid"))
                                 .replace("{warp}", warpName)));
             return;
         }
@@ -582,7 +532,7 @@ public class MainCommands implements CommandExecutor {
                 getPluginInstance().getManager()
                         .sendCustomMessage(Objects
                                 .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.delete-not-owner"))
+                                        getPluginInstance().getLangConfig().getString("delete-not-owner"))
                                 .replace("{warp}", warpName), (Player) commandSender);
                 return;
             }
@@ -594,43 +544,43 @@ public class MainCommands implements CommandExecutor {
         if (commandSender instanceof Player)
             getPluginInstance().getManager()
                     .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-deleted"))
+                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-deleted"))
                             .replace("{warp}", warpName), (Player) commandSender);
         else
             commandSender.sendMessage(getPluginInstance().getManager()
                     .colorText(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-deleted"))
+                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-deleted"))
                             .replace("{warp}", warpName)));
     }
 
     private void runWarpCreationCommand(CommandSender commandSender, String warpName) {
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
+                    .colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!player.hasPermission("hyperdrive.use.create")) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.no-permission"), player);
+                    getPluginInstance().getLangConfig().getString("no-permission"), player);
             return;
         }
 
         if (getPluginInstance().getManager().isBlockedWorld(player.getWorld())) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.blocked-world"), player);
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("blocked-world"), player);
             return;
         }
 
-        if (!getPluginInstance().getTeleportationHandler().isLocationHookSafe(player, player.getLocation())) {
+        if (getPluginInstance().getTeleportationHandler().locationNotSafe(player, player.getLocation())) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.not-hook-safe"), player);
+                    getPluginInstance().getLangConfig().getString("not-hook-safe"), player);
             return;
         }
 
         if (getPluginInstance().getManager().hasMetWarpLimit(player)) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.warp-limit-met"), player);
+                    getPluginInstance().getLangConfig().getString("warp-limit-met"), player);
             return;
         }
 
@@ -645,7 +595,7 @@ public class MainCommands implements CommandExecutor {
         if (getPluginInstance().getManager().doesWarpExist(warpName)) {
             getPluginInstance().getManager()
                     .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-exists"))
+                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-exists"))
                             .replace("{warp}", warpName), player);
             return;
         }
@@ -654,14 +604,14 @@ public class MainCommands implements CommandExecutor {
         boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
         if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                 || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warpName))) {
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-exists"))
+            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-exists"))
                     .replace("{warp}", warpName), player);
         } else {
             warp.register();
             warp.save(true, getPluginInstance().getConnection() != null);
             getPluginInstance().getManager()
                     .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-created"))
+                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-created"))
                             .replace("{warp}", warpName), player);
         }
     }
@@ -697,14 +647,14 @@ public class MainCommands implements CommandExecutor {
                     if (commandSender instanceof Player)
                         getPluginInstance().getManager().sendCustomMessage(
                                 Objects.requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.ip-ping-fail"))
+                                        getPluginInstance().getLangConfig().getString("ip-ping-fail"))
                                         .replace("{warp}", warp.getWarpName())
                                         .replace("{ip}", warp.getServerIPAddress()),
                                 (Player) commandSender);
                     else
                         commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects
                                 .requireNonNull(
-                                        getPluginInstance().getConfig().getString("language-section.ip-ping-fail"))
+                                        getPluginInstance().getLangConfig().getString("ip-ping-fail"))
                                 .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress())));
                     return true;
                 }
@@ -715,242 +665,15 @@ public class MainCommands implements CommandExecutor {
         return true;
     }
 
-    private void beginRandomTeleportCommand(CommandSender commandSender) {
-        if (!(commandSender instanceof Player)) {
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
-            return;
-        }
-
-        Player player = (Player) commandSender;
-        if (!player.hasPermission("hyperdrive.rtp")) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), player);
-            return;
-        }
-
-        if (!player.hasPermission("hyperdrive.rtpbypass")) {
-            long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
-            if (cooldownDurationLeft > 0) {
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-cooldown"))
-                        .replace("{duration}", String.valueOf(cooldownDurationLeft)), player);
-                return;
-            }
-        }
-
-        if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.already-teleporting"), player);
-            return;
-        }
-
-        for (String worldName : getPluginInstance().getConfig()
-                .getStringList("random-teleport-section.forbidden-worlds")) {
-            if (worldName.equalsIgnoreCase(player.getWorld().getName())) {
-                getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getConfig().getString("language-section.forbidden-world"), player);
-                return;
-            }
-        }
-
-        getPluginInstance().getManager().updateCooldown(player, "rtp");
-        int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration") : 0;
-        getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "rtp", player.getWorld().getName(), duration);
-
-        String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"), subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
-        if (title != null && subTitle != null)
-            getPluginInstance().getManager().sendTitle(player, title.replace("{duration}", String.valueOf(duration)),
-                    subTitle.replace("{duration}", String.valueOf(duration)), 0, 5, 0);
-        getPluginInstance().getManager().sendActionBar(player, Objects.requireNonNull(getPluginInstance().getConfig().getString("random-teleport-section.start-bar-message"))
-                .replace("{duration}", String.valueOf(duration)));
-        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-begin")).replace("{duration}", String.valueOf(duration)), player);
-    }
-
-    private void beginRandomTeleportCommand(CommandSender commandSender, String playerName) {
-        if (!commandSender.hasPermission("hyperdrive.admin.rtp") && !commandSender.hasPermission("hyperdrive.rtp")) {
-            if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.no-permission"), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
-            return;
-        } else if (!commandSender.hasPermission("hyperdrive.admin.rtp") && commandSender.hasPermission("hyperdrive.rtp") && commandSender instanceof Player) {
-            Player player = (Player) commandSender;
-            World world = getPluginInstance().getServer().getWorld(playerName);
-            if (world == null) {
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig()
-                        .getString("language-section.world-invalid")).replace("{world}", playerName)));
-                return;
-            }
-
-            if (!player.hasPermission("hyperdrive.rtpbypass")) {
-                long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
-                if (cooldownDurationLeft > 0) {
-                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-cooldown"))
-                            .replace("{duration}", String.valueOf(cooldownDurationLeft)), player);
-                    return;
-                }
-            }
-
-            if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
-                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.already-teleporting"), player);
-                return;
-            }
-
-            for (String worldName : getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-worlds")) {
-                if (worldName.equalsIgnoreCase(player.getWorld().getName())) {
-                    commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig()
-                            .getString("language-section.random-teleport-admin-forbidden")).replace("{world}", playerName)));
-                    return;
-                }
-            }
-
-            int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0;
-            getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "rtp", player.getWorld().getName(), duration);
-
-            String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"), subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
-            if (title != null && subTitle != null)
-                getPluginInstance().getManager().sendTitle(player, title.replace("{duration}", String.valueOf(duration)),
-                        subTitle.replace("{duration}", String.valueOf(duration)), 0, 5, 0);
-            getPluginInstance().getManager().sendActionBar(player, Objects.requireNonNull(getPluginInstance().getConfig().getString("random-teleport-section.start-bar-message"))
-                    .replace("{duration}", String.valueOf(duration)));
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-begin")).replace("{duration}", String.valueOf(duration)), player);
-
-            getPluginInstance().getManager().updateCooldown(player, "rtp");
-            return;
-        }
-
-        Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                    Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-invalid"))
-                            .replace("{player}", playerName)));
-            return;
-        }
-
-        if (!enteredPlayer.hasPermission("hyperdrive.rtpbypass")) {
-            long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(enteredPlayer, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
-            if (cooldownDurationLeft > 0) {
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-cooldown"))
-                        .replace("{duration}", String.valueOf(cooldownDurationLeft)), enteredPlayer);
-                return;
-            }
-        }
-
-        if (getPluginInstance().getTeleportationHandler().isTeleporting(enteredPlayer)) {
-            if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-already-teleporting")).replace("{player}", enteredPlayer.getName()), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-already-teleporting")).replace("{player}", enteredPlayer.getName())));
-            return;
-        }
-
-        for (String worldName : getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-worlds")) {
-            if (worldName.equalsIgnoreCase(enteredPlayer.getWorld().getName())) {
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(Objects
-                                .requireNonNull(getPluginInstance().getConfig()
-                                        .getString("language-section.random-teleport-admin-forbidden"))
-                                .replace("{player}", enteredPlayer.getName()).replace("{world}",
-                                        Objects.requireNonNull(enteredPlayer.getLocation().getWorld()).getName())));
-                return;
-            }
-        }
-
-        int duration = !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration") : 0;
-        getPluginInstance().getTeleportationHandler().updateTeleportTemp(enteredPlayer, "rtp", enteredPlayer.getWorld().getName(), duration);
-
-        String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"), subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
-        if (title != null && subTitle != null)
-            getPluginInstance().getManager().sendTitle(enteredPlayer, title.replace("{duration}", String.valueOf(duration)),
-                    subTitle.replace("{duration}", String.valueOf(duration)), 0, 5, 0);
-        getPluginInstance().getManager().sendActionBar(enteredPlayer, Objects.requireNonNull(getPluginInstance().getConfig().getString("random-teleport-section.start-bar-message"))
-                .replace("{duration}", String.valueOf(duration)));
-        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-begin")).replace("{duration}", String.valueOf(duration)), enteredPlayer);
-
-        if (!commandSender.getName().equalsIgnoreCase(enteredPlayer.getName()))
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects
-                    .requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-admin"))
-                    .replace("{player}", enteredPlayer.getName())
-                    .replace("{world}", Objects.requireNonNull(enteredPlayer.getLocation().getWorld()).getName())));
-    }
-
-    private void beginRandomTeleportCommand(CommandSender commandSender, String playerName, String worldName) {
-        if (!commandSender.hasPermission("hyperdrive.admin.rtp")) {
-            if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getConfig().getString("language-section.no-permission"),
-                        (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
-            return;
-        }
-
-        Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                    Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-invalid"))
-                            .replace("{player}", playerName)));
-            return;
-        }
-
-        if (!enteredPlayer.hasPermission("hyperdrive.rtpbypass")) {
-            long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(enteredPlayer, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
-            if (cooldownDurationLeft > 0) {
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-cooldown"))
-                        .replace("{duration}", String.valueOf(cooldownDurationLeft)), enteredPlayer);
-                return;
-            }
-        }
-
-        if (getPluginInstance().getTeleportationHandler().isTeleporting(enteredPlayer)) {
-            if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-already-teleporting")).replace("{player}", enteredPlayer.getName()), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.player-already-teleporting")).replace("{player}", enteredPlayer.getName())));
-            return;
-        }
-
-        World world = getPluginInstance().getServer().getWorld(worldName);
-        if (world == null) {
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.world-invalid"))
-                    .replace("{world}", worldName)));
-            return;
-        }
-
-        for (String wn : getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-worlds")) {
-            if (wn.equalsIgnoreCase(world.getName())) {
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(Objects
-                                .requireNonNull(getPluginInstance().getConfig()
-                                        .getString("language-section.random-teleport-admin-forbidden"))
-                                .replace("{player}", enteredPlayer.getName()).replace("{world}", world.getName())));
-                return;
-            }
-        }
-
-        int duration = !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration") : 0;
-        getPluginInstance().getTeleportationHandler().updateTeleportTemp(enteredPlayer, "rtp", world.getName(), duration);
-
-        String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"), subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
-        if (title != null && subTitle != null)
-            getPluginInstance().getManager().sendTitle(enteredPlayer, title.replace("{duration}", String.valueOf(duration)),
-                    subTitle.replace("{duration}", String.valueOf(duration)), 0, 5, 0);
-        getPluginInstance().getManager().sendActionBar(enteredPlayer, Objects.requireNonNull(getPluginInstance().getConfig().getString("random-teleport-section.start-bar-message"))
-                .replace("{duration}", String.valueOf(duration)));
-        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-begin")).replace("{duration}", String.valueOf(duration)), enteredPlayer);
-
-        commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.random-teleport-admin"))
-                .replace("{player}", enteredPlayer.getName()).replace("{world}", world.getName())));
-    }
-
     private void runInfoCommand(CommandSender commandSender) {
         if (!commandSender.hasPermission("hyperdrive.info")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getConfig().getString("language-section.no-permission"),
+                        getPluginInstance().getLangConfig().getString("no-permission"),
                         (Player) commandSender);
             else
                 commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
+                        .colorText(getPluginInstance().getLangConfig().getString("no-permission")));
             return;
         }
 
@@ -968,16 +691,16 @@ public class MainCommands implements CommandExecutor {
         if (!commandSender.hasPermission("hyperdrive.reload")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getConfig().getString("language-section.no-permission"),
+                        getPluginInstance().getLangConfig().getString("no-permission"),
                         (Player) commandSender);
             else
                 commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getConfig().getString("language-section.no-permission")));
+                        .colorText(getPluginInstance().getLangConfig().getString("no-permission")));
             return;
         }
 
         getPluginInstance().stopTasks();
-        getPluginInstance().reloadConfig();
+        getPluginInstance().reloadConfigs();
         getPluginInstance().getManager().setSimpleDateFormat(new SimpleDateFormat(
                 Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
@@ -989,16 +712,16 @@ public class MainCommands implements CommandExecutor {
 
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getConfig().getString("language-section.reload")));
+                    .colorText(getPluginInstance().getLangConfig().getString("reload")));
         } else
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.reload"), (Player) commandSender);
+                    getPluginInstance().getLangConfig().getString("reload"), (Player) commandSender);
     }
 
     private void beginWarpCommand(CommandSender commandSender, String warpName) {
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
+                    .colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
             return;
         }
 
@@ -1006,7 +729,7 @@ public class MainCommands implements CommandExecutor {
         if (!getPluginInstance().getManager().doesWarpExist(warpName)) {
             getPluginInstance().getManager()
                     .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-invalid"))
+                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
                             .replace("{warp}", warpName), player);
             return;
         }
@@ -1019,7 +742,7 @@ public class MainCommands implements CommandExecutor {
                 && !(player.hasPermission("hyperdrive.warps." + warp.getWarpName())
                 || player.hasPermission("hyperdrive.warps.*"))) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.no-permission"), player);
+                    getPluginInstance().getLangConfig().getString("no-permission"), player);
             return;
         }
 
@@ -1036,7 +759,7 @@ public class MainCommands implements CommandExecutor {
             if (!warpIP.equalsIgnoreCase(serverIP)) {
                 String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
                 if (server == null) {
-                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.ip-ping-fail"))
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("ip-ping-fail"))
                             .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress()), (Player) commandSender);
                     return;
                 }
@@ -1046,13 +769,13 @@ public class MainCommands implements CommandExecutor {
         long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp",
                 getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration"));
         if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.warp-cooldown"))
+            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-cooldown"))
                     .replace("{duration}", String.valueOf(currentCooldown)), player);
             return;
         }
 
         if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig().getString("language-section.already-teleporting"), player);
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("already-teleporting"), player);
             return;
         }
 
@@ -1064,11 +787,11 @@ public class MainCommands implements CommandExecutor {
             EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player,
                     warp.getUsagePrice());
             if (!economyResponse.transactionSuccess()) {
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.insufficient-funds"))
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("insufficient-funds"))
                         .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
                 return;
             } else
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getConfig().getString("language-section.transaction-success"))
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("transaction-success"))
                         .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
         }
 
@@ -1099,7 +822,7 @@ public class MainCommands implements CommandExecutor {
                 .replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
 
         getPluginInstance().getManager().sendCustomMessage(Objects
-                .requireNonNull(getPluginInstance().getConfig().getString("language-section.teleportation-start"))
+                .requireNonNull(getPluginInstance().getLangConfig().getString("teleportation-start"))
                 .replace("{warp}", warp.getWarpName()).replace("{duration}", String.valueOf(duration)), player);
 
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(), duration);
@@ -1108,20 +831,19 @@ public class MainCommands implements CommandExecutor {
     private void openListMenu(CommandSender commandSender) {
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getConfig().getString("language-section.must-be-player")));
+                    .colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!player.hasPermission("hyperdrive.use")) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.no-permission"), player);
+                    getPluginInstance().getLangConfig().getString("no-permission"), player);
             return;
         }
 
         Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
-        MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory,
-                player);
+        MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player);
         getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
         if (!menuOpenEvent.isCancelled())
             player.openInventory(inventory);
@@ -1232,7 +954,7 @@ public class MainCommands implements CommandExecutor {
         if (!(commandSender instanceof Player)) {
             if (!getAdminHelpPages().containsKey(page)) {
                 commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getConfig().getString("language-section.invalid-help-page")));
+                        .colorText(getPluginInstance().getLangConfig().getString("invalid-help-page")));
                 return;
             }
 
@@ -1247,7 +969,7 @@ public class MainCommands implements CommandExecutor {
         Player player = (Player) commandSender;
         if (!getAdminHelpPages().containsKey(page)) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.invalid-help-page"), player);
+                    getPluginInstance().getLangConfig().getString("invalid-help-page"), player);
             return;
         }
 
@@ -1304,7 +1026,7 @@ public class MainCommands implements CommandExecutor {
         if (!(commandSender instanceof Player)) {
             if (!getHelpPages().containsKey(page)) {
                 commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getConfig().getString("language-section.invalid-help-page")));
+                        .colorText(getPluginInstance().getLangConfig().getString("invalid-help-page")));
                 return;
             }
 
@@ -1319,7 +1041,7 @@ public class MainCommands implements CommandExecutor {
         Player player = (Player) commandSender;
         if (!getHelpPages().containsKey(page)) {
             getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.invalid-help-page"), player);
+                    getPluginInstance().getLangConfig().getString("invalid-help-page"), player);
             return;
         }
 

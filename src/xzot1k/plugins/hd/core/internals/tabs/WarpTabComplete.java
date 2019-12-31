@@ -27,8 +27,7 @@ public class WarpTabComplete implements TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String label, String[] args) {
         boolean hasAllAccess = (commandSender.isOp() || commandSender.hasPermission("hyperdrive.admin.tab"));
-        List<String> warpNames = hasAllAccess
-                ? new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()) : new ArrayList<>();
+        List<String> warpNames = hasAllAccess ? new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()) : new ArrayList<>();
 
         if (!hasAllAccess && commandSender instanceof Player) {
             Player player = (Player) commandSender;

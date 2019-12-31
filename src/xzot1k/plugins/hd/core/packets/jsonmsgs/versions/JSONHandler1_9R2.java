@@ -13,8 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import xzot1k.plugins.hd.core.packets.jsonmsgs.JSONHandler;
 
-public class JSONHandler1_9R2 implements JSONHandler
-{
+public class JSONHandler1_9R2 implements JSONHandler {
     @Override
     public void sendJSONMessage(Player player, String JSONString) {
         IChatBaseComponent comp = IChatBaseComponent.ChatSerializer.a(JSONString);

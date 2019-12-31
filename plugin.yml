@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.3.6-B
+version: 5.3.7-SNAPSHOT
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -14,6 +14,14 @@ commands:
     aliases: [warp]
 
   # REMOVE THE COMMANDS BELOW TO DISABLE STANDALONE TELEPORTATION COMMANDS
+  randomteleport:
+    default: op
+    description: The tradition random teleportation command.
+    aliases: [rtp, randomtp, rteleport]
+  grouprandomteleport:
+    default: op
+    description: Begins the group random teleportation process.
+    aliases: [grtp, grouprtp, grandomtp, grteleport, grouprandomtp, grouprteleport]
   spawn:
     default: op
     description: The traditional spawn command.

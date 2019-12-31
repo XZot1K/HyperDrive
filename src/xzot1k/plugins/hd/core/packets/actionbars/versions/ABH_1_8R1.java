@@ -12,8 +12,7 @@ import org.bukkit.craftbukkit.v1_8_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import xzot1k.plugins.hd.core.packets.actionbars.ActionBarHandler;
 
-public class ABH_1_8R1 implements ActionBarHandler
-{
+public class ABH_1_8R1 implements ActionBarHandler {
     @Override
 
     public void sendActionBar(Player player, String message) {

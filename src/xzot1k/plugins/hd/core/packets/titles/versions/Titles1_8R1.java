@@ -12,8 +12,7 @@ import org.bukkit.entity.Player;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.core.packets.titles.TitleHandler;
 
-public class Titles1_8R1 implements TitleHandler
-{
+public class Titles1_8R1 implements TitleHandler {
     private HyperDrive pluginInstance;
 
     public Titles1_8R1(HyperDrive pluginInstance) {

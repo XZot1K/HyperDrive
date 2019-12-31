@@ -15,8 +15,7 @@ import xzot1k.plugins.hd.core.packets.particles.ParticleHandler;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Particle1_12R1 implements ParticleHandler
-{
+public class Particle1_12R1 implements ParticleHandler {
     @Override
     public void displayParticle(String particleName, Location location, int offsetX, int offsetY, int offsetZ, int red, int green, int blue, int brightness, int speed, int amount) {
         PacketPlayOutWorldParticles packet = new PacketPlayOutWorldParticles(EnumParticle.valueOf(particleName), true,

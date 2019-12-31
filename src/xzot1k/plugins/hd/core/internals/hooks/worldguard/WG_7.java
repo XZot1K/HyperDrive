@@ -15,8 +15,7 @@ import xzot1k.plugins.hd.HyperDrive;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WG_7
-{
+public class WG_7 {
 
     public static boolean passedWorldGuardHook(Location location) {
         RegionQuery query = WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery();

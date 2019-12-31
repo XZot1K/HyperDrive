@@ -16,8 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-public class Animation
-{
+public class Animation {
 
     private HyperDrive pluginInstance;
     private HashMap<UUID, BukkitTask> activeAnimationMap;

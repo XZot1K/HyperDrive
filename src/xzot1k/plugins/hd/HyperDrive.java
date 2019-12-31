@@ -32,6 +32,7 @@ import xzot1k.plugins.hd.core.internals.tabs.WarpTabComplete;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -51,14 +52,29 @@ public class HyperDrive extends JavaPlugin {
     private String serverVersion;
     private int teleportationHandlerTaskId, autoSaveTaskId, crossServerTaskId;
 
+    private FileConfiguration langConfig, menusConfig;
+    private File langFile, menusFile;
+
     @Override
     public void onEnable() {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
         setServerVersion(getPluginInstance().getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
-        saveDefaultConfig();
-        updateConfig();
 
+        // duplicates old configuration.
+        File file = new File(getDataFolder(), "/config.yml");
+        if (file.exists()) {
+            FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+            ConfigurationSection cs = yaml.getConfigurationSection("");
+            if (cs != null && cs.contains("language-section"))
+                file.renameTo(new File(getDataFolder(), "/old-config.yml"));
+        }
+
+        // creates new configurations or loads them.
+        saveDefaultConfigs();
+        updateConfigs();
+
+        // checks if vault is installed.
         if (getConfig().getBoolean("general-section.use-vault") && !setupVaultEconomy()) {
             log(Level.INFO, "The plugin was disabled due to Vault or an economy plugin for it being invalid. "
                     + "(Took " + (System.currentTimeMillis() - startTime) + "ms)");
@@ -100,10 +116,12 @@ public class HyperDrive extends JavaPlugin {
 
         getServer().getMessenger().registerOutgoingPluginChannel(getPluginInstance(), "BungeeCord");
         setBungeeListener(new BungeeListener(getPluginInstance()));
-        getServer().getMessenger().registerIncomingPluginChannel(getPluginInstance(), "BungeeCord",
-                getBungeeListener());
+        getServer().getMessenger().registerIncomingPluginChannel(getPluginInstance(), "BungeeCord", getBungeeListener());
+
+        // sets up the manager class including all API methods.
         setManager(new Manager(this));
 
+        // sets up all commands and their counterparts.
         setMainCommands(new MainCommands(this));
         String[] commandNames = {"warps", "hyperdrive"};
         for (String cmd : commandNames) {
@@ -117,28 +135,31 @@ public class HyperDrive extends JavaPlugin {
         setTeleportationCommands(new TeleportationCommands(this));
         String[] teleportCommandNames = {"teleport", "teleporthere", "teleportoverride", "teleportoverridehere",
                 "teleportposition", "teleportask", "teleportaccept", "teleportdeny", "teleporttoggle", "back",
-                "teleportaskhere", "crossserver", "spawn"};
+                "teleportaskhere", "crossserver", "spawn", "randomteleport", "grouprandomteleport"};
         for (String cmd : teleportCommandNames) {
             PluginCommand command = getCommand(cmd);
             if (command != null)
                 command.setExecutor(getTeleportationCommands());
         }
 
+        // registers events
         getServer().getPluginManager().registerEvents(new Listeners(getPluginInstance()), getPluginInstance());
+
+        // loads warps and runs conversion process.
         loadWarps(getConnection() != null);
         startWarpConverter();
 
+        // starts the runnables/tasks.
         startTasks();
+
+        // enables metrics and does logging information including update checker.
         new Metrics(getPluginInstance());
         log(Level.INFO,
                 "The plugin was enabled successfully. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
 
         if (isOutdated())
-            log(Level.INFO, "Your version of HyperDrive (" + getDescription().getVersion() + ") doesn't match the "
-                    + "version found on the main page (" + getLatestVersion() + "). There may be a update for you!");
-        else
-            log(Level.INFO,
-                    "You current HyperDrive version, " + getDescription().getVersion() + ", seems to be up to date!");
+            log(Level.INFO, "HEY YOU! There seems to be a new version out (" + getLatestVersion() + ")!");
+        else log(Level.INFO, "Everything seems to be up to date!");
     }
 
     @Override
@@ -182,89 +203,98 @@ public class HyperDrive extends JavaPlugin {
     }
 
     // configuration methods
-    private void updateConfig() {
+    private void updateConfigs() {
         long startTime = System.currentTimeMillis();
-        int updateCount = 0;
-        saveResource("latest-config.yml", true);
-        File file = new File(getDataFolder(), "/latest-config.yml");
-        FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        int totalUpdates = 0;
 
         boolean isOffhandVersion = (getServerVersion().startsWith("v1_13") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")
                 || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"));
-        ConfigurationSection currentConfigurationSection = getConfig().getConfigurationSection(""),
-                latestConfigurationSection = yaml.getConfigurationSection("");
-        if (currentConfigurationSection != null && latestConfigurationSection != null) {
-            Set<String> newKeys = latestConfigurationSection.getKeys(true),
-                    currentKeys = currentConfigurationSection.getKeys(true);
-            for (String updatedKey : newKeys) {
-                if (updatedKey.contains(".items") || updatedKey.startsWith("custom-menus-section")) continue;
-                if (!currentKeys.contains(updatedKey)) {
-                    getConfig().set(updatedKey, yaml.get(updatedKey));
-                    updateCount++;
+        String[] configNames = {"config", "lang", "menus"};
+        for (int i = -1; ++i < configNames.length; ) {
+            String name = configNames[i];
+
+            InputStream inputStream = getClass().getResourceAsStream("/" + name + ".yml");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            FileConfiguration yaml = YamlConfiguration.loadConfiguration(reader);
+            int updateCount = updateKeys(yaml, name.equalsIgnoreCase("config") ? getConfig() : name.equalsIgnoreCase("lang") ? getLangConfig() : getMenusConfig());
+
+            if (name.equalsIgnoreCase("config")) {
+                String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
+                if (isOffhandVersion) {
+                    if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
+
+                        if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"))
+                            getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMEN_TELEPORT");
+                        else getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
+                        updateCount++;
+                    }
+
+                    String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
+                    if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("CLICK")) {
+                        getConfig().set("warp-icon-section.click-sound", "UI_BUTTON_CLICK");
+                        updateCount++;
+                    }
+                } else {
+                    if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
+                        getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
+                        updateCount++;
+                    }
+
+                    String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
+                    if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("UI_BUTTON_CLICK")) {
+                        getConfig().set("warp-icon-section.click-sound", "CLICK");
+                        updateCount++;
+                    }
                 }
             }
 
-            for (String currentKey : currentKeys) {
-                if (currentKey.contains(".items") || currentKey.startsWith("custom-menus-section")) continue;
-                if (!newKeys.contains(currentKey)) {
-                    getConfig().set(currentKey, null);
-                    updateCount++;
+            try {
+                inputStream.close();
+                reader.close();
+            } catch (IOException e) {
+                log(Level.WARNING, e.getMessage());
+            }
+
+            updateCount = fixItems(yaml, updateCount, isOffhandVersion);
+
+            if (updateCount > 0)
+                switch (name) {
+                    case "config":
+                        saveConfig();
+                        break;
+                    case "menus":
+                        saveMenusConfig();
+                        break;
+                    case "lang":
+                        saveLangConfig();
+                        break;
+                    default:
+                        break;
                 }
+
+            if (updateCount > 0) {
+                totalUpdates += updateCount;
+                log(Level.INFO, updateCount + " things were fixed, updated, or removed in the '" + name + ".yml' configuration file. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
             }
         }
 
-        // Fix Sounds
-        String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
-        if (isOffhandVersion) {
-            if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
-
-                if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"))
-                    getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMEN_TELEPORT");
-                else getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
-                updateCount++;
-            }
-
-            String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
-            if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("CLICK")) {
-                getConfig().set("warp-icon-section.click-sound", "UI_BUTTON_CLICK");
-                updateCount++;
-            }
-        } else {
-            if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
-                getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
-                updateCount++;
-            }
-
-            String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
-            if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("UI_BUTTON_CLICK")) {
-                getConfig().set("warp-icon-section.click-sound", "CLICK");
-                updateCount++;
-            }
-        }
-
-        updateCount = fixItems(updateCount, isOffhandVersion);
-        if (updateCount > 0) {
-            saveConfig();
-            reloadConfig();
-            log(Level.INFO, updateCount + " thing(s) were/was fixed, updated, or removed in the configuration " + "using the " + file.getName() + " file.");
-            log(Level.WARNING, "Please go check out the configuration and customize these newly generated options to your liking. Messages and " +
-                    "similar values may not appear the same as they did in the default configuration (P.S. Configuration comments have more than likely " +
-                    "been removed to ensure proper syntax).");
+        if (totalUpdates > 0) {
+            reloadConfigs();
+            log(Level.INFO, "A total of " + totalUpdates + " thing(s) were fixed, updated, or removed from all the configuration together. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+            log(Level.WARNING, "Please go checkout the configuration files as they are no longer the same as their default counterparts.");
         } else
-            log(Level.INFO, "Everything inside the configuration seems to be up to date.");
-        file.delete();
-        log(Level.INFO, "The configuration update checker process took " + (System.currentTimeMillis() - startTime) + "ms to complete.");
+            log(Level.INFO, "Everything inside the configuration seems to be up to date. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
-    private int fixItems(int updateCount, boolean isOffhandVersion) {
-        ConfigurationSection configurationSection = getConfig().getConfigurationSection("");
+    private int fixItems(FileConfiguration yaml, int updateCount, boolean isOffhandVersion) {
+        ConfigurationSection configurationSection = yaml.getConfigurationSection("");
         if (configurationSection == null) return updateCount;
 
         for (String key : configurationSection.getKeys(true)) {
             if (key.contains(".items.") && key.endsWith(".material")) {
-                String keyValue = getConfig().getString(key);
+                String keyValue = yaml.getString(key);
                 if (keyValue == null || keyValue.equalsIgnoreCase("")) {
-                    getConfig().set(key, "ARROW");
+                    yaml.set(key, "ARROW");
                     updateCount++;
                 }
 
@@ -272,76 +302,76 @@ public class HyperDrive extends JavaPlugin {
                     switch (keyValue.replace(" ", "_").replace("-", "_")) {
                         case "INK_SAC":
                             if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
-                                getConfig().set(key, "RED_DYE");
+                                yaml.set(key, "RED_DYE");
                                 updateCount++;
                             } else if (getServerVersion().startsWith("v1_13")) {
-                                getConfig().set(key, "ROSE_RED");
+                                yaml.set(key, "ROSE_RED");
                                 updateCount++;
                             } else if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
                                     || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
-                                getConfig().set(key, "INK_SACK");
+                                yaml.set(key, "INK_SACK");
                                 updateCount++;
                             }
                             break;
                         case "INK_SACK":
                             if (!getServerVersion().startsWith("v1_12") && !getServerVersion().startsWith("v1_9") && !getServerVersion().startsWith("v1_11") && !getServerVersion().startsWith("v1_10")
                                     && !getServerVersion().startsWith("v1_13") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15")) {
-                                getConfig().set(key, "INK_SAC");
+                                yaml.set(key, "INK_SAC");
                                 updateCount++;
                             }
                             break;
                         case "ROSE_RED":
                             if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
-                                getConfig().set(key, "RED_DYE");
+                                yaml.set(key, "RED_DYE");
                                 updateCount++;
                             } else if (!getServerVersion().startsWith("v1_13")) {
-                                getConfig().set(key, "INK_SACK");
+                                yaml.set(key, "INK_SACK");
                                 updateCount++;
                             }
                             break;
                         case "RED_DYE":
                             if (getServerVersion().startsWith("v1_13")) {
-                                getConfig().set(key, "ROSE_RED");
+                                yaml.set(key, "ROSE_RED");
                                 updateCount++;
                             } else if (!getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15")) {
-                                getConfig().set(key, "INK_SACK");
+                                yaml.set(key, "INK_SACK");
                                 updateCount++;
                             }
 
                             break;
                         case "CLOCK":
                             if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
-                                getConfig().set(key, "WATCH");
+                                yaml.set(key, "WATCH");
                                 updateCount++;
                             }
                             break;
                         case "WATCH":
                             if (getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")) {
-                                getConfig().set(key, "CLOCK");
+                                yaml.set(key, "CLOCK");
                                 updateCount++;
                             }
                             break;
                         case "BLACK_STAINED_GLASS_PANE":
                             if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
-                                getConfig().set(key, "STAINED_GLASS_PANE");
+                                yaml.set(key, "STAINED_GLASS_PANE");
                                 updateCount++;
                             }
                             break;
                         case "STAINED_GLASS_PANE":
                             if (getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")) {
-                                getConfig().set(key, "BLACK_STAINED_GLASS_PANE");
+                                yaml.set(key, "BLACK_STAINED_GLASS_PANE");
                                 updateCount++;
                             }
                             break;
                         case "OAK_SIGN":
                             if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14")) {
-                                getConfig().set(key, "SIGN");
+                                yaml.set(key, "SIGN");
                                 updateCount++;
                             }
                             break;
                         case "SIGN":
                             if (getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14")) {
-                                getConfig().set(key, "OAK_SIGN");
+                                yaml.set(key, "OAK_SIGN");
                                 updateCount++;
                             }
                             break;
@@ -349,13 +379,13 @@ public class HyperDrive extends JavaPlugin {
                         case "LIME_WOOL":
                         case "RED_WOOL":
                             if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
-                                getConfig().set(key, "WOOL");
+                                yaml.set(key, "WOOL");
                                 updateCount++;
                             }
                             break;
                         case "GRASS_BLOCK":
                             if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
-                                getConfig().set(key, "GRASS");
+                                yaml.set(key, "GRASS");
                                 updateCount++;
                             }
                             break;
@@ -364,7 +394,34 @@ public class HyperDrive extends JavaPlugin {
                 String keyValue = getConfig().getString(key);
                 if ((keyValue == null || keyValue.equalsIgnoreCase("")) || (isOffhandVersion && keyValue.equalsIgnoreCase("CLICK"))
                         || (!isOffhandVersion && keyValue.equalsIgnoreCase("UI_BUTTON_CLICK"))) {
-                    getConfig().set(key, isOffhandVersion ? "UI_BUTTON_CLICK" : "CLICK");
+                    yaml.set(key, isOffhandVersion ? "UI_BUTTON_CLICK" : "CLICK");
+                    updateCount++;
+                }
+            }
+        }
+
+        return updateCount;
+    }
+
+    private int updateKeys(FileConfiguration jarYaml, FileConfiguration currentYaml) {
+        int updateCount = 0;
+        ConfigurationSection currentConfigurationSection = currentYaml.getConfigurationSection(""),
+                latestConfigurationSection = jarYaml.getConfigurationSection("");
+        if (currentConfigurationSection != null && latestConfigurationSection != null) {
+            Set<String> newKeys = latestConfigurationSection.getKeys(true),
+                    currentKeys = currentConfigurationSection.getKeys(true);
+            for (String updatedKey : newKeys) {
+                if (updatedKey.contains(".items") || updatedKey.startsWith("custom-menus-section")) continue;
+                if (!currentKeys.contains(updatedKey)) {
+                    currentYaml.set(updatedKey, jarYaml.get(updatedKey));
+                    updateCount++;
+                }
+            }
+
+            for (String currentKey : currentKeys) {
+                if (currentKey.contains(".items") || currentKey.startsWith("custom-menus-section")) continue;
+                if (!newKeys.contains(currentKey)) {
+                    currentYaml.set(currentKey, null);
                     updateCount++;
                 }
             }
@@ -921,7 +978,7 @@ public class HyperDrive extends JavaPlugin {
                         Location location = locationMap.get(playerUniqueId);
                         locationMap.remove(playerUniqueId);
                         getTeleportationHandler().teleportPlayer(offlinePlayer.getPlayer(), location);
-                        getManager().sendCustomMessage(Objects.requireNonNull(getConfig().getString("language-section.cross-teleported"))
+                        getManager().sendCustomMessage(Objects.requireNonNull(getLangConfig().getString("cross-teleported"))
                                 .replace("{world}", Objects.requireNonNull(location.getWorld()).getName())
                                 .replace("{x}", String.valueOf(location.getBlockX()))
                                 .replace("{y}", String.valueOf(location.getBlockY()))
@@ -1159,6 +1216,99 @@ public class HyperDrive extends JavaPlugin {
             if (!columnName.equalsIgnoreCase(columnArgs[0]))
                 statement.executeUpdate("alter table warps drop column " + columnArgs[0] + "");
             else statement.executeUpdate("alter table warps add column " + columnArgs[0] + " " + columnArgs[1]);
+        }
+    }
+
+    // custom configurations
+
+    /**
+     * Reloads all configs associated with DisplayShops.
+     */
+    public void reloadConfigs() {
+        reloadConfig();
+
+        if (langFile == null) langFile = new File(getDataFolder(), "lang.yml");
+        langConfig = YamlConfiguration.loadConfiguration(langFile);
+
+        Reader defConfigStream;
+        InputStream path = this.getResource("lang.yml");
+        if (path != null) {
+            defConfigStream = new InputStreamReader(path, StandardCharsets.UTF_8);
+            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
+            langConfig.setDefaults(defConfig);
+
+            try {
+                defConfigStream.close();
+            } catch (IOException e) {
+                log(Level.WARNING, e.getMessage());
+            }
+        }
+
+        if (menusFile == null) menusFile = new File(getDataFolder(), "menus.yml");
+        menusConfig = YamlConfiguration.loadConfiguration(menusFile);
+
+        InputStream path2 = this.getResource("menus.yml");
+        if (path2 != null) {
+            defConfigStream = new InputStreamReader(path2, StandardCharsets.UTF_8);
+            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
+            langConfig.setDefaults(defConfig);
+
+            try {
+                defConfigStream.close();
+            } catch (IOException e) {
+                log(Level.WARNING, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Gets the language file configuration.
+     *
+     * @return The FileConfiguration found.
+     */
+    public FileConfiguration getLangConfig() {
+        if (langConfig == null) reloadConfigs();
+        return langConfig;
+    }
+
+    /**
+     * Gets the menus file configuration.
+     *
+     * @return The FileConfiguration found.
+     */
+    public FileConfiguration getMenusConfig() {
+        if (menusConfig == null) reloadConfigs();
+        return menusConfig;
+    }
+
+    /**
+     * Saves the default configuration files (Doesn't replace existing).
+     */
+    public void saveDefaultConfigs() {
+        saveDefaultConfig();
+        if (langFile == null) langFile = new File(getDataFolder(), "lang.yml");
+        if (!langFile.exists()) saveResource("lang.yml", false);
+        if (menusFile == null) menusFile = new File(getDataFolder(), "menus.yml");
+        if (!menusFile.exists()) saveResource("menus.yml", false);
+
+        reloadConfigs();
+    }
+
+    private void saveLangConfig() {
+        if (langConfig == null || langFile == null) return;
+        try {
+            getLangConfig().save(langFile);
+        } catch (IOException e) {
+            log(Level.WARNING, e.getMessage());
+        }
+    }
+
+    private void saveMenusConfig() {
+        if (menusConfig == null || menusFile == null) return;
+        try {
+            getMenusConfig().save(menusFile);
+        } catch (IOException e) {
+            log(Level.WARNING, e.getMessage());
         }
     }
 

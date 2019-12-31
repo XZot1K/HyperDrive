@@ -61,7 +61,7 @@ public class Paging {
     }
 
     public HashMap<Integer, List<UUID>> getPlayerSelectionPages(OfflinePlayer player) {
-        int slotCount = getPluginInstance().getConfig().getIntegerList("ps-menu-section.player-slots").size();
+        int slotCount = getPluginInstance().getMenusConfig().getIntegerList("ps-menu-section.player-slots").size();
         List<UUID> playerList = getPluginInstance().getManager().getPlayerUUIDs();
         playerList.remove(player.getUniqueId());
         playerSelectionSort(playerList);
@@ -204,11 +204,11 @@ public class Paging {
     }
 
     public HashMap<Integer, List<Warp>> getWarpPages(OfflinePlayer player, String menuPath, String status) {
-        String ownedFormat = getPluginInstance().getConfig().getString("list-menu-section.own-status-format"),
-                publicFormat = getPluginInstance().getConfig().getString("list-menu-section.public-status-format"),
-                privateFormat = getPluginInstance().getConfig().getString("list-menu-section.private-status-format"),
-                adminFormat = getPluginInstance().getConfig().getString("list-menu-section.admin-status-format"),
-                featuredFormat = getPluginInstance().getConfig().getString("list-menu-section.featured-status-format");
+        String ownedFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format"),
+                publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
+                privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
+                adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format"),
+                featuredFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format");
 
         switch (status.toLowerCase()) {
             case "public":
@@ -227,17 +227,14 @@ public class Paging {
                 break;
         }
 
-        int slotCount = getPluginInstance().getConfig().getIntegerList(menuPath + ".warp-slots").size();
-        List<Warp> warpList = !getPluginInstance().getManager().getWarpMap().isEmpty()
-                ? new ArrayList<>(getPluginInstance().getManager().getWarpMap().values())
-                : new ArrayList<>();
+        int slotCount = getPluginInstance().getMenusConfig().getIntegerList(menuPath + ".warp-slots").size();
+        List<Warp> warpList = !getPluginInstance().getManager().getWarpMap().isEmpty() ? new ArrayList<>(getPluginInstance().getManager().getWarpMap().values()) : new ArrayList<>();
 
         if (status != null)
             warpSort(warpList, status.equals(featuredFormat));
 
         HashMap<Integer, List<Warp>> finalMap = new HashMap<>();
-        int currentPage = 1,
-                trafficThreshold = getPluginInstance().getConfig().getInt("list-menu-section.traffic-threshold");
+        int currentPage = 1, trafficThreshold = getPluginInstance().getMenusConfig().getInt("list-menu-section.traffic-threshold");
         List<Warp> currentWarpList = new ArrayList<>();
         for (int i = -1; ++i < warpList.size(); ) {
             Warp warp = warpList.get(i);

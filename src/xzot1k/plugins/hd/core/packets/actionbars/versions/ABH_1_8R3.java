@@ -11,8 +11,7 @@ import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import xzot1k.plugins.hd.core.packets.actionbars.ActionBarHandler;
 
-public class ABH_1_8R3 implements ActionBarHandler
-{
+public class ABH_1_8R3 implements ActionBarHandler {
     @Override
     public void sendActionBar(Player player, String message) {
         IChatBaseComponent iChatBaseComponent = IChatBaseComponent.ChatSerializer.a("{\"text\": \""

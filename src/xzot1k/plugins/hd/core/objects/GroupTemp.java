@@ -91,7 +91,7 @@ public class GroupTemp {
                         Location destinationLocation = getDestination().getLocation().asBukkitLocation();
                         if (destinationLocation != null) {
                             int teleportCount = 0;
-                            for (int i = -1; ++i < getAcceptedPlayers().size();) {
+                            for (int i = -1; ++i < getAcceptedPlayers().size(); ) {
                                 UUID playerUniqueId = getAcceptedPlayers().get(i);
                                 if (playerUniqueId == null)
                                     continue;

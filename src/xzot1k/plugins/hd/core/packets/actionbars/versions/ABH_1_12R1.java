@@ -11,8 +11,7 @@ import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import xzot1k.plugins.hd.core.packets.actionbars.ActionBarHandler;
 
-public class ABH_1_12R1 implements ActionBarHandler
-{
+public class ABH_1_12R1 implements ActionBarHandler {
     @Override
     public void sendActionBar(Player player, String message) {
         PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.ACTIONBAR, IChatBaseComponent.ChatSerializer
