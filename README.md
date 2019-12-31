@@ -27,8 +27,8 @@ on the main page. The link can be found [here](https://www.spigotmc.org/resource
 
 Required Libraries when compiling:
 ```
-* Bukkit/Spigot 1.8-1.14.x (ALL jars from 1.7.10-1.14.x for the NMS containing R1-R3 classes for the interfaces)
-* Vault
+* Bukkit/Spigot 1.8-1.15.x (ALL jars from 1.7.10-1.15.x for the NMS containing R1-R3 classes for the interfaces)
+* Vault (Latest Official)
 * WorldGuard 6 and 7
 * FactionsUUID or a fork using the same API classes and methods.
 * ASkyBlock
