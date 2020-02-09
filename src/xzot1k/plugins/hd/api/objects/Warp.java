@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api.objects;
@@ -24,12 +24,12 @@ import java.util.logging.Level;
 public class Warp {
     private HyperDrive pluginInstance;
     private SerializableLocation warpLocation;
-    private String warpName, creationDate, iconTheme, animationSet, serverIPAddress;
+    private String warpName, creationDate, iconTheme, animationSet, serverIPAddress, description;
     private EnumContainer.Status status;
     private ChatColor displayNameColor, descriptionColor;
-    private List<String> description, commands;
     private UUID owner;
     private List<UUID> playerList, assistants, voters;
+    private List<String> commands;
     private int traffic, likes, dislikes;
     private double usagePrice;
     private boolean enchantedLook, whiteListMode;
@@ -57,11 +57,7 @@ public class Warp {
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
-        List<String> defaultDescription = getPluginInstance().getConfig().getStringList("warp-icon-section.default-description");
-        List<String> newLore = new ArrayList<>();
-        for (int i = -1; ++i < defaultDescription.size(); )
-            newLore.add(getPluginInstance().getManager().colorText(defaultDescription.get(i)));
-        setDescription(newLore);
+        setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
         setUsagePrice(0);
         setTraffic(0);
         setLikes(0);
@@ -96,11 +92,7 @@ public class Warp {
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
-        List<String> defaultDescription = getPluginInstance().getConfig().getStringList("warp-icon-section.default-description");
-        List<String> newLore = new ArrayList<>();
-        for (int i = -1; ++i < defaultDescription.size(); )
-            newLore.add(getPluginInstance().getManager().colorText(defaultDescription.get(i)));
-        setDescription(newLore);
+        setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
         setUsagePrice(0);
         setTraffic(0);
         setLikes(0);
@@ -136,11 +128,7 @@ public class Warp {
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
-        List<String> defaultDescription = getPluginInstance().getConfig().getStringList("warp-icon-section.default-description");
-        List<String> newLore = new ArrayList<>();
-        for (int i = -1; ++i < defaultDescription.size(); )
-            newLore.add(getPluginInstance().getManager().colorText(defaultDescription.get(i)));
-        setDescription(newLore);
+        setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
         setUsagePrice(0);
         setTraffic(0);
         setLikes(0);
@@ -175,11 +163,7 @@ public class Warp {
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
-        List<String> defaultDescription = getPluginInstance().getConfig().getStringList("warp-icon-section.default-description");
-        List<String> newLore = new ArrayList<>();
-        for (int i = -1; ++i < defaultDescription.size(); )
-            newLore.add(getPluginInstance().getManager().colorText(defaultDescription.get(i)));
-        setDescription(newLore);
+        setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
         setUsagePrice(0);
         setTraffic(0);
         setLikes(0);
@@ -203,15 +187,23 @@ public class Warp {
 
     public String getLikeBar() {
         StringBuilder bar = new StringBuilder();
-        int sum = (getLikes() + getDislikes()), difference = (Math.max(getLikes(), getDislikes()) - Math.min(getLikes(), getDislikes())),
-                fractionValue = (int) Math.round((((double) (sum - difference)) * 0.01) * 12);
-
+        double averageValue = Math.min(getLikes(), getDislikes());
         for (int i = -1; ++i < 12; ) {
-            if (fractionValue > 0) {
-                bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&7" : "&a").append("\u25CF");
-                fractionValue -= 1;
-            } else
-                bar.append((getLikes() <= 0 || getDislikes() <= 0) ? "&7" : "&c").append("\u25CF");
+            if (getLikes() == getDislikes()) {
+                bar.append("&f").append("\u25CF");
+                continue;
+            } else if (getLikes() == 0 && getDislikes() != 0) {
+                bar.append("&c").append("\u25CF");
+                continue;
+            } else if (getDislikes() == 0 && getLikes() != 0) {
+                bar.append("&a").append("\u25CF");
+                continue;
+            }
+
+            if (averageValue >= 0.1) {
+                bar.append("&a").append("\u25CF");
+                averageValue -= 0.1;
+            } else bar.append("&c").append("\u25CF");
         }
 
         return bar.toString();
@@ -223,106 +215,27 @@ public class Warp {
     }
 
     private void delete() {
-        if (getPluginInstance().getConnection() == null) {
-            File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
-            if (!file.exists()) return;
-
-            try {
-                YamlConfiguration yamlConfiguration = YamlConfiguration.loadConfiguration(file);
-                yamlConfiguration.set(getWarpName(), null);
-                yamlConfiguration.save(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return;
-        }
-
         try {
-            PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement(
-                    "delete from warps where name = '" + getWarpName() + "'");
+            PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement("delete from warps where name = '" + getWarpName() + "'");
             preparedStatement.executeUpdate();
             preparedStatement.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            getPluginInstance().log(Level.WARNING, "There was an issue deleting the warp " + getWarpName() + " from the MySQL database.");
+            getPluginInstance().log(Level.WARNING, "There was an issue deleting the warp " + getWarpName() + " from the database (" + e.getMessage() + ").");
         }
     }
 
-    public void save(boolean async, boolean useMySQL) {
+    public void save(boolean async) {
         if (async)
-            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> save(useMySQL));
-        else save(useMySQL);
+            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), (Runnable) this::save);
+        else save();
     }
 
-    private void save(boolean useMySQL) {
-        File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+    private void save() {
         try {
             setWarpName(getWarpName().replace("§", "").replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", ""));
-            if (!useMySQL || getPluginInstance().getConnection() == null) {
-                yaml.set(getWarpName() + ".location.world", getWarpLocation().getWorldName());
-                yaml.set(getWarpName() + ".location.x", getWarpLocation().getX());
-                yaml.set(getWarpName() + ".location.y", getWarpLocation().getY());
-                yaml.set(getWarpName() + ".location.z", getWarpLocation().getZ());
-                yaml.set(getWarpName() + ".location.yaw", getWarpLocation().getYaw());
-                yaml.set(getWarpName() + ".location.pitch", getWarpLocation().getPitch());
 
-                try {
-                    List<String> playerList = new ArrayList<>(), assistants = new ArrayList<>(), voters = new ArrayList<>();
-                    for (int j = -1; ++j < getPlayerList().size(); ) {
-                        UUID uuid = getPlayerList().get(j);
-                        playerList.add(uuid.toString());
-                    }
-                    for (int j = -1; ++j < getAssistants().size(); ) {
-                        UUID uuid = getAssistants().get(j);
-                        assistants.add(uuid.toString());
-                    }
-                    for (int j = -1; ++j < getVoters().size(); ) {
-                        UUID uuid = getVoters().get(j);
-                        voters.add(uuid.toString());
-                    }
-
-                    yaml.set(getWarpName() + ".traffic", getTraffic());
-                    yaml.set(getWarpName() + ".likes", getLikes());
-                    yaml.set(getWarpName() + ".dislikes", getDislikes());
-                    yaml.set(getWarpName() + ".status", getStatus().toString());
-                    yaml.set(getWarpName() + ".creation-date", getCreationDate());
-                    yaml.set(getWarpName() + ".server-ip", getServerIPAddress().replace("localhost", "127.0.0.1"));
-                    yaml.set(getWarpName() + ".owner", getOwner() != null ? getOwner().toString() : "");
-                    yaml.set(getWarpName() + ".assistants", assistants);
-                    yaml.set(getWarpName() + ".player-list", playerList);
-                    yaml.set(getWarpName() + ".white-list-mode", isWhiteListMode());
-                    yaml.set(getWarpName() + ".voters", voters);
-                    yaml.set(getWarpName() + ".commands", getCommands() != null ? getCommands() : new ArrayList<>());
-                    yaml.set(getWarpName() + ".animation-set", getAnimationSet());
-
-                    yaml.set(getWarpName() + ".icon.theme", getIconTheme());
-                    yaml.set(getWarpName() + ".icon.description-color", getDescriptionColor().name());
-                    yaml.set(getWarpName() + ".icon.name-color", getDisplayNameColor().name());
-
-                    List<String> desc = getDescription();
-                    for (int i = -1; ++i < desc.size(); )
-                        desc.set(i, ChatColor.stripColor(desc.get(i)));
-                    setDescription(desc);
-
-                    yaml.set(getWarpName() + ".icon.description", getDescription());
-                    yaml.set(getWarpName() + ".icon.use-enchanted-look", hasIconEnchantedLook());
-                    yaml.set(getWarpName() + ".icon.prices.usage", getUsagePrice());
-
-                    yaml.save(file);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    getPluginInstance().log(Level.INFO, "There was an issue saving the warp " + getWarpName()
-                            + "'s data aside it's location.");
-                }
-
-                return;
-            }
-
-            StringBuilder description = new StringBuilder(), commands = new StringBuilder(),
-                    playerList = new StringBuilder(), assistants = new StringBuilder(), voters = new StringBuilder();
-            for (int j = -1; ++j < getDescription().size(); )
-                description.append(ChatColor.stripColor(getDescription().get(j))).append(",");
+            StringBuilder commands = new StringBuilder(), playerList = new StringBuilder(), assistants = new StringBuilder(), voters = new StringBuilder();
             for (int j = -1; ++j < getCommands().size(); )
                 commands.append(getCommands().get(j)).append(",");
             for (int j = -1; ++j < getPlayerList().size(); )
@@ -332,51 +245,49 @@ public class Warp {
             for (int j = -1; ++j < getVoters().size(); )
                 voters.append(getVoters().get(j).toString()).append(",");
 
-            Statement statement = getPluginInstance().getConnection().createStatement();
-            ResultSet rs = statement.executeQuery("select * from warps where name='" + getWarpName() + "'");
-            if (rs.next()) {
-                statement.executeUpdate("update warps set location = '"
-                        + (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + ","
-                        + getWarpLocation().getY() + "," + getWarpLocation().getZ() + ","
-                        + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch())
-                        + "', status = '" + getStatus().name() + "', creation_date = '"
-                        + getCreationDate() + "', icon_theme = '" + getIconTheme()
-                        + "', animation_set = '" + getAnimationSet() + "'," + " name_color = '"
-                        + getDisplayNameColor().name() + "', description = '" + description.toString()
-                        + "', commands = '" + commands.toString() + "'," + " owner = '" + (getOwner() != null ? getOwner().toString() : "")
-                        + "', player_list = '" + playerList.toString() + "', assistants = '" + assistants.toString()
-                        + "'," + " usage_price = '" + getUsagePrice() + "', enchanted_look = '"
-                        + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress()
-                        + "', likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters.toString()
-                        + "', white_list_mode = '" + (isWhiteListMode() ? 1 : 0) + "' where name = '" + getWarpName() + "';");
+            final String locationString = (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + "," + getWarpLocation().getY() + "," + getWarpLocation().getZ() + ","
+                    + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch()), owner = (getOwner() != null ? getOwner().toString() : "");
 
-                rs.close();
-                statement.close();
-                return;
-            }
+            Statement statement = getPluginInstance().getDatabaseConnection().createStatement();
+            ResultSet rs = statement.executeQuery("select * from warps where name = '" + getWarpName() + "';");
 
-            PreparedStatement preparedStatement = getPluginInstance().getConnection().prepareStatement(
-                    "insert into warps (name, location, status, creation_date, icon_theme, animation_set, " +
-                            "description_color, name_color, description, commands, owner, player_list, assistants, " +
-                            "traffic, usage_price, enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) "
-                            + "values ('" + getWarpName() + "', '" + (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + ","
-                            + getWarpLocation().getY() + "," + getWarpLocation().getZ() + "," + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch())
-                            + "', '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '"
-                            + getDescriptionColor().name() + "', '" + getDisplayNameColor().name() + "', ?, ?, '" + (getOwner() != null ? getOwner().toString() : "")
-                            + "', ?, ?, " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0) + ", '"
-                            + getServerIPAddress().replace("localhost", "127.0.0.1") + "'," + " '" + getLikes() + "', '" + getDislikes() + "', ?, '"
-                            + (isWhiteListMode() ? 1 : 0) + "');");
+            final boolean warpExists = rs.next();
+            rs.close();
+            statement.close();
 
-            preparedStatement.setString(1, description.toString());
-            preparedStatement.setString(2, commands.toString());
-            preparedStatement.setString(3, playerList.toString());
-            preparedStatement.setString(4, assistants.toString());
-            preparedStatement.setString(5, voters.toString());
+            final String syntax = warpExists ? "update warps set (name, location, status, creation_date, icon_theme, animation_set, description_color, name_color, description, commands, owner, player_list, "
+                    + "assistants, traffic, usage_price, enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) = (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) where name = '" + getWarpName() + "';"
+                    : "insert into warps (name, location, status, creation_date, icon_theme, animation_set, description_color, name_color, description, commands, owner, player_list, assistants, traffic, "
+                    + "usage_price, enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+            PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement(syntax);
+
+            preparedStatement.setString(1, getWarpName());
+            preparedStatement.setString(2, locationString);
+            preparedStatement.setString(3, getStatus().name());
+            preparedStatement.setString(4, getCreationDate());
+            preparedStatement.setString(5, getIconTheme());
+            preparedStatement.setString(6, getAnimationSet());
+            preparedStatement.setString(7, getDescriptionColor().name());
+            preparedStatement.setString(8, getDisplayNameColor().name());
+            preparedStatement.setString(9, getDescription());
+            preparedStatement.setString(10, commands.toString());
+            preparedStatement.setString(11, owner);
+            preparedStatement.setString(12, playerList.toString());
+            preparedStatement.setString(13, assistants.toString());
+            preparedStatement.setInt(14, getTraffic());
+            preparedStatement.setDouble(15, getUsagePrice());
+            preparedStatement.setInt(16, (hasIconEnchantedLook() ? 1 : 0));
+            preparedStatement.setString(17, getServerIPAddress().replace("localhost", "127.0.0.1"));
+            preparedStatement.setInt(18, getLikes());
+            preparedStatement.setInt(19, getDislikes());
+            preparedStatement.setString(20, voters.toString());
+            preparedStatement.setInt(21, (isWhiteListMode() ? 1 : 0));
 
             preparedStatement.executeUpdate();
             preparedStatement.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            getPluginInstance().log(Level.WARNING, "There was an issue saving the warp '" + getWarpName() + "' to the database (" + e.getMessage() + ").");
         }
     }
 
@@ -385,29 +296,25 @@ public class Warp {
      * Renames the warp to the given name (Handles Re-Registration).
      *
      * @param newName The new name (Does NOT filter).
-     * @return Whether the rename was successful (Checks if the newName already exists).
      */
-    public boolean rename(String newName) {
-        if (!getPluginInstance().getManager().doesWarpExist(newName)) {
-            unRegister();
-            final String finalWarpName = getWarpName();
-            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-                try {
-                    File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
-                    FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-                    yaml.set(finalWarpName, null);
-                    yaml.save(file);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    getPluginInstance().log(Level.WARNING, "Failed to delete the warp '" + finalWarpName + "' from the warps.yml.");
-                }
-            });
-            setWarpName(newName);
-            register();
-            return true;
-        }
+    public void rename(String newName) {
+        if (!getPluginInstance().getManager().doesWarpExist(newName)) return;
 
-        return false;
+        unRegister();
+        final String finalWarpName = getWarpName();
+        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+            try {
+                File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
+                FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+                yaml.set(finalWarpName, null);
+                yaml.save(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+                getPluginInstance().log(Level.WARNING, "Failed to delete the warp '" + finalWarpName + "' from the warps.yml.");
+            }
+        });
+        setWarpName(newName);
+        register();
     }
 
     // getters & setters
@@ -447,11 +354,11 @@ public class Warp {
         this.displayNameColor = displayNameColor;
     }
 
-    public List<String> getDescription() {
+    public String getDescription() {
         return description;
     }
 
-    public void setDescription(List<String> description) {
+    public void setDescription(String description) {
         this.description = description;
     }
 
@@ -528,8 +435,15 @@ public class Warp {
     }
 
     public String getServerIPAddress() {
-        return serverIPAddress.replace("localhost", "127.0.0.1")
-                .replace("0.0.0.0", getPluginInstance().getConfig().getString("mysql-connection.default-ip"));
+        String ipAddress = serverIPAddress;
+
+        if (serverIPAddress != null) {
+            final String defaultIp = getPluginInstance().getConfig().getString("mysql-connection.default-ip");
+            if (defaultIp != null) ipAddress = ipAddress.replace("localhost", "127.0.0.1")
+                    .replace("0.0.0.0", defaultIp);
+        }
+
+        return ipAddress;
     }
 
     public void setServerIPAddress(String serverIPAddress) {

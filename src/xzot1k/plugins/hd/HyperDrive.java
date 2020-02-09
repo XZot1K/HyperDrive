@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd;
 
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -14,7 +13,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import xzot1k.plugins.hd.api.EnumContainer;
@@ -27,6 +26,8 @@ import xzot1k.plugins.hd.core.internals.Listeners;
 import xzot1k.plugins.hd.core.internals.Metrics;
 import xzot1k.plugins.hd.core.internals.cmds.MainCommands;
 import xzot1k.plugins.hd.core.internals.cmds.TeleportationCommands;
+import xzot1k.plugins.hd.core.internals.hooks.VaultHandler;
+import xzot1k.plugins.hd.core.internals.hooks.WorldGuardHandler;
 import xzot1k.plugins.hd.core.internals.tabs.WarpTabComplete;
 
 import java.io.*;
@@ -45,8 +46,7 @@ public class HyperDrive extends JavaPlugin {
     private Manager manager;
     private BungeeListener bungeeListener;
 
-    private Economy vaultEconomy;
-    private Connection connection;
+    private Connection databaseConnection;
     private List<String> databaseWarps;
 
     private String serverVersion;
@@ -54,6 +54,20 @@ public class HyperDrive extends JavaPlugin {
 
     private FileConfiguration langConfig, menusConfig;
     private File langFile, menusFile;
+
+    private VaultHandler vaultHandler;
+    private WorldGuardHandler worldGuardHandler;
+
+    @Override
+    public void onLoad() {
+
+        // Wrapped in try/catch to bypass an issue involving world guard custom flag registration when re-loaded live.
+        try {
+            Plugin worldGuard = getServer().getPluginManager().getPlugin("WorldGuard");
+            if (worldGuard != null) setWorldGuardHandler(new WorldGuardHandler());
+        } catch (Exception ignored) {
+        }
+    }
 
     @Override
     public void onEnable() {
@@ -74,16 +88,10 @@ public class HyperDrive extends JavaPlugin {
         saveDefaultConfigs();
         updateConfigs();
 
-        // checks if vault is installed.
-        if (getConfig().getBoolean("general-section.use-vault") && !setupVaultEconomy()) {
-            log(Level.INFO, "The plugin was disabled due to Vault or an economy plugin for it being invalid. "
-                    + "(Took " + (System.currentTimeMillis() - startTime) + "ms)");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
+        if (getConfig().getBoolean("general-section.use-vault")) setVaultHandler(new VaultHandler(getPluginInstance()));
 
-        File warpsFile = new File(getDataFolder(), "/warps.yml"),
-                backupFile = new File(getDataFolder(), "/warps-backup.yml");
+        File warpsFile = new File(getDataFolder(), "/warps.db"),
+                backupFile = new File(getDataFolder(), "/warps-backup.db");
         if (warpsFile.exists() && !backupFile.exists()) {
             try {
                 copy(warpsFile, backupFile);
@@ -95,23 +103,14 @@ public class HyperDrive extends JavaPlugin {
         }
 
         setDatabaseWarps(new ArrayList<>());
-        if (getConfig().getBoolean("mysql-connection.use-mysql")) {
-            long databaseStartTime = System.currentTimeMillis();
-            attemptMySQLConnection();
-            if (getConnection() != null)
-                log(Level.INFO, "The MySQL database connection was formed. (Took "
-                        + (System.currentTimeMillis() - databaseStartTime) + "ms)");
-            else {
-                log(Level.WARNING, "The MySQL database connection failed. (Took "
-                        + (System.currentTimeMillis() - databaseStartTime) + "ms)");
-                getPluginInstance().getServer().getPluginManager().disablePlugin(this);
-                return;
-            }
-
-            if (getConfig().getBoolean("mysql-connection.run-flat-file-converter"))
-                runFlatFileConverter();
-            else if (getConfig().getBoolean("mysql-connection.run-mysql-converter"))
-                runMySQLConverter();
+        long databaseStartTime = System.currentTimeMillis();
+        setupDatabase(getConfig().getBoolean("mysql-connection.use-mysql"));
+        if (getDatabaseConnection() != null)
+            log(Level.INFO, "Communication to the database was successful. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
+        else {
+            log(Level.WARNING, "Communication to the database failed. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
+            getPluginInstance().getServer().getPluginManager().disablePlugin(this);
+            return;
         }
 
         getServer().getMessenger().registerOutgoingPluginChannel(getPluginInstance(), "BungeeCord");
@@ -146,30 +145,29 @@ public class HyperDrive extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new Listeners(getPluginInstance()), getPluginInstance());
 
         // loads warps and runs conversion process.
-        loadWarps(getConnection() != null);
-        startWarpConverter();
+        runConverter();
+        loadWarps();
+        startEssentialsConverter();
 
         // starts the runnables/tasks.
         startTasks();
 
         // enables metrics and does logging information including update checker.
         new Metrics(getPluginInstance());
-        log(Level.INFO,
-                "The plugin was enabled successfully. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+        log(Level.INFO, "Everything is set and ready to go! (Took " + (System.currentTimeMillis() - startTime) + "ms)");
 
-        if (isOutdated())
-            log(Level.INFO, "HEY YOU! There seems to be a new version out (" + getLatestVersion() + ")!");
+        if (isOutdated()) log(Level.INFO, "HEY YOU! There seems to be a new version out (" + getLatestVersion() + ")!");
         else log(Level.INFO, "Everything seems to be up to date!");
     }
 
     @Override
     public void onDisable() {
-        saveWarps(getConnection() != null);
+        saveWarps(false);
         saveData();
 
-        if (getConnection() != null)
+        if (getDatabaseConnection() != null)
             try {
-                getConnection().close();
+                getDatabaseConnection().close();
                 log(Level.WARNING, "The MySQL connection has been completely closed.");
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -217,7 +215,6 @@ public class HyperDrive extends JavaPlugin {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             FileConfiguration yaml = YamlConfiguration.loadConfiguration(reader);
             int updateCount = updateKeys(yaml, name.equalsIgnoreCase("config") ? getConfig() : name.equalsIgnoreCase("lang") ? getLangConfig() : getMenusConfig());
-
             if (name.equalsIgnoreCase("config")) {
                 String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
                 if (isOffhandVersion) {
@@ -255,7 +252,8 @@ public class HyperDrive extends JavaPlugin {
                 log(Level.WARNING, e.getMessage());
             }
 
-            updateCount = fixItems(yaml, updateCount, isOffhandVersion);
+            updateCount = fixItems(name.equalsIgnoreCase("config") ? getConfig() : name.equalsIgnoreCase("lang")
+                    ? getLangConfig() : getMenusConfig(), updateCount, isOffhandVersion);
 
             if (updateCount > 0)
                 switch (name) {
@@ -291,26 +289,30 @@ public class HyperDrive extends JavaPlugin {
         if (configurationSection == null) return updateCount;
 
         for (String key : configurationSection.getKeys(true)) {
-            if (key.contains(".items.") && key.endsWith(".material")) {
+            if (key.toLowerCase().endsWith(".material")) {
                 String keyValue = yaml.getString(key);
                 if (keyValue == null || keyValue.equalsIgnoreCase("")) {
                     yaml.set(key, "ARROW");
                     updateCount++;
+
                 }
 
                 if (keyValue != null)
-                    switch (keyValue.replace(" ", "_").replace("-", "_")) {
+                    switch (keyValue.toUpperCase().replace(" ", "_").replace("-", "_")) {
                         case "INK_SAC":
                             if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
                                 yaml.set(key, "RED_DYE");
                                 updateCount++;
+
                             } else if (getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "ROSE_RED");
                                 updateCount++;
+
                             } else if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
                                     || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
                                 yaml.set(key, "INK_SACK");
                                 updateCount++;
+
                             }
                             break;
                         case "INK_SACK":
@@ -354,6 +356,7 @@ public class HyperDrive extends JavaPlugin {
                         case "BLACK_STAINED_GLASS_PANE":
                             if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "STAINED_GLASS_PANE");
+                                yaml.set(key.replace(".material", ".durability"), 15);
                                 updateCount++;
                             }
                             break;
@@ -389,11 +392,16 @@ public class HyperDrive extends JavaPlugin {
                                 updateCount++;
                             }
                             break;
+                        default:
+                            break;
                     }
-            } else if (key.contains(".items.") && key.endsWith(".sound-name")) {
+            } else if (key.toLowerCase().endsWith(".sound-name")) {
                 String keyValue = getConfig().getString(key);
-                if ((keyValue == null || keyValue.equalsIgnoreCase("")) || (isOffhandVersion && keyValue.equalsIgnoreCase("CLICK"))
-                        || (!isOffhandVersion && keyValue.equalsIgnoreCase("UI_BUTTON_CLICK"))) {
+                if (keyValue == null) continue;
+
+                keyValue = keyValue.toUpperCase().replace(" ", "_").replace("-", "_");
+                if (keyValue.equalsIgnoreCase("") || ((isOffhandVersion && !keyValue.equalsIgnoreCase("CLICK"))
+                        || (!isOffhandVersion && !keyValue.equalsIgnoreCase("UI_BUTTON_CLICK")))) {
                     yaml.set(key, isOffhandVersion ? "UI_BUTTON_CLICK" : "CLICK");
                     updateCount++;
                 }
@@ -411,7 +419,7 @@ public class HyperDrive extends JavaPlugin {
             Set<String> newKeys = latestConfigurationSection.getKeys(true),
                     currentKeys = currentConfigurationSection.getKeys(true);
             for (String updatedKey : newKeys) {
-                if (updatedKey.contains(".items") || updatedKey.startsWith("custom-menus-section")) continue;
+                if (updatedKey.contains(".items") || updatedKey.contains("custom-menus-section")) continue;
                 if (!currentKeys.contains(updatedKey)) {
                     currentYaml.set(updatedKey, jarYaml.get(updatedKey));
                     updateCount++;
@@ -419,7 +427,7 @@ public class HyperDrive extends JavaPlugin {
             }
 
             for (String currentKey : currentKeys) {
-                if (currentKey.contains(".items") || currentKey.startsWith("custom-menus-section")) continue;
+                if (currentKey.contains(".items") || currentKey.contains("custom-menus-section")) continue;
                 if (!newKeys.contains(currentKey)) {
                     currentYaml.set(currentKey, null);
                     updateCount++;
@@ -431,69 +439,63 @@ public class HyperDrive extends JavaPlugin {
     }
 
     // core methods
-    private void attemptMySQLConnection() {
-        if (getConnection() == null)
-            try {
+    private void setupDatabase(boolean useMySQL) {
+        if (getDatabaseConnection() != null) return;
+
+        try {
+            Statement statement;
+            if (!useMySQL) {
+                Class.forName("org.sqlite.JDBC");
+                setDatabaseConnection(DriverManager.getConnection("jdbc:sqlite:" + getDataFolder() + "/warps.db"));
+            } else {
                 Class.forName("com.mysql.jdbc.Driver");
 
                 String databaseName = getConfig().getString("mysql-connection.database-name"), host = getConfig().getString("mysql-connection.host"),
                         port = getConfig().getString("mysql-connection.port"), username = getConfig().getString("mysql-connection.username"),
                         password = getConfig().getString("mysql-connection.password");
-                setConnection(DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/?user=" + username + "&password=" + password));
+                setDatabaseConnection(DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/?user=" + username + "&password=" + password));
 
-                Statement statement = getConnection().createStatement();
+                statement = getDatabaseConnection().createStatement();
                 statement.executeUpdate("create database if not exists " + databaseName);
                 statement.close();
-                getConnection().close();
+                getDatabaseConnection().close();
 
-                setConnection(DriverManager.getConnection("jdbc:mysql://" + getConfig().getString("mysql-connection.host") + ":"
-                                + getConfig().getString("mysql-connection.port") + "/" + databaseName,
-                        getConfig().getString("mysql-connection.username"), getConfig().getString("mysql-connection.password")));
-
-                String[] columnNames = {"name varchar(100)", "location varchar(255)", "status varchar(100)", "creation_date varchar(100)", "icon_theme varchar(100)", "animation_set varchar(100)",
-                        "description_color varchar(100)", "name_color varchar(100)", "description varchar(255)", "commands varchar(255)", "owner varchar(100)", "player_list varchar(255)", "assistants varchar(255)",
-                        "traffic int", "usage_price double", "enchanted_look int", "server_ip varchar(255)", "likes int", "dislikes int", "voters longtext", "white_list_mode int"};
-
-
-                DatabaseMetaData databaseMetaData = getConnection().getMetaData();
-                ResultSet tables = databaseMetaData.getTables(null, null, "warps", null);
-                if (tables.next()) {
-                    statement = getConnection().createStatement();
-                    ResultSet columnResults = statement.executeQuery("select * from warps");
-                    ResultSetMetaData columnData = columnResults.getMetaData();
-
-                    List<String> columnDataNames = new ArrayList<>();
-                    for (int i = 0; ++i < columnData.getColumnCount(); )
-                        columnDataNames.add(columnData.getColumnName(i));
-
-                    for (String columnName : columnDataNames) performColumnCleanup(statement, columnName, columnNames);
-                } else {
-                    statement.executeUpdate("create table if not exists warps (name varchar(100),location varchar(255),status varchar(100),creation_date varchar(100),"
-                            + "icon_theme varchar(100),animation_set varchar(100),description_color varchar(100),name_color varchar(100),description varchar(255),commands varchar(255),"
-                            + "owner varchar(100),player_list varchar(255),assistants varchar(255),traffic int,usage_price double,enchanted_look int,server_ip varchar(255),likes int,"
-                            + "dislikes int, voters longtext, white_list_mode int, primary key (name))");
-                }
-
-                tables.close();
-                statement.executeUpdate("create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
-                statement.executeUpdate("truncate transfer");
-                statement.close();
-            } catch (ClassNotFoundException | SQLException e) {
-                e.printStackTrace();
-                log(Level.WARNING, "There was an issue involving the MySQL connection.");
+                setDatabaseConnection(DriverManager.getConnection("jdbc:mysql://" + getConfig().getString("mysql-connection.host")
+                                + ":" + getConfig().getString("mysql-connection.port") + "/" + databaseName, getConfig().getString("mysql-connection.username"),
+                        getConfig().getString("mysql-connection.password")));
             }
 
+            statement = getDatabaseConnection().createStatement();
+            statement.executeUpdate("create table if not exists warps (name varchar(100), location varchar(255), status varchar(100), creation_date varchar(100),"
+                    + " icon_theme varchar(100), animation_set varchar(100), description_color varchar(100), name_color varchar(100), description varchar(255), commands varchar(255),"
+                    + " owner varchar(100), player_list varchar(255), assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int,"
+                    + " dislikes int, voters longtext, white_list_mode int, primary key (name))");
+
+            /*
+                    statement.executeUpdate("alter table warps drop column " + columnArgs[0] + "");
+                    statement.executeUpdate("alter table warps add column " + columnArgs[0] + " " + columnArgs[1]);
+             */
+
+            if (useMySQL) {
+                statement.executeUpdate("create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
+                statement.executeUpdate("truncate transfer");
+            }
+
+            statement.close();
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+            log(Level.WARNING, "There was an issue involving the MySQL connection.");
+        }
     }
 
-    private void runFlatFileConverter() {
+    private void runConverter() {
         int convertedWarpCount = 0, failedToConvertWarps = 0;
         long startTime = System.currentTimeMillis();
 
         File file = new File(getDataFolder(), "/warps.yml");
         if (file.exists()) {
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-            List<String> configurationLines = new ArrayList<>(
-                    Objects.requireNonNull(yaml.getConfigurationSection("")).getKeys(false));
+            List<String> configurationLines = new ArrayList<>(Objects.requireNonNull(yaml.getConfigurationSection("")).getKeys(false));
             for (int i = -1; ++i < configurationLines.size(); ) {
                 try {
                     String warpName = configurationLines.get(i);
@@ -507,29 +509,23 @@ public class HyperDrive extends JavaPlugin {
 
                     Warp warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
                     converterWarpSpecifics(yaml, warpName, warp);
-                    warp.save(false, true);
+                    warp.save(false);
                     convertedWarpCount++;
                 } catch (Exception ignored) {
                     failedToConvertWarps++;
                 }
             }
-        }
 
-        getConfig().set("mysql-connection.run-flat-file-converter", false);
-        saveConfig();
-        reloadConfig();
-        log(Level.INFO,
-                convertedWarpCount + " " + ((convertedWarpCount == 1) ? "warp was" : "warps were")
-                        + " converted to MySQL and " + failedToConvertWarps + " "
-                        + ((failedToConvertWarps == 1) ? "warp" : "warps") + " failed to convert to MySQL. (Took "
-                        + (System.currentTimeMillis() - startTime) + "ms)");
+            file.renameTo(new File(getDataFolder(), "/converted-warps.yml"));
+            log(Level.INFO, convertedWarpCount + " " + ((convertedWarpCount == 1) ? "warp was" : "warps were") + " converted and "
+                    + failedToConvertWarps + " " + ((failedToConvertWarps == 1) ? "warp" : "warps") + " failed to convert. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+        }
     }
 
     private void converterWarpSpecifics(FileConfiguration yaml, String warpName, Warp warp) {
         try {
             List<UUID> assistantList = new ArrayList<>(), playerList = new ArrayList<>(), voters = new ArrayList<>();
-            List<String> assistants = yaml.getStringList(warpName + ".assistants"),
-                    playerListData = yaml.getStringList(warpName + ".player-list");
+            List<String> assistants = yaml.getStringList(warpName + ".assistants"), playerListData = yaml.getStringList(warpName + ".player-list");
             for (int j = -1; ++j < assistants.size(); ) {
                 UUID uniqueId = UUID.fromString(assistants.get(j));
                 assistantList.add(uniqueId);
@@ -550,122 +546,57 @@ public class HyperDrive extends JavaPlugin {
             }
 
             String statusString = yaml.getString(warpName + ".status");
-            if (statusString == null)
-                statusString = EnumContainer.Status.PUBLIC.name();
+            if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
 
-            EnumContainer.Status status = EnumContainer.Status
-                    .valueOf(statusString.toUpperCase().replace(" ", "_").replace("-", "_"));
+            EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_").replace("-", "_"));
             warp.setStatus(status);
             warp.setAssistants(assistantList);
             warp.setPlayerList(playerList);
             warp.setCreationDate(yaml.getString(warpName + ".creation-date"));
             warp.setCommands(yaml.getStringList(warpName + ".commands"));
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
-
             warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
             warp.setDescriptionColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.description-color")));
             warp.setDisplayNameColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.name-color")));
-            warp.setDescription(yaml.getStringList(warpName + ".icon.description"));
+
+            List<String> description = yaml.getStringList(warpName + ".icon.description");
+            warp.setDescription(ChatColor.stripColor(getManager().colorText(description.toString().replace("[", "")
+                    .replace("]", "").replace(",", "").trim().replaceAll("\\s+", " "))));
+
             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
             warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
             warp.setTraffic(yaml.getInt(warpName + ".traffic"));
             warp.setVoters(voters);
             warp.setLikes(yaml.getInt(warpName + ".likes"));
             warp.setDislikes(yaml.getInt(warpName + ".dislikes"));
-
-            ConfigurationSection nameSection = yaml.getConfigurationSection(warpName);
-            if (nameSection != null) {
-                if (nameSection.contains("likes"))
-                    warp.setLikes(yaml.getInt(warpName + ".likes"));
-                if (nameSection.contains("dislikes"))
-                    warp.setDislikes(yaml.getInt(warpName + ".dislikes"));
-                if (nameSection.contains("white-list-mode"))
-                    warp.setWhiteListMode(yaml.getBoolean(warpName + ".white-list-mode"));
-            }
-
+            warp.setWhiteListMode(yaml.getBoolean(warpName + ".white-list-mode"));
             warp.setServerIPAddress(Objects.requireNonNull(yaml.getString(warpName + ".server-ip")).replace("localhost", "127.0.0.1"));
         } catch (Exception e) {
             e.printStackTrace();
-            log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName()
-                    + "'s data aside it's location.");
+            log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
         }
-
-    }
-
-    private void runMySQLConverter() {
-        int convertedWarpCount = 0, failedToConvert = 0;
-        long startTime = System.currentTimeMillis();
-
-        try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from warps");
-            while (resultSet.next()) {
-                String warpName = resultSet.getString(1),
-                        ipAddress = resultSet.getString(17).replace("localhost", "127.0.0.1"),
-                        locationString = resultSet.getString(2);
-                if (locationString.contains(",")) {
-                    String[] locationStringArgs = locationString.split(",");
-
-                    SerializableLocation serializableLocation = new SerializableLocation(locationStringArgs[0],
-                            Double.parseDouble(locationStringArgs[1]), Double.parseDouble(locationStringArgs[2]),
-                            Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]),
-                            Float.parseFloat(locationStringArgs[5]));
-
-                    Warp warp = new Warp(warpName, serializableLocation);
-                    converterWarpSpecifics(resultSet, ipAddress, warp);
-                    warp.save(true, false);
-
-                    convertedWarpCount++;
-                }
-            }
-
-            resultSet.close();
-            statement.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            failedToConvert++;
-        }
-
-        getConfig().set("mysql-connection.run-mysql-converter", false);
-        saveConfig();
-        reloadConfig();
-        log(Level.INFO, convertedWarpCount + " " + ((convertedWarpCount == 1) ? "warp was" : "warps were")
-                + " converted to flat file and " + failedToConvert + " " + ((failedToConvert == 1) ? "warp" : "warps")
-                + " failed to convert to flat file. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
     private void converterWarpSpecifics(ResultSet resultSet, String ipAddress, Warp warp) {
         try {
-            String statusString = resultSet.getString(3);
-            if (statusString == null)
-                statusString = EnumContainer.Status.PUBLIC.name();
+            String statusString = resultSet.getString("status");
+            if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
 
-            EnumContainer.Status status = EnumContainer.Status
-                    .valueOf(statusString.toUpperCase().replace(" ", "_").replace("-", "_"));
+            EnumContainer.Status status = EnumContainer.Status.valueOf(statusString.toUpperCase().replace(" ", "_").replace("-", "_"));
             warp.setStatus(status);
-            warp.setCreationDate(resultSet.getString(4));
-            warp.setIconTheme(resultSet.getString(5).replace(":", ","));
-            warp.setAnimationSet(resultSet.getString(6));
+            warp.setCreationDate(resultSet.getString("creation_date"));
+            warp.setIconTheme(resultSet.getString("icon_theme").replace(":", ","));
+            warp.setAnimationSet(resultSet.getString("animation_set"));
 
-            String descriptionColor = resultSet.getString(7);
+            String descriptionColor = resultSet.getString("description_color");
             if (descriptionColor != null && !descriptionColor.equalsIgnoreCase(""))
-                warp.setDescriptionColor(ChatColor
-                        .valueOf(descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")));
-            String nameColor = resultSet.getString(8);
+                warp.setDescriptionColor(ChatColor.valueOf(descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+            String nameColor = resultSet.getString("name_color");
             if (nameColor != null && !nameColor.equalsIgnoreCase(""))
-                warp.setDisplayNameColor(
-                        ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+                warp.setDisplayNameColor(ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")));
 
-            String descriptionString = resultSet.getString(9);
-            if (descriptionString.contains(",")) {
-                List<String> description = new ArrayList<>();
-                String[] descriptionStringArgs = descriptionString.split(",");
-                for (int i = -1; ++i < descriptionStringArgs.length; )
-                    description.add(ChatColor.stripColor(descriptionStringArgs[i]));
-                warp.setDescription(description);
-            }
-
-            String commandsString = resultSet.getString(10);
+            warp.setDescription(ChatColor.stripColor(getManager().colorText(resultSet.getString("description").replace(",", "").trim().replaceAll("\\s+", " "))));
+            String commandsString = resultSet.getString("commands");
             if (commandsString.contains(",")) {
                 List<String> commands = new ArrayList<>();
                 String[] commandsStringArgs = commandsString.split(",");
@@ -675,9 +606,9 @@ public class HyperDrive extends JavaPlugin {
             }
 
             if (resultSet.getString(11) != null && !resultSet.getString(11).equalsIgnoreCase(""))
-                warp.setOwner(UUID.fromString(resultSet.getString(11)));
+                warp.setOwner(UUID.fromString(resultSet.getString("owner")));
 
-            String playerListString = resultSet.getString(12);
+            String playerListString = resultSet.getString("player_list");
             if (playerListString.contains(",")) {
                 List<UUID> playerList = new ArrayList<>();
                 String[] playerListStringArgs = playerListString.split(",");
@@ -686,7 +617,7 @@ public class HyperDrive extends JavaPlugin {
                 warp.setPlayerList(playerList);
             }
 
-            String assistantsString = resultSet.getString(13);
+            String assistantsString = resultSet.getString("assistants");
             if (assistantsString.contains(",")) {
                 List<UUID> assistants = new ArrayList<>();
                 String[] assistantsStringArgs = assistantsString.split(",");
@@ -695,30 +626,28 @@ public class HyperDrive extends JavaPlugin {
                 warp.setAssistants(assistants);
             }
 
-            String votersString = resultSet.getString(13);
+            String votersString = resultSet.getString("voters");
             if (votersString.contains(",")) {
                 List<UUID> voters = new ArrayList<>();
                 String[] votersStringArgs = votersString.split(",");
-                for (int i = -1; ++i < votersStringArgs.length; )
-                    voters.add(UUID.fromString(votersStringArgs[i]));
+                for (int i = -1; ++i < votersStringArgs.length; ) voters.add(UUID.fromString(votersStringArgs[i]));
                 warp.setVoters(voters);
             }
 
-            warp.setTraffic(resultSet.getInt(14));
-            warp.setUsagePrice(resultSet.getDouble(15));
-            warp.setIconEnchantedLook(resultSet.getInt(16) >= 1);
-            warp.setLikes(resultSet.getInt(17));
-            warp.setDislikes(resultSet.getInt(18));
+            warp.setTraffic(resultSet.getInt("traffic"));
+            warp.setUsagePrice(resultSet.getDouble("usage_price"));
+            warp.setIconEnchantedLook(resultSet.getInt("enchanted_look") >= 1);
+            warp.setLikes(resultSet.getInt("likes"));
+            warp.setDislikes(resultSet.getInt("dislikes"));
             warp.setServerIPAddress(ipAddress);
-            warp.setWhiteListMode(resultSet.getInt(19) >= 1);
+            warp.setWhiteListMode(resultSet.getInt("white_list_mode") >= 1);
         } catch (Exception e) {
             e.printStackTrace();
-            log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName()
-                    + "'s data aside it's location.");
+            log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
         }
     }
 
-    private void startWarpConverter() {
+    private void startEssentialsConverter() {
         int convertedWarpCount = 0;
         long startTime = System.currentTimeMillis();
 
@@ -733,29 +662,20 @@ public class HyperDrive extends JavaPlugin {
 
                         try {
                             String warpName = ymlFile.getString("Name");
-                            if (getManager().getWarp(warpName) != null)
-                                continue;
+                            if (getManager().getWarp(warpName) != null) continue;
 
-                            double x = ymlFile.getDouble("Location.X"), y = ymlFile.getDouble("Location.Y"),
-                                    z = ymlFile.getDouble("Location.Z");
-                            float yaw = (float) ymlFile.getDouble("Location.Yaw"),
-                                    pitch = (float) ymlFile.getDouble("Location.Pitch");
+                            double x = ymlFile.getDouble("Location.X"), y = ymlFile.getDouble("Location.Y"), z = ymlFile.getDouble("Location.Z");
+                            float yaw = (float) ymlFile.getDouble("Location.Yaw"), pitch = (float) ymlFile.getDouble("Location.Pitch");
 
-                            SerializableLocation serializableLocation = new SerializableLocation(
-                                    ymlFile.getString("Location.World"), x, y, z, yaw, pitch);
-                            Warp warp = new Warp(warpName,
-                                    getServer().getOfflinePlayer(
-                                            UUID.fromString(Objects.requireNonNull(ymlFile.getString("Main Owner")))),
-                                    serializableLocation);
+                            SerializableLocation serializableLocation = new SerializableLocation(ymlFile.getString("Location.World"), x, y, z, yaw, pitch);
+                            Warp warp = new Warp(warpName, getServer().getOfflinePlayer(UUID.fromString(Objects.requireNonNull(ymlFile.getString("Main Owner")))), serializableLocation);
 
                             String statusName = ymlFile.getString("Status");
                             if (statusName != null)
-                                warp.setStatus(statusName.equalsIgnoreCase("SHOP") ? EnumContainer.Status.PUBLIC
-                                        : statusName.equalsIgnoreCase("SERVER") ? EnumContainer.Status.ADMIN
-                                        : EnumContainer.Status.valueOf(
-                                        statusName.toUpperCase().replace(" ", "_").replace("-", "_")));
+                                warp.setStatus(statusName.equalsIgnoreCase("SHOP") ? EnumContainer.Status.PUBLIC : statusName.equalsIgnoreCase("SERVER") ? EnumContainer.Status.ADMIN
+                                        : EnumContainer.Status.valueOf(statusName.toUpperCase().replace(" ", "_").replace("-", "_")));
                             warp.setCommands(ymlFile.getStringList("Commands"));
-                            warp.setDescription(ymlFile.getStringList("Description"));
+                            warp.setDescription(ymlFile.getStringList("Description").toString().replace("[", "").replace("]", "").replace(",", ""));
                             warp.setUsagePrice(ymlFile.getDouble("Usage Price"));
                             warp.setIconEnchantedLook(ymlFile.getBoolean("Enchanted Look"));
                             warp.setCreationDate(ymlFile.getString("Creation Date"));
@@ -765,10 +685,8 @@ public class HyperDrive extends JavaPlugin {
                             if (descriptionColor != null)
                                 warp.setDescriptionColor(descriptionColor);
 
-                            ChatColor displayNameColor = ChatColor.getByChar(
-                                    Objects.requireNonNull(ymlFile.getString("Name Color")).replace("&", ""));
-                            if (displayNameColor != null)
-                                warp.setDisplayNameColor(displayNameColor);
+                            ChatColor displayNameColor = ChatColor.getByChar(Objects.requireNonNull(ymlFile.getString("Name Color")).replace("&", ""));
+                            if (displayNameColor != null) warp.setDisplayNameColor(displayNameColor);
 
                             List<String> commandList = new ArrayList<>();
                             commandList.add(ymlFile.getString("Command"));
@@ -782,8 +700,7 @@ public class HyperDrive extends JavaPlugin {
 
                             warp.register();
                             convertedWarpCount += 1;
-                            log(Level.INFO, "The warp " + warp.getWarpName() + " has been successfully converted (Took "
-                                    + (System.currentTimeMillis() - startTime) + "ms)");
+                            log(Level.INFO, "The warp " + warp.getWarpName() + " has been successfully converted (Took " + (System.currentTimeMillis() - startTime) + "ms)");
                         } catch (Exception ignored) {
                         }
                     }
@@ -792,19 +709,14 @@ public class HyperDrive extends JavaPlugin {
         }
 
         if (convertedWarpCount > 0) {
-            log(Level.INFO,
-                    "A total of " + convertedWarpCount + " old warp(s) were found and converted into new warp(s). "
-                            + "(Took " + (System.currentTimeMillis() - startTime) + "ms)");
-            log(Level.INFO,
-                    "All old warp files are never deleted from the original location; therefore, nothing has been lost!");
-        } else
-            log(Level.INFO, "No old warps were found. Skipping the new warp conversion process... (Took "
-                    + (System.currentTimeMillis() - startTime) + "ms)");
+            log(Level.INFO, "A total of " + convertedWarpCount + " old warp(s) were found and converted into new warp(s). " + "(Took " + (System.currentTimeMillis() - startTime) + "ms)");
+            log(Level.INFO, "All old warp files are never deleted from the original location; therefore, nothing has been lost!");
+        }
 
         if (getConfig().getBoolean("general-section.essentials-converter")) {
             convertedWarpCount = 0;
-            File essentialsDirectory = new File(
-                    getDataFolder().getAbsolutePath().replace(getDescription().getName(), "Essentials"));
+            final String name = getConfig().getString("general-section.essentials-name");
+            File essentialsDirectory = new File(getDataFolder().getAbsolutePath().replace(getDescription().getName(), name != null ? name : "Essentials"));
             File[] essentialsFileList = essentialsDirectory.listFiles();
             if (essentialsFileList != null)
                 for (int i = -1; ++i < essentialsFileList.length; ) {
@@ -826,12 +738,9 @@ public class HyperDrive extends JavaPlugin {
                                         String warpName = ymlFile.getString("name");
                                         if (getManager().getWarp(warpName) != null) continue;
 
-                                        double x = ymlFile.getDouble("x"), y = ymlFile.getDouble("y"),
-                                                z = ymlFile.getDouble("z");
-                                        float yaw = (float) ymlFile.getDouble("yaw"),
-                                                pitch = (float) ymlFile.getDouble("pitch");
-                                        SerializableLocation serializableLocation = new SerializableLocation(
-                                                ymlFile.getString("world"), x, y, z, yaw, pitch);
+                                        double x = ymlFile.getDouble("x"), y = ymlFile.getDouble("y"), z = ymlFile.getDouble("z");
+                                        float yaw = (float) ymlFile.getDouble("yaw"), pitch = (float) ymlFile.getDouble("pitch");
+                                        SerializableLocation serializableLocation = new SerializableLocation(ymlFile.getString("world"), x, y, z, yaw, pitch);
 
                                         Warp warp = new Warp(warpName, serializableLocation);
                                         warp.setIconTheme("ARROW,0,1");
@@ -845,40 +754,33 @@ public class HyperDrive extends JavaPlugin {
                 }
 
             if (convertedWarpCount > 0) {
-                log(Level.INFO,
-                        "A total of " + convertedWarpCount
-                                + " Essentials warp(s) were found and converted into HyperDrive warp(s). " + "(Took "
-                                + (System.currentTimeMillis() - startTime) + "ms)");
-                log(Level.INFO,
-                        "All Essentials warp files are never deleted from the original location; therefore, nothing has been lost!");
+                log(Level.INFO, "A total of " + convertedWarpCount + " Essentials warp(s) were found and converted into HyperDrive warp(s). "
+                        + "(Took " + (System.currentTimeMillis() - startTime) + "ms)");
+                log(Level.INFO, "All Essentials warp files are never deleted from the original location; therefore, nothing has been lost!");
             } else
-                log(Level.INFO,
-                        "No Essentials warps were found. Skipping the HyperDrive warp conversion process... (Took "
-                                + (System.currentTimeMillis() - startTime) + "ms)");
+                log(Level.INFO, "No Essentials warps were found. Skipping the HyperDrive warp conversion process... (Took "
+                        + (System.currentTimeMillis() - startTime) + "ms)");
         }
     }
 
-    public void stopTasks() {
+    public void stopTasks(boolean useMySQL) {
         getServer().getScheduler().cancelTask(getTeleportationHandlerTaskId());
 
-        if (getConnection() != null)
+        if (getDatabaseConnection() != null && useMySQL)
             getServer().getScheduler().cancelTask(getCrossServerTaskId());
-        if (getConfig().getBoolean("auto-save"))
+        if (getConfig().getInt("general-section.auto-save-interval") >= 0)
             getServer().getScheduler().cancelTask(getAutoSaveTaskId());
     }
 
     public void startTasks() {
-        long startTime = System.currentTimeMillis();
-
         boolean useMySQL = getConfig().getBoolean("mysql-connection.use-mysql");
         TeleportationHandler teleportationHandler = new TeleportationHandler(this);
         int thID = getServer().getScheduler().scheduleSyncRepeatingTask(this, teleportationHandler, 0, 20);
         setTeleportationHandlerTaskId(thID);
         setTeleportationHandler(teleportationHandler);
 
-        int interval = getConfig().getInt("general-section.auto-save-interval");
-        BukkitTask autoSaveTask = getServer().getScheduler().runTaskTimerAsynchronously(this, () -> saveWarps(useMySQL),
-                20 * interval, 20 * interval);
+        final int interval = getConfig().getInt("general-section.auto-save-interval");
+        BukkitTask autoSaveTask = getServer().getScheduler().runTaskTimerAsynchronously(this, () -> saveWarps(useMySQL), 20 * interval, 20 * interval);
         setAutoSaveTaskId(autoSaveTask.getTaskId());
 
         if (useMySQL) {
@@ -893,7 +795,7 @@ public class HyperDrive extends JavaPlugin {
                     getDatabaseWarps().clear();
 
                     try {
-                        Statement statement = getConnection().createStatement();
+                        Statement statement = getDatabaseConnection().createStatement();
                         ResultSet resultSet = statement.executeQuery("select * from warps");
                         while (resultSet.next()) {
                             String warpName = resultSet.getString(1).toLowerCase();
@@ -910,14 +812,14 @@ public class HyperDrive extends JavaPlugin {
 
                         for (String warpName : getDatabaseWarps())
                             if (!getManager().getWarpMap().containsKey(warpName))
-                                loadWarp(warpName, (getConnection() != null));
+                                loadWarp(warpName);
 
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
 
                     try {
-                        Statement statement = getConnection().createStatement();
+                        Statement statement = getDatabaseConnection().createStatement();
                         ResultSet resultSet = statement.executeQuery("select * from transfer");
                         while (resultSet.next()) {
                             UUID playerUniqueId = UUID.fromString(resultSet.getString(1));
@@ -964,8 +866,7 @@ public class HyperDrive extends JavaPlugin {
 
                     getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
                         try {
-                            PreparedStatement preparedStatement = getConnection().prepareStatement(
-                                    "delete from transfer where player_uuid = '" + playerUniqueId.toString() + "'");
+                            PreparedStatement preparedStatement = getDatabaseConnection().prepareStatement("delete from transfer where player_uuid = '" + playerUniqueId.toString() + "'");
                             preparedStatement.executeUpdate();
                             preparedStatement.close();
                         } catch (SQLException e) {
@@ -988,9 +889,6 @@ public class HyperDrive extends JavaPlugin {
             }, 0, 20);
             setCrossServerTaskId(crossServerTeleportTaskId);
         }
-
-        log(Level.INFO, "All tasks were successfully setup and started. (Took "
-                + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
     private void saveData() {
@@ -1020,65 +918,26 @@ public class HyperDrive extends JavaPlugin {
         }
     }
 
-    public void saveWarps(boolean useMySQL) {
+    public void saveWarps(boolean async) {
         long startTime = System.currentTimeMillis();
-        for (Warp warp : getManager().getWarpMap().values()) warp.save(false, useMySQL);
+        for (Warp warp : getManager().getWarpMap().values()) warp.save(async);
         if (getConfig().getBoolean("general-section.auto-save-log"))
             log(Level.INFO, "All warps have been saved! (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
-    public void loadWarps(boolean useMySQL) {
+    public void loadWarps() {
         long startTime = System.currentTimeMillis();
         int loadedWarps = 0, failedToLoadWarps = 0;
-        if (!useMySQL || getConnection() == null) {
-            File file = new File(getDataFolder(), "/warps.yml");
-            if (file.exists()) {
-                FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-                List<String> configurationLines = new ArrayList<>(
-                        Objects.requireNonNull(yaml.getConfigurationSection("")).getKeys(false));
-                for (int i = -1; ++i < configurationLines.size(); ) {
-                    try {
-                        String warpName = configurationLines.get(i).replace("§", "")
-                                .replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", "");
-                        UUID uuid = null;
-
-                        String ownerId = yaml.getString(warpName + ".owner");
-                        if (ownerId != null && !ownerId.equalsIgnoreCase(""))
-                            uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
-
-                        SerializableLocation serializableLocation = new SerializableLocation(
-                                yaml.getString(warpName + ".location.world"), yaml.getDouble(warpName + ".location.x"),
-                                yaml.getDouble(warpName + ".location.y"), yaml.getDouble(warpName + ".location.z"),
-                                (float) yaml.getDouble(warpName + ".location.yaw"),
-                                (float) yaml.getDouble(warpName + ".location.pitch"));
-
-                        Warp warp;
-                        if (uuid == null) warp = new Warp(warpName, serializableLocation);
-                        else
-                            warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
-                        warp.register();
-                        loadedWarps += 1;
-
-                        converterWarpSpecifics(yaml, warpName, warp);
-                    } catch (Exception ignored) {
-                        failedToLoadWarps += 1;
-                    }
-                }
-            }
-
-            log(Level.INFO, loadedWarps + " " + ((loadedWarps == 1) ? "warp was" : "warps were") + " loaded and "
-                    + failedToLoadWarps + " " + ((failedToLoadWarps == 1) ? "warp" : "warps")
-                    + " failed to load. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
-            return;
-        }
 
         try {
-            Statement statement = connection.createStatement();
+            Statement statement = getDatabaseConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from warps");
             while (resultSet.next()) {
-                String warpName = resultSet.getString(1),
-                        ipAddress = resultSet.getString(17).replace("localhost", "127.0.0.1"),
-                        locationString = resultSet.getString(2);
+                String warpName = resultSet.getString("name");
+                if (warpName == null || warpName.equalsIgnoreCase("")) continue;
+
+                String ipAddress = resultSet.getString("server_ip").replace("localhost", "127.0.0.1"),
+                        locationString = resultSet.getString("location");
                 if (locationString.contains(",")) {
                     String[] locationStringArgs = locationString.split(",");
 
@@ -1106,47 +965,20 @@ public class HyperDrive extends JavaPlugin {
             statement.close();
         } catch (SQLException e) {
             failedToLoadWarps += 1;
+            e.printStackTrace();
+            log(Level.WARNING, "This is just a warning stating that a warp has failed to load.");
         }
 
-        log(Level.INFO,
-                loadedWarps + " " + ((loadedWarps == 1) ? "warp was" : "warps were") + " loaded and "
-                        + failedToLoadWarps + " " + ((failedToLoadWarps == 1) ? "warp" : "warps")
-                        + " failed to load. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+        if (loadedWarps > 0 || failedToLoadWarps > 0)
+            log(Level.INFO, loadedWarps + " " + ((loadedWarps == 1) ? "warp was" : "warps were") + " loaded and "
+                    + failedToLoadWarps + " " + ((failedToLoadWarps == 1) ? "warp" : "warps") + " failed to load. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
-    private void loadWarp(String warpName, boolean useMySQL) {
+    private void loadWarp(String warpName) {
         if (getManager().doesWarpExist(warpName)) return;
 
-        if (!useMySQL || getConnection() == null) {
-            File file = new File(getDataFolder(), "/warps.yml");
-            if (file.exists()) {
-                YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-                UUID uuid = null;
-
-                String ownerId = yaml.getString(warpName + ".owner");
-                if (ownerId != null && !ownerId.equalsIgnoreCase(""))
-                    uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
-
-                SerializableLocation serializableLocation = new SerializableLocation(
-                        yaml.getString(warpName + ".location.world"), yaml.getDouble(warpName + ".location.x"),
-                        yaml.getDouble(warpName + ".location.y"), yaml.getDouble(warpName + ".location.z"),
-                        (float) yaml.getDouble(warpName + ".location.yaw"),
-                        (float) yaml.getDouble(warpName + ".location.pitch"));
-
-                Warp warp;
-                if (uuid == null)
-                    warp = new Warp(warpName, serializableLocation);
-                else
-                    warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
-                warp.register();
-
-                converterWarpSpecifics(yaml, warpName, warp);
-                return;
-            }
-        }
-
         try {
-            Statement statement = connection.createStatement();
+            Statement statement = getDatabaseConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from warps");
             while (resultSet.next()) {
                 String ipAddress = resultSet.getString(17).replace("localhost", "127.0.0.1"),
@@ -1197,26 +1029,6 @@ public class HyperDrive extends JavaPlugin {
     public void log(Level level, String message) {
         getPluginInstance().getServer().getLogger().log(level,
                 "[" + getPluginInstance().getDescription().getName() + "] " + message);
-    }
-
-    private boolean setupVaultEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null)
-            return false;
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null)
-            return false;
-
-        setVaultEconomy(rsp.getProvider());
-        return getVaultEconomy() != null;
-    }
-
-    private void performColumnCleanup(Statement statement, String columnName, String[] columnNames) throws SQLException {
-        for (int i = -1; ++i < columnNames.length; ) {
-            String[] columnArgs = columnNames[i].split(" ");
-            if (!columnName.equalsIgnoreCase(columnArgs[0]))
-                statement.executeUpdate("alter table warps drop column " + columnArgs[0] + "");
-            else statement.executeUpdate("alter table warps add column " + columnArgs[0] + " " + columnArgs[1]);
-        }
     }
 
     // custom configurations
@@ -1337,14 +1149,6 @@ public class HyperDrive extends JavaPlugin {
         this.teleportationHandler = teleportationHandler;
     }
 
-    public Economy getVaultEconomy() {
-        return vaultEconomy;
-    }
-
-    private void setVaultEconomy(Economy vaultEconomy) {
-        this.vaultEconomy = vaultEconomy;
-    }
-
     public MainCommands getMainCommands() {
         return mainCommands;
     }
@@ -1361,12 +1165,12 @@ public class HyperDrive extends JavaPlugin {
         this.teleportationCommands = teleportationCommands;
     }
 
-    public Connection getConnection() {
-        return connection;
+    public Connection getDatabaseConnection() {
+        return databaseConnection;
     }
 
-    private void setConnection(Connection connection) {
-        this.connection = connection;
+    private void setDatabaseConnection(Connection connection) {
+        this.databaseConnection = connection;
     }
 
     private int getTeleportationHandlerTaskId() {
@@ -1415,5 +1219,21 @@ public class HyperDrive extends JavaPlugin {
 
     private void setDatabaseWarps(List<String> databaseWarps) {
         this.databaseWarps = databaseWarps;
+    }
+
+    public VaultHandler getVaultHandler() {
+        return vaultHandler;
+    }
+
+    private void setVaultHandler(VaultHandler vaultHandler) {
+        this.vaultHandler = vaultHandler;
+    }
+
+    public WorldGuardHandler getWorldGuardHandler() {
+        return worldGuardHandler;
+    }
+
+    private void setWorldGuardHandler(WorldGuardHandler worldGuardHandler) {
+        this.worldGuardHandler = worldGuardHandler;
     }
 }

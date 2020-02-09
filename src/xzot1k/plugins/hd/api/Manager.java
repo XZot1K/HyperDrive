@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api;
@@ -17,7 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import xzot1k.plugins.hd.HyperDrive;
-import xzot1k.plugins.hd.api.events.EconomyReturnEvent;
+import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.internals.Paging;
@@ -54,20 +54,17 @@ public class Manager {
     private ActionBarHandler actionBarHandler;
 
     private HashMap<String, Warp> warpMap;
-    private HashMap<UUID, Double> lastTransactionMap;
     private HashMap<UUID, HashMap<String, Long>> cooldownMap;
     private HashMap<UUID, InteractionModule> chatInteractionMap;
     private HashMap<UUID, List<UUID>> groupMap;
 
     public Manager(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
-        setSimpleDateFormat(new SimpleDateFormat(
-                Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
+        setSimpleDateFormat(new SimpleDateFormat(Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
         setPaging(new Paging(getPluginInstance()));
         setCooldownMap(new HashMap<>());
         setWarpMap(new HashMap<>());
         setChatInteractionMap(new HashMap<>());
-        setLastTransactionMap(new HashMap<>());
         setGroupMap(new HashMap<>());
 
         setupPackets();
@@ -173,37 +170,50 @@ public class Manager {
         else return player.getItemInHand();
     }
 
-    public boolean isNumeric(String string) {
-        try {
-            Double.parseDouble(string);
-        } catch (NumberFormatException | NullPointerException nfe) {
-            return false;
+    /**
+     * See if a string is NOT a numerical value.
+     *
+     * @param string The string to check.
+     * @return Whether it is numerical or not.
+     */
+    public boolean isNotNumeric(String string) {
+        final char[] chars = string.toCharArray();
+        for (int i = -1; ++i < string.length(); ) {
+            final char c = chars[i];
+            if (!Character.isDigit(c) && c != '.' && c != '-') return true;
         }
-        return true;
+
+        return false;
     }
 
     public List<String> wrapString(String text, int lineSize) {
         List<String> result = new ArrayList<>();
-        char[] chars = text.toCharArray();
-        int counter = 0;
-        StringBuilder tempLine = new StringBuilder();
 
-        for (int i = -1; ++i < chars.length; ) {
-            if (counter <= lineSize)
-                tempLine.append(chars[i]);
-            else {
-                tempLine.append(chars[i]);
-                result.add(tempLine.toString());
-                tempLine.setLength(0);
-                counter = 0;
-                continue;
+        final int longWordCount = getPluginInstance().getConfig().getInt("warp-icon-section.long-word-wrap");
+        final String[] words = text.trim().split(" ");
+        if (words.length > 0) {
+            int wordCounter = 0;
+            StringBuilder sb = new StringBuilder();
+            for (int i = -1; ++i < words.length; ) {
+                String word = words[i];
+                if (wordCounter < lineSize) {
+
+                    if (word.length() >= longWordCount && longWordCount > 0)
+                        word.substring(0, Math.min(word.length(), longWordCount));
+
+                    sb.append(word).append(" ");
+                    wordCounter++;
+                    continue;
+                }
+
+                result.add(sb.toString().trim());
+                sb = new StringBuilder();
+                sb.append(word).append(" ");
+                wordCounter = 1;
             }
 
-            counter += 1;
+            result.add(sb.toString().trim());
         }
-
-        if (tempLine.length() > 0)
-            result.add(tempLine.toString());
         return result;
     }
 
@@ -286,37 +296,6 @@ public class Manager {
         return tempList;
     }
 
-    public double getLastTransactionAmount(OfflinePlayer player) {
-        if (!getLastTransactionMap().isEmpty() && getLastTransactionMap().containsKey(player.getUniqueId()))
-            return getLastTransactionMap().get(player.getUniqueId());
-        else
-            return 0;
-    }
-
-    public void updateLastTransactionAmount(OfflinePlayer player, double amount) {
-        if (!getLastTransactionMap().isEmpty() && getLastTransactionMap().containsKey(player.getUniqueId()))
-            getLastTransactionMap().put(player.getUniqueId(),
-                    getLastTransactionMap().get(player.getUniqueId()) + amount);
-        else
-            getLastTransactionMap().put(player.getUniqueId(), amount);
-    }
-
-    public void returnLastTransactionAmount(OfflinePlayer player) {
-        double lastAmount = getLastTransactionAmount(player);
-        if (lastAmount > 0) {
-            EconomyReturnEvent economyReturnEvent = new EconomyReturnEvent(player, lastAmount);
-            getPluginInstance().getServer().getPluginManager().callEvent(economyReturnEvent);
-            if (!economyReturnEvent.isCancelled()) {
-                if (getPluginInstance().getConfig().getBoolean("general-section.use-vault")) {
-                    getPluginInstance().getVaultEconomy().depositPlayer(player, lastAmount);
-                    if (player.isOnline())
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("last-transaction-return"))
-                                .replace("{amount}", String.valueOf(lastAmount)), player.getPlayer());
-                }
-            }
-        }
-    }
-
     public String getProgressionBar(int f1, int f2, int segments) {
         StringBuilder bar = new StringBuilder();
         int fractionValue = (int) (((double) f1) / ((double) f2) * segments);
@@ -347,7 +326,7 @@ public class Manager {
 
     // cross-server stuff
     public void teleportCrossServer(Player player, String serverIP, String serverName, SerializableLocation location) {
-        if (getPluginInstance().getConnection() == null)
+        if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql") && getPluginInstance().getDatabaseConnection() == null)
             return;
 
         try {
@@ -365,10 +344,9 @@ public class Manager {
 
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
             try {
-                Statement statement = getPluginInstance().getConnection().createStatement();
+                Statement statement = getPluginInstance().getDatabaseConnection().createStatement();
 
-                ResultSet rs = statement.executeQuery(
-                        "select * from transfer where player_uuid = '" + player.getUniqueId().toString() + "'");
+                ResultSet rs = statement.executeQuery("select * from transfer where player_uuid = '" + player.getUniqueId().toString() + "'");
                 if (rs.next()) {
                     statement.executeUpdate("update transfer set location = '"
                             + (location.getWorldName() + "," + location.getX() + ","
@@ -385,19 +363,14 @@ public class Manager {
                     return;
                 }
 
-                PreparedStatement preparedStatement = getPluginInstance().getConnection()
-                        .prepareStatement("insert into transfer (player_uuid, location, server_ip) values ('"
-                                + player.getUniqueId().toString() + "', '"
-                                + (location.getWorldName() + "," + location.getX() + ","
-                                + location.getY() + "," + location.getZ() + "," + location.getYaw() + ","
-                                + location.getPitch())
-                                + "', '" + serverIP + "');");
+                PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement("insert into transfer (player_uuid, location, server_ip) values ('"
+                        + player.getUniqueId().toString() + "', '" + (location.getWorldName() + "," + location.getX() + "," + location.getY() + "," + location.getZ() + ","
+                        + location.getYaw() + "," + location.getPitch()) + "', '" + serverIP + "');");
                 preparedStatement.executeUpdate();
                 preparedStatement.close();
-                getPluginInstance().log(Level.WARNING,
-                        "Cross-Server transfer updated (" + player.getName() + "_" + player.getUniqueId().toString()
-                                + " / " + serverName + " / World: " + location.getWorldName() + ", X: "
-                                + location.getX() + ", Y: " + location.getY() + ", Z: " + location.getZ() + ")");
+                getPluginInstance().log(Level.WARNING, "Cross-Server transfer updated (" + player.getName() + "_" + player.getUniqueId().toString()
+                        + " / " + serverName + " / World: " + location.getWorldName() + ", X: "
+                        + location.getX() + ", Y: " + location.getY() + ", Z: " + location.getZ() + ")");
             } catch (SQLException e) {
                 e.printStackTrace();
                 getPluginInstance().log(Level.WARNING,
@@ -637,7 +610,7 @@ public class Manager {
         String[] eventPlaceholders = {"{is-owner}", "{has-access}", "{no-access}", "{can-edit}", "{is-private}",
                 "{is-public}", "{is-admin}"};
         List<String> iconLoreFormat = getPluginInstance().getConfig().getStringList("warp-icon-section.list-lore-format"), newLore = new ArrayList<>(),
-                warpDescription = warp.getDescription();
+                wrappedDescription = getPluginInstance().getManager().wrapString(warp.getDescription(), getPluginInstance().getConfig().getInt("warp-icon-section.description-line-cap"));
 
         for (int i = -1; ++i < iconLoreFormat.size(); ) {
             String formatLine = iconLoreFormat.get(i), foundEventPlaceholder = null;
@@ -645,12 +618,10 @@ public class Manager {
                     || (formatLine.contains("{creation-date}") && warp.getStatus() == EnumContainer.Status.ADMIN))
                 continue;
 
-            if (formatLine.equalsIgnoreCase("{description}")) {
-                if (warpDescription != null && !warpDescription.isEmpty()) {
-                    for (int j = -1; ++j < warpDescription.size(); )
-                        newLore.add(warp.getDescriptionColor() + ChatColor.stripColor(warpDescription.get(j)));
-                }
-
+            if (formatLine.equalsIgnoreCase("{description}") && warp.getDescription() != null) {
+                if (wrappedDescription != null && wrappedDescription.size() > 0)
+                    for (int j = -1; ++j < wrappedDescription.size(); )
+                        newLore.add(warp.getDescriptionColor() + wrappedDescription.get(j));
                 continue;
             }
 
@@ -682,19 +653,19 @@ public class Manager {
             String invalidRetrieval = getPluginInstance().getConfig().getString("warp-icon-section.invalid-retrieval");
             if (invalidRetrieval == null) invalidRetrieval = "";
 
-            furtherFormattedLine = formatLine.replace("{creation-date}", warp.getCreationDate())
+            furtherFormattedLine = formatLine.replace("{creation-date}", warp.getCreationDate() != null ? warp.getCreationDate() : "")
                     .replace("{assistant-count}", String.valueOf(warp.getAssistants().size()))
                     .replace("{usage-price}", String.valueOf(warp.getUsagePrice()))
                     .replace("{list-count}", String.valueOf(warp.getPlayerList().size()))
-                    .replace("{status}", Objects.requireNonNull(statusName))
-                    .replace("{theme}", warp.getIconTheme() != null && warp.getIconTheme().contains(":") ? warp.getIconTheme().split(":")[0] : "")
+                    .replace("{status}", statusName != null ? statusName : "")
+                    .replace("{theme}", (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) ? warp.getIconTheme().split(",")[0] : "")
                     .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
-                    .replace("{player}", Objects.requireNonNull(player.getName()))
+                    .replace("{player}", player != null ? Objects.requireNonNull(player.getName()) : "")
                     .replace("{traffic}", String.valueOf(warp.getTraffic())).replace("{owner}", offlinePlayer != null ? (offlinePlayer.getName() != null ? offlinePlayer.getName() : invalidRetrieval) : invalidRetrieval)
                     .replace("{likes}", String.valueOf(warp.getLikes())).replace("{dislikes}", String.valueOf(warp.getDislikes()))
                     .replace("{like-bar}", warp.getLikeBar());
 
-            if (foundEventPlaceholder != null) {
+            if (foundEventPlaceholder != null && player != null) {
                 switch (foundEventPlaceholder) {
                     case "{is-owner}":
                         if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
@@ -739,71 +710,73 @@ public class Manager {
         if (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) {
             String[] themeArgs = warp.getIconTheme().split(",");
 
-            String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
+            if (themeArgs.length <= 3) {
+                String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
 
-            int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
-            if (materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) {
-                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
-                ItemMeta itemMeta = item.getItemMeta();
-                if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                    itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                    itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                    item.setItemMeta(itemMeta);
-                }
-                return item;
-            } else {
-                Material material;
-                try {
-                    material = Material.getMaterial(materialName);
-                } catch (Exception ignored) {
-                    material = Material.ARROW;
-                }
-
-                ItemStack item = buildItem(material, durability, warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
-                ItemMeta itemMeta = item.getItemMeta();
-                if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                    itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                    itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                    item.setItemMeta(itemMeta);
-                }
-
-                return item;
-            }
-        } else {
-            warp.setIconTheme("");
-            ItemStack item;
-            if (warp.getOwner() != null) {
-                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
-                ItemMeta itemMeta = item.getItemMeta();
-                if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                    itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                    itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                    item.setItemMeta(itemMeta);
-                }
-            } else {
-                if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
-                        || getPluginInstance().getServerVersion().startsWith("v1_15"))
-                    item = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), 1);
-                else item = new ItemStack(Objects.requireNonNull(Material.getMaterial("SKULL_ITEM")), 1, (short) 3);
-
-                ItemMeta itemMeta = item.getItemMeta();
-                if (itemMeta != null) {
-                    itemMeta.setDisplayName(colorText(warp.getDisplayNameColor() + warp.getWarpName()));
-                    itemMeta.setLore(newLore);
-
-                    if (warp.hasIconEnchantedLook()) {
+                int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
+                if (materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) {
+                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+                    ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
+                    ItemMeta itemMeta = item.getItemMeta();
+                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
                         itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
                         itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        item.setItemMeta(itemMeta);
+                    }
+                    return item;
+                } else {
+                    Material material;
+                    try {
+                        material = Material.getMaterial(materialName);
+                    } catch (Exception ignored) {
+                        material = Material.ARROW;
                     }
 
-                    item.setItemMeta(itemMeta);
+                    ItemStack item = buildItem(material, durability, warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
+                    ItemMeta itemMeta = item.getItemMeta();
+                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
+                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        item.setItemMeta(itemMeta);
+                    }
+
+                    return item;
                 }
             }
-
-            return item;
         }
+
+        warp.setIconTheme("");
+        ItemStack item;
+        if (warp.getOwner() != null) {
+            OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+            item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
+            ItemMeta itemMeta = item.getItemMeta();
+            if (warp.hasIconEnchantedLook() && itemMeta != null) {
+                itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                item.setItemMeta(itemMeta);
+            }
+        } else {
+            if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
+                    || getPluginInstance().getServerVersion().startsWith("v1_15"))
+                item = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), 1);
+            else item = new ItemStack(Objects.requireNonNull(Material.getMaterial("SKULL_ITEM")), 1, (short) 3);
+
+            ItemMeta itemMeta = item.getItemMeta();
+            if (itemMeta != null) {
+                itemMeta.setDisplayName(colorText(warp.getDisplayNameColor() + warp.getWarpName()));
+                itemMeta.setLore(newLore);
+
+                if (warp.hasIconEnchantedLook()) {
+                    itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                    itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                }
+
+                item.setItemMeta(itemMeta);
+            }
+        }
+
+        return item;
     }
 
     public ItemStack buildItemFromId(OfflinePlayer player, String currentFilterStatus, String menuPath, String itemId) {
@@ -1315,6 +1288,30 @@ public class Manager {
         return inventory;
     }
 
+    // economy stuff
+    public boolean initiateEconomyCharge(Player player, double chargeAmount) {
+        boolean useVault = getPluginInstance().getConfig().getBoolean("general-section.use-vault");
+        if (useVault && !player.hasPermission("hyperdrive.economybypass") && chargeAmount > 0) {
+            EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, chargeAmount);
+            getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+            if (!economyChargeEvent.isCancelled()) {
+                if (!getPluginInstance().getVaultHandler().getEconomy().has(player, economyChargeEvent.getAmount())) {
+                    String message = getPluginInstance().getLangConfig().getString("insufficient-funds");
+                    if (message != null && !message.equalsIgnoreCase(""))
+                        getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(chargeAmount)).replace("{player}", player.getName()), player);
+                    return false;
+                }
+
+                getPluginInstance().getVaultHandler().getEconomy().withdrawPlayer(player, chargeAmount);
+                String message = getPluginInstance().getLangConfig().getString("transaction-success");
+                if (message != null && !message.equalsIgnoreCase(""))
+                    getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(chargeAmount)).replace("{player}", player.getName()), player);
+            }
+        }
+
+        return true;
+    }
+
     // warp stuff
     public String getNextAnimationSet(Warp warp) {
         List<String> animationSetList = getPluginInstance().getConfig()
@@ -1471,16 +1468,6 @@ public class Manager {
         return getChatInteractionMap().isEmpty() || !getChatInteractionMap().containsKey(player.getUniqueId());
     }
 
-    public boolean isNotChatInteractionId(String text) {
-        String[] ids = {"create-warp", "rename", "change-status", "change-name-color", "edit-description",
-                "give-ownership", "give-assistant", "remove-assistant", "add-to-whitelist", "remove-from-whitelist",
-                "change-usage-price", "add-command", "remove-command"};
-        for (int i = -1; ++i < ids.length; )
-            if (ids[i].equalsIgnoreCase(text))
-                return false;
-        return true;
-    }
-
     // getters and setters
     private HyperDrive getPluginInstance() {
         return pluginInstance;
@@ -1544,14 +1531,6 @@ public class Manager {
 
     public void setSimpleDateFormat(SimpleDateFormat simpleDateFormat) {
         this.simpleDateFormat = simpleDateFormat;
-    }
-
-    private HashMap<UUID, Double> getLastTransactionMap() {
-        return lastTransactionMap;
-    }
-
-    private void setLastTransactionMap(HashMap<UUID, Double> lastTransactionMap) {
-        this.lastTransactionMap = lastTransactionMap;
     }
 
     private ActionBarHandler getActionBarHandler() {

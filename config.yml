@@ -3,12 +3,6 @@
 mysql-connection:
   # If this option is enabled, HyperDrive will enable cross-server teleportation and MySQL warp saving/loading.
   use-mysql: false
-  # If this is enabled, HyperDrive will convert all MySQL warps to flat file warps. 'use-mysql' must be enabled.
-  # (NOTE: DO NOT ENABLE WITH 'run-flat-file-converter').
-  run-mysql-converter: false
-  # If this is enabled, HyperDrive will convert all flat file warps to MySQL warps. 'use-mysql' must be enabled.
-  # (NOTE: DO NOT ENABLE WITH 'run-mysql-converter').
-  run-flat-file-converter: false
   # If a warp's IP is found blank or null, its IP will be replaced with this IP similar to a backup.
   default-ip: "127.0.0.1"
   # Below, define your MySQL information. THE DEFINED DATABASE MUST ALREADY EXIST.
@@ -39,6 +33,8 @@ general-section:
   # If this option is enabled, all warps found in the existing Essentials folder will be converted into HyperDrive warps.
   # (Note: No essentials warps will be removed; therefore, please disable this option after the conversion is complete.)
   essentials-converter: false
+  # If using the essentials converter, set this to the name of your installed essentials plugin.
+  essentials-name: "Essentials"
   # This is what the user must type to forcefully cancel a chat interaction.
   chat-interaction-cancel: "cancel"
   # This is the format that is used for toggle based options. These will be the two values used when a option is either enabled or disabled (Please use the format <enable>:<disable>).
@@ -63,23 +59,6 @@ general-section:
   custom-alias-commands: []
   # Worlds found in this list will not allow warp creation.
   world-blacklist: []
-
-hooks-section:
-  # If this option is enabled, HyperDrive will hook accordingly into WorldGuard, if needed.
-  use-worldguard: false
-  # If a region's name is in this list hyperdrive will allow its magic to perform in the region.
-  world-guard-whitelist:
-    - "allowed-region"
-  # If this option is enabled, HyperDrive will hook accordingly into Factions, if needed.
-  use-factions: false
-  # If this option is enabled, HyperDrive will hook accordingly into ASkyBlock, if needed.
-  use-askyblock: false
-  # If this option is enabled, HyperDrive will hook accordingly into GriefPrevention, if needed.
-  use-grief-prevention: false
-  # If this option is enabled, HyperDrive will hook accordingly into Towny, if needed.
-  use-towny: false
-  # If this option is enabled, HyperDrive will hook accordingly into Residence, if needed.
-  use-residence: false
 
 # Here is where filters can be customized to remove unwanted symbols or words from use in the plugin's features.
 filter-section:
@@ -202,13 +181,14 @@ warp-icon-section:
   default-icon-material: "PLAYER_HEAD,0,1"
   # When the player sets the description to only this symbol, the description will be cleared.
   description-clear-symbol: "-"
-  # This is the maximum character count per description line when setting it. All characters past this count will be
-  # wrapped to the next line.
-  description-line-cap: 32
+  # This is the maximum word count per description line when setting it. All words past this count will be
+  # wrapped to the next line unless it is a long word to completely and the word is under .
+  description-line-cap: 5
+  # If a long word exceeds this length in characters, it will be trimmed to this length for cleanliness.
+  # (NOTE: This can be set to -1 to disable this check)
+  long-word-wrap: 16
   # This is the default description that is set to a newly created warp.
-  default-description:
-    - "&7This is the default HyperDrive warp description."
-    - "&7(Note: This can be changed inside the edit menu)"
+  default-description: "&7This is the default HyperDrive warp description. &7(Note: This can be changed inside the edit menu)"
   # This is the lore the warp icon is given inside of menus.
   # Current Placeholders:
   # {description} - replaces the line with the first description line while adding the remaining lines below it.

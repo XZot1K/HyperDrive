@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals.cmds;
 
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -15,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
+import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
@@ -68,8 +68,7 @@ public class MainCommands implements CommandExecutor {
                     case 2:
                         if (args[0].equalsIgnoreCase("help")) {
                             if (commandSender.hasPermission("hyperdrive.admin.help"))
-                                sendAdminHelpPage(commandSender,
-                                        getPluginInstance().getManager().isNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
+                                sendAdminHelpPage(commandSender, !getPluginInstance().getManager().isNotNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
                             else {
                                 commandSender.sendMessage(getPluginInstance().getManager().colorText(
                                         getPluginInstance().getLangConfig().getString("no-permission")));
@@ -153,8 +152,7 @@ public class MainCommands implements CommandExecutor {
                                 beginDenyCommand(commandSender, args[1]);
                                 return true;
                             case "help":
-                                sendHelpPage(commandSender,
-                                        getPluginInstance().getManager().isNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
+                                sendHelpPage(commandSender, !getPluginInstance().getManager().isNotNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
                                 return true;
                             case "create":
                                 runWarpCreationCommand(commandSender, args[1]);
@@ -239,7 +237,7 @@ public class MainCommands implements CommandExecutor {
         }
 
         warp.setStatus(enteredStatus);
-        warp.save(true, getPluginInstance().getConnection() != null);
+        warp.save(true);
         String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("status-set"))
                 .replace("{warp}", warp.getWarpName()).replace("{status}", WordUtils.capitalize(enteredStatus.name().toLowerCase()));
         if (commandSender instanceof Player)
@@ -608,11 +606,10 @@ public class MainCommands implements CommandExecutor {
                     .replace("{warp}", warpName), player);
         } else {
             warp.register();
-            warp.save(true, getPluginInstance().getConnection() != null);
-            getPluginInstance().getManager()
-                    .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-created"))
-                            .replace("{warp}", warpName), player);
+            warp.save(true);
+            getPluginInstance().getManager().sendCustomMessage(Objects
+                    .requireNonNull(getPluginInstance().getLangConfig().getString("warp-created"))
+                    .replace("{warp}", warpName), player);
         }
     }
 
@@ -631,30 +628,20 @@ public class MainCommands implements CommandExecutor {
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
 
-        if ((getPluginInstance().getConnection() != null
-                && getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))) {
+        if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
             String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
-                    serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
-                            || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                            ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":"
-                            + getPluginInstance().getServer().getPort()
-                            : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":"
-                            + getPluginInstance().getServer().getPort());
+                    serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
+                            ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
+                            : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
 
             if (!warpIP.equalsIgnoreCase(serverIP)) {
                 String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
                 if (server == null) {
                     if (commandSender instanceof Player)
-                        getPluginInstance().getManager().sendCustomMessage(
-                                Objects.requireNonNull(
-                                        getPluginInstance().getLangConfig().getString("ip-ping-fail"))
-                                        .replace("{warp}", warp.getWarpName())
-                                        .replace("{ip}", warp.getServerIPAddress()),
-                                (Player) commandSender);
+                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("ip-ping-fail"))
+                                .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress()), (Player) commandSender);
                     else
-                        commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getLangConfig().getString("ip-ping-fail"))
+                        commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("ip-ping-fail"))
                                 .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress())));
                     return true;
                 }
@@ -690,23 +677,19 @@ public class MainCommands implements CommandExecutor {
     private void runReloadCommand(CommandSender commandSender) {
         if (!commandSender.hasPermission("hyperdrive.reload")) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getLangConfig().getString("no-permission"),
-                        (Player) commandSender);
+                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("no-permission"), (Player) commandSender);
             else
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
             return;
         }
 
-        getPluginInstance().stopTasks();
+        getPluginInstance().stopTasks(getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"));
         getPluginInstance().reloadConfigs();
-        getPluginInstance().getManager().setSimpleDateFormat(new SimpleDateFormat(
-                Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
+        getPluginInstance().getManager().setSimpleDateFormat(new SimpleDateFormat(Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-            getPluginInstance().saveWarps(getPluginInstance().getConnection() != null);
+            getPluginInstance().saveWarps(false);
             getPluginInstance().getManager().getWarpMap().clear();
-            getPluginInstance().loadWarps(getPluginInstance().getConnection() != null);
+            getPluginInstance().loadWarps();
             getPluginInstance().startTasks();
         });
 
@@ -727,34 +710,24 @@ public class MainCommands implements CommandExecutor {
 
         Player player = (Player) commandSender;
         if (!getPluginInstance().getManager().doesWarpExist(warpName)) {
-            getPluginInstance().getManager()
-                    .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                            .replace("{warp}", warpName), player);
+            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
+                    .replace("{warp}", warpName), player);
             return;
         }
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-        if (warp.getStatus() != EnumContainer.Status.PUBLIC
-                && !warp.getOwner().toString().equals(player.getUniqueId().toString())
-                && !warp.getAssistants().contains(player.getUniqueId())
-                && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())
-                && !(player.hasPermission("hyperdrive.warps." + warp.getWarpName())
-                || player.hasPermission("hyperdrive.warps.*"))) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("no-permission"), player);
+        if (warp.getStatus() != EnumContainer.Status.PUBLIC && !warp.getOwner().toString().equals(player.getUniqueId().toString())
+                && !warp.getAssistants().contains(player.getUniqueId()) && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())
+                && !(player.hasPermission("hyperdrive.warps." + warp.getWarpName()) || player.hasPermission("hyperdrive.warps.*"))) {
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("no-permission"), player);
             return;
         }
 
-        if ((getPluginInstance().getConnection() != null
-                && getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))) {
+        if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
             String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
-                    serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
-                            || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                            ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":"
-                            + getPluginInstance().getServer().getPort()
-                            : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":"
-                            + getPluginInstance().getServer().getPort());
+                    serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
+                            ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
+                            : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
 
             if (!warpIP.equalsIgnoreCase(serverIP)) {
                 String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
@@ -766,8 +739,7 @@ public class MainCommands implements CommandExecutor {
             }
         }
 
-        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp",
-                getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration"));
+        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration"));
         if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-cooldown"))
                     .replace("{duration}", String.valueOf(currentCooldown)), player);
@@ -779,20 +751,22 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        if (getPluginInstance().getConfig().getBoolean("general-section.use-vault")
-                && !player.hasPermission("hyperdrive.economybypass")
-                && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
-                && !warp.getAssistants().contains(player.getUniqueId())
+        if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
+                && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
                 && (warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
-            EconomyResponse economyResponse = getPluginInstance().getVaultEconomy().withdrawPlayer(player,
-                    warp.getUsagePrice());
-            if (!economyResponse.transactionSuccess()) {
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("insufficient-funds"))
-                        .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
-                return;
-            } else
+            EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
+            getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+            if (!economyChargeEvent.isCancelled()) {
+                if (!getPluginInstance().getVaultHandler().getEconomy().has(player, economyChargeEvent.getAmount())) {
+                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("insufficient-funds"))
+                            .replace("{amount}", String.valueOf(economyChargeEvent.getAmount())), player);
+                    return;
+                }
+
+                getPluginInstance().getVaultHandler().getEconomy().withdrawPlayer(player, economyChargeEvent.getAmount());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("transaction-success"))
-                        .replace("{amount}", String.valueOf(warp.getUsagePrice())), player);
+                        .replace("{amount}", String.valueOf(economyChargeEvent.getAmount())), player);
+            }
         }
 
         int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0;
@@ -802,27 +776,22 @@ public class MainCommands implements CommandExecutor {
             if (delayTheme.contains("/")) {
                 String[] delayThemeArgs = delayTheme.split("/");
                 getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1],
-                        EnumContainer.Animation.valueOf(
-                                delayThemeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_")),
-                        duration);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0].toUpperCase().replace(" ", "_")
+                        .replace("-", "_")), duration);
             }
         }
 
         String title = getPluginInstance().getConfig().getString("teleportation-section.start-title"),
                 subTitle = getPluginInstance().getConfig().getString("teleportation-section.start-sub-title");
         if (title != null && subTitle != null)
-            getPluginInstance().getManager().sendTitle(player,
-                    title.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()),
-                    subTitle.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()), 0,
-                    5, 0);
+            getPluginInstance().getManager().sendTitle(player, title.replace("{duration}", String.valueOf(duration))
+                    .replace("{warp}", warp.getWarpName()), subTitle.replace("{duration}", String.valueOf(duration))
+                    .replace("{warp}", warp.getWarpName()), 0, 5, 0);
 
-        getPluginInstance().getManager().sendActionBar(player, Objects
-                .requireNonNull(getPluginInstance().getConfig().getString("teleportation-section.start-bar-message"))
+        getPluginInstance().getManager().sendActionBar(player, Objects.requireNonNull(getPluginInstance().getConfig().getString("teleportation-section.start-bar-message"))
                 .replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
 
-        getPluginInstance().getManager().sendCustomMessage(Objects
-                .requireNonNull(getPluginInstance().getLangConfig().getString("teleportation-start"))
+        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("teleportation-start"))
                 .replace("{warp}", warp.getWarpName()).replace("{duration}", String.valueOf(duration)), player);
 
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(), duration);
@@ -830,15 +799,13 @@ public class MainCommands implements CommandExecutor {
 
     private void openListMenu(CommandSender commandSender) {
         if (!(commandSender instanceof Player)) {
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
+            commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!player.hasPermission("hyperdrive.use")) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("no-permission"), player);
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("no-permission"), player);
             return;
         }
 
@@ -870,9 +837,9 @@ public class MainCommands implements CommandExecutor {
         page2.add("&7&l*&r &e/warps &7- &aopens the warp list menu.");
         page2.add("&7&l*&r &e/warps <name> &7- &aattempts to teleport to the entered warp.");
         page2.add("&7&l*&r &e/warps <name> <player> &7- &aattempts to teleport the entered player to the entered warp.");
-        page2.add("&7&l*&r &e/warps rtp &7- &abegins the random teleportation process on the sender.");
-        page2.add("&7&l*&r &e/warps rtp <player> &7- &abegins the random teleportation process on the entered player.");
-        page2.add("&7&l*&r &e/warps rtp <player> <world> &7- &abegins the random teleportation process on the entered player to the entered world.");
+        page2.add("&7&l*&r &e/rtp &7- &abegins the random teleportation process on the sender.");
+        page2.add("&7&l*&r &e/rtp <player> &7- &abegins the random teleportation process on the entered player.");
+        page2.add("&7&l*&r &e/rtp <player> <world> &7- &abegins the random teleportation process on the entered player to the entered world.");
         page2.add("");
         getAdminHelpPages().put(2, page2);
 
@@ -943,8 +910,8 @@ public class MainCommands implements CommandExecutor {
         page3.add("&7&l*&r &e/tptoggle &7- &atoggles teleportation such as TPA requests and forceful teleportation commands.");
         page3.add("&7&l*&r &e/back &7- &aattempts to teleport to the last teleport location.");
         page3.add("&7&l*&r &e/tpahere <player> &7- &asends a request for the player to teleport to you.");
-        page3.add("&7&l*&r &e/warps rtp &7- &abegins the random teleportation process.");
-        page3.add("&7&l*&r &e/warps rtp <world> &7- &abegins the random teleportation process to the specified world.");
+        page3.add("&7&l*&r &e/rtp &7- &abegins the random teleportation process.");
+        page3.add("&7&l*&r &e/rtp <world> &7- &abegins the random teleportation process to the specified world.");
         page3.add("&7&l*&r &e/spawn &7- &ateleports to the normal spawn, if it exists.");
         page3.add("");
         getHelpPages().put(3, page3);

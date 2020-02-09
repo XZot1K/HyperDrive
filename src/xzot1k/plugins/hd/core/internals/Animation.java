@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals;
@@ -27,6 +27,7 @@ public class Animation {
     }
 
     public void playAnimation(Player player, String particleEffect, EnumContainer.Animation animationType, int duration) {
+
         switch (animationType) {
             case CONE:
 

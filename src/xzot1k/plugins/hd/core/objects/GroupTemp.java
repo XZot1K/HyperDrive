@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.objects;
@@ -57,7 +57,7 @@ public class GroupTemp {
             int duration = getPluginInstance().getConfig().getInt("teleportation-section.group-request-duration");
             String animationSet = getPluginInstance().getConfig()
                     .getString("special-effects-section.group-teleport-animation"),
-                    teleportSound = getPluginInstance().getConfig().getString("general-section.global-sounds.teleport")
+                    teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                             .toUpperCase().replace(" ", "_").replace("-", "_");
             boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"),
                     useCrossWarping = getPluginInstance().getConfig()
@@ -96,24 +96,17 @@ public class GroupTemp {
                                 if (playerUniqueId == null)
                                     continue;
 
-                                OfflinePlayer offlinePlayer = getPluginInstance().getServer()
-                                        .getOfflinePlayer(playerUniqueId);
-                                if (offlinePlayer == null || !offlinePlayer.isOnline())
-                                    continue;
+                                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
+                                if (!offlinePlayer.isOnline()) continue;
 
-                                if (useCrossWarping && useMySQL && getPluginInstance().getConnection() != null) {
+                                if (useCrossWarping && useMySQL && getPluginInstance().getDatabaseConnection() != null) {
                                     if (getDestination().getWarp() != null) {
-                                        String warpIP = getDestination().getWarp().getServerIPAddress()
-                                                .replace("localhost", "127.0.0.1"),
+                                        String warpIP = getDestination().getWarp().getServerIPAddress(),
                                                 serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
-                                                        || getPluginInstance().getServer().getIp().equalsIgnoreCase(
-                                                        "0.0.0.0")) ? getPluginInstance().getConfig()
-                                                        .getString("mysql-connection.default-ip") + ":"
-                                                        + getPluginInstance().getServer().getPort()
-                                                        : (getPluginInstance().getServer().getIp()
-                                                        .replace("localhost", "127.0.0.1") + ":"
-                                                        + getPluginInstance().getServer()
-                                                        .getPort());
+                                                        || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
+                                                        ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":"
+                                                        + getPluginInstance().getServer().getPort() : (getPluginInstance().getServer().getIp()
+                                                        .replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
 
                                         if (!warpIP.equalsIgnoreCase(serverIP)) {
                                             String server = getPluginInstance().getBungeeListener()
@@ -155,25 +148,20 @@ public class GroupTemp {
 
                                 teleportCount += 1;
                                 getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getConfig().getString("language-section.group-teleported")
+                                        Objects.requireNonNull(getPluginInstance().getLangConfig().getString("group-teleported"))
                                                 .replace("{player}", player.getName()),
                                         offlinePlayer.getPlayer());
                             }
 
-                            if (useCrossWarping && useMySQL && getPluginInstance().getConnection() != null) {
+                            if (useCrossWarping && useMySQL && getPluginInstance().getDatabaseConnection() != null) {
                                 if (getDestination().getWarp() != null) {
-                                    String warpIP = getDestination().getWarp().getServerIPAddress().replace("localhost",
-                                            "127.0.0.1"),
+                                    String warpIP = getDestination().getWarp().getServerIPAddress().replace("localhost", "127.0.0.1"),
                                             serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
-                                                    || getPluginInstance().getServer().getIp()
-                                                    .equalsIgnoreCase("0.0.0.0"))
-                                                    ? getPluginInstance().getConfig().getString(
-                                                    "mysql-connection.default-ip") + ":"
-                                                    + getPluginInstance().getServer().getPort()
-                                                    : (getPluginInstance().getServer().getIp()
-                                                    .replace("localhost", "127.0.0.1") + ":"
-                                                    + getPluginInstance().getServer()
-                                                    .getPort());
+                                                    || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
+                                                    ? getPluginInstance().getConfig().getString("mysql-connection.default-ip")
+                                                    + ":" + getPluginInstance().getServer().getPort()
+                                                    : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":"
+                                                    + getPluginInstance().getServer().getPort());
 
                                     if (!warpIP.equalsIgnoreCase(serverIP)) {
                                         String server = getPluginInstance().getBungeeListener()
@@ -212,22 +200,21 @@ public class GroupTemp {
                             }
 
                             if (teleportCount > 0)
-                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig()
-                                        .getString("language-section.group-teleport-success"), player);
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig()
+                                        .getString("group-teleport-success"), player);
                             else
-                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig()
-                                        .getString("language-section.group-teleport-fail"), player);
+                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig()
+                                        .getString("group-teleport-fail"), player);
                         } else
                             getPluginInstance().getManager().sendCustomMessage(
-                                    getPluginInstance().getConfig().getString("language-section.destination-invalid"),
+                                    getPluginInstance().getLangConfig().getString("destination-invalid"),
                                     player);
 
                     } else
                         getPluginInstance().getManager().sendCustomMessage(
-                                getPluginInstance().getConfig().getString("language-section.group-teleport-fail"),
+                                getPluginInstance().getLangConfig().getString("group-teleport-fail"),
                                 player);
 
-                    getPluginInstance().getManager().returnLastTransactionAmount(player);
                     getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
                     getPluginInstance().getTeleportationHandler().clearGroupTemp(player);
                     cancel();

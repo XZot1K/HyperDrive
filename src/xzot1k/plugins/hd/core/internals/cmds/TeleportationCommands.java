@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals.cmds;
@@ -565,7 +565,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        if (getPluginInstance().getConnection() == null) {
+        if (getPluginInstance().getConfig().getBoolean("mysql-connection-section.use-mysql") && getPluginInstance().getDatabaseConnection() == null) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance()
                         .getLangConfig().getString("mysql-disabled")), (Player) commandSender);
@@ -588,7 +588,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         // X coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[3])) {
+        if (getPluginInstance().getManager().isNotNumeric(args[3])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("coordinate-invalid")), (Player) commandSender);
             else
@@ -597,7 +597,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         // Y coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[4])) {
+        if (getPluginInstance().getManager().isNotNumeric(args[4])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("coordinate-invalid")), (Player) commandSender);
             else
@@ -606,7 +606,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         // Z coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[5])) {
+        if (getPluginInstance().getManager().isNotNumeric(args[5])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("coordinate-invalid")), (Player) commandSender);
             else
@@ -646,7 +646,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        if (getPluginInstance().getConnection() == null) {
+        if (getPluginInstance().getConfig().getBoolean("mysql-connection-section.use-mysql") && getPluginInstance().getDatabaseConnection() == null) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance()
                         .getLangConfig().getString("mysql-disabled")), (Player) commandSender);
@@ -669,7 +669,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         // X coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[3])) {
+        if (getPluginInstance().getManager().isNotNumeric(args[3])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("coordinate-invalid")), (Player) commandSender);
             else
@@ -678,7 +678,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         // Y coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[4])) {
+        if (getPluginInstance().getManager().isNotNumeric(args[4])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("coordinate-invalid")), (Player) commandSender);
             else
@@ -687,7 +687,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         // Z coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[5])) {
+        if (getPluginInstance().getManager().isNotNumeric(args[5])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("coordinate-invalid")), (Player) commandSender);
             else
@@ -696,7 +696,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         // Yaw coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[6])) {
+        if (getPluginInstance().getManager().isNotNumeric(args[6])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("coordinate-invalid")), (Player) commandSender);
             else
@@ -705,7 +705,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         // Pitch coordinate
-        if (!getPluginInstance().getManager().isNumeric(args[7])) {
+        if (getPluginInstance().getManager().isNotNumeric(args[7])) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("coordinate-invalid")), (Player) commandSender);
             else
@@ -1172,7 +1172,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        if (!getPluginInstance().getManager().isNumeric(xEntry) || !getPluginInstance().getManager().isNumeric(yEntry) || !getPluginInstance().getManager().isNumeric(zEntry)) {
+        if (getPluginInstance().getManager().isNotNumeric(xEntry) || getPluginInstance().getManager().isNotNumeric(yEntry) || getPluginInstance().getManager().isNotNumeric(zEntry)) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("coordinate-invalid"), (Player) commandSender);
             return;
         }
@@ -1214,14 +1214,14 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        if (!getPluginInstance().getManager().isNumeric(xEntry) || !getPluginInstance().getManager().isNumeric(yEntry) || !getPluginInstance().getManager().isNumeric(zEntry)) {
+        if (getPluginInstance().getManager().isNotNumeric(xEntry) || getPluginInstance().getManager().isNotNumeric(yEntry) || getPluginInstance().getManager().isNotNumeric(zEntry)) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("coordinate-invalid"), (Player) commandSender);
             return;
         }
 
         World world = getPluginInstance().getServer().getWorld(worldName);
         if (world == null) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("world-invalid"), (Player) commandSender);
+            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("world-invalid")).replace("{world}", worldName), (Player) commandSender);
             return;
         }
 
@@ -1265,7 +1265,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        if (!getPluginInstance().getManager().isNumeric(xEntry) || !getPluginInstance().getManager().isNumeric(yEntry) || !getPluginInstance().getManager().isNumeric(zEntry)) {
+        if (getPluginInstance().getManager().isNotNumeric(xEntry) || getPluginInstance().getManager().isNotNumeric(yEntry) || getPluginInstance().getManager().isNotNumeric(zEntry)) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("coordinate-invalid"))
                         .replace("{player}", playerName), (Player) commandSender);
@@ -1277,10 +1277,10 @@ public class TeleportationCommands implements CommandExecutor {
         World world = getPluginInstance().getServer().getWorld(worldName);
         if (world == null) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("world-invalid"))
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("world-invalid")).replace("{world}", worldName)
                         .replace("{player}", playerName), (Player) commandSender);
             else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("world-invalid"))
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("world-invalid")).replace("{world}", worldName)
                         .replace("{world}", worldName));
             return;
         }

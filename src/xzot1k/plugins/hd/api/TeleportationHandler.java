@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api;
@@ -34,8 +34,6 @@ import xzot1k.plugins.hd.api.events.RandomTeleportEvent;
 import xzot1k.plugins.hd.api.events.WarpEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.internals.Animation;
-import xzot1k.plugins.hd.core.internals.hooks.worldguard.WG_6;
-import xzot1k.plugins.hd.core.internals.hooks.worldguard.WG_7;
 import xzot1k.plugins.hd.core.objects.Destination;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
 import xzot1k.plugins.hd.core.objects.TeleportTemp;
@@ -133,28 +131,21 @@ public class TeleportationHandler implements Runnable {
                                             warp.setTraffic(warp.getTraffic() + 1);
 
                                     boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-                                    if (useMySQL && getPluginInstance().getConnection() != null) {
-                                        String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
-                                                serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("")
-                                                        || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                                                        ? getPluginInstance().getConfig().getString("mysql-connection.default-ip")
-                                                        + ":" + getPluginInstance().getServer().getPort()
-                                                        : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1")
-                                                        + ":" + getPluginInstance().getServer().getPort());
+                                    if (useMySQL && getPluginInstance().getDatabaseConnection() != null) {
+                                        String serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
+                                                ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
+                                                : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
 
-                                        if (!warpIP.equalsIgnoreCase(serverIP)) {
+                                        if (!warp.getServerIPAddress().equalsIgnoreCase(serverIP)) {
                                             String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
                                             if (server != null) {
                                                 for (String command : warp.getCommands()) {
                                                     if (command.toUpperCase().endsWith(":PLAYER"))
-                                                        getPluginInstance().getServer().dispatchCommand(player, command
-                                                                .replaceAll("(?i):PLAYER", "")
-                                                                .replaceAll("(?i):CONSOLE", "")
-                                                                .replace("{player}", player.getName()));
+                                                        getPluginInstance().getServer().dispatchCommand(player, command.replaceAll("(?i):PLAYER", "")
+                                                                .replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
                                                     else if (command.toUpperCase().endsWith(":CONSOLE"))
                                                         getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
-                                                                command.replaceAll("(?i):PLAYER", "")
-                                                                        .replaceAll("(?i):CONSOLE", "")
+                                                                command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "")
                                                                         .replace("{player}", player.getName()));
                                                     else
                                                         getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
@@ -339,8 +330,8 @@ public class TeleportationHandler implements Runnable {
                 String[] lineArgs = line.split(":");
                 if ((lineArgs.length >= 2 && lineArgs[1].contains(","))) {
                     String[] coordinateArgs = lineArgs[1].split(",");
-                    if (getPluginInstance().getManager().isNumeric(coordinateArgs[0]) && getPluginInstance().getManager().isNumeric(coordinateArgs[1])
-                            && getPluginInstance().getManager().isNumeric(coordinateArgs[2])) {
+                    if (!getPluginInstance().getManager().isNotNumeric(coordinateArgs[0]) && !getPluginInstance().getManager().isNotNumeric(coordinateArgs[1])
+                            && !getPluginInstance().getManager().isNotNumeric(coordinateArgs[2])) {
                         if (world.getName().equalsIgnoreCase(lineArgs[0])) {
                             basedLocation = new Location(world, Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
                                     Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(), player.getLocation().getPitch());
@@ -421,7 +412,7 @@ public class TeleportationHandler implements Runnable {
                                     .getMaterial(materialArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
                             int durability = 0;
 
-                            if (getPluginInstance().getManager().isNumeric(materialArgs[1]))
+                            if (!getPluginInstance().getManager().isNotNumeric(materialArgs[1]))
                                 durability = Integer.parseInt(materialArgs[1]);
 
                             if (material != null && foundBlock.getType() == material
@@ -443,7 +434,7 @@ public class TeleportationHandler implements Runnable {
                                         .getMaterial(materialArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
                                 int durability = 0;
 
-                                if (getPluginInstance().getManager().isNumeric(materialArgs[1]))
+                                if (!getPluginInstance().getManager().isNotNumeric(materialArgs[1]))
                                     durability = Integer.parseInt(materialArgs[1]);
 
                                 if (material != null && blockUnder.getType() == material
@@ -459,7 +450,7 @@ public class TeleportationHandler implements Runnable {
                     }
 
                     if (!isForbidden) {
-                        Location newLocation = new Location(finalBasedLocation.getWorld(), x, safeY, z,
+                        Location newLocation = new Location(finalBasedLocation.getWorld(), x + 0.5, safeY + 1.5, z + 0.5,
                                 finalBasedLocation.getYaw(), finalBasedLocation.getPitch());
 
                         RandomTeleportEvent randomTeleportEvent = new RandomTeleportEvent(newLocation, player);
@@ -471,11 +462,10 @@ public class TeleportationHandler implements Runnable {
                             return;
                         }
 
-                        teleportPlayer(player, newLocation.add(0.5, 0, 0.5));
+                        teleportPlayer(player, newLocation);
                         getPluginInstance().getManager().updateCooldown(player, "rtp");
 
-                        String animationLine = getPluginInstance().getConfig()
-                                .getString("special-effects-section.random-teleport-animation");
+                        String animationLine = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-animation");
                         if (animationLine != null && animationLine.contains(":")) {
                             String[] animationArgs = animationLine.split(":");
                             if (animationArgs.length >= 2) {
@@ -488,8 +478,7 @@ public class TeleportationHandler implements Runnable {
                         }
 
                         if (!teleportSound.equalsIgnoreCase(""))
-                            Objects.requireNonNull(newLocation.getWorld()).playSound(newLocation,
-                                    Sound.valueOf(teleportSound), 1, 1);
+                            Objects.requireNonNull(newLocation.getWorld()).playSound(newLocation, Sound.valueOf(teleportSound), 1, 1);
 
                         getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString(".random-teleported"))
                                 .replace("{tries}", String.valueOf(tries - 1))
@@ -528,8 +517,8 @@ public class TeleportationHandler implements Runnable {
                 if ((lineArgs.length >= 2 && lineArgs[1].contains(","))) {
                     String[] coordinateArgs = lineArgs[1].split(",");
                     if (coordinateArgs.length >= 3) {
-                        if (getPluginInstance().getManager().isNumeric(coordinateArgs[0]) && getPluginInstance().getManager().isNumeric(coordinateArgs[1])
-                                && getPluginInstance().getManager().isNumeric(coordinateArgs[2])) {
+                        if (!getPluginInstance().getManager().isNotNumeric(coordinateArgs[0]) && !getPluginInstance().getManager().isNotNumeric(coordinateArgs[1])
+                                && !getPluginInstance().getManager().isNotNumeric(coordinateArgs[2])) {
                             if (basedLocation.getWorld() != null && basedLocation.getWorld().getName().equalsIgnoreCase(lineArgs[0])) {
                                 basedLocation = new Location(getPluginInstance().getServer().getWorld(lineArgs[0]), Double.parseDouble(coordinateArgs[0]),
                                         Double.parseDouble(coordinateArgs[1]), Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(),
@@ -608,7 +597,7 @@ public class TeleportationHandler implements Runnable {
                                     .getMaterial(materialArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
                             int durability = 0;
 
-                            if (getPluginInstance().getManager().isNumeric(materialArgs[1]))
+                            if (!getPluginInstance().getManager().isNotNumeric(materialArgs[1]))
                                 durability = Integer.parseInt(materialArgs[1]);
 
                             if (material != null && foundBlock.getType() == material
@@ -630,7 +619,7 @@ public class TeleportationHandler implements Runnable {
                                         .getMaterial(materialArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
                                 int durability = 0;
 
-                                if (getPluginInstance().getManager().isNumeric(materialArgs[1]))
+                                if (!getPluginInstance().getManager().isNotNumeric(materialArgs[1]))
                                     durability = Integer.parseInt(materialArgs[1]);
 
                                 if (material != null && blockUnder.getType() == material
@@ -646,9 +635,9 @@ public class TeleportationHandler implements Runnable {
                     }
 
                     if (!isForbidden) {
-                        Location newLocation = new Location(finalBasedLocation.getWorld(), x, safeY, z,
+                        Location newLocation = new Location(finalBasedLocation.getWorld(), x + 0.5, safeY + 1.5, z + 0.5,
                                 finalBasedLocation.getYaw(), finalBasedLocation.getPitch());
-                        updateDestination(player, new Destination(getPluginInstance(), newLocation.add(0.5, 0, 0.5)));
+                        updateDestination(player, new Destination(getPluginInstance(), newLocation));
                         foundSafeLocation = true;
                         cancel();
                     }
@@ -684,56 +673,38 @@ public class TeleportationHandler implements Runnable {
             return false;
         boolean isSafeLocation = true;
 
-        Plugin worldGuardPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("WorldGuard");
-        if (worldGuardPlugin != null && getPluginInstance().getConfig().getBoolean("hooks-section.use-worldguard")) {
-            if (worldGuardPlugin.getDescription().getVersion().toLowerCase().startsWith("6")) {
-                if (!WG_6.passedWorldGuardHook(location))
-                    isSafeLocation = false;
-            } else if (worldGuardPlugin.getDescription().getVersion().toLowerCase().startsWith("7")) {
-                if (!WG_7.passedWorldGuardHook(location))
-                    isSafeLocation = false;
-            }
-        }
+        if (getPluginInstance().getWorldGuardHandler() != null && !getPluginInstance().getWorldGuardHandler().passedWorldGuardHook(location))
+            isSafeLocation = false;
 
         Plugin factionsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("Factions");
-        if (factionsPlugin != null && getPluginInstance().getConfig().getBoolean("hooks-section.use-factions")) {
-            String[] authorsList = {"Cayorion", "Madus", "Ulumulu1510", "MarkehMe", "Brettflan"};
-
-            if (factionsPlugin.getDescription().getAuthors().toString().equals(Arrays.toString(authorsList))) {
-                com.massivecraft.factions.entity.Faction factionAtLocation = BoardColl.get()
-                        .getFactionAt(PS.valueOf(location));
+        if (factionsPlugin != null) {
+            if (factionsPlugin.getDescription().getDepend().contains("MassiveCore")) {
+                com.massivecraft.factions.entity.Faction factionAtLocation = BoardColl.get().getFactionAt(PS.valueOf(location));
                 MPlayer mPlayer = MPlayer.get(player);
-                if (!factionAtLocation.getId().equalsIgnoreCase(FactionColl.get().getNone().getId())
-                        && !factionAtLocation.getId().equalsIgnoreCase(mPlayer.getFaction().getId()))
+                if (!factionAtLocation.getId().equalsIgnoreCase(FactionColl.get().getNone().getId()) && !factionAtLocation.getId().equalsIgnoreCase(mPlayer.getFaction().getId()))
                     isSafeLocation = false;
             } else {
                 FLocation fLocation = new FLocation(location);
                 com.massivecraft.factions.Faction factionAtLocation = Board.getInstance().getFactionAt(fLocation);
                 FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
-                if (!factionAtLocation.isWilderness() && !fPlayer.getFaction().getComparisonTag()
-                        .equalsIgnoreCase(factionAtLocation.getComparisonTag()))
+                if (!factionAtLocation.isWilderness() && !fPlayer.getFaction().getComparisonTag().equalsIgnoreCase(factionAtLocation.getComparisonTag()))
                     isSafeLocation = false;
             }
         }
 
-        Plugin askyblockPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("ASkyBlock");
-        if (askyblockPlugin != null && getPluginInstance().getConfig().getBoolean("hooks-section.use-askyblock")) {
+        if (getPluginInstance().getServer().getPluginManager().getPlugin("ASkyBlock") != null) {
             Island island = ASkyBlockAPI.getInstance().getIslandAt(location);
-            if (island != null && !island.getOwner().toString().equals(player.getUniqueId().toString())
-                    && !island.getMembers().contains(player.getUniqueId()))
+            if (island != null && !island.getOwner().toString().equals(player.getUniqueId().toString()) && !island.getMembers().contains(player.getUniqueId()))
                 isSafeLocation = false;
         }
 
-        Plugin griefPreventionPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("GriefPrevention");
-        if (griefPreventionPlugin != null
-                && getPluginInstance().getConfig().getBoolean("hooks-section.use-grief-prevention")) {
+        if (getPluginInstance().getServer().getPluginManager().getPlugin("GriefPrevention") != null) {
             Claim claimAtLocation = GriefPrevention.instance.dataStore.getClaimAt(location, false, null);
             if (claimAtLocation != null)
                 isSafeLocation = false;
         }
 
-        Plugin townyPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("Towny");
-        if (townyPlugin != null && getPluginInstance().getConfig().getBoolean("hooks-section.use-towny")) {
+        if (getPluginInstance().getServer().getPluginManager().getPlugin("Towny") != null) {
             try {
                 Town town = WorldCoord.parseWorldCoord(location).getTownBlock().getTown();
                 if (town != null) isSafeLocation = false;
@@ -741,11 +712,9 @@ public class TeleportationHandler implements Runnable {
             }
         }
 
-        Plugin residence = getPluginInstance().getServer().getPluginManager().getPlugin("Residence");
-        if (residence != null && getPluginInstance().getConfig().getBoolean("hooks-section.use-residence")) {
+        if (getPluginInstance().getServer().getPluginManager().getPlugin("Residence") != null) {
             ClaimedResidence res = Residence.getInstance().getResidenceManager().getByLoc(location);
-            if (res != null)
-                isSafeLocation = false;
+            if (res != null) isSafeLocation = false;
         }
 
         HookCheckEvent hookCheckEvent = new HookCheckEvent(location, player, isSafeLocation);
