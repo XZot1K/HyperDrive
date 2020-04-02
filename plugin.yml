@@ -1,9 +1,10 @@
 name: HyperDrive
-version: 5.3.9
+version: 5.4
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
 description: A high class warp plugin allowing you and your players to warp through space and time with high control.
+load: POSTWORLD
 softdepend: [Vault, WorldGuard, Factions, ASkyBlock, Towny, GriefPrevention, Residence, MultiWorld, Multiverse-Core]
 commands:
   hyperdrive:
@@ -91,6 +92,7 @@ permissions:
       hyperdrive.use.rtpgroup: true
       hyperdrive.use.signs: true
       hyperdrive.spawn: true
+      hyperdrive.use.list: true
 
   # ADMIN STAR PERMISSION
   hyperdrive.admin.*:
@@ -124,6 +126,8 @@ permissions:
       hyperdrive.likebypass: true
       hyperdrive.admin.spawn: true
       hyperdrive.admin.tab: true
+      hyperdrive.admin.list: true
+      hyperdrive.admin.signs: true
 
   # INTENDED PLAYER PERMISSIONS
   hyperdrive.use:
@@ -164,13 +168,16 @@ permissions:
     description: This permission node is used to allow any player with the node to use the /warps <rtpgroup/rtpg> command.
   hyperdrive.use.signs:
     default: op
-    description: This permission node is used to allow any player with the node to create HyperDrive signs.
+    description: This permission node is used to allow any player with the node to use HyperDrive signs.
   hyperdrive.like:
     default: op
     description: This permission node is used to allow any player with the node to like or dislike a warp.
   hyperdrive.spawn:
     default: op
     description: This permission node allows any player to use the /spawn command.
+  hyperdrive.use.list:
+    default: op
+    description: This permission allows the user to see any player list attached to any warp they have access to.
 
   # INTENDED ADMIN PERMISSIONS
   hyperdrive.info:
@@ -242,3 +249,9 @@ permissions:
   hyperdrive.admin.tab:
     default: op
     description: This permission allows the player to tab through all existing warps.
+  hyperdrive.admin.list:
+    default: op
+    description: This permission allows the user to see any player list attached to any warp.
+  hyperdrive.admin.signs:
+    default: op
+    description: This permission node is used to allow any player with the node to create HyperDrive signs.

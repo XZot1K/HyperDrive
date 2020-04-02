@@ -25,14 +25,12 @@ public class GroupTemp {
     private boolean cancelled;
     private List<UUID> selectedPlayers, acceptedPlayers;
 
-    public GroupTemp(HyperDrive pluginInstance, Player player, Destination destination) {
+    public GroupTemp(HyperDrive pluginInstance, List<UUID> selectedPlayers, Player player, Destination destination) {
         setPluginInstance(pluginInstance);
         setAcceptedPlayers(new ArrayList<>());
         setCancelled(false);
         setDestination(destination);
-
-        List<UUID> selectedPlayers = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
-        setSelectedPlayers(selectedPlayers != null ? selectedPlayers : new ArrayList<>());
+        setSelectedPlayers(selectedPlayers);
 
         createTask(player);
     }
@@ -44,8 +42,7 @@ public class GroupTemp {
             return;
         }
 
-        GroupTeleportEvent groupTeleportEvent = new GroupTeleportEvent(
-                getDestination().getLocation().asBukkitLocation(), player, getAcceptedPlayers());
+        GroupTeleportEvent groupTeleportEvent = new GroupTeleportEvent(getDestination().getLocation().asBukkitLocation(), player, getAcceptedPlayers());
         getPluginInstance().getServer().getPluginManager().callEvent(groupTeleportEvent);
         if (groupTeleportEvent.isCancelled())
             return;
@@ -211,9 +208,7 @@ public class GroupTemp {
                                     player);
 
                     } else
-                        getPluginInstance().getManager().sendCustomMessage(
-                                getPluginInstance().getLangConfig().getString("group-teleport-fail"),
-                                player);
+                        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("group-teleport-fail"), player);
 
                     getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
                     getPluginInstance().getTeleportationHandler().clearGroupTemp(player);

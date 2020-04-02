@@ -26,11 +26,13 @@ import xzot1k.plugins.hd.core.internals.Listeners;
 import xzot1k.plugins.hd.core.internals.Metrics;
 import xzot1k.plugins.hd.core.internals.cmds.MainCommands;
 import xzot1k.plugins.hd.core.internals.cmds.TeleportationCommands;
+import xzot1k.plugins.hd.core.internals.hooks.HookChecker;
 import xzot1k.plugins.hd.core.internals.hooks.VaultHandler;
 import xzot1k.plugins.hd.core.internals.hooks.WorldGuardHandler;
 import xzot1k.plugins.hd.core.internals.tabs.WarpTabComplete;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -50,6 +52,7 @@ public class HyperDrive extends JavaPlugin {
     private List<String> databaseWarps;
 
     private String serverVersion;
+    private boolean asyncChunkMethodExists;
     private int teleportationHandlerTaskId, autoSaveTaskId, crossServerTaskId;
 
     private FileConfiguration langConfig, menusConfig;
@@ -57,6 +60,7 @@ public class HyperDrive extends JavaPlugin {
 
     private VaultHandler vaultHandler;
     private WorldGuardHandler worldGuardHandler;
+    private HookChecker hookChecker;
 
     @Override
     public void onLoad() {
@@ -88,7 +92,19 @@ public class HyperDrive extends JavaPlugin {
         saveDefaultConfigs();
         updateConfigs();
 
+        setAsyncChunkMethodExists(false);
+        for (Method method : World.class.getMethods())
+            if (method.getName().equals("getChunkAtAsync") && method.getParameterCount() == 3) {
+                setAsyncChunkMethodExists(true);
+                break;
+            }
+
+        if (!asyncChunkMethodExists())
+            log(Level.WARNING, "Async chunk retrieving methods were not found. Use Paper Spigot to resolve this issue.");
+        else log(Level.INFO, "Async chunk retrieving methods were found!");
+
         if (getConfig().getBoolean("general-section.use-vault")) setVaultHandler(new VaultHandler(getPluginInstance()));
+        setHookChecker(new HookChecker(this));
 
         File warpsFile = new File(getDataFolder(), "/warps.db"),
                 backupFile = new File(getDataFolder(), "/warps-backup.db");
@@ -162,6 +178,8 @@ public class HyperDrive extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        getServer().getScheduler().cancelTasks(this);
+
         saveWarps(false);
         saveData();
 
@@ -216,9 +234,17 @@ public class HyperDrive extends JavaPlugin {
             FileConfiguration yaml = YamlConfiguration.loadConfiguration(reader);
             int updateCount = updateKeys(yaml, name.equalsIgnoreCase("config") ? getConfig() : name.equalsIgnoreCase("lang") ? getLangConfig() : getMenusConfig());
             if (name.equalsIgnoreCase("config")) {
-                String teleporationSound = getConfig().getString("general-section.global-sounds.teleport");
+                String teleporationSound = getConfig().getString("general-section.global-sounds.teleport"), standaloneTeleporationSound = getConfig().getString("general-section.global-sounds.teleport");
                 if (isOffhandVersion) {
                     if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
+
+                        if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"))
+                            getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMEN_TELEPORT");
+                        else getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
+                        updateCount++;
+                    }
+
+                    if (standaloneTeleporationSound == null || standaloneTeleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
 
                         if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"))
                             getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMEN_TELEPORT");
@@ -233,6 +259,11 @@ public class HyperDrive extends JavaPlugin {
                     }
                 } else {
                     if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
+                        getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
+                        updateCount++;
+                    }
+
+                    if (standaloneTeleporationSound == null || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
                         getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
                         updateCount++;
                     }
@@ -453,7 +484,13 @@ public class HyperDrive extends JavaPlugin {
                 String databaseName = getConfig().getString("mysql-connection.database-name"), host = getConfig().getString("mysql-connection.host"),
                         port = getConfig().getString("mysql-connection.port"), username = getConfig().getString("mysql-connection.username"),
                         password = getConfig().getString("mysql-connection.password");
-                setDatabaseConnection(DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/?user=" + username + "&password=" + password));
+
+                StringBuilder propertyString = new StringBuilder();
+                ConfigurationSection propertySection = getPluginInstance().getConfig().getConfigurationSection("mysql-connection.properties");
+                if (propertySection != null) for (String property : propertySection.getKeys(false))
+                    propertyString.append(";").append(property).append("=").append(propertySection.getString(property));
+
+                setDatabaseConnection(DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/?user=" + username + "&password=" + password + propertyString));
 
                 statement = getDatabaseConnection().createStatement();
                 statement.executeUpdate("create database if not exists " + databaseName);
@@ -787,8 +824,7 @@ public class HyperDrive extends JavaPlugin {
             HashMap<UUID, Location> locationMap = new HashMap<>();
             int crossServerTeleportTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
                 Player firstPlayer = getBungeeListener().getFirstPlayer();
-                if (firstPlayer != null)
-                    getBungeeListener().requestServers(firstPlayer);
+                if (firstPlayer != null) getBungeeListener().requestServers(firstPlayer);
 
                 getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
 
@@ -832,23 +868,23 @@ public class HyperDrive extends JavaPlugin {
                                     Location location = new Location(world, Double.parseDouble(locationStringArgs[1]), Double.parseDouble(locationStringArgs[2]),
                                             Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]), Float.parseFloat(locationStringArgs[5]));
                                     locationMap.put(playerUniqueId, location);
+                                } else {
+                                    Player player = getServer().getPlayer(locationString);
+                                    if (player != null) locationMap.put(playerUniqueId, player.getLocation());
                                 }
                             } else {
-                                if (!server_ip.replace("localhost", "127.0.0.1")
-                                        .equalsIgnoreCase((getServer().getIp() + ":" + getServer().getPort())
-                                                .replace("localhost", "127.0.0.1")))
+                                if (!server_ip.replace("localhost", "127.0.0.1").equalsIgnoreCase((getServer().getIp() + ":" + getServer().getPort())
+                                        .replace("localhost", "127.0.0.1")))
                                     continue;
 
                                 if (locationString.contains(",")) {
                                     String[] locationStringArgs = locationString.split(",");
-                                    Location location = new Location(
-                                            getPluginInstance().getServer().getWorld(locationStringArgs[0]),
-                                            Double.parseDouble(locationStringArgs[1]),
-                                            Double.parseDouble(locationStringArgs[2]),
-                                            Double.parseDouble(locationStringArgs[3]),
-                                            Float.parseFloat(locationStringArgs[4]),
-                                            Float.parseFloat(locationStringArgs[5]));
+                                    Location location = new Location(getPluginInstance().getServer().getWorld(locationStringArgs[0]), Double.parseDouble(locationStringArgs[1]),
+                                            Double.parseDouble(locationStringArgs[2]), Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]), Float.parseFloat(locationStringArgs[5]));
                                     locationMap.put(playerUniqueId, location);
+                                } else {
+                                    Player player = getServer().getPlayer(locationString);
+                                    if (player != null) locationMap.put(playerUniqueId, player.getLocation());
                                 }
                             }
                         }
@@ -935,6 +971,7 @@ public class HyperDrive extends JavaPlugin {
             while (resultSet.next()) {
                 String warpName = resultSet.getString("name");
                 if (warpName == null || warpName.equalsIgnoreCase("")) continue;
+                warpName = warpName.replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", "");
 
                 String ipAddress = resultSet.getString("server_ip").replace("localhost", "127.0.0.1"),
                         locationString = resultSet.getString("location");
@@ -1235,5 +1272,21 @@ public class HyperDrive extends JavaPlugin {
 
     private void setWorldGuardHandler(WorldGuardHandler worldGuardHandler) {
         this.worldGuardHandler = worldGuardHandler;
+    }
+
+    public boolean asyncChunkMethodExists() {
+        return asyncChunkMethodExists;
+    }
+
+    private void setAsyncChunkMethodExists(boolean asyncChunkMethodExists) {
+        this.asyncChunkMethodExists = asyncChunkMethodExists;
+    }
+
+    public HookChecker getHookChecker() {
+        return hookChecker;
+    }
+
+    private void setHookChecker(HookChecker hookChecker) {
+        this.hookChecker = hookChecker;
     }
 }

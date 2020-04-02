@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api.objects;
@@ -92,5 +92,15 @@ public class SerializableLocation {
 
     private void setPitch(double pitch) {
         this.pitch = pitch;
+    }
+
+    /**
+     * Gets the location in a string format.
+     *
+     * @return The converted string format
+     */
+    @Override
+    public String toString() {
+        return getWorldName() + ":" + getX() + "," + getY() + "," + getZ() + "," + getYaw() + "," + getPitch();
     }
 }

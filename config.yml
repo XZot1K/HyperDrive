@@ -11,6 +11,9 @@ mysql-connection:
   port: 3306
   username: "root"
   password: ""
+  # These are the connection properties, you can add/remove from this list as long as it follows an identical format.
+  properties:
+    useSSL: "false"
 
 # Here is where everything that is general can be configured
 general-section:
@@ -48,8 +51,10 @@ general-section:
   # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
   # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
   global-sounds:
-    # This is the sound played when a player is teleported.
+    # This is the sound played when a player is teleported through things like warps.
     teleport: "ENTITY_ENDERMAN_TELEPORT"
+    # This is the sound played when a player is teleported through a standalone teleportation command.
+    standalone-teleport: "ENTITY_ENDERMAN_TELEPORT"
   # This is the color that will be placed in front of the header of newly created HyperDrive signs.
   # (Note: ONLY use color codes)
   sign-header-color: "&d"
@@ -71,6 +76,8 @@ filter-section:
 teleportation-section:
   # This is the warp cooldown that a player must wait before warping again (In seconds).
   cooldown-duration: 5
+  # This is the TPA cooldown that a player must wait before using the TPA command again (In seconds).
+  tpa-cooldown: 5
   # If the player teleports while in a vehicle should they be dismounted and teleported?
   # (Note: The mount will be teleported as well, but half a second after to prevent faulty chunk loading)
   teleport-vehicles: true
@@ -82,8 +89,10 @@ teleportation-section:
   damage-cancellation: true
   # If this option is enabled, players will have their teleportation process cancelled upon moving.
   move-cancellation: true
-  # This is the duration the player must wait before engaging teleportation (In seconds).
+  # This is the duration the player must wait before engaging warp teleportation (In seconds).
   warp-delay-duration: 10
+  # This is the duration the player must wait before engaging a standalone teleport (In seconds).
+  standalone-delay-duration: 10
   # These are the title and sub-title that are sent to the player after they are teleported (Note: Set to "" to disable).
   teleport-title: "&eYou have been teleported"
   teleport-sub-title: "&eto the &a{warp} &ewarp."
@@ -102,10 +111,6 @@ teleportation-section:
 
 # Here is where everything related to random teleportation can be customize.
 random-teleport-section:
-  # This determines whether the random teleportation process is allowed to load chunks or not.
-  can-load-chunks: true
-  # This determines whether the random teleportation process is allowed to generate new chunks or not.
-  can-generate-chunks: false
   # How long in between random teleportation processes should the player have to wait before beginning another in seconds.
   cooldown: 10
   # This is the duration the player must wait before engaging random teleportation (In seconds).
@@ -141,27 +146,18 @@ random-teleport-section:
   max-tries: 300
   # If a biome name is contained in this list, that biome will be avoided.
   # Here is a list of biomes: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/block/Biome.html
+  # (NOTE: Biome names can be generalized, for example, if the value "OCEAN" is entered all biomes containing the name "OCEAN" will be blacklisted.)
   biome-blacklist:
-    - "DEEP_OCEAN"
-    - "DEEP_COLD_OCEAN"
-    - "DEEP_FROZEN_OCEAN"
-    - "DEEP_LUKEWARM_OCEAN"
-    - "DEEP_WARM_OCEAN"
-    - "COLD_OCEAN"
-    - "FROZEN_OCEAN"
     - "OCEAN"
-    - "THE_VOID"
-    - "WARM_OCEAN"
   # Materials in this list will be avoided while a player is undergoing random teleportation.
-  # (Format: <material>:<durability>)
+  # (NOTE: The material name can be generalized, for example, the value "leaves" will detect all materials that have that value in their name)
+  # This format is what needs to be followed to coordinate specific data values: <material>:<durability>
   forbidden-materials:
-    - "WATER:-1"
-    - "STATIONARY_WATER:-1"
-    - "LAVA:-1"
-    - "STATIONARY_LAVA:-1"
-    - "LILY_PAD:-1"
-    - "WATER_LILY:-1"
-    - "AIR:-1"
+    - "WATER"
+    - "LAVA"
+    - "LILY"
+    - "AIR"
+    - "LEAVES"
 
 warp-icon-section:
   # This is the sound that is played when a warp icon is selected. This option can be set to "" to disable.

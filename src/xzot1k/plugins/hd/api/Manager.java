@@ -161,6 +161,31 @@ public class Manager {
                             + "related. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
+    /**
+     * Gets a Serializable location instance from a string format.
+     *
+     * @param locationString The location string.
+     * @return The new instance of the location.
+     */
+    public SerializableLocation getLocationFromString(String locationString) {
+        if (!locationString.contains(":")) return null;
+
+        String[] worldSplit = locationString.split(":"), coordSplit = worldSplit[1].split(",");
+        return new SerializableLocation(worldSplit[0], (int) Double.parseDouble(coordSplit[0]), (int) Double.parseDouble(coordSplit[1]),
+                (int) Double.parseDouble(coordSplit[2]), (int) Double.parseDouble(coordSplit[3]), (int) Double.parseDouble(coordSplit[4]));
+    }
+
+    /**
+     * This will determine if the plugin is 1.13+ or not.
+     *
+     * @return Whether the plugin exeeds version 1.13.
+     */
+    public boolean isBlockStateVersion() {
+        return !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
+                || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9") || getPluginInstance().getServerVersion().startsWith("v1_8")
+                || getPluginInstance().getServerVersion().startsWith("v1_7"));
+    }
+
     public ItemStack getHandItem(Player player) {
         if (getPluginInstance().getServerVersion().startsWith("v1_9") || getPluginInstance().getServerVersion().startsWith("v1_10")
                 || getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_12")
@@ -348,18 +373,13 @@ public class Manager {
 
                 ResultSet rs = statement.executeQuery("select * from transfer where player_uuid = '" + player.getUniqueId().toString() + "'");
                 if (rs.next()) {
-                    statement.executeUpdate("update transfer set location = '"
-                            + (location.getWorldName() + "," + location.getX() + ","
-                            + location.getY() + "," + location.getZ() + "," + location.getYaw() + ","
-                            + location.getPitch())
-                            + "', server_ip = '" + serverIP + "' where player_uuid = '"
+                    statement.executeUpdate("update transfer set location = '" + (location.getWorldName() + "," + location.getX() + "," + location.getY() + ","
+                            + location.getZ() + "," + location.getYaw() + "," + location.getPitch()) + "', server_ip = '" + serverIP + "' where player_uuid = '"
                             + player.getUniqueId().toString() + "';");
                     rs.close();
                     statement.close();
-                    getPluginInstance().log(Level.WARNING,
-                            "Cross-Server transfer updated (" + player.getName() + "_" + player.getUniqueId().toString()
-                                    + " / " + serverName + " / World: " + location.getWorldName() + ", X: "
-                                    + location.getX() + ", Y: " + location.getY() + ", Z: " + location.getZ() + ")");
+                    getPluginInstance().log(Level.WARNING, " updated (" + player.getName() + "_" + player.getUniqueId().toString() + " / "
+                            + serverName + " / World: " + location.getWorldName() + ", X: " + location.getX() + ", Y: " + location.getY() + ", Z: " + location.getZ() + ")");
                     return;
                 }
 
@@ -371,6 +391,56 @@ public class Manager {
                 getPluginInstance().log(Level.WARNING, "Cross-Server transfer updated (" + player.getName() + "_" + player.getUniqueId().toString()
                         + " / " + serverName + " / World: " + location.getWorldName() + ", X: "
                         + location.getX() + ", Y: " + location.getY() + ", Z: " + location.getZ() + ")");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                getPluginInstance().log(Level.WARNING,
+                        "There seems to have been an issue communicating with the MySQL database.");
+                getPluginInstance().log(Level.WARNING,
+                        "Cross-Server initiation failed for the player '" + player.getName() + "_"
+                                + player.getUniqueId().toString() + "'. They have been sent to " + "the '" + serverName
+                                + "' server, but the location was unable to be processed.");
+            }
+        });
+    }
+
+    public void teleportCrossServer(Player player, String serverIP, String serverName, String playerName) {
+        if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql") && getPluginInstance().getDatabaseConnection() == null)
+            return;
+
+        try {
+            ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(byteArray);
+            out.writeUTF("Connect");
+            out.writeUTF(serverName);
+            player.sendPluginMessage(pluginInstance, "BungeeCord", byteArray.toByteArray());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            getPluginInstance().log(Level.WARNING,
+                    "There seems to have been an issue when switching the player to the '" + serverName + "' server.");
+            return;
+        }
+
+        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+            try {
+                Statement statement = getPluginInstance().getDatabaseConnection().createStatement();
+
+                ResultSet rs = statement.executeQuery("select * from transfer where player_uuid = '" + player.getUniqueId().toString() + "'");
+                if (rs.next()) {
+                    statement.executeUpdate("update transfer set location = '" + playerName + "', server_ip = '" + serverIP + "' where player_uuid = '"
+                            + player.getUniqueId().toString() + "';");
+                    rs.close();
+                    statement.close();
+                    getPluginInstance().log(Level.WARNING, " Updated (" + player.getName() + "_" + player.getUniqueId().toString() + " / "
+                            + serverName + " / Player: " + playerName + ")");
+                    return;
+                }
+
+                PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement("insert into transfer (player_uuid, location, server_ip) values ('"
+                        + player.getUniqueId().toString() + "', '" + playerName + "', '" + serverIP + "');");
+                preparedStatement.executeUpdate();
+                preparedStatement.close();
+                getPluginInstance().log(Level.WARNING, "Cross-Server transfer updated (" + player.getName() + "_" + player.getUniqueId().toString()
+                        + " / " + serverName + " / Player: " + playerName + ")");
             } catch (SQLException e) {
                 e.printStackTrace();
                 getPluginInstance().log(Level.WARNING,
@@ -435,15 +505,19 @@ public class Manager {
 
     @SuppressWarnings("deprecation")
     private ItemStack getPlayerHead(String playerName, String displayName, List<String> lore, int amount) {
-        boolean isNew = getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
-                || getPluginInstance().getServerVersion().startsWith("v1_15");
+        boolean isNew = (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
+                || getPluginInstance().getServerVersion().startsWith("v1_15"));
         ItemStack itemStack;
 
         if (isNew) {
             itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), amount);
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
             if (skullMeta != null) {
-                skullMeta.setOwningPlayer(getPluginInstance().getServer().getOfflinePlayer(playerName));
+                if (playerName != null && !playerName.equalsIgnoreCase("")) {
+                    OfflinePlayer player = getPluginInstance().getServer().getOfflinePlayer(playerName);
+                    skullMeta.setOwningPlayer(player);
+                }
+
                 skullMeta.setDisplayName(colorText(displayName));
                 skullMeta.setLore(lore);
                 itemStack.setItemMeta(skullMeta);
@@ -453,7 +527,8 @@ public class Manager {
                     (short) org.bukkit.SkullType.PLAYER.ordinal());
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
             if (skullMeta != null) {
-                skullMeta.setOwner(playerName);
+                if (playerName != null && !playerName.equalsIgnoreCase(""))
+                    skullMeta.setOwner(playerName);
                 skullMeta.setDisplayName(colorText(displayName));
                 skullMeta.setLore(lore);
                 itemStack.setItemMeta(skullMeta);
@@ -1054,7 +1129,7 @@ public class Manager {
         return inventory;
     }
 
-    public Inventory buildEditMenu(Warp warp) {
+    public Inventory buildEditMenu(Player player, Warp warp) {
         final Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getMenusConfig().getInt("edit-menu-section.size"),
                 colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title") + "&" + warp.getDisplayNameColor().getChar() + warp.getWarpName()));
 
@@ -1095,6 +1170,11 @@ public class Manager {
                 default:
                     nextStatusName = publicFormat;
                     break;
+            }
+
+            if (!player.hasPermission("hyperdrive.admin.status") && nextStatus == EnumContainer.Status.ADMIN) {
+                nextStatus = EnumContainer.Status.PUBLIC;
+                nextStatusName = publicFormat;
             }
 
             List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("edit-menu-section.items")).getKeys(false));
@@ -1293,7 +1373,7 @@ public class Manager {
         boolean useVault = getPluginInstance().getConfig().getBoolean("general-section.use-vault");
         if (useVault && !player.hasPermission("hyperdrive.economybypass") && chargeAmount > 0) {
             EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, chargeAmount);
-            getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+            getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent));
             if (!economyChargeEvent.isCancelled()) {
                 if (!getPluginInstance().getVaultHandler().getEconomy().has(player, economyChargeEvent.getAmount())) {
                     String message = getPluginInstance().getLangConfig().getString("insufficient-funds");

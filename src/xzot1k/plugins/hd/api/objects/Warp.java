@@ -7,13 +7,9 @@ package xzot1k.plugins.hd.api.objects;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -210,11 +206,12 @@ public class Warp {
     }
 
     public void deleteSaved(boolean async) {
-        if (!async) delete();
-        else getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), this::delete);
+        if (!async) delete(getWarpName());
+        else
+            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> delete(getWarpName()));
     }
 
-    private void delete() {
+    private void delete(String warpName) {
         try {
             PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement("delete from warps where name = '" + getWarpName() + "'");
             preparedStatement.executeUpdate();
@@ -292,7 +289,6 @@ public class Warp {
     }
 
     /**
-     * '
      * Renames the warp to the given name (Handles Re-Registration).
      *
      * @param newName The new name (Does NOT filter).
@@ -302,18 +298,9 @@ public class Warp {
 
         unRegister();
         final String finalWarpName = getWarpName();
-        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-            try {
-                File file = new File(getPluginInstance().getDataFolder(), "/warps.yml");
-                FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-                yaml.set(finalWarpName, null);
-                yaml.save(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-                getPluginInstance().log(Level.WARNING, "Failed to delete the warp '" + finalWarpName + "' from the warps.yml.");
-            }
-        });
+        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> delete(finalWarpName));
         setWarpName(newName);
+        save(true);
         register();
     }
 

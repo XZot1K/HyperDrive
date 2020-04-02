@@ -40,7 +40,7 @@ public class Animation {
                         t += 0.5;
                         time += 1;
 
-                        Location location = player.getLocation();
+                        Location location = player.getLocation().clone();
 
                         double piDivided = Math.PI / 8;
                         for (double theta = -piDivided; (theta += piDivided) <= (Math.PI * 2); ) {
@@ -56,7 +56,7 @@ public class Animation {
 
                         if (time >= 20 * duration) cancel();
                     }
-                }.runTaskTimer(getPluginInstance(), 0, 1));
+                }.runTaskTimerAsynchronously(getPluginInstance(), 0, 1));
 
                 break;
 
@@ -72,7 +72,7 @@ public class Animation {
                         if (t >= 5 * (8 * (Math.PI / 8))) t = 0;
                         time += 1;
 
-                        Location location = player.getLocation();
+                        Location location = player.getLocation().clone();
                         double x = 1 * Math.cos(t), y = t, z = 1 * Math.sin(t);
 
                         location.add(x, y, z);
@@ -81,7 +81,7 @@ public class Animation {
 
                         if (time >= 20 * duration) cancel();
                     }
-                }.runTaskTimer(getPluginInstance(), 0, 1));
+                }.runTaskTimerAsynchronously(getPluginInstance(), 0, 1));
 
                 break;
 
@@ -97,7 +97,7 @@ public class Animation {
                         nt += 0;
                         time += 1;
 
-                        Location location = player.getLocation();
+                        Location location = player.getLocation().clone();
 
                         t += Math.PI / 8;
                         double x = -0.75 * Math.cos(t), z = -0.75 * Math.sin(t);
@@ -132,7 +132,7 @@ public class Animation {
 
                         if (this.time >= 20.0 * duration) cancel();
                     }
-                }.runTaskTimer(getPluginInstance(), 0, 1));
+                }.runTaskTimerAsynchronously(getPluginInstance(), 0, 1));
 
                 break;
 
@@ -146,7 +146,7 @@ public class Animation {
                         t += Math.PI / 8;
                         time += 1;
 
-                        Location location = player.getLocation();
+                        Location location = player.getLocation().clone();
 
                         double piDivided = Math.PI / 8;
                         for (double theta = -piDivided; (theta += piDivided) <= (Math.PI * 2); ) {
@@ -160,7 +160,7 @@ public class Animation {
 
                         if (time >= 20 * duration) cancel();
                     }
-                }.runTaskTimer(getPluginInstance(), 0, 1));
+                }.runTaskTimerAsynchronously(getPluginInstance(), 0, 1));
 
                 break;
 
@@ -176,7 +176,7 @@ public class Animation {
                         nt += 0;
                         time += 1;
 
-                        Location location = player.getLocation(), location2 = player.getLocation();
+                        Location location = player.getLocation().clone(), location2 = player.getLocation().clone();
                         t += Math.PI / 8;
                         double x = -1 * Math.cos(t), y = 1 * Math.sin(t), z = -1 * Math.sin(t);
                         location.add(x, y, z);

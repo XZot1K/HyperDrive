@@ -44,7 +44,7 @@ public class Listeners implements Listener {
         setPluginInstance(pluginInstance);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onClick(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
             Player player = (Player) e.getWhoClicked();
@@ -84,7 +84,7 @@ public class Listeners implements Listener {
     }
 
     @SuppressWarnings("deprecation")
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onChat(AsyncPlayerChatEvent e) {
         InteractionModule interactionModule = getPluginInstance().getManager().getChatInteraction(e.getPlayer());
         if (interactionModule == null)
@@ -632,10 +632,9 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onMove(PlayerMoveEvent e) {
-        if ((e.getFrom().getBlockX() != Objects.requireNonNull(e.getTo()).getBlockX())
-                || (e.getFrom().getBlockY() != e.getTo().getBlockY())
+        if ((e.getFrom().getBlockX() != Objects.requireNonNull(e.getTo()).getBlockX()) || (e.getFrom().getBlockY() != e.getTo().getBlockY())
                 || (e.getFrom().getBlockZ() != e.getTo().getBlockZ()) || !Objects.requireNonNull(e.getFrom().getWorld())
                 .getName().equalsIgnoreCase(Objects.requireNonNull(e.getTo().getWorld()).getName())) {
             boolean moveCancellation = getPluginInstance().getConfig()
@@ -723,20 +722,19 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onDamage(EntityDamageEvent e) {
         if (e.getEntity() instanceof Player) {
             Player player = (Player) e.getEntity();
-            boolean damageCancellation = getPluginInstance().getConfig()
-                    .getBoolean("teleportation-section.damage-cancellation");
+            boolean damageCancellation = getPluginInstance().getConfig().getBoolean("teleportation-section.damage-cancellation");
             if (damageCancellation) {
+                getPluginInstance().getTeleportationCommands().getTpaSentMap().remove(player.getUniqueId());
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+
                 GroupTemp groupTemp = getPluginInstance().getTeleportationHandler().getGroupTemp(player.getUniqueId());
                 if (groupTemp != null && !groupTemp.isCancelled()) {
                     groupTemp.setCancelled(true);
-
-                    getPluginInstance().getManager().sendCustomMessage(
-                            getPluginInstance().getLangConfig().getString("group-teleport-cancelled"),
-                            player);
+                    getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("group-teleport-cancelled"), player);
                     List<UUID> playerList = groupTemp.getAcceptedPlayers();
                     for (int i = -1; ++i < playerList.size(); ) {
                         UUID playerUniqueId = playerList.get(i);
@@ -753,26 +751,18 @@ public class Listeners implements Listener {
                     }
 
                     getPluginInstance().getTeleportationHandler().clearGroupTemp(player);
-                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
                     getPluginInstance().getTeleportationHandler().getAnimation().stopGroupActiveAnimation(groupTemp);
                     return;
                 }
 
-                GroupTemp acceptedGroupTemp = getPluginInstance().getTeleportationHandler()
-                        .getAcceptedGroupTemp(player.getUniqueId());
+                GroupTemp acceptedGroupTemp = getPluginInstance().getTeleportationHandler().getAcceptedGroupTemp(player.getUniqueId());
                 if (acceptedGroupTemp != null && !acceptedGroupTemp.isCancelled()) {
                     acceptedGroupTemp.setCancelled(true);
+                    getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("group-teleport-cancelled"), player);
 
-                    getPluginInstance().getManager().sendCustomMessage(
-                            getPluginInstance().getLangConfig().getString("group-teleport-cancelled"),
-                            player);
-
-                    Player gl = getPluginInstance().getServer().getPlayer(
-                            getPluginInstance().getTeleportationHandler().getGroupLeader(player.getUniqueId()));
+                    Player gl = getPluginInstance().getServer().getPlayer(getPluginInstance().getTeleportationHandler().getGroupLeader(player.getUniqueId()));
                     if (gl != null && gl.isOnline())
-                        getPluginInstance().getManager().sendCustomMessage(
-                                getPluginInstance().getLangConfig().getString("group-teleport-cancelled"),
-                                gl);
+                        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("group-teleport-cancelled"), gl);
 
                     List<UUID> playerList = acceptedGroupTemp.getAcceptedPlayers();
                     for (int i = -1; ++i < playerList.size(); ) {
@@ -790,26 +780,20 @@ public class Listeners implements Listener {
                     }
 
                     getPluginInstance().getTeleportationHandler().clearGroupTemp(player);
-                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                    getPluginInstance().getTeleportationHandler().getAnimation()
-                            .stopGroupActiveAnimation(acceptedGroupTemp);
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopGroupActiveAnimation(acceptedGroupTemp);
                     return;
                 }
 
                 if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
-                    getPluginInstance().getTeleportationHandler().getRandomTeleportingPlayers()
-                            .remove(player.getUniqueId());
+                    getPluginInstance().getTeleportationHandler().getRandomTeleportingPlayers().remove(player.getUniqueId());
                     getPluginInstance().getTeleportationHandler().removeTeleportTemp(player);
-                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                    getPluginInstance().getManager().sendCustomMessage(
-                            getPluginInstance().getLangConfig().getString("teleportation-cancelled"),
-                            player);
+                    getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("teleportation-cancelled"), player);
                 }
             }
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onTeleport(PlayerJoinEvent e) {
         if (getPluginInstance().getConfig().getBoolean("general-section.force-spawn"))
             if (!e.getPlayer().hasPlayedBefore() && getPluginInstance().getTeleportationCommands().getFirstJoinLocation() != null) {
@@ -857,13 +841,13 @@ public class Listeners implements Listener {
             }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onTeleport(PlayerTeleportEvent e) {
         if (e.getCause() == PlayerTeleportEvent.TeleportCause.PLUGIN || e.getCause() == PlayerTeleportEvent.TeleportCause.COMMAND)
             getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
         if (getPluginInstance().getConfig().getBoolean("general-section.force-death-spawn") && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null) {
             e.getPlayer().setVelocity(new Vector(0, 0, 0));
@@ -889,12 +873,12 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onDeath(PlayerDeathEvent e) {
         getPluginInstance().getTeleportationCommands().updateLastLocation(e.getEntity(), e.getEntity().getLocation());
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onSignCreate(SignChangeEvent e) {
         String initialLine = e.getLine(0);
         if (initialLine == null
@@ -908,20 +892,15 @@ public class Listeners implements Listener {
                 && !secondLine.equalsIgnoreCase("GROUP-WARP") && !secondLine.equalsIgnoreCase("GROUP-RTP")))
             return;
 
-        if (!e.getPlayer().hasPermission("hyperdrive.use.signs"))
-            return;
-
-        getPluginInstance().getManager().sendCustomMessage(
-                getPluginInstance().getLangConfig().getString("sign-creation"), e.getPlayer());
-        e.setLine(0, getPluginInstance().getManager().colorText(
-                getPluginInstance().getConfig().getString("general-section.sign-header-color")) + initialLine);
+        if (!e.getPlayer().hasPermission("hyperdrive.use.createsigns")) return;
+        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("sign-creation"), e.getPlayer());
+        e.setLine(0, getPluginInstance().getManager().colorText(getPluginInstance().getConfig().getString("general-section.sign-header-color")) + initialLine);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         Player player = e.getPlayer();
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK
-                && (e.getClickedBlock() != null && (e.getClickedBlock().getType().name().contains("SIGN")))) {
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && (e.getClickedBlock() != null && (e.getClickedBlock().getType().name().contains("SIGN")))) {
             Sign sign = (Sign) e.getClickedBlock().getState();
             String initialLine = ChatColor.stripColor(sign.getLine(0));
             if (!initialLine.equalsIgnoreCase("[HyperDrive]") && !initialLine.equalsIgnoreCase("[HD]"))
@@ -961,11 +940,9 @@ public class Listeners implements Listener {
                             || (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()) || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode()))))) {
                         player.closeInventory();
                         int duration = getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration"),
-                                cooldown = getPluginInstance().getConfig()
-                                        .getInt("teleportation-section.cooldown-duration");
+                                cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
 
-                        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp",
-                                cooldown);
+                        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
                         if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
                             getPluginInstance().getManager().sendCustomMessage(Objects
                                     .requireNonNull(
@@ -1123,7 +1100,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent e) {
         List<String> commandStrings = getPluginInstance().getConfig().getStringList("general-section.custom-alias-commands");
         for (int i = -1; ++i < commandStrings.size(); ) {
@@ -1140,7 +1117,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         getPluginInstance().getManager().getPaging().getWarpPageMap().remove(e.getPlayer().getUniqueId());
         getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(e.getPlayer().getUniqueId());
@@ -1375,7 +1352,7 @@ public class Listeners implements Listener {
 
                             if (player.hasPermission("hyperdrive.admin.edit") || player.hasPermission("hyperdrive.edit.*") || player.hasPermission("hyperdrive.edit." + warpName)
                                     || player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) || warp.getAssistants().contains(player.getUniqueId())) {
-                                Inventory inventory = getPluginInstance().getManager().buildEditMenu(warp);
+                                Inventory inventory = getPluginInstance().getManager().buildEditMenu(player, warp);
 
                                 MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.EDIT, inventory, player.getPlayer());
                                 getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
@@ -1458,7 +1435,7 @@ public class Listeners implements Listener {
                                 return;
                             }
 
-                            if (getPluginInstance().getTeleportationHandler().locationNotSafe(player, player.getLocation())) {
+                            if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation())) {
                                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("not-hook-safe"), player);
                                 break;
                             }
@@ -1795,7 +1772,7 @@ public class Listeners implements Listener {
                                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
                                         .replace("{warp}", warp.getWarpName()), player);
 
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
+                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
                             break;
 
                         case "change-status":
@@ -1853,7 +1830,7 @@ public class Listeners implements Listener {
                                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-no-longer-exists"))
                                         .replace("{warp}", warp.getWarpName()), player);
 
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
+                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
                             break;
 
                         case "give-ownership":
@@ -1988,7 +1965,7 @@ public class Listeners implements Listener {
                                     .replace("{cancel}", Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel")))
                                     .replace("{player}", player.getName()), player);
 
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
+                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
                             break;
 
                         case "add-command":
@@ -2037,7 +2014,7 @@ public class Listeners implements Listener {
                                         .replace("{warp}", warp.getWarpName()), player);
                             }
 
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
+                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
                             break;
 
                         case "change-icon":
@@ -2059,7 +2036,7 @@ public class Listeners implements Listener {
                                         .replace("{warp}", warp.getWarpName()), player);
                             }
 
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
+                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
                             break;
 
                         case "change-animation-set":
@@ -2083,7 +2060,7 @@ public class Listeners implements Listener {
                                         .replace("{warp}", warp.getWarpName()), player);
                             }
 
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(warp));
+                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
                             break;
 
                         default:
@@ -2305,8 +2282,8 @@ public class Listeners implements Listener {
                         case "confirm":
 
                             player.closeInventory();
-                            List<UUID> selectedPlayers = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
-                            if (selectedPlayers != null && selectedPlayers.size() >= 1) {
+                            final List<UUID> selectedPlayers = new ArrayList<>(getPluginInstance().getManager().getPaging().getSelectedPlayers(player));
+                            if (selectedPlayers.size() >= 1) {
                                 if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                     return;
                                 for (int i = -1; ++i < selectedPlayers.size(); ) {
@@ -2322,11 +2299,13 @@ public class Listeners implements Listener {
                                     getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("player-selected-teleport"))
                                             .replace("{player}", player.getName()), offlinePlayer.getPlayer());
                                 }
-                                getPluginInstance().getTeleportationHandler().createGroupTemp(player, getPluginInstance().getTeleportationHandler().getDestination(player));
+
+                                getPluginInstance().getTeleportationHandler().createGroupTemp(player, selectedPlayers, getPluginInstance().getTeleportationHandler().getDestination(player));
                                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("group-teleport-sent"), player);
                             } else
                                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("player-selection-fail"), player);
 
+                            getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
                             break;
                         case "refresh":
                             getPluginInstance().getManager().getPaging().resetPlayerSelectionPages(player);
