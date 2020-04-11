@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.4
+version: 5.4.1
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -93,6 +93,7 @@ permissions:
       hyperdrive.use.signs: true
       hyperdrive.spawn: true
       hyperdrive.use.list: true
+      hyperdrive.like: true
 
   # ADMIN STAR PERMISSION
   hyperdrive.admin.*:

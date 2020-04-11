@@ -17,7 +17,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
 
-public class Warp {
+public class Warp implements Comparable<Warp> {
     private HyperDrive pluginInstance;
     private SerializableLocation warpLocation;
     private String warpName, creationDate, iconTheme, animationSet, serverIPAddress, description;
@@ -213,7 +213,7 @@ public class Warp {
 
     private void delete(String warpName) {
         try {
-            PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement("delete from warps where name = '" + getWarpName() + "'");
+            PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement("delete from warps where name = '" + warpName + "'");
             preparedStatement.executeUpdate();
             preparedStatement.close();
         } catch (SQLException e) {
@@ -252,33 +252,56 @@ public class Warp {
             rs.close();
             statement.close();
 
-            final String syntax = warpExists ? "update warps set (name, location, status, creation_date, icon_theme, animation_set, description_color, name_color, description, commands, owner, player_list, "
-                    + "assistants, traffic, usage_price, enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) = (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) where name = '" + getWarpName() + "';"
+            final String syntax = warpExists ? "update warps set (location, status, creation_date, icon_theme, animation_set, description_color, name_color, description, commands, owner, player_list, "
+                    + "assistants, traffic, usage_price, enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) = (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) where name = '" + getWarpName() + "';"
                     : "insert into warps (name, location, status, creation_date, icon_theme, animation_set, description_color, name_color, description, commands, owner, player_list, assistants, traffic, "
                     + "usage_price, enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
             PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement(syntax);
 
-            preparedStatement.setString(1, getWarpName());
-            preparedStatement.setString(2, locationString);
-            preparedStatement.setString(3, getStatus().name());
-            preparedStatement.setString(4, getCreationDate());
-            preparedStatement.setString(5, getIconTheme());
-            preparedStatement.setString(6, getAnimationSet());
-            preparedStatement.setString(7, getDescriptionColor().name());
-            preparedStatement.setString(8, getDisplayNameColor().name());
-            preparedStatement.setString(9, getDescription());
-            preparedStatement.setString(10, commands.toString());
-            preparedStatement.setString(11, owner);
-            preparedStatement.setString(12, playerList.toString());
-            preparedStatement.setString(13, assistants.toString());
-            preparedStatement.setInt(14, getTraffic());
-            preparedStatement.setDouble(15, getUsagePrice());
-            preparedStatement.setInt(16, (hasIconEnchantedLook() ? 1 : 0));
-            preparedStatement.setString(17, getServerIPAddress().replace("localhost", "127.0.0.1"));
-            preparedStatement.setInt(18, getLikes());
-            preparedStatement.setInt(19, getDislikes());
-            preparedStatement.setString(20, voters.toString());
-            preparedStatement.setInt(21, (isWhiteListMode() ? 1 : 0));
+            if (warpExists) {
+                preparedStatement.setString(1, locationString);
+                preparedStatement.setString(2, getStatus().name());
+                preparedStatement.setString(3, getCreationDate());
+                preparedStatement.setString(4, getIconTheme());
+                preparedStatement.setString(5, getAnimationSet());
+                preparedStatement.setString(6, getDescriptionColor().name());
+                preparedStatement.setString(7, getDisplayNameColor().name());
+                preparedStatement.setString(8, getDescription());
+                preparedStatement.setString(9, commands.toString());
+                preparedStatement.setString(10, owner);
+                preparedStatement.setString(11, playerList.toString());
+                preparedStatement.setString(12, assistants.toString());
+                preparedStatement.setInt(13, getTraffic());
+                preparedStatement.setDouble(14, getUsagePrice());
+                preparedStatement.setInt(15, (hasIconEnchantedLook() ? 1 : 0));
+                preparedStatement.setString(16, getServerIPAddress().replace("localhost", "127.0.0.1"));
+                preparedStatement.setInt(17, getLikes());
+                preparedStatement.setInt(18, getDislikes());
+                preparedStatement.setString(19, voters.toString());
+                preparedStatement.setInt(20, (isWhiteListMode() ? 1 : 0));
+            } else {
+                preparedStatement.setString(1, getWarpName());
+                preparedStatement.setString(2, locationString);
+                preparedStatement.setString(3, getStatus().name());
+                preparedStatement.setString(4, getCreationDate());
+                preparedStatement.setString(5, getIconTheme());
+                preparedStatement.setString(6, getAnimationSet());
+                preparedStatement.setString(7, getDescriptionColor().name());
+                preparedStatement.setString(8, getDisplayNameColor().name());
+                preparedStatement.setString(9, getDescription());
+                preparedStatement.setString(10, commands.toString());
+                preparedStatement.setString(11, owner);
+                preparedStatement.setString(12, playerList.toString());
+                preparedStatement.setString(13, assistants.toString());
+                preparedStatement.setInt(14, getTraffic());
+                preparedStatement.setDouble(15, getUsagePrice());
+                preparedStatement.setInt(16, (hasIconEnchantedLook() ? 1 : 0));
+                preparedStatement.setString(17, getServerIPAddress().replace("localhost", "127.0.0.1"));
+                preparedStatement.setInt(18, getLikes());
+                preparedStatement.setInt(19, getDislikes());
+                preparedStatement.setString(20, voters.toString());
+                preparedStatement.setInt(21, (isWhiteListMode() ? 1 : 0));
+            }
 
             preparedStatement.executeUpdate();
             preparedStatement.close();
@@ -491,5 +514,10 @@ public class Warp {
 
     public void setWhiteListMode(boolean whiteListMode) {
         this.whiteListMode = whiteListMode;
+    }
+
+    @Override
+    public int compareTo(Warp warp) {
+        return warp.getWarpName().compareToIgnoreCase(getWarpName());
     }
 }

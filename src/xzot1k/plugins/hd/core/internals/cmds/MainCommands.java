@@ -4,6 +4,10 @@
 
 package xzot1k.plugins.hd.core.internals.cmds;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -18,8 +22,6 @@ import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
-import xzot1k.plugins.hd.core.objects.json.JSONExtra;
-import xzot1k.plugins.hd.core.objects.json.JSONMessage;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -825,8 +827,8 @@ public class MainCommands implements CommandExecutor {
         }
 
         if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
-                && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
-                && (warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
+                && (warp.getOwner() != null && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())) && !warp.getAssistants().contains(player.getUniqueId())
+                && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
             EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
             getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
             if (!economyChargeEvent.isCancelled()) {
@@ -837,6 +839,12 @@ public class MainCommands implements CommandExecutor {
                 }
 
                 getPluginInstance().getVaultHandler().getEconomy().withdrawPlayer(player, economyChargeEvent.getAmount());
+
+                if (warp.getOwner() != null) {
+                    OfflinePlayer owner = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+                    getPluginInstance().getVaultHandler().getEconomy().depositPlayer(owner, economyChargeEvent.getAmount());
+                }
+
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("transaction-success"))
                         .replace("{amount}", String.valueOf(economyChargeEvent.getAmount())), player);
             }
@@ -997,26 +1005,77 @@ public class MainCommands implements CommandExecutor {
         getHelpPages().put(4, page4);
     }
 
+    public void sendJSONLine(Player player, int page) {
+        HoverEvent previousHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{
+                new TextComponent(getPluginInstance().getManager().colorText("&aOpens the previous help page."))}),
+                nextHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{
+                        new TextComponent(getPluginInstance().getManager().colorText("&aOpens the next help page."))});
+
+        ClickEvent previousClickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, ("/hyperdrive help " + (page - 1))),
+                nextClickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, ("/hyperdrive help " + (page + 1)));
+
+        if (getAdminHelpPages().containsKey(page + 1) && getAdminHelpPages().containsKey(page - 1)) {
+            BaseComponent message = new TextComponent(getPluginInstance().getManager().colorText("&e<&m------&r&e("));
+
+            BaseComponent extraOne = new TextComponent(getPluginInstance().getManager().colorText(" &d[Previous Page] "));
+            extraOne.setClickEvent(previousClickEvent);
+            extraOne.setHoverEvent(previousHoverEvent);
+            message.addExtra(extraOne);
+
+            BaseComponent extraTwo = new TextComponent(getPluginInstance().getManager().colorText("&e|"));
+            message.addExtra(extraTwo);
+
+            BaseComponent extraThree = new TextComponent(getPluginInstance().getManager().colorText(" &d[Next Page] "));
+            extraThree.setClickEvent(nextClickEvent);
+            extraThree.setHoverEvent(nextHoverEvent);
+            message.addExtra(extraThree);
+
+            BaseComponent extraFour = new TextComponent(getPluginInstance().getManager().colorText("&e)&m-------&r&e>"));
+            message.addExtra(extraFour);
+            player.sendMessage(message);
+        } else if (getAdminHelpPages().containsKey(page + 1)) {
+            BaseComponent message = new TextComponent(getPluginInstance().getManager().colorText("&e<&m--------------&r&e("));
+
+            BaseComponent extraOne = new TextComponent(getPluginInstance().getManager().colorText(" &d[Next Page] "));
+            extraOne.setClickEvent(nextClickEvent);
+            extraOne.setHoverEvent(nextHoverEvent);
+            message.addExtra(extraOne);
+
+            BaseComponent extraTwo = new TextComponent(getPluginInstance().getManager().colorText("&e)&m---------------&r&e>"));
+            message.addExtra(extraTwo);
+            player.sendMessage(message);
+        } else if (getAdminHelpPages().containsKey(page - 1)) {
+            BaseComponent message = new TextComponent(getPluginInstance().getManager().colorText("&e<&m------------&r&e("));
+
+            BaseComponent extraOne = new TextComponent(getPluginInstance().getManager().colorText(" &d[Previous Page] "));
+            extraOne.setClickEvent(previousClickEvent);
+            extraOne.setHoverEvent(previousHoverEvent);
+            message.addExtra(extraOne);
+
+            BaseComponent extraTwo = new TextComponent(getPluginInstance().getManager().colorText("&e)&m-------------&r&e>"));
+            message.addExtra(extraTwo);
+            player.sendMessage(message);
+        } else
+            player.sendMessage(getPluginInstance().getManager().colorText("&e<&m-------------------------------------------------------&r&e>"));
+    }
+
     public void sendAdminHelpPage(CommandSender commandSender, int page) {
         if (!(commandSender instanceof Player)) {
             if (!getAdminHelpPages().containsKey(page)) {
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getLangConfig().getString("invalid-help-page")));
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("invalid-help-page")));
                 return;
             }
 
             List<String> lines = getAdminHelpPages().get(page);
             for (int i = -1; ++i < lines.size(); )
                 commandSender.sendMessage(getPluginInstance().getManager().colorText(lines.get(i)));
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText("&e<&m-------------------------------------------------------&r&e>"));
+            commandSender.sendMessage(getPluginInstance().getManager().colorText("&e<&m-------------------------------------------------------&r&e>"));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!getAdminHelpPages().containsKey(page)) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("invalid-help-page"), player);
+            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("invalid-help-page"), player);
             return;
         }
 
@@ -1024,49 +1083,7 @@ public class MainCommands implements CommandExecutor {
         for (int i = -1; ++i < lines.size(); )
             player.sendMessage(getPluginInstance().getManager().colorText(lines.get(i)));
 
-        if (getAdminHelpPages().containsKey(page + 1) && getAdminHelpPages().containsKey(page - 1)) {
-            JSONMessage jsonMessage = new JSONMessage(getPluginInstance(), "&e<&m------&r&e(");
-            JSONExtra jsonExtra1 = new JSONExtra(getPluginInstance(), " &d[Previous Page] ");
-            jsonExtra1.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, "/hyperdrive help " + (page - 1));
-            jsonExtra1.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT,
-                    "&aOpens the previous administrator help page.");
-            jsonMessage.addExtra(jsonExtra1);
-
-            JSONExtra jsonExtra2 = new JSONExtra(getPluginInstance(), "&e|");
-            jsonMessage.addExtra(jsonExtra2);
-
-            JSONExtra jsonExtra3 = new JSONExtra(getPluginInstance(), " &d[Next Page] ");
-            jsonExtra3.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, "/hyperdrive help " + (page + 1));
-            jsonExtra3.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT,
-                    "&aOpens the next administrator help page.");
-            jsonMessage.addExtra(jsonExtra3);
-
-            JSONExtra jsonExtra4 = new JSONExtra(getPluginInstance(), "&e)&m-------&r&e>");
-            jsonMessage.addExtra(jsonExtra4);
-            jsonMessage.sendJSONToPlayer(player);
-        } else if (getAdminHelpPages().containsKey(page + 1)) {
-            JSONMessage jsonMessage = new JSONMessage(getPluginInstance(), "&e<&m--------------&r&e(");
-            JSONExtra jsonExtra1 = new JSONExtra(getPluginInstance(), " &d[Next Page] ");
-            jsonExtra1.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, "/hyperdrive help " + (page + 1));
-            jsonExtra1.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT,
-                    "&aOpens the next administrator help page.");
-            jsonMessage.addExtra(jsonExtra1);
-            JSONExtra jsonExtra2 = new JSONExtra(getPluginInstance(), "&e)&m---------------&r&e>");
-            jsonMessage.addExtra(jsonExtra2);
-            jsonMessage.sendJSONToPlayer(player);
-        } else if (getAdminHelpPages().containsKey(page - 1)) {
-            JSONMessage jsonMessage = new JSONMessage(getPluginInstance(), "&e<&m------------&r&e(");
-            JSONExtra jsonExtra1 = new JSONExtra(getPluginInstance(), " &d[Previous Page] ");
-            jsonExtra1.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, "/hyperdrive help " + (page - 1));
-            jsonExtra1.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT,
-                    "&aOpens the previous administrator help page.");
-            jsonMessage.addExtra(jsonExtra1);
-            JSONExtra jsonExtra2 = new JSONExtra(getPluginInstance(), "&e)&m-------------&r&e>");
-            jsonMessage.addExtra(jsonExtra2);
-            jsonMessage.sendJSONToPlayer(player);
-        } else
-            player.sendMessage(getPluginInstance().getManager()
-                    .colorText("&e<&m-------------------------------------------------------&r&e>"));
+        sendJSONLine(player, page);
     }
 
     public void sendHelpPage(CommandSender commandSender, int page) {
@@ -1097,47 +1114,7 @@ public class MainCommands implements CommandExecutor {
         for (int i = -1; ++i < lines.size(); )
             player.sendMessage(getPluginInstance().getManager().colorText(lines.get(i)));
 
-        if (getHelpPages().containsKey(page + 1) && getHelpPages().containsKey(page - 1)) {
-            JSONMessage jsonMessage = new JSONMessage(getPluginInstance(), "&e<&m------&r&e(");
-            JSONExtra jsonExtra1 = new JSONExtra(getPluginInstance(), " &d[Previous Page] ");
-            jsonExtra1.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, "/hyperdrive help " + (page - 1));
-            jsonExtra1.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT,
-                    "&aOpens the previous administrator help page.");
-            jsonMessage.addExtra(jsonExtra1);
-
-            JSONExtra jsonExtra2 = new JSONExtra(getPluginInstance(), "&e|");
-            jsonMessage.addExtra(jsonExtra2);
-
-            JSONExtra jsonExtra3 = new JSONExtra(getPluginInstance(), " &d[Next Page] ");
-            jsonExtra3.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, "/hyperdrive help " + (page + 1));
-            jsonExtra3.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT,
-                    "&aOpens the next administrator help page.");
-            jsonMessage.addExtra(jsonExtra3);
-
-            JSONExtra jsonExtra4 = new JSONExtra(getPluginInstance(), "&e)&m-------&r&e>");
-            jsonMessage.addExtra(jsonExtra4);
-            jsonMessage.sendJSONToPlayer(player);
-        } else if (getHelpPages().containsKey(page + 1)) {
-            JSONMessage jsonMessage = new JSONMessage(getPluginInstance(), "&e<&m--------------&r&e(");
-            JSONExtra jsonExtra1 = new JSONExtra(getPluginInstance(), " &d[Next Page] ");
-            jsonExtra1.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, "/hyperdrive help " + (page + 1));
-            jsonExtra1.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT, "&aOpens the next help page.");
-            jsonMessage.addExtra(jsonExtra1);
-            JSONExtra jsonExtra2 = new JSONExtra(getPluginInstance(), "&e)&m---------------&r&e>");
-            jsonMessage.addExtra(jsonExtra2);
-            jsonMessage.sendJSONToPlayer(player);
-        } else if (getHelpPages().containsKey(page - 1)) {
-            JSONMessage jsonMessage = new JSONMessage(getPluginInstance(), "&e<&m------------&r&e(");
-            JSONExtra jsonExtra1 = new JSONExtra(getPluginInstance(), " &d[Previous Page] ");
-            jsonExtra1.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, "/hyperdrive help " + (page - 1));
-            jsonExtra1.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT, "&aOpens the previous help page.");
-            jsonMessage.addExtra(jsonExtra1);
-            JSONExtra jsonExtra2 = new JSONExtra(getPluginInstance(), "&e)&m-------------&r&e>");
-            jsonMessage.addExtra(jsonExtra2);
-            jsonMessage.sendJSONToPlayer(player);
-        } else
-            player.sendMessage(getPluginInstance().getManager()
-                    .colorText("&e<&m-------------------------------------------------------&r&e>"));
+        sendJSONLine(player, page);
     }
 
     // getters & setters

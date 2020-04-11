@@ -4,6 +4,10 @@
 
 package xzot1k.plugins.hd.api;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
@@ -22,12 +26,8 @@ import xzot1k.plugins.hd.api.objects.SerializableLocation;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.internals.Paging;
 import xzot1k.plugins.hd.core.objects.InteractionModule;
-import xzot1k.plugins.hd.core.objects.json.JSONExtra;
-import xzot1k.plugins.hd.core.objects.json.JSONMessage;
 import xzot1k.plugins.hd.core.packets.actionbars.ActionBarHandler;
 import xzot1k.plugins.hd.core.packets.actionbars.versions.*;
-import xzot1k.plugins.hd.core.packets.jsonmsgs.JSONHandler;
-import xzot1k.plugins.hd.core.packets.jsonmsgs.versions.*;
 import xzot1k.plugins.hd.core.packets.particles.ParticleHandler;
 import xzot1k.plugins.hd.core.packets.particles.versions.*;
 import xzot1k.plugins.hd.core.packets.titles.TitleHandler;
@@ -49,7 +49,6 @@ public class Manager {
     private SimpleDateFormat simpleDateFormat;
 
     private ParticleHandler particleHandler;
-    private JSONHandler jsonHandler;
     private TitleHandler titleHandler;
     private ActionBarHandler actionBarHandler;
 
@@ -75,80 +74,80 @@ public class Manager {
         boolean succeeded = true;
         long startTime = System.currentTimeMillis();
         switch (getPluginInstance().getServerVersion()) {
+           /* case "v1_16_R1":
+                setParticleHandler(new Particle_Latest());
+                setTitleHandler(new Titles_Latest(getPluginInstance()));
+                setActionBarHandler(new ABH_Latest());
+                break;
             case "v1_15_R1":
                 setParticleHandler(new Particle_Latest());
-                setJsonHandler(new JSONHandler1_15R1());
                 setTitleHandler(new Titles_Latest(getPluginInstance()));
-                setActionBarHandler(new ABH_1_15R1());
+                setActionBarHandler(new ABH_Latest());
                 break;
             case "v1_14_R1":
                 setParticleHandler(new Particle_Latest());
-                setJsonHandler(new JSONHandler1_14R1());
                 setTitleHandler(new Titles_Latest(getPluginInstance()));
-                setActionBarHandler(new ABH_1_14R1());
+                setActionBarHandler(new ABH_Latest());
                 break;
             case "v1_13_R2":
                 setParticleHandler(new Particle_Latest());
-                setJsonHandler(new JSONHandler1_13R2());
                 setTitleHandler(new Titles_Latest(getPluginInstance()));
-                setActionBarHandler(new ABH_1_13R2());
+                setActionBarHandler(new ABH_Latest());
                 break;
             case "v1_13_R1":
                 setParticleHandler(new Particle_Latest());
-                setJsonHandler(new JSONHandler1_13R1());
                 setTitleHandler(new Titles_Latest(getPluginInstance()));
-                setActionBarHandler(new ABH_1_13R1());
-                break;
+                setActionBarHandler(new ABH_Latest());
+                break;*/
             case "v1_12_R1":
                 setParticleHandler(new Particle1_12R1());
-                setJsonHandler(new JSONHandler1_12R1());
                 setTitleHandler(new Titles1_12R1(getPluginInstance()));
-                setActionBarHandler(new ABH_1_12R1());
+                setActionBarHandler(new ABH_Latest());
                 break;
             case "v1_11_R1":
                 setParticleHandler(new Particle1_11R1());
-                setJsonHandler(new JSONHandler1_11R1());
                 setTitleHandler(new Titles1_11R1(getPluginInstance()));
-                setActionBarHandler(new ABH_1_11R1());
+                setActionBarHandler(new ABH_Latest());
                 break;
             case "v1_10_R1":
                 setParticleHandler(new Particle1_10R1());
-                setJsonHandler(new JSONHandler1_10R1());
                 setTitleHandler(new Titles1_10R1(getPluginInstance()));
-                setActionBarHandler(new ABH_1_10R1());
+                setActionBarHandler(new ABH_Latest());
                 break;
             case "v1_9_R2":
                 setParticleHandler(new Particle1_9R2());
-                setJsonHandler(new JSONHandler1_9R2());
                 setTitleHandler(new Titles1_9R2(getPluginInstance()));
-                setActionBarHandler(new ABH_1_9R2());
+                setActionBarHandler(new ABH_Latest());
                 break;
             case "v1_9_R1":
                 setParticleHandler(new Particle1_9R1());
-                setJsonHandler(new JSONHandler1_9R1());
                 setTitleHandler(new Titles1_9R1(getPluginInstance()));
                 setActionBarHandler(new ABH_1_9R1());
                 break;
             case "v1_8_R3":
                 setParticleHandler(new Particle1_8R3());
-                setJsonHandler(new JSONHandler1_8R3());
                 setTitleHandler(new Titles1_8R3(getPluginInstance()));
                 setActionBarHandler(new ABH_1_8R3());
                 break;
             case "v1_8_R2":
                 setParticleHandler(new Particle1_8R2());
-                setJsonHandler(new JSONHandler1_8R2());
                 setTitleHandler(new Titles1_8R2(getPluginInstance()));
                 setActionBarHandler(new ABH_1_8R2());
                 break;
             case "v1_8_R1":
                 setParticleHandler(new Particle1_8R1());
-                setJsonHandler(new JSONHandler1_8R1());
                 setTitleHandler(new Titles1_8R1(getPluginInstance()));
                 setActionBarHandler(new ABH_1_8R1());
                 break;
             default:
-                succeeded = false;
+                if (!getPluginInstance().getServerVersion().contains("v1_7") && !getPluginInstance().getServerVersion().contains("v1_6")
+                        && !getPluginInstance().getServerVersion().contains("v1_5") && !getPluginInstance().getServerVersion().contains("v1_4")
+                        && !getPluginInstance().getServerVersion().contains("v1_3") && !getPluginInstance().getServerVersion().contains("v1_2")
+                        && !getPluginInstance().getServerVersion().contains("v1_1") && !getPluginInstance().getServerVersion().contains("v1_0")) {
+                    setParticleHandler(new Particle_Latest());
+                    setTitleHandler(new Titles_Latest(getPluginInstance()));
+                    setActionBarHandler(new ABH_Latest());
+                } else succeeded = false;
                 break;
         }
 
@@ -171,14 +170,14 @@ public class Manager {
         if (!locationString.contains(":")) return null;
 
         String[] worldSplit = locationString.split(":"), coordSplit = worldSplit[1].split(",");
-        return new SerializableLocation(worldSplit[0], (int) Double.parseDouble(coordSplit[0]), (int) Double.parseDouble(coordSplit[1]),
-                (int) Double.parseDouble(coordSplit[2]), (int) Double.parseDouble(coordSplit[3]), (int) Double.parseDouble(coordSplit[4]));
+        return new SerializableLocation(worldSplit[0], Double.parseDouble(coordSplit[0]), Double.parseDouble(coordSplit[1]),
+                Double.parseDouble(coordSplit[2]), (float) Double.parseDouble(coordSplit[3]), (float) Double.parseDouble(coordSplit[4]));
     }
 
     /**
      * This will determine if the plugin is 1.13+ or not.
      *
-     * @return Whether the plugin exeeds version 1.13.
+     * @return Whether the plugin exceeds version 1.13.
      */
     public boolean isBlockStateVersion() {
         return !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
@@ -259,28 +258,41 @@ public class Manager {
             if (message.contains("<") && message.contains(">")) {
                 message = (prefix != null && !prefix.equalsIgnoreCase("") ? prefix : "") + message;
                 String jsonFormat = StringUtils.substringBetween(message, "<", ">");
-                String[] jsonFormatArgs = jsonFormat.split(":");
 
                 String splitMessage = message.replace("<" + jsonFormat + ">", "_.SPLIT._");
                 String[] splitMessageArgs = splitMessage.split("_.SPLIT._");
-                JSONMessage jm1 = new JSONMessage(getPluginInstance(), splitMessageArgs[0]);
-                JSONExtra je1 = new JSONExtra(getPluginInstance(), jsonFormatArgs[0]);
-                if (jsonFormatArgs.length >= 2)
-                    je1.setClickEvent(EnumContainer.JSONClickAction.RUN_COMMAND, jsonFormatArgs[1]);
-                if (jsonFormatArgs.length >= 3)
-                    je1.setHoverEvent(EnumContainer.JSONHoverAction.SHOW_TEXT, jsonFormatArgs[2]);
-                jm1.addExtra(je1);
 
-                if (splitMessageArgs.length >= 2) {
-                    JSONExtra je2 = new JSONExtra(getPluginInstance(), splitMessageArgs[1]);
-                    jm1.addExtra(je2);
-                }
+                BaseComponent originalMessage = new TextComponent(colorText(splitMessageArgs[0]));
 
-                jm1.sendJSONToPlayer(player);
+                if (jsonFormat.contains(",")) {
+                    String[] extraSplits = jsonFormat.split(",");
+                    for (int i = -1; ++i < extraSplits.length; )
+                        implementJSONExtras(extraSplits[i], splitMessageArgs, originalMessage);
+                } else implementJSONExtras(jsonFormat, splitMessageArgs, originalMessage);
+
+                player.spigot().sendMessage(originalMessage);
                 return;
             }
 
             player.sendMessage(colorText(prefix + message));
+        }
+    }
+
+    private void implementJSONExtras(String extraLine, String[] splitMessageArgs, BaseComponent originalMessage) {
+        final String[] jsonFormatArgs = extraLine.split(":");
+        BaseComponent extraMessage = new TextComponent(colorText(jsonFormatArgs[0]));
+
+        if (jsonFormatArgs.length >= 2)
+            extraMessage.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, jsonFormatArgs[1]));
+
+        if (jsonFormatArgs.length >= 3)
+            extraMessage.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{new TextComponent(jsonFormatArgs[2])}));
+
+        originalMessage.addExtra(extraMessage);
+
+        if (splitMessageArgs.length >= 2) {
+            BaseComponent extraExtraMessage = new TextComponent(colorText(splitMessageArgs[1]));
+            originalMessage.addExtra(extraExtraMessage);
         }
     }
 
@@ -1454,10 +1466,11 @@ public class Manager {
             List<PermissionAttachmentInfo> lists = new ArrayList<>(p.getEffectivePermissions());
             for (int i = -1; ++i < lists.size(); ) {
                 PermissionAttachmentInfo permission = lists.get(i);
-                if (permission.getPermission().toLowerCase().startsWith("hyperdrive.warplimit.")
-                        && permission.getValue()) {
-                    int tempValue = Integer
-                            .parseInt(permission.getPermission().toLowerCase().replace("hyperdrive.warplimit.", ""));
+                if (permission.getPermission().toLowerCase().startsWith("hyperdrive.warplimit.") && permission.getValue()) {
+                    String foundValue = permission.getPermission().toLowerCase().replace("hyperdrive.warplimit.", "");
+                    if (isNotNumeric(foundValue)) continue;
+
+                    int tempValue = Integer.parseInt(foundValue);
                     if (tempValue > currentFoundAmount)
                         currentFoundAmount = tempValue;
                 }
@@ -1571,14 +1584,6 @@ public class Manager {
 
     private void setParticleHandler(ParticleHandler particleHandler) {
         this.particleHandler = particleHandler;
-    }
-
-    public JSONHandler getJsonHandler() {
-        return jsonHandler;
-    }
-
-    private void setJsonHandler(JSONHandler jsonHandler) {
-        this.jsonHandler = jsonHandler;
     }
 
     private TitleHandler getTitleHandler() {

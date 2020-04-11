@@ -38,6 +38,24 @@ public class SerializableLocation {
         return new Location(getPluginInstance().getServer().getWorld(getWorldName()), getX(), getY(), getZ(), (float) getYaw(), (float) getPitch());
     }
 
+    public double distance(double x, double y, double z) {
+        final double differenceInX = (Math.max(x, getX()) - Math.min(x, getX())), differenceInY = (Math.max(y, getY()) - Math.min(y, getY())),
+                differenceInZ = (Math.max(z, getZ()) - Math.min(z, getZ()));
+        return Math.sqrt(Math.pow(differenceInX, 2) + Math.pow(differenceInY, 2) + Math.pow(differenceInZ, 2));
+    }
+
+    public double distance(Location location) {
+        final double differenceInX = (Math.max(location.getX(), getX()) - Math.min(location.getX(), getX())), differenceInY = (Math.max(location.getY(), getY()) - Math.min(location.getY(), getY())),
+                differenceInZ = (Math.max(location.getZ(), getZ()) - Math.min(location.getZ(), getZ()));
+        return Math.sqrt(Math.pow(differenceInX, 2) + Math.pow(differenceInY, 2) + Math.pow(differenceInZ, 2));
+    }
+
+    public double distance(SerializableLocation location) {
+        final double differenceInX = (Math.max(location.getX(), getX()) - Math.min(location.getX(), getX())), differenceInY = (Math.max(location.getY(), getY()) - Math.min(location.getY(), getY())),
+                differenceInZ = (Math.max(location.getZ(), getZ()) - Math.min(location.getZ(), getZ()));
+        return Math.sqrt(Math.pow(differenceInX, 2) + Math.pow(differenceInY, 2) + Math.pow(differenceInZ, 2));
+    }
+
     private HyperDrive getPluginInstance() {
         return pluginInstance;
     }

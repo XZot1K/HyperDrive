@@ -661,7 +661,7 @@ edit-menu-section:
       durability: 0
       amount: 1
     return-list-menu:
-      click-action: "open-menu:List Menu"
+      click-action: "open-custom-menu:List Menu"
       click-message: ""
       fill-empty-slots: false
       click-sound: true

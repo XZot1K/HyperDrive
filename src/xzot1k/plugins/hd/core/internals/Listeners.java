@@ -48,6 +48,8 @@ public class Listeners implements Listener {
     public void onClick(InventoryClickEvent e) {
         if (e.getWhoClicked() instanceof Player) {
             Player player = (Player) e.getWhoClicked();
+            if (player.isSleeping()) return;
+
             String inventoryName;
 
             try {
@@ -1200,6 +1202,11 @@ public class Listeners implements Listener {
                                         }
 
                                         getPluginInstance().getVaultHandler().getEconomy().withdrawPlayer(player, warp.getUsagePrice());
+                                        if (warp.getOwner() != null) {
+                                            OfflinePlayer owner = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+                                            getPluginInstance().getVaultHandler().getEconomy().depositPlayer(owner, warp.getUsagePrice());
+                                        }
+
                                         getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("transaction-success"))
                                                 .replace("{amount}", String.valueOf(economyChargeEvent.getAmount())), player);
                                     }

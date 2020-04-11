@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals;
@@ -229,6 +229,7 @@ public class Paging {
 
         int slotCount = getPluginInstance().getMenusConfig().getIntegerList(menuPath + ".warp-slots").size();
         List<Warp> warpList = !getPluginInstance().getManager().getWarpMap().isEmpty() ? new ArrayList<>(getPluginInstance().getManager().getWarpMap().values()) : new ArrayList<>();
+        warpList.sort(Warp::compareTo);
 
         if (status != null)
             warpSort(warpList, status.equals(featuredFormat));
@@ -329,9 +330,9 @@ public class Paging {
         int border = (low + 1);
         for (int i = border - 1; ++i <= high; ) {
             Warp warpAtHigh = warpList.get(i), warpAtLow = warpList.get(low);
-            int compareValue = (sortAsFeatured ? ((warpAtHigh.getTraffic() > warpAtLow.getTraffic()) ? 0 : 1)
-                    : (warpAtHigh.getLikes() > warpAtLow.getLikes() ? 0 : 1));
-            if (compareValue == 0)
+            if (sortAsFeatured ? (warpAtHigh.getTraffic() > warpAtLow.getTraffic())
+                    : ((Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes()) / Math.max(warpAtHigh.getLikes(), warpAtHigh.getDislikes()))
+                    > (Math.min(warpAtLow.getLikes(), warpAtLow.getDislikes()) / Math.max(warpAtLow.getLikes(), warpAtLow.getDislikes()))))
                 warpSwapIndex(warpList, i, border++);
         }
 

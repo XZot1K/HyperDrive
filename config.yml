@@ -12,8 +12,8 @@ mysql-connection:
   username: "root"
   password: ""
   # These are the connection properties, you can add/remove from this list as long as it follows an identical format.
-  properties:
-    useSSL: "false"
+  # (NOTE: This is for advanced users this feature just extends upon the SQL syntax connection line.)
+  sql-properties: ""
 
 # Here is where everything that is general can be configured
 general-section:
@@ -184,7 +184,7 @@ warp-icon-section:
   # (NOTE: This can be set to -1 to disable this check)
   long-word-wrap: 16
   # This is the default description that is set to a newly created warp.
-  default-description: "&7This is the default HyperDrive warp description. &7(Note: This can be changed inside the edit menu)"
+  default-description: "This is the default HyperDrive warp description. &7(Note: This can be changed inside the edit menu)"
   # This is the lore the warp icon is given inside of menus.
   # Current Placeholders:
   # {description} - replaces the line with the first description line while adding the remaining lines below it.

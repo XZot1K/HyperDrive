@@ -107,8 +107,12 @@ public class TeleportationHandler implements Runnable {
 
                                         if (getPluginInstance().asyncChunkMethodExists()) {
                                             World world = getPluginInstance().getServer().getWorld(warp.getWarpLocation().getWorldName());
-                                            if (world != null)
-                                                world.getChunkAtAsync((int) warp.getWarpLocation().getX() >> 4, (int) warp.getWarpLocation().getZ() >> 4, true);
+                                            if (world != null) {
+                                                if (getPluginInstance().getServerVersion().startsWith("v1_8"))
+                                                    world.getChunkAtAsync((int) warp.getWarpLocation().getX() >> 4, (int) warp.getWarpLocation().getZ() >> 4, chunk -> {});
+                                                else
+                                                    world.getChunkAtAsync((int) warp.getWarpLocation().getX() >> 4, (int) warp.getWarpLocation().getZ() >> 4, true);
+                                            }
                                         }
 
                                         final Location warpLocation = warp.getWarpLocation().asBukkitLocation();
@@ -248,8 +252,12 @@ public class TeleportationHandler implements Runnable {
 
                                     if (getPluginInstance().asyncChunkMethodExists()) {
                                         World world = getPluginInstance().getServer().getWorld(serializableLocation.getWorldName());
-                                        if (world != null)
-                                            world.getChunkAtAsync((int) serializableLocation.getX() >> 4, (int) serializableLocation.getZ() >> 4, true);
+                                        if (world != null) {
+                                            if (getPluginInstance().getServerVersion().startsWith("v1_8"))
+                                                world.getChunkAtAsync((int) serializableLocation.getX() >> 4, (int) serializableLocation.getZ() >> 4, chunk -> {});
+                                            else
+                                                world.getChunkAtAsync((int) serializableLocation.getX() >> 4, (int) serializableLocation.getZ() >> 4, true);
+                                        }
                                     }
 
                                     final Location toLocation = serializableLocation.asBukkitLocation();
@@ -280,11 +288,14 @@ public class TeleportationHandler implements Runnable {
                                                         .replace("-", "_")), 1);
                                     }
 
-
-                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig()
-                                            .getString(".basic-teleportation-engaged")).replace("{world}", Objects.requireNonNull(toLocation.getWorld()).getName())
-                                            .replace("{x}", String.valueOf(toLocation.getBlockX())).replace("{y}", String.valueOf(toLocation.getBlockY())).replace("{z}",
-                                                    String.valueOf(toLocation.getBlockZ())).replace("{duration}", String.valueOf(teleportTemp.getSeconds())), player);
+                                    if (!getPluginInstance().getTeleportationCommands().getSpawnLocation().getWorldName().equals(serializableLocation.getWorldName())
+                                            && !(getPluginInstance().getTeleportationCommands().getSpawnLocation().getX() != serializableLocation.getX()
+                                            || getPluginInstance().getTeleportationCommands().getSpawnLocation().getY() != serializableLocation.getY())
+                                            || getPluginInstance().getTeleportationCommands().getSpawnLocation().getZ() != serializableLocation.getZ())
+                                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig()
+                                                .getString(".basic-teleportation-engaged")).replace("{world}", Objects.requireNonNull(toLocation.getWorld()).getName())
+                                                .replace("{x}", String.valueOf(toLocation.getBlockX())).replace("{y}", String.valueOf(toLocation.getBlockY())).replace("{z}",
+                                                        String.valueOf(toLocation.getBlockZ())).replace("{duration}", String.valueOf(teleportTemp.getSeconds())), player);
                                 }
                             default:
                                 break;
@@ -293,6 +304,17 @@ public class TeleportationHandler implements Runnable {
                 }
             } else getTeleportTempMap().remove(playerUniqueId);
         }
+    }
+
+    /**
+     * Gets a random int between two values.
+     *
+     * @param min The minimum.
+     * @param max The maximum.
+     * @return The found value.
+     */
+    public int getRandomInRange(int min, int max) {
+        return getRandom().nextInt((max - min) + 1) + min;
     }
 
     // teleportation temp stuff

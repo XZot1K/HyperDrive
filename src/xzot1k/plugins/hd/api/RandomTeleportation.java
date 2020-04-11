@@ -17,14 +17,13 @@ import xzot1k.plugins.hd.core.objects.Destination;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 public class RandomTeleportation implements Runnable {
 
     private HyperDrive pluginInstance;
     private List<String> forbiddenMaterialList, biomeBlackList;
     private int attempts, maxAttempts, boundsRadius, smartLimit;
-    private boolean loadChunks, onlyUpdateDestination;
+    private boolean onlyUpdateDestination;
     private String teleportSound;
 
     private World baseLocationWorld;
@@ -35,11 +34,11 @@ public class RandomTeleportation implements Runnable {
         setPluginInstance(pluginInstance);
         setPlayer(player);
         setAttempts(0);
+        setSmartLimit(0);
         setOnlyUpdateDestination(onlyUpdateDestination);
         setForbiddenMaterialList(getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-materials"));
         setBiomeBlackList(getPluginInstance().getConfig().getStringList("random-teleport-section.biome-blacklist"));
         setMaxAttempts(getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"));
-        setLoadChunks(getPluginInstance().getConfig().getBoolean("random-teleport-section.can-load-chunks"));
         setTeleportSound(Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                 .toUpperCase().replace(" ", "_").replace("-", "_"));
         setAttempts(0);
@@ -58,21 +57,26 @@ public class RandomTeleportation implements Runnable {
             setAttempts(getAttempts() + 1);
 
             int smartBounds = (getBoundsRadius() - getSmartLimit()),
-                    xAddition = getPluginInstance().getTeleportationHandler().getRandom().nextInt(((smartBounds - (-smartBounds)) + 1)) + (-smartBounds),
-                    zAddition = getPluginInstance().getTeleportationHandler().getRandom().nextInt(((smartBounds - (-smartBounds)) + 1)) + (-smartBounds),
+                    xAddition = getPluginInstance().getTeleportationHandler().getRandomInRange(-smartBounds, smartBounds),
+                    zAddition = getPluginInstance().getTeleportationHandler().getRandomInRange(-smartBounds, smartBounds),
                     x = (int) (getBaseLocation().getX() + xAddition),
                     z = (int) (getBaseLocation().getZ() + zAddition);
 
-            if (x >= getBoundsRadius() || z >= getBoundsRadius()) continue;
+            if (x >= getBoundsRadius() || z >= getBoundsRadius() || getBaseLocation().distance(x, 0, z) < (getBoundsRadius() * 0.1))
+                continue;
             if (getSmartLimit() < getBoundsRadius())
                 setSmartLimit((int) (getSmartLimit() + (getBoundsRadius() * 0.005)));
 
-            if (!getPluginInstance().asyncChunkMethodExists()) getBaseLocationWorld().getChunkAt(x >> 4, z >> 4);
-            else try {
-                getBaseLocationWorld().getChunkAtAsync(x >> 4, z >> 4, true).get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+            if (!getPluginInstance().asyncChunkMethodExists())
+                getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> getBaseLocationWorld().getChunkAt(x >> 4, z >> 4));
+            else {
+                if (getPluginInstance().getServerVersion().startsWith("v1_8"))
+                    getBaseLocationWorld().getChunkAtAsync(x >> 4, z >> 4, chunk1 -> chunk1.load(false));
+                else
+                    getBaseLocationWorld().getChunkAtAsync(x >> 4, z >> 4, true);
             }
+
+            if (!getBaseLocationWorld().isChunkLoaded(x >> 4, z >> 4)) continue;
 
             int highestY = getHighestY(getBaseLocationWorld(), x, z);
             if (highestY <= 0) continue;
@@ -220,14 +224,6 @@ public class RandomTeleportation implements Runnable {
 
     private void setMaxAttempts(int maxAttempts) {
         this.maxAttempts = maxAttempts;
-    }
-
-    public boolean canLoadChunks() {
-        return loadChunks;
-    }
-
-    private void setLoadChunks(boolean loadChunks) {
-        this.loadChunks = loadChunks;
     }
 
     private String getTeleportSound() {

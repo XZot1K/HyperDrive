@@ -450,7 +450,8 @@ public class HyperDrive extends JavaPlugin {
             Set<String> newKeys = latestConfigurationSection.getKeys(true),
                     currentKeys = currentConfigurationSection.getKeys(true);
             for (String updatedKey : newKeys) {
-                if (updatedKey.contains(".items") || updatedKey.contains("custom-menus-section")) continue;
+                if (updatedKey.contains(".items") || updatedKey.contains("custom-menus-section"))
+                    continue;
                 if (!currentKeys.contains(updatedKey)) {
                     currentYaml.set(updatedKey, jarYaml.get(updatedKey));
                     updateCount++;
@@ -458,7 +459,8 @@ public class HyperDrive extends JavaPlugin {
             }
 
             for (String currentKey : currentKeys) {
-                if (currentKey.contains(".items") || currentKey.contains("custom-menus-section")) continue;
+                if (currentKey.contains(".items") || currentKey.contains("custom-menus-section"))
+                    continue;
                 if (!newKeys.contains(currentKey)) {
                     currentYaml.set(currentKey, null);
                     updateCount++;
@@ -483,23 +485,16 @@ public class HyperDrive extends JavaPlugin {
 
                 String databaseName = getConfig().getString("mysql-connection.database-name"), host = getConfig().getString("mysql-connection.host"),
                         port = getConfig().getString("mysql-connection.port"), username = getConfig().getString("mysql-connection.username"),
-                        password = getConfig().getString("mysql-connection.password");
+                        password = getConfig().getString("mysql-connection.password"), properties = getPluginInstance().getConfig().getString("mysql-connection.sql-properties");
 
-                StringBuilder propertyString = new StringBuilder();
-                ConfigurationSection propertySection = getPluginInstance().getConfig().getConfigurationSection("mysql-connection.properties");
-                if (propertySection != null) for (String property : propertySection.getKeys(false))
-                    propertyString.append(";").append(property).append("=").append(propertySection.getString(property));
-
-                setDatabaseConnection(DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/?user=" + username + "&password=" + password + propertyString));
+                setDatabaseConnection(DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + databaseName + properties, username, password));
 
                 statement = getDatabaseConnection().createStatement();
                 statement.executeUpdate("create database if not exists " + databaseName);
                 statement.close();
                 getDatabaseConnection().close();
 
-                setDatabaseConnection(DriverManager.getConnection("jdbc:mysql://" + getConfig().getString("mysql-connection.host")
-                                + ":" + getConfig().getString("mysql-connection.port") + "/" + databaseName, getConfig().getString("mysql-connection.username"),
-                        getConfig().getString("mysql-connection.password")));
+                setDatabaseConnection(DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + databaseName + properties, username, password));
             }
 
             statement = getDatabaseConnection().createStatement();
@@ -842,7 +837,8 @@ public class HyperDrive extends JavaPlugin {
                         resultSet.close();
                         statement.close();
 
-                        for (Warp warp : getManager().getWarpMap().values())
+                        List<Warp> warps = new ArrayList<>(getManager().getWarpMap().values());
+                        for (Warp warp : warps)
                             if (!getDatabaseWarps().contains(warp.getWarpName().toLowerCase()))
                                 warp.unRegister();
 

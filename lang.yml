@@ -84,7 +84,7 @@ no-previous-page: "&cThere are no previous pages to view. You are on the first p
 refresh-fail: "&cThere was nothing to refresh."
 group-selection-start: "&ePlease select all of the players you wish to request to teleport with you."
 player-selection-fail: "&cThere must be at least one player selected to complete the process."
-player-selected-teleport: "&eThe player &a{player} &ewould like &eyou to teleport &ewith them. <&e(Click To Accept):/warps accept {player}:&aClick to accept the player's request.>"
+player-selected-teleport: "&eThe player &a{player} &ewould like &eyou to teleport &ewith them. <&a(Accept):/warps accept {player}:&aClick to accept the player's request.,&c(Deny):/warps deny {player}:&aClick to deny the player's request.>"
 no-players-found: "&cThere seems to be no players currently online other than yourself."
 group-teleport-fail: "&cThe group teleportation failed due to none of the selected players accepting the request."
 group-teleport-success: "&eYou have been teleported with all of the selected players who accepted the request."
