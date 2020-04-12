@@ -330,10 +330,20 @@ public class Paging {
         int border = (low + 1);
         for (int i = border - 1; ++i <= high; ) {
             Warp warpAtHigh = warpList.get(i), warpAtLow = warpList.get(low);
-            if (sortAsFeatured ? (warpAtHigh.getTraffic() > warpAtLow.getTraffic())
-                    : ((Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes()) / Math.max(warpAtHigh.getLikes(), warpAtHigh.getDislikes()))
-                    > (Math.min(warpAtLow.getLikes(), warpAtLow.getDislikes()) / Math.max(warpAtLow.getLikes(), warpAtLow.getDislikes()))))
-                warpSwapIndex(warpList, i, border++);
+
+            if (sortAsFeatured) {
+                if (!((warpAtHigh.getTraffic() > warpAtLow.getTraffic())))
+                    continue;
+            } else {
+                double maxRatioMax = Math.max(warpAtHigh.getLikes(), warpAtHigh.getDislikes()), maxRatioMin = Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes()),
+                        minRatioMax = Math.max(warpAtLow.getLikes(), warpAtLow.getDislikes()), minRatioMin = Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes());
+                if ((maxRatioMax == 0 && maxRatioMin == 0) || (minRatioMax == 0 && minRatioMin == 0)) continue;
+
+                double maxRatio = (maxRatioMin / maxRatioMax), minRatio = (minRatioMin / minRatioMax);
+                if (!(maxRatio > minRatio)) continue;
+            }
+
+            warpSwapIndex(warpList, i, border++);
         }
 
         warpSwapIndex(warpList, low, border - 1);

@@ -404,7 +404,8 @@ public class TeleportationCommands implements CommandExecutor {
 
             int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
             getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "tp", getSpawnLocation().toString(), duration);
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("teleport-spawn"), player);
+            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("teleport-spawn"))
+                    .replace("{duration}", String.valueOf(duration)), player);
             return;
         }
 

@@ -189,6 +189,12 @@ public class MainCommands implements CommandExecutor {
                         else
                             sendHelpPage(commandSender, 1);
                         return true;
+
+                    case 4:
+                        if (args[0].equalsIgnoreCase("visits"))
+                            initiateVisitsModify(commandSender, args[1], args[2], args[3]);
+                        return true;
+
                     default:
                         break;
                 }
@@ -202,6 +208,93 @@ public class MainCommands implements CommandExecutor {
         }
 
         return false;
+    }
+
+    private void initiateVisitsModify(CommandSender commandSender, String commandType, String warpName, String value) {
+        if (!commandSender.hasPermission("hyperdrive.admin.visits")) {
+            String message = getPluginInstance().getLangConfig().getString("no-permission");
+            if (commandSender instanceof Player)
+                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
+            else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            return;
+        }
+
+        Warp warp = getPluginInstance().getManager().getWarp(warpName);
+        boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+        if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
+            if (commandSender instanceof Player)
+                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
+                        .replace("{warp}", warpName), (Player) commandSender);
+            else
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
+                        .replace("{warp}", warpName)));
+            return;
+        }
+
+        if (getPluginInstance().getManager().isNotNumeric(value)) {
+            String message = getPluginInstance().getLangConfig().getString("invalid-visit-amount");
+            if (commandSender instanceof Player)
+                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
+            else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            return;
+        }
+
+        String message;
+        final int foundValue = (int) Double.parseDouble(value);
+        switch (commandType.toLowerCase()) {
+            case "add":
+
+                warp.setTraffic(warp.getTraffic() + foundValue);
+                message = getPluginInstance().getLangConfig().getString("visits-modified");
+                if (message != null && !message.isEmpty()) if (commandSender instanceof Player)
+                    getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(foundValue))
+                            .replace("{warp}", warp.getWarpName())
+                            .replace("{total}", String.valueOf(warp.getTraffic())), (Player) commandSender);
+                else
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{amount}", String.valueOf(foundValue))
+                            .replace("{warp}", warp.getWarpName())
+                            .replace("{total}", String.valueOf(warp.getTraffic()))));
+
+                return;
+
+            case "remove":
+
+                warp.setTraffic(Math.max(0, (warp.getTraffic() - foundValue)));
+                message = getPluginInstance().getLangConfig().getString("visits-modified");
+                if (message != null && !message.isEmpty()) if (commandSender instanceof Player)
+                    getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(foundValue))
+                            .replace("{warp}", warp.getWarpName())
+                            .replace("{total}", String.valueOf(warp.getTraffic())), (Player) commandSender);
+                else
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{amount}", String.valueOf(foundValue))
+                            .replace("{warp}", warp.getWarpName())
+                            .replace("{total}", String.valueOf(warp.getTraffic()))));
+
+                return;
+
+            case "set":
+
+                warp.setTraffic(foundValue);
+                message = getPluginInstance().getLangConfig().getString("visits-modified");
+                if (message != null && !message.isEmpty()) if (commandSender instanceof Player)
+                    getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(foundValue))
+                            .replace("{warp}", warp.getWarpName())
+                            .replace("{total}", String.valueOf(warp.getTraffic())), (Player) commandSender);
+                else
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{amount}", String.valueOf(foundValue))
+                            .replace("{warp}", warp.getWarpName())
+                            .replace("{total}", String.valueOf(warp.getTraffic()))));
+
+                return;
+
+            default:
+                break;
+        }
+
+        if (commandSender.hasPermission("hyperdrive.admin.help"))
+            sendAdminHelpPage(commandSender, 1);
+        else
+            sendHelpPage(commandSender, 1);
     }
 
     private void runAssistantsCommand(CommandSender commandSender, String warpName) {
@@ -900,7 +993,7 @@ public class MainCommands implements CommandExecutor {
     // page methods
     private void setupAdminPages() {
         ArrayList<String> page1 = new ArrayList<>(), page2 = new ArrayList<>(), page3 = new ArrayList<>(),
-                page4 = new ArrayList<>(), page5 = new ArrayList<>();
+                page4 = new ArrayList<>(), page5 = new ArrayList<>(), page6 = new ArrayList<>();
         page1.add("");
         page1.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a1&e] &e)&m-----------&r&e>");
         page1.add("");
@@ -959,6 +1052,15 @@ public class MainCommands implements CommandExecutor {
                 "defined player to the server at the defined coordinates.");
         page5.add("");
         getAdminHelpPages().put(5, page5);
+
+        page6.add("");
+        page6.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a6&e] &e)&m-----------&r&e>");
+        page6.add("");
+        page6.add("&7&l*&r &e/warps visits add <warp> <amount> &7- &aAdds the defined amount to the warp's total visit count.");
+        page6.add("&7&l*&r &e/warps visits remove <warp> <amount> &7- &aRemoves the defined amount from the warp's total visit count.");
+        page6.add("&7&l*&r &e/warps visits set <warp> <amount> &7- &aSets the defined amount as the warp's total visit count.");
+        page6.add("");
+        getAdminHelpPages().put(5, page6);
     }
 
     private void setupHelpPages() {

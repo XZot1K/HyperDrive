@@ -636,7 +636,7 @@ edit-menu-section:
         - ""
         - "&eClick to change the animation set of"
         - "&ethe warp &a{warp-name}&e."
-      slot: 22
+      slot: 23
       use-player-head: false
       player-head-name: ""
       material: "SLIME_BALL"

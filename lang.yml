@@ -157,3 +157,5 @@ basic-teleportation-engaged: "&aYou have been teleported to &eWorld: &6{world} &
 tpa-cooldown: "&cYou are unable to send a teleportation request to a player for another &e{duration} &csecond(s)."
 assistants-list: "&eCurrent Assistant(s) For The Warp &a{warp}&e: &a{list}"
 listed-list: "&eCurrent Listed For The Warp &a{warp}&e: &a{list}"
+invalid-visit-amount: "&cThe amount entered was either not numeric or simply invalid."
+visits-modified: "&aThe warp &e{warp} &ahas had its visit count modified by &e{amount} &aand now has a total of &e{total} visits."

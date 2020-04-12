@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.4.1
+version: 5.4.2
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -129,6 +129,7 @@ permissions:
       hyperdrive.admin.tab: true
       hyperdrive.admin.list: true
       hyperdrive.admin.signs: true
+      hyperdrive.admin.visits: true
 
   # INTENDED PLAYER PERMISSIONS
   hyperdrive.use:
@@ -256,3 +257,6 @@ permissions:
   hyperdrive.admin.signs:
     default: op
     description: This permission node is used to allow any player with the node to create HyperDrive signs.
+  hyperdrive.admin.visits:
+    default: op
+    description: This permission node is used to allow any player with the node to modify the traffic of a warp.

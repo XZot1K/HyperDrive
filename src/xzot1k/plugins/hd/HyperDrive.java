@@ -99,8 +99,9 @@ public class HyperDrive extends JavaPlugin {
                 break;
             }
 
-        if (!asyncChunkMethodExists())
+        if (!asyncChunkMethodExists()) {
             log(Level.WARNING, "Async chunk retrieving methods were not found. Use Paper Spigot to resolve this issue.");
+        }
         else log(Level.INFO, "Async chunk retrieving methods were found!");
 
         if (getConfig().getBoolean("general-section.use-vault")) setVaultHandler(new VaultHandler(getPluginInstance()));
@@ -186,7 +187,7 @@ public class HyperDrive extends JavaPlugin {
         if (getDatabaseConnection() != null)
             try {
                 getDatabaseConnection().close();
-                log(Level.WARNING, "The MySQL connection has been completely closed.");
+                log(Level.WARNING, "The SQL connection has been completely closed.");
             } catch (SQLException e) {
                 e.printStackTrace();
                 log(Level.WARNING, "The MySQL connection was unable to be closed.");

@@ -27,6 +27,7 @@ public class Animation {
     }
 
     public void playAnimation(Player player, String particleEffect, EnumContainer.Animation animationType, int duration) {
+        if (player == null || (particleEffect == null || particleEffect.isEmpty()) || duration <= 0) return;
 
         switch (animationType) {
             case CONE:
@@ -37,6 +38,8 @@ public class Animation {
 
                     @Override
                     public void run() {
+                        if (time >= 20 * duration) cancel();
+
                         t += 0.5;
                         time += 1;
 
@@ -53,8 +56,6 @@ public class Animation {
                                 location.subtract(x, y, z);
                             }
                         }
-
-                        if (time >= 20 * duration) cancel();
                     }
                 }.runTaskTimerAsynchronously(getPluginInstance(), 0, 1));
 
@@ -68,6 +69,8 @@ public class Animation {
 
                     @Override
                     public void run() {
+                        if (time >= 20 * duration) cancel();
+
                         t += Math.PI / 8;
                         if (t >= 5 * (8 * (Math.PI / 8))) t = 0;
                         time += 1;
@@ -78,8 +81,6 @@ public class Animation {
                         location.add(x, y, z);
                         getPluginInstance().getManager().displayParticle(location, particleEffect);
                         location.subtract(x, y, z);
-
-                        if (time >= 20 * duration) cancel();
                     }
                 }.runTaskTimerAsynchronously(getPluginInstance(), 0, 1));
 
@@ -93,6 +94,8 @@ public class Animation {
 
                     @Override
                     public void run() {
+                        if (time >= 20 * duration) cancel();
+
                         t += 0;
                         nt += 0;
                         time += 1;
@@ -129,8 +132,6 @@ public class Animation {
                         location.add(x2, 1.5, z2);
                         getPluginInstance().getManager().displayParticle(location, particleEffect);
                         location.subtract(x2, 1.5, z2);
-
-                        if (this.time >= 20.0 * duration) cancel();
                     }
                 }.runTaskTimerAsynchronously(getPluginInstance(), 0, 1));
 
@@ -143,6 +144,8 @@ public class Animation {
                     int time;
 
                     public void run() {
+                        if (time >= 20 * duration) cancel();
+
                         t += Math.PI / 8;
                         time += 1;
 
@@ -157,8 +160,6 @@ public class Animation {
                             getPluginInstance().getManager().displayParticle(location, particleEffect);
                             location.subtract(x, y, z);
                         }
-
-                        if (time >= 20 * duration) cancel();
                     }
                 }.runTaskTimerAsynchronously(getPluginInstance(), 0, 1));
 
@@ -172,6 +173,8 @@ public class Animation {
 
                     @Override
                     public void run() {
+                        if (time >= 20 * duration) cancel();
+
                         t += 0;
                         nt += 0;
                         time += 1;
@@ -188,7 +191,6 @@ public class Animation {
                         location2.add(x2, y2, z2);
                         getPluginInstance().getManager().displayParticle(location2, particleEffect);
                         location2.subtract(x2, y2, z2);
-                        if (this.time >= 20.0 * duration) cancel();
                     }
                 }.runTaskTimer(getPluginInstance(), 0, 1));
 

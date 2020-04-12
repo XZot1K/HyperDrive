@@ -26,23 +26,32 @@ public class WarpTabComplete implements TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("warps") && args.length == 1) {
-            boolean hasAllAccess = (commandSender.isOp() || commandSender.hasPermission("hyperdrive.admin.tab"));
-            final List<String> warpNames = hasAllAccess ? new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()) : new ArrayList<>();
+        if (command.getName().equalsIgnoreCase("warps")) {
 
-            if (!hasAllAccess && commandSender instanceof Player) {
-                Player player = (Player) commandSender;
-                for (Warp warp : getPluginInstance().getManager().getWarpMap().values()) {
-                    if (!warpNames.contains(warp.getWarpName()) && ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
-                            || warp.getAssistants().contains(player.getUniqueId()) || (warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
-                            || warp.getStatus() == EnumContainer.Status.PUBLIC || (warp.getStatus() == EnumContainer.Status.ADMIN
-                            && ((player.hasPermission("hyperdrive.warps." + warp.getWarpName()) || player.hasPermission("hyperdrive.warps.*"))))))
-                        warpNames.add(warp.getWarpName());
+            if (args.length == 1) {
+                boolean hasAllAccess = (commandSender.isOp() || commandSender.hasPermission("hyperdrive.admin.tab"));
+                final List<String> warpNames = hasAllAccess ? new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()) : new ArrayList<>();
+
+                if (!hasAllAccess && commandSender instanceof Player) {
+                    Player player = (Player) commandSender;
+                    for (Warp warp : getPluginInstance().getManager().getWarpMap().values()) {
+                        if (!warpNames.contains(warp.getWarpName()) && ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                                || warp.getAssistants().contains(player.getUniqueId()) || (warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
+                                || warp.getStatus() == EnumContainer.Status.PUBLIC || (warp.getStatus() == EnumContainer.Status.ADMIN
+                                && ((player.hasPermission("hyperdrive.warps." + warp.getWarpName()) || player.hasPermission("hyperdrive.warps.*"))))))
+                            warpNames.add(warp.getWarpName());
+                    }
                 }
+
+                Collections.sort(warpNames);
+                return warpNames;
             }
 
-            Collections.sort(warpNames);
-            return warpNames;
+            List<String> playerNames = new ArrayList<>();
+            for (Player player : getPluginInstance().getServer().getOnlinePlayers())
+                playerNames.add(player.getName());
+            Collections.sort(playerNames);
+            return playerNames;
         }
 
         return null;

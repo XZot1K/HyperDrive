@@ -4,6 +4,7 @@
 
 package xzot1k.plugins.hd.api;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -17,6 +18,8 @@ import xzot1k.plugins.hd.core.objects.Destination;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 
 public class RandomTeleportation implements Runnable {
 
@@ -67,17 +70,16 @@ public class RandomTeleportation implements Runnable {
             if (getSmartLimit() < getBoundsRadius())
                 setSmartLimit((int) (getSmartLimit() + (getBoundsRadius() * 0.005)));
 
-            if (!getPluginInstance().asyncChunkMethodExists())
-                getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> getBaseLocationWorld().getChunkAt(x >> 4, z >> 4));
-            else {
-                if (getPluginInstance().getServerVersion().startsWith("v1_8"))
-                    getBaseLocationWorld().getChunkAtAsync(x >> 4, z >> 4, chunk1 -> chunk1.load(false));
-                else
-                    getBaseLocationWorld().getChunkAtAsync(x >> 4, z >> 4, true);
+            Chunk chunk;
+            try {
+                chunk = getPluginInstance().getManager().getChunk(getBaseLocationWorld(), x, z).get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+                getPluginInstance().log(Level.WARNING, "The random teleportation task was unable to obtain a chunk. Don't worry, I caught it before it caused further issues! Gonna try again...");
+                return;
             }
 
-            if (!getBaseLocationWorld().isChunkLoaded(x >> 4, z >> 4)) continue;
-
+            if (chunk == null) continue;
             int highestY = getHighestY(getBaseLocationWorld(), x, z);
             if (highestY <= 0) continue;
 

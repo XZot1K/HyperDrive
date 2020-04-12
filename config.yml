@@ -184,7 +184,7 @@ warp-icon-section:
   # (NOTE: This can be set to -1 to disable this check)
   long-word-wrap: 16
   # This is the default description that is set to a newly created warp.
-  default-description: "This is the default HyperDrive warp description. &7(Note: This can be changed inside the edit menu)"
+  default-description: "This is the default HyperDrive warp description. (Note: This can be changed inside the edit menu)"
   # This is the lore the warp icon is given inside of menus.
   # Current Placeholders:
   # {description} - replaces the line with the first description line while adding the remaining lines below it.
@@ -215,17 +215,7 @@ warp-icon-section:
   # {is-public} - Only displays if the warp's status is set to PUBLIC.
   # {is-admin} - Only displays if the warp's status is set to ADMIN.
   list-lore-format:
-    - "&e&l&m----------------------------"
-    - ""
     - "{description}"
-    - ""
-    - "&e&l&m----------------------------"
-    - ""
-    - "&7Status: &e{status}"
-    - "&7Icon Theme: &e{theme}"
-    - "&7Animation Set: &e{animation-set}"
-    - "&7Creation Date: &e{creation-date}"
-    - "&7Usage Cost: &e${usage-price}"
     - ""
     - "{no-access}&cYou don't have access to use this warp."
     - "{has-access}&a(Left-Click) &eBegin the teleportation process."
@@ -233,14 +223,14 @@ warp-icon-section:
     - "{has-access}&a(Shift + Left-Click) &eBegin the warp rating process."
     - "{can-edit}&a(Shift + Right-Click) &eBegin the warp edit process."
     - ""
-    - "&a\u2714 &e{likes}   &r{like-bar}   &e{dislikes} &c\u2716"
+    - "&7It will cost &e${usage-price} &7to use this warp."
+    - "&a\u2714 &e{likes} &r{like-bar} &e{dislikes} &c\u2716"
     - ""
     - "&7Owner: &e{owner}"
-    - "&7Player List Count: &e{list-count}"
-    - "&7Assistant Count: &e{assistant-count}"
-    - "&7Warp Traffic/Popularity: &e{traffic}"
+    - "&7Visits: &e{traffic}"
     - ""
-    - "&e&l&m----------------------------"
+    - "&7Created: &e{creation-date}"
+    - "&7This is a &e{status} &7warp."
 
 # Here is where everything related to animation can be customized.
 special-effects-section:
@@ -263,7 +253,7 @@ special-effects-section:
   # This is the animation that is displayed when the player is successfully randomly teleported. (Format: <type>:<effect>)
   # Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
   # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
-  random-teleport-animation: "CIRCLE:SMOKE_NORMAL"
+  random-teleport-animation: "CIRCLE:FIREWORKS_SPARK"
   # This is the animation that is displayed when the player is successfully teleported through a standalone teleportation command such as /TP or /TPO.
   # (Format: <type>:<effect>) Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
   # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]

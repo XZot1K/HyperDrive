@@ -41,6 +41,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 public class Manager {
@@ -140,10 +141,7 @@ public class Manager {
                 setActionBarHandler(new ABH_1_8R1());
                 break;
             default:
-                if (!getPluginInstance().getServerVersion().contains("v1_7") && !getPluginInstance().getServerVersion().contains("v1_6")
-                        && !getPluginInstance().getServerVersion().contains("v1_5") && !getPluginInstance().getServerVersion().contains("v1_4")
-                        && !getPluginInstance().getServerVersion().contains("v1_3") && !getPluginInstance().getServerVersion().contains("v1_2")
-                        && !getPluginInstance().getServerVersion().contains("v1_1") && !getPluginInstance().getServerVersion().contains("v1_0")) {
+                if (!getPluginInstance().getServerVersion().contains("v1_7")) {
                     setParticleHandler(new Particle_Latest());
                     setTitleHandler(new Titles_Latest(getPluginInstance()));
                     setActionBarHandler(new ABH_Latest());
@@ -306,6 +304,7 @@ public class Manager {
     }
 
     public void displayParticle(Location location, String particleEffect) {
+        if (location == null || (particleEffect == null || particleEffect.isEmpty())) return;
         getParticleHandler().displayParticle(particleEffect, location, 0, 0, 0, 0, 1);
     }
 
@@ -359,6 +358,29 @@ public class Manager {
         }
 
         return getPluginInstance().getConfig().getInt("random-teleport-section.default-bounds");
+    }
+
+    /**
+     * Gets a chunk using paper methods and other checks.
+     *
+     * @param world The world to obtain the chunk from.
+     * @param x     The chunk x-axis coordinate.
+     * @param z     The chunk z-axis coordinate.
+     * @return The found chunk after it is found.
+     */
+    public CompletableFuture<Chunk> getChunk(World world, int x, int z) {
+        boolean useAsync = getPluginInstance().asyncChunkMethodExists();
+        if (useAsync && !getPluginInstance().getServerVersion().startsWith("v1_8"))
+            return world.getChunkAtAsync(x >> 4, z >> 4, true);
+
+        CompletableFuture<Chunk> chunkFuture = new CompletableFuture<>();
+        getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> {
+            if (!useAsync) chunkFuture.complete(world.getChunkAt(x >> 4, z >> 4));
+            else
+                world.getChunkAtAsync(x >> 4, z >> 4, chunk1 -> chunkFuture.complete(world.getChunkAt(x >> 4, z >> 4)));
+        });
+
+        return chunkFuture;
     }
 
     // cross-server stuff
@@ -694,8 +716,7 @@ public class Manager {
                 privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
                 adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format");
 
-        String[] eventPlaceholders = {"{is-owner}", "{has-access}", "{no-access}", "{can-edit}", "{is-private}",
-                "{is-public}", "{is-admin}"};
+        String[] eventPlaceholders = {"{is-owner}", "{has-access}", "{no-access}", "{can-edit}", "{is-private}", "{is-public}", "{is-admin}"};
         List<String> iconLoreFormat = getPluginInstance().getConfig().getStringList("warp-icon-section.list-lore-format"), newLore = new ArrayList<>(),
                 wrappedDescription = getPluginInstance().getManager().wrapString(warp.getDescription(), getPluginInstance().getConfig().getInt("warp-icon-section.description-line-cap"));
 
