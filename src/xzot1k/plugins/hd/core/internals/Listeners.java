@@ -171,7 +171,12 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                warp.rename(enteredName);
+                String finalEnteredName = enteredName;
+                getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> {
+                    e.getPlayer().closeInventory();
+                    warp.rename(finalEnteredName);
+                });
+
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-renamed"))
                         .replace("{previous-name}", previousName).replace("{new-name}", enteredName), e.getPlayer());

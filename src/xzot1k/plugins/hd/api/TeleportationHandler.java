@@ -24,8 +24,6 @@ import xzot1k.plugins.hd.core.objects.GroupTemp;
 import xzot1k.plugins.hd.core.objects.TeleportTemp;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 
 public class TeleportationHandler implements Runnable {
     private HyperDrive pluginInstance;
@@ -106,16 +104,6 @@ public class TeleportationHandler implements Runnable {
                             case "warp":
                                 if (teleportTemp.getTeleportValue() != null) {
                                     if (warp != null && warp.getWarpLocation() != null) {
-
-                                        World world = getPluginInstance().getServer().getWorld(warp.getWarpLocation().getWorldName());
-                                        if (world != null)
-                                            try {
-                                                getPluginInstance().getManager().getChunk(world, (int) warp.getWarpLocation().getX() >> 4, (int) warp.getWarpLocation().getZ() >> 4).get();
-                                            } catch (InterruptedException | ExecutionException e) {
-                                                e.printStackTrace();
-                                                getPluginInstance().log(Level.WARNING, "Unable to obtain the chunk for some odd reason... No worries gonna try again!");
-                                            }
-
                                         final Location warpLocation = warp.getWarpLocation().asBukkitLocation();
                                         WarpEvent warpEvent = new WarpEvent(warpLocation, player);
                                         getPluginInstance().getServer().getPluginManager().callEvent(warpEvent);
@@ -250,15 +238,6 @@ public class TeleportationHandler implements Runnable {
 
                                     SerializableLocation serializableLocation = getPluginInstance().getManager().getLocationFromString(teleportTemp.getTeleportValue());
                                     if (serializableLocation == null) return;
-
-                                    World world = getPluginInstance().getServer().getWorld(serializableLocation.getWorldName());
-                                    if (world != null)
-                                        try {
-                                            getPluginInstance().getManager().getChunk(world, (int) serializableLocation.getX() >> 4, (int) serializableLocation.getZ() >> 4).get();
-                                        } catch (InterruptedException | ExecutionException e) {
-                                            e.printStackTrace();
-                                            getPluginInstance().log(Level.WARNING, "Unable to obtain the chunk for some odd reason... No worries gonna try again!");
-                                        }
 
                                     final Location toLocation = serializableLocation.asBukkitLocation();
                                     if (toLocation == null) return;
