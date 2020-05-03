@@ -57,8 +57,6 @@ public class Listeners implements Listener {
                     inventoryName = e.getView().getTitle();
                 else {
                     Method method = e.getInventory().getClass().getMethod("getName");
-                    if (method == null)
-                        method = e.getInventory().getClass().getMethod("getTitle");
                     inventoryName = (String) method.invoke(e.getInventory());
                 }
             } catch (NoSuchMethodException | IllegalStateException | IllegalAccessException | InvocationTargetException ex) {
@@ -137,6 +135,7 @@ public class Listeners implements Listener {
 
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 warp = new Warp(enteredName, e.getPlayer(), e.getPlayer().getLocation());
+                warp.save(true);
                 warp.register();
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-created"))
                         .replace("{warp}", enteredName), e.getPlayer());
@@ -848,10 +847,9 @@ public class Listeners implements Listener {
             }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onTeleport(PlayerTeleportEvent e) {
-        if (e.getCause() == PlayerTeleportEvent.TeleportCause.PLUGIN || e.getCause() == PlayerTeleportEvent.TeleportCause.COMMAND)
-            getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
+        getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
     }
 
     @EventHandler
@@ -880,7 +878,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onDeath(PlayerDeathEvent e) {
         getPluginInstance().getTeleportationCommands().updateLastLocation(e.getEntity(), e.getEntity().getLocation());
     }
@@ -1130,7 +1128,6 @@ public class Listeners implements Listener {
         getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(e.getPlayer().getUniqueId());
         getPluginInstance().getManager().getPaging().getCurrentPageMap().remove(e.getPlayer().getUniqueId());
         getPluginInstance().getTeleportationCommands().getToggledPlayers().remove(e.getPlayer().getUniqueId());
-        getPluginInstance().getTeleportationCommands().getLastLocationMap().remove(e.getPlayer().getUniqueId());
         getPluginInstance().getTeleportationCommands().getTpaHereSentPlayers().remove(e.getPlayer().getUniqueId());
     }
 
@@ -1159,8 +1156,7 @@ public class Listeners implements Listener {
 
                             if (warp.getStatus() == EnumContainer.Status.PUBLIC || (player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive.warps.*"))
                                     || warp.getOwner().toString().equals(player.getUniqueId().toString()) || warp.getAssistants().contains(player.getUniqueId())
-                                    || (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())
-                                    || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode())))) {
+                                    || (!warp.getPlayerList().isEmpty() && (warp.isWhiteListMode() == warp.getPlayerList().contains(player.getUniqueId())))) {
                                 player.closeInventory();
 
                                 if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
@@ -1250,7 +1246,7 @@ public class Listeners implements Listener {
 
                             if ((warp.getStatus() == EnumContainer.Status.PUBLIC || player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive.warps.*")
                                     || warp.getOwner().toString().equals(player.getUniqueId().toString()) || warp.getAssistants().contains(player.getUniqueId())
-                                    || (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()) || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode()))))
+                                    || (!warp.getPlayerList().isEmpty() && (warp.isWhiteListMode() == warp.getPlayerList().contains(player.getUniqueId()))))
                                     && player.hasPermission("hyperdrive.groups.use")) {
                                 player.closeInventory();
 

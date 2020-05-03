@@ -104,6 +104,7 @@ coordinate-invalid: "&cA coordinate you entered was invalid. Please use integers
 teleport-pos: "&e{player} &chas been teleported to the entered coordinates and world."
 teleported-pos: "&eYou have been teleported to &aX: {x} - Y: {y} - Z: {z} - World: {world}&e."
 player-teleportation-toggled: "&cThe player &e{player} &chas teleportation toggled and will not be able to be teleported to without administration access."
+#
 player-tpa-sent: "&eYour teleport request has been sent to &a{player}&e. (&a10 &eseconds to accept)"
 player-tpa-received: "&eYou have received a teleport request from &a{player}&e. (&a10 &eseconds to accept)"
 player-tpa-invalid: "&cYou do not currently have any TPA requests from &e{player}&c."
@@ -112,6 +113,15 @@ player-tpa-accept: "&eYou have accepted &a{player}'s &eTPA request."
 player-tpa-accepted: "&a{player} &ehas accepted your TPA request."
 player-tpa-deny: "&eYou have denied &a{player}'s &eTPA request."
 player-tpa-denied: "&e{player} &chas denied your TPA request."
+#
+player-tpahere-sent: "&eYou requested &a{player} &eto teleport to you. (&a10 &eseconds to accept)"
+player-tpahere-received: "&a{player} &ewants you to teleport to them. (&a10 &eseconds to accept)"
+player-tpahere-invalid: "&cYou do not currently have any TPAHere requests from &e{player}&c."
+player-tpahere-accept: "&eYou have accepted &a{player}'s &eTPAHere request."
+player-tpahere-accepted: "&a{player} &ehas accepted your TPAHere request."
+player-tpahere-deny: "&eYou have denied &a{player}'s &eTPAHere request."
+player-tpahere-denied: "&e{player} &chas denied your TPAHere request."
+#
 teleport-toggled-off: "&eTeleportation has been toggled &cOff&e."
 teleport-toggled-on: "&eTeleportation has been toggled &aOn&e."
 no-last-location: "&cYou currently have no last teleport location."

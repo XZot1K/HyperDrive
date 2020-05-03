@@ -974,103 +974,101 @@ public class Manager {
         final Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getMenusConfig().getInt("list-menu-section.size"),
                 colorText(getPluginInstance().getMenusConfig().getString("list-menu-section.title")));
 
-        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-            if (player == null || !player.isOnline()) return;
+        if (player != null && player.isOnline()) {
+            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                List<Integer> warpSlots = getPluginInstance().getMenusConfig().getIntegerList("list-menu-section.warp-slots");
+                ItemStack emptySlotFiller = null;
 
-            List<Integer> warpSlots = getPluginInstance().getMenusConfig().getIntegerList("list-menu-section.warp-slots");
-            ItemStack emptySlotFiller = null;
+                int defaultFilterIndex = getPluginInstance().getMenusConfig().getInt("list-menu-section.default-filter-index");
+                String currentStatus, ownFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format"),
+                        publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
+                        privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
+                        adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format"),
+                        featuredFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format");
 
-            int defaultFilterIndex = getPluginInstance().getMenusConfig().getInt("list-menu-section.default-filter-index");
+                switch (defaultFilterIndex) {
+                    case 1:
+                        currentStatus = privateFormat;
+                        break;
+                    case 2:
+                        currentStatus = adminFormat;
+                        break;
+                    case 3:
+                        currentStatus = ownFormat;
+                        break;
+                    case 4:
+                        currentStatus = featuredFormat;
+                        break;
+                    default:
+                        currentStatus = publicFormat;
+                        break;
+                }
 
-            String currentStatus, ownFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format"),
-                    publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
-                    privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
-                    adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format"),
-                    featuredFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format");
+                getPaging().resetWarpPages(player);
+                HashMap<Integer, List<Warp>> warpPageMap = getPaging().getWarpPages(player, "list-menu-section", Objects.requireNonNull(currentStatus));
+                getPaging().getWarpPageMap().put(player.getUniqueId(), warpPageMap);
 
-            switch (defaultFilterIndex) {
-                case 1:
-                    currentStatus = privateFormat;
-                    break;
-                case 2:
-                    currentStatus = adminFormat;
-                    break;
-                case 3:
-                    currentStatus = ownFormat;
-                    break;
-                case 4:
-                    currentStatus = featuredFormat;
-                    break;
-                default:
-                    currentStatus = publicFormat;
-                    break;
-            }
+                if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(1)) {
+                    List<Warp> pageOneWarpList = new ArrayList<>(warpPageMap.get(1));
+                    for (int i = -1; ++i < inventory.getSize(); )
+                        if (warpSlots.contains(i) && pageOneWarpList.size() >= 1) {
+                            Warp warp = pageOneWarpList.get(0);
 
-            getPaging().resetWarpPages(player);
-            HashMap<Integer, List<Warp>> warpPageMap = getPaging().getWarpPages(player, "list-menu-section", Objects.requireNonNull(currentStatus));
-            getPaging().getWarpPageMap().put(player.getUniqueId(), warpPageMap);
+                            ItemStack item = buildWarpIcon(player, warp);
+                            if (item != null) inventory.setItem(i, item);
+                            pageOneWarpList.remove(warp);
+                        }
+                }
 
-            if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(1)) {
-                List<Warp> pageOneWarpList = new ArrayList<>(warpPageMap.get(1));
-                for (int i = -1; ++i < inventory.getSize(); )
-                    if (warpSlots.contains(i) && pageOneWarpList.size() >= 1) {
-                        Warp warp = pageOneWarpList.get(0);
+                int currentPage = getPaging().getCurrentPage(player);
+                boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player), hasNextPage = getPaging().hasNextWarpPage(player);
 
-                        ItemStack item = buildWarpIcon(player, warp);
-                        if (item != null) inventory.setItem(i, item);
-                        pageOneWarpList.remove(warp);
-                    }
-            }
+                List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section.items")).getKeys(false));
+                for (int i = -1; ++i < itemIds.size(); ) {
+                    String itemId = itemIds.get(i);
+                    if (itemId != null && !itemId.equalsIgnoreCase("")) {
+                        boolean usePlayerHead = getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
+                                fillEmptySlots = getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".fill-empty-slots");
+                        String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None", replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) : "None";
+                        String displayName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".display-name"))
+                                .replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement).replace("{next-page}", replacement1)
+                                .replace("{current-status}", Objects.requireNonNull(currentStatus));
+                        if (usePlayerHead) {
+                            List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getMenusConfig().getStringList("list-menu-section.items." + itemId + ".lore");
+                            for (int j = -1; ++j < lore.size(); )
+                                newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
+                                        .replace("{previous-page}", replacement).replace("{next-page}", replacement1)
+                                        .replace("{current-status}", currentStatus)));
 
-            int currentPage = getPaging().getCurrentPage(player);
-            boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player),
-                    hasNextPage = getPaging().hasNextWarpPage(player);
-
-            List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section.items")).getKeys(false));
-            for (int i = -1; ++i < itemIds.size(); ) {
-                String itemId = itemIds.get(i);
-                if (itemId != null && !itemId.equalsIgnoreCase("")) {
-                    boolean usePlayerHead = getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
-                            fillEmptySlots = getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".fill-empty-slots");
-                    String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None", replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) : "None";
-                    String displayName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".display-name"))
-                            .replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement).replace("{next-page}", replacement1)
-                            .replace("{current-status}", Objects.requireNonNull(currentStatus));
-                    if (usePlayerHead) {
-                        List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getMenusConfig().getStringList("list-menu-section.items." + itemId + ".lore");
-                        for (int j = -1; ++j < lore.size(); )
-                            newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
-                                    .replace("{previous-page}", replacement).replace("{next-page}", replacement1)
-                                    .replace("{current-status}", currentStatus)));
-
-                        ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".player-head-name"),
-                                displayName, newLore, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                        inventory.setItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".slot"), playerHeadItem);
-                        if (fillEmptySlots) emptySlotFiller = playerHeadItem;
-                    } else {
-                        List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getMenusConfig().getStringList("list-menu-section.items." + itemId + ".lore");
-                        for (int j = -1; ++j < lore.size(); )
-                            newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement)
-                                    .replace("{next-page}", replacement1).replace("{current-status}", currentStatus)));
-                        Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".material"))
-                                .toUpperCase().replace(" ", "_").replace("-", "_"));
-                        ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".durability"), displayName, newLore,
-                                getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                        inventory.setItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".slot"), itemStack);
-                        if (fillEmptySlots)
-                            emptySlotFiller = itemStack;
+                            ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".player-head-name"),
+                                    displayName, newLore, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
+                            inventory.setItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".slot"), playerHeadItem);
+                            if (fillEmptySlots) emptySlotFiller = playerHeadItem;
+                        } else {
+                            List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getMenusConfig().getStringList("list-menu-section.items." + itemId + ".lore");
+                            for (int j = -1; ++j < lore.size(); )
+                                newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement)
+                                        .replace("{next-page}", replacement1).replace("{current-status}", currentStatus)));
+                            Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".material"))
+                                    .toUpperCase().replace(" ", "_").replace("-", "_"));
+                            ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".durability"), displayName, newLore,
+                                    getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
+                            inventory.setItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".slot"), itemStack);
+                            if (fillEmptySlots)
+                                emptySlotFiller = itemStack;
+                        }
                     }
                 }
-            }
 
-            for (int i = -1; ++i < inventory.getSize(); ) {
-                if (emptySlotFiller != null && !warpSlots.contains(i)) {
-                    ItemStack itemStack = inventory.getItem(i);
-                    if (itemStack == null || itemStack.getType() == Material.AIR)
-                        inventory.setItem(i, emptySlotFiller);
+                for (int i = -1; ++i < inventory.getSize(); ) {
+                    if (emptySlotFiller != null && !warpSlots.contains(i)) {
+                        ItemStack itemStack = inventory.getItem(i);
+                        if (itemStack == null || itemStack.getType() == Material.AIR)
+                            inventory.setItem(i, emptySlotFiller);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         return inventory;
     }
@@ -1467,7 +1465,7 @@ public class Manager {
         List<Warp> warpList = new ArrayList<>(getWarpMap().values());
         for (int i = -1; ++i < warpList.size(); ) {
             Warp warp = warpList.get(i);
-            if (warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString()))
+            if (warp.getOwner() != null && warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString()))
                 warpCount += 1;
         }
 

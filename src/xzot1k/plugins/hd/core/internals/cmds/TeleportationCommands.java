@@ -630,7 +630,8 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         enteredPlayer.setVelocity(new Vector(0, 0, 0));
-        enteredPlayer.teleport(lastLocation, PlayerTeleportEvent.TeleportCause.COMMAND);
+        enteredPlayer.teleport(lastLocation);
+        getPluginInstance().getTeleportationCommands().updateLastLocation(enteredPlayer, lastLocation);
         if (commandSender instanceof Player && !((Player) commandSender).getUniqueId().toString().equals(enteredPlayer.getUniqueId().toString()))
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("teleported-last-location"))
                     .replace("{player}", enteredPlayer.getName()), (Player) commandSender);
@@ -667,7 +668,8 @@ public class TeleportationCommands implements CommandExecutor {
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "tp", new SerializableLocation(lastLocation).toString(), duration);
 
         player.setVelocity(new Vector(0, 0, 0));
-        player.teleport(lastLocation, PlayerTeleportEvent.TeleportCause.COMMAND);
+        player.teleport(lastLocation);
+        getPluginInstance().getTeleportationCommands().updateLastLocation(player, lastLocation);
         getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("teleport-last-location"), player);
     }
 
@@ -969,9 +971,9 @@ public class TeleportationCommands implements CommandExecutor {
         updateTeleportAskRequest(player, enteredPlayer);
         if (!getTpaHereSentPlayers().contains(player.getUniqueId()))
             getTpaHereSentPlayers().add(player.getUniqueId());
-        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("player-tpa-sent"))
+        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("player-tpahere-sent"))
                 .replace("{player}", enteredPlayer.getName()), player);
-        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("player-tpa-received"))
+        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("player-tpahere-received"))
                 .replace("{player}", player.getName()), enteredPlayer);
 
         new BukkitRunnable() {

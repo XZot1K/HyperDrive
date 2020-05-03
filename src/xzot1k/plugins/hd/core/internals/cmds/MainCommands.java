@@ -885,7 +885,7 @@ public class MainCommands implements CommandExecutor {
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
         if (warp.getStatus() != EnumContainer.Status.PUBLIC && !warp.getOwner().toString().equals(player.getUniqueId().toString())
-                && !warp.getAssistants().contains(player.getUniqueId()) && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())
+                && !warp.getAssistants().contains(player.getUniqueId()) && (warp.isWhiteListMode() != warp.getPlayerList().contains(player.getUniqueId()))
                 && !(player.hasPermission("hyperdrive.warps." + warp.getWarpName()) || player.hasPermission("hyperdrive.warps.*"))) {
             getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("no-permission"), player);
             return;
