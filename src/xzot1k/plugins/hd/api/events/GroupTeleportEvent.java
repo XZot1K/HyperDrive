@@ -14,14 +14,13 @@ import java.util.List;
 import java.util.UUID;
 
 public class GroupTeleportEvent extends Event implements Cancellable {
-    private static HandlerList handlers;
+    private static HandlerList handlers = new HandlerList();
     private boolean cancelled;
     private Location destination;
     private Player groupLeader;
     private List<UUID> groupMemberIds;
 
     public GroupTeleportEvent(Location destination, Player groupLeader, List<UUID> groupMemberIds) {
-        handlers = new HandlerList();
         setCancelled(false);
         setDestination(destination);
         setGroupLeader(groupLeader);

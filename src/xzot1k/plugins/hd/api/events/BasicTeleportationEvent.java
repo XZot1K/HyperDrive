@@ -11,13 +11,12 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 public class BasicTeleportationEvent extends Event implements Cancellable {
-    private static HandlerList handlers;
+    private static HandlerList handlers = new HandlerList();
     private boolean cancelled;
     private Location toLocation;
     private Player player;
 
     public BasicTeleportationEvent(Location toLocation, Player player) {
-        handlers = new HandlerList();
         setCancelled(false);
         setToLocation(toLocation);
         setPlayer(player);
