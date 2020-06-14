@@ -10,13 +10,12 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 public class EconomyReturnEvent extends Event implements Cancellable {
-    private static HandlerList handlers;
+    private static HandlerList handlers = new HandlerList();
     private boolean cancelled;
     private double amount;
     private OfflinePlayer player;
 
     public EconomyReturnEvent(OfflinePlayer player, double amount) {
-        handlers = new HandlerList();
         setCancelled(false);
         setPlayer(player);
         setAmount(amount);

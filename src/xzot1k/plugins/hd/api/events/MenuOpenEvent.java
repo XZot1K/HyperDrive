@@ -13,7 +13,7 @@ import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 
 public class MenuOpenEvent extends Event implements Cancellable {
-    private static HandlerList handlers;
+    private static HandlerList handlers = new HandlerList();
     private boolean cancelled;
     private Inventory openedMenu;
     private EnumContainer.MenuType menuType;
@@ -22,7 +22,6 @@ public class MenuOpenEvent extends Event implements Cancellable {
 
     public MenuOpenEvent(HyperDrive pluginInstance, EnumContainer.MenuType menuType, Inventory openedMenu,
                          Player player) {
-        handlers = new HandlerList();
         setCancelled(false);
         setOpenedMenu(openedMenu);
         setPlayer(player);
