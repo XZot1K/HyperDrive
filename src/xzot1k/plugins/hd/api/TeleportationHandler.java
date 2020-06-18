@@ -34,7 +34,7 @@ public class TeleportationHandler implements Runnable {
     private HashMap<UUID, TeleportTemp> teleportTempMap;
     private HashMap<UUID, Destination> destinationMap;
     private List<UUID> randomTeleportingPlayers;
-    private String teleportSound, teleportTitle, teleportSubTitle, delayTitle, delaySubTitle, randomTeleportDelayTitle, randomTeleportSubDelayTitle;
+    private final String teleportSound, teleportTitle, teleportSubTitle, delayTitle, delaySubTitle, randomTeleportDelayTitle, randomTeleportSubDelayTitle;
 
     public TeleportationHandler(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);

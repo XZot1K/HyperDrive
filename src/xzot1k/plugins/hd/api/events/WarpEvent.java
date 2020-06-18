@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api.events;
@@ -11,7 +11,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 public class WarpEvent extends Event implements Cancellable {
-    private static HandlerList handlers = new HandlerList();
+    final private static HandlerList handlers = new HandlerList();
     private boolean cancelled;
     private Location location;
     private Player player;

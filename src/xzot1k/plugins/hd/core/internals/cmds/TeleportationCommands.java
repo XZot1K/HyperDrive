@@ -73,10 +73,10 @@ public class TeleportationCommands implements CommandExecutor {
 
                 switch (args.length) {
                     case 0:
-                        runRTPCommand(commandSender);
+                        runRTPCommand(commandSender, false);
                         return true;
                     case 2:
-                        runRTPCommand(commandSender, args[0], args[1]);
+                        runRTPCommand(commandSender, args[0], args[1], false);
                         return true;
                 }
 
@@ -84,6 +84,22 @@ public class TeleportationCommands implements CommandExecutor {
                     getPluginInstance().getMainCommands().sendAdminHelpPage(commandSender, 1);
                 else getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
                 return true;
+            case "randomteleportadmin":
+
+                switch (args.length) {
+                    case 0:
+                        runRTPCommand(commandSender, true);
+                        return true;
+                    case 2:
+                        runRTPCommand(commandSender, args[0], args[1], true);
+                        return true;
+                }
+
+                if (commandSender.hasPermission("hyperdrive.admin.help"))
+                    getPluginInstance().getMainCommands().sendAdminHelpPage(commandSender, 1);
+                else getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
+                return true;
+
             case "spawn":
                 switch (args.length) {
                     case 0:
@@ -270,7 +286,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
     }
 
-    private void runRTPCommand(CommandSender commandSender, String playerName, String worldName) {
+    private void runRTPCommand(CommandSender commandSender, String playerName, String worldName, boolean bypassLimits) {
         if (!commandSender.hasPermission("hyperdrive.admin.rtp")) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("no-permission"), (Player) commandSender);
@@ -285,7 +301,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        if (!enteredPlayer.hasPermission("hyperdrive.rtpbypass")) {
+        if (!bypassLimits || !enteredPlayer.hasPermission("hyperdrive.rtpbypass")) {
             long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(enteredPlayer, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
             if (cooldownDurationLeft > 0) {
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("random-teleport-cooldown"))
@@ -319,7 +335,7 @@ public class TeleportationCommands implements CommandExecutor {
         final String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"),
                 subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
         final int rtpDelay = getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration");
-        int duration = !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass") ? rtpDelay : 0;
+        int duration = (!bypassLimits || !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass")) ? rtpDelay : 0;
         if (duration > 0) {
             getPluginInstance().getTeleportationHandler().updateTeleportTemp(enteredPlayer, "rtp", world.getName(), duration);
             if (title != null && subTitle != null)
@@ -335,7 +351,7 @@ public class TeleportationCommands implements CommandExecutor {
                     .replace("{player}", enteredPlayer.getName()).replace("{world}", world.getName())));
     }
 
-    private void runRTPCommand(CommandSender commandSender) {
+    private void runRTPCommand(CommandSender commandSender, boolean bypassLimits) {
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
             return;
@@ -347,7 +363,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        if (!player.hasPermission("hyperdrive.rtpbypass")) {
+        if (!bypassLimits || !player.hasPermission("hyperdrive.rtpbypass")) {
             long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
             if (cooldownDurationLeft > 0) {
                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("random-teleport-cooldown"))
@@ -371,7 +387,7 @@ public class TeleportationCommands implements CommandExecutor {
         final String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"),
                 subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
         final int rtpDelay = getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration");
-        int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? rtpDelay : 0;
+        int duration = (!bypassLimits || !player.hasPermission("hyperdrive.tpdelaybypass")) ? rtpDelay : 0;
         if (duration > 0) {
             getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "rtp", player.getWorld().getName(), duration);
             if (title != null && subTitle != null)
@@ -494,7 +510,7 @@ public class TeleportationCommands implements CommandExecutor {
         Location location = new Location(world, Double.parseDouble(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), enteredPlayer.getLocation().getYaw(),
                 enteredPlayer.getLocation().getPitch());
 
-        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, getPluginInstance().getBungeeListener().getIPFromMap(serverName), serverName, new SerializableLocation(location));
+        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, getPluginInstance().getBungeeListener().getServerAddressMap().get(serverName), serverName, new SerializableLocation(location));
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("cross-server"))
                     .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName)), (Player) commandSender);
@@ -591,7 +607,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         Location location = new Location(world, Double.parseDouble(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), Float.parseFloat(args[6]), Float.parseFloat(args[7]));
-        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, getPluginInstance().getBungeeListener().getIPFromMap(serverName), serverName, new SerializableLocation(location));
+        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, getPluginInstance().getBungeeListener().getServerAddressMap().get(serverName), serverName, new SerializableLocation(location));
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("cross-server"))
                     .replace("{player}", enteredPlayer.getName()).replace("{server}", serverName)), (Player) commandSender);

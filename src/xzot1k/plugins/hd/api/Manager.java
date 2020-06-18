@@ -4,6 +4,8 @@
 
 package xzot1k.plugins.hd.api;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -401,7 +403,17 @@ public class Manager {
             return;
         }
 
-        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+        try {
+            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+            out.writeUTF("HyperDrive");
+            out.writeUTF(serverName + ";" + player.getUniqueId().toString() + ";" + location.toString());
+            player.sendPluginMessage(pluginInstance, "BungeeCord", out.toByteArray());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            //  return;
+        }
+
+       /* getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
             try {
                 Statement statement = getPluginInstance().getDatabaseConnection().createStatement();
 
@@ -434,7 +446,7 @@ public class Manager {
                                 + player.getUniqueId().toString() + "'. They have been sent to " + "the '" + serverName
                                 + "' server, but the location was unable to be processed.");
             }
-        });
+        });*/
     }
 
     public void teleportCrossServer(Player player, String serverIP, String serverName, String playerName) {

@@ -227,12 +227,10 @@ public class Paging {
                 break;
         }
 
-        int slotCount = getPluginInstance().getMenusConfig().getIntegerList(menuPath + ".warp-slots").size();
-        List<Warp> warpList = !getPluginInstance().getManager().getWarpMap().isEmpty() ? new ArrayList<>(getPluginInstance().getManager().getWarpMap().values()) : new ArrayList<>();
-        warpList.sort(Warp::compareTo);
-
-        if (status != null)
-            warpSort(warpList, status.equals(featuredFormat));
+        final int slotCount = getPluginInstance().getMenusConfig().getIntegerList(menuPath + ".warp-slots").size();
+        final Collection<Warp> warpCollection = getPluginInstance().getManager().getWarpMap().values();
+        List<Warp> warpList = !getPluginInstance().getManager().getWarpMap().isEmpty() ? new ArrayList<>(warpCollection) : new ArrayList<>();
+        if (status != null) warpSort(warpList, status.equals(featuredFormat));
 
         HashMap<Integer, List<Warp>> finalMap = new HashMap<>();
         int currentPage = 1, trafficThreshold = getPluginInstance().getMenusConfig().getInt("list-menu-section.traffic-threshold");
@@ -331,17 +329,20 @@ public class Paging {
         for (int i = border - 1; ++i <= high; ) {
             Warp warpAtHigh = warpList.get(i), warpAtLow = warpList.get(low);
 
-            if (sortAsFeatured) {
-                if (!((warpAtHigh.getTraffic() > warpAtLow.getTraffic())))
-                    continue;
-            } else {
-                double maxRatioMax = Math.max(warpAtHigh.getLikes(), warpAtHigh.getDislikes()), maxRatioMin = Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes()),
-                        minRatioMax = Math.max(warpAtLow.getLikes(), warpAtLow.getDislikes()), minRatioMin = Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes());
-                if ((maxRatioMax == 0 && maxRatioMin == 0) || (minRatioMax == 0 && minRatioMin == 0)) continue;
+            final int comparedNames = warpAtHigh.getWarpName().compareTo(warpAtLow.getWarpName());
+            if (comparedNames > 0) continue;
+            else if (comparedNames == 0)
+                if (sortAsFeatured) {
+                    if (!((warpAtHigh.getTraffic() > warpAtLow.getTraffic())))
+                        continue;
+                } else {
+                    double maxRatioMax = Math.max(warpAtHigh.getLikes(), warpAtHigh.getDislikes()), maxRatioMin = Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes()),
+                            minRatioMax = Math.max(warpAtLow.getLikes(), warpAtLow.getDislikes()), minRatioMin = Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes());
+                    if ((maxRatioMax == 0 && maxRatioMin == 0) || (minRatioMax == 0 && minRatioMin == 0)) continue;
 
-                double maxRatio = (maxRatioMin / maxRatioMax), minRatio = (minRatioMin / minRatioMax);
-                if (!(maxRatio > minRatio)) continue;
-            }
+                    double maxRatio = (maxRatioMin / maxRatioMax), minRatio = (minRatioMin / minRatioMax);
+                    if (!(maxRatio > minRatio)) continue;
+                }
 
             warpSwapIndex(warpList, i, border++);
         }

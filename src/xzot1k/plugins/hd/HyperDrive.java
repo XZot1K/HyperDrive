@@ -12,7 +12,6 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -101,8 +100,7 @@ public class HyperDrive extends JavaPlugin {
 
         if (!asyncChunkMethodExists()) {
             log(Level.WARNING, "Async chunk retrieving methods were not found. Use Paper Spigot to resolve this issue.");
-        }
-        else log(Level.INFO, "Async chunk retrieving methods were found!");
+        } else log(Level.INFO, "Async chunk retrieving methods were found!");
 
         if (getConfig().getBoolean("general-section.use-vault")) setVaultHandler(new VaultHandler(getPluginInstance()));
         setHookChecker(new HookChecker(this));
@@ -817,100 +815,44 @@ public class HyperDrive extends JavaPlugin {
         setAutoSaveTaskId(autoSaveTask.getTaskId());
 
         if (useMySQL) {
-            HashMap<UUID, Location> locationMap = new HashMap<>();
-            int crossServerTeleportTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
-                Player firstPlayer = getBungeeListener().getFirstPlayer();
-                if (firstPlayer != null) getBungeeListener().requestServers(firstPlayer);
+            BukkitTask crossServerTeleportTaskId = getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+                if (getBungeeListener() == null) {
+                    getServer().getScheduler().cancelTask(getCrossServerTaskId());
+                    return;
+                }
 
-                getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-
-                    getDatabaseWarps().clear();
-
-                    try {
-                        Statement statement = getDatabaseConnection().createStatement();
-                        ResultSet resultSet = statement.executeQuery("select * from warps");
-                        while (resultSet.next()) {
-                            String warpName = resultSet.getString(1).toLowerCase();
-                            if (!getDatabaseWarps().contains(warpName))
-                                getDatabaseWarps().add(warpName);
-                        }
-
-                        resultSet.close();
-                        statement.close();
-
-                        List<Warp> warps = new ArrayList<>(getManager().getWarpMap().values());
-                        for (Warp warp : warps)
-                            if (!getDatabaseWarps().contains(warp.getWarpName().toLowerCase()))
-                                warp.unRegister();
-
-                        for (String warpName : getDatabaseWarps())
-                            if (!getManager().getWarpMap().containsKey(warpName))
-                                loadWarp(warpName);
-
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                getDatabaseWarps().clear();
+                try {
+                    Statement statement = getDatabaseConnection().createStatement();
+                    ResultSet resultSet = statement.executeQuery("select * from warps");
+                    while (resultSet.next()) {
+                        String warpName = resultSet.getString(1).toLowerCase();
+                        if (!getDatabaseWarps().contains(warpName)) getDatabaseWarps().add(warpName);
                     }
 
-                    try {
-                        Statement statement = getDatabaseConnection().createStatement();
-                        ResultSet resultSet = statement.executeQuery("select * from transfer");
-                        while (resultSet.next()) {
-                            UUID playerUniqueId = UUID.fromString(resultSet.getString(1));
-                            String locationString = resultSet.getString(2), server_ip = resultSet.getString(3);
-                            if (server_ip == null || server_ip.equalsIgnoreCase("")) {
-                                if (locationString.contains(",")) {
-                                    String[] locationStringArgs = locationString.split(",");
-                                    World world = getPluginInstance().getServer().getWorld(locationStringArgs[0]);
-                                    if (world == null) continue;
-                                    Location location = new Location(world, Double.parseDouble(locationStringArgs[1]), Double.parseDouble(locationStringArgs[2]),
-                                            Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]), Float.parseFloat(locationStringArgs[5]));
-                                    locationMap.put(playerUniqueId, location);
-                                } else {
-                                    Player player = getServer().getPlayer(locationString);
-                                    if (player != null) locationMap.put(playerUniqueId, player.getLocation());
-                                }
-                            } else {
-                                if (!server_ip.replace("localhost", "127.0.0.1").equalsIgnoreCase((getServer().getIp() + ":" + getServer().getPort())
-                                        .replace("localhost", "127.0.0.1")))
-                                    continue;
+                    resultSet.close();
+                    statement.close();
 
-                                if (locationString.contains(",")) {
-                                    String[] locationStringArgs = locationString.split(",");
-                                    Location location = new Location(getPluginInstance().getServer().getWorld(locationStringArgs[0]), Double.parseDouble(locationStringArgs[1]),
-                                            Double.parseDouble(locationStringArgs[2]), Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]), Float.parseFloat(locationStringArgs[5]));
-                                    locationMap.put(playerUniqueId, location);
-                                } else {
-                                    Player player = getServer().getPlayer(locationString);
-                                    if (player != null) locationMap.put(playerUniqueId, player.getLocation());
-                                }
-                            }
-                        }
+                    List<Warp> warps = new ArrayList<>(getManager().getWarpMap().values());
+                    for (Warp warp : warps)
+                        if (!getDatabaseWarps().contains(warp.getWarpName().toLowerCase()))
+                            warp.unRegister();
 
-                        resultSet.close();
-                        statement.close();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                });
+                    for (String warpName : getDatabaseWarps())
+                        if (!getManager().getWarpMap().containsKey(warpName))
+                            loadWarp(warpName);
 
-                List<UUID> ids = new ArrayList<>(locationMap.keySet());
-                for (int i = -1; ++i < ids.size(); ) {
-                    UUID playerUniqueId = ids.get(i);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
 
-                    getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-                        try {
-                            PreparedStatement preparedStatement = getDatabaseConnection().prepareStatement("delete from transfer where player_uuid = '" + playerUniqueId.toString() + "'");
-                            preparedStatement.executeUpdate();
-                            preparedStatement.close();
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                    });
-
-                    OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(playerUniqueId);
+                List<UUID> playersToClear = new ArrayList<>();
+                for (Map.Entry<UUID, SerializableLocation> mapEntry : getBungeeListener().getTransferMap().entrySet()) {
+                    if (mapEntry.getKey() == null || mapEntry.getValue() == null) continue;
+                    OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(mapEntry.getKey());
                     if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() != null) {
-                        Location location = locationMap.get(playerUniqueId);
-                        locationMap.remove(playerUniqueId);
+                        getBungeeListener().getTransferMap().remove(mapEntry.getKey());
+                        Location location = mapEntry.getValue().asBukkitLocation();
                         getTeleportationHandler().teleportPlayer(offlinePlayer.getPlayer(), location);
                         getManager().sendCustomMessage(Objects.requireNonNull(getLangConfig().getString("cross-teleported"))
                                 .replace("{world}", Objects.requireNonNull(location.getWorld()).getName())
@@ -920,7 +862,7 @@ public class HyperDrive extends JavaPlugin {
                     }
                 }
             }, 0, 20);
-            setCrossServerTaskId(crossServerTeleportTaskId);
+            setCrossServerTaskId(crossServerTeleportTaskId.getTaskId());
         }
     }
 

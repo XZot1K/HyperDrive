@@ -19,6 +19,10 @@ commands:
     default: op
     description: The tradition random teleportation command.
     aliases: [rtp, randomtp, rteleport]
+  randomteleportadmin:
+    default: op
+    description: The tradition random teleportation command (bypasses limitations).
+    aliases: [rtpa, rtpadmin, randomtpadmin, rteleportadmin]
   grouprandomteleport:
     default: op
     description: Begins the group random teleportation process.

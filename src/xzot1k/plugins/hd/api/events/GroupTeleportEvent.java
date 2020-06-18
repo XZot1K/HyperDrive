@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api.events;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class GroupTeleportEvent extends Event implements Cancellable {
-    private static HandlerList handlers = new HandlerList();
+    final private static HandlerList handlers = new HandlerList();
     private boolean cancelled;
     private Location destination;
     private Player groupLeader;

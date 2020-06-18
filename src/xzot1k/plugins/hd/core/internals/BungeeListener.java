@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals;
@@ -10,24 +10,77 @@ import com.google.common.io.ByteStreams;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import xzot1k.plugins.hd.HyperDrive;
+import xzot1k.plugins.hd.api.objects.SerializableLocation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 public class BungeeListener implements PluginMessageListener {
     private HyperDrive pluginInstance;
+    private String myServer;
     private HashMap<String, String> serverAddressMap;
+    private HashMap<UUID, SerializableLocation> transferMap;
 
     public BungeeListener(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
         setServerAddressMap(new HashMap<>());
+        setTransferMap(new HashMap<>());
 
-        Player firstPlayer = getFirstPlayer();
+        final Player firstPlayer = getFirstPlayer();
         if (firstPlayer != null) {
-            requestServer(firstPlayer);
-            requestServers(firstPlayer);
+            requestValue(firstPlayer, "GetServer");
+            requestValue(firstPlayer, "GetServers");
         }
+    }
+
+    @Override
+    public void onPluginMessageReceived(String channel, Player player, byte[] message) {
+        if (!channel.equals("BungeeCord")) return;
+
+        ByteArrayDataInput in = ByteStreams.newDataInput(message);
+        String subChannel = in.readUTF();
+        switch (subChannel) {
+            case "HyperDrive":
+                final String[] lineArgs = in.readUTF().split(";");
+                if (getMyServer() == null || (getMyServer() != null && !lineArgs[0].equalsIgnoreCase(getMyServer())))
+                    return;
+
+                final UUID uuid = UUID.fromString(lineArgs[1]);
+
+                Player foundPlayer = getPluginInstance().getServer().getPlayer(uuid);
+                if (foundPlayer == null || !foundPlayer.isOnline()) return;
+
+                final String[] locationArgs = lineArgs[2].split(":"),
+                        coordArgs = locationArgs[1].split(",");
+
+                SerializableLocation location = new SerializableLocation(locationArgs[0], Double.parseDouble(coordArgs[0]),
+                        Double.parseDouble(coordArgs[1]), Double.parseDouble(coordArgs[2]), Float.parseFloat(coordArgs[3]),
+                        Float.parseFloat(coordArgs[4]));
+                getTransferMap().put(uuid, location);
+                break;
+            case "GetServer":
+                setMyServer(in.readUTF());
+                break;
+            case "GetServers":
+                String[] serverList = in.readUTF().split(", ");
+                for (int i = -1; ++i < serverList.length; )
+                    requestValue(player, "ServerIP", serverList[i]);
+                break;
+            case "ServerIP":
+                getServerAddressMap().put(in.readUTF(), (in.readUTF() + ":" + in.readShort()));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void requestValue(Player player, String... values) {
+        ByteArrayDataOutput output = ByteStreams.newDataOutput();
+        for (int i = -1; ++i < values.length; )
+            output.writeUTF(values[i]);
+        player.sendPluginMessage(getPluginInstance(), "BungeeCord", output.toByteArray());
     }
 
     public String getServerName(String ipAddress) {
@@ -42,59 +95,8 @@ public class BungeeListener implements PluginMessageListener {
         return null;
     }
 
-    @Override
-    public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-        if (!channel.equals("BungeeCord")) return;
-
-        ByteArrayDataInput in = ByteStreams.newDataInput(message);
-        String subChannel = in.readUTF(), serverName;
-        switch (subChannel) {
-            case "GetServers":
-                String[] serverList = in.readUTF().split(", ");
-                for (int i = -1; ++i < serverList.length; )
-                    requestServerIP(serverList[i]);
-                break;
-
-            case "ServerIP":
-                serverName = in.readUTF();
-                String ip = in.readUTF();
-                short port = in.readShort();
-                getServerAddressMap().put(serverName, ip + ":" + port);
-                break;
-
-            default:
-                break;
-        }
-    }
-
-    public void requestServers(Player player) {
-        ByteArrayDataOutput output = ByteStreams.newDataOutput();
-        output.writeUTF("GetServers");
-        player.sendPluginMessage(getPluginInstance(), "BungeeCord", output.toByteArray());
-    }
-
-    private void requestServer(Player player) {
-        ByteArrayDataOutput output = ByteStreams.newDataOutput();
-        output.writeUTF("GetServer");
-        player.sendPluginMessage(getPluginInstance(), "BungeeCord", output.toByteArray());
-    }
-
-    private void requestServerIP(String server) {
-        ByteArrayDataOutput out = ByteStreams.newDataOutput();
-        out.writeUTF("ServerIP");
-        out.writeUTF(server);
-        Player firstPlayer = getFirstPlayer();
-        if (firstPlayer != null) firstPlayer.sendPluginMessage(getPluginInstance(), "BungeeCord", out.toByteArray());
-    }
-
     public Player getFirstPlayer() {
         return !getPluginInstance().getServer().getOnlinePlayers().isEmpty() ? getPluginInstance().getServer().getOnlinePlayers().iterator().next() : null;
-    }
-
-    public String getIPFromMap(String serverName) {
-        if (!getServerAddressMap().isEmpty() && getServerAddressMap().containsKey(serverName))
-            return getServerAddressMap().get(serverName);
-        return null;
     }
 
     // getters & setters
@@ -106,7 +108,15 @@ public class BungeeListener implements PluginMessageListener {
         this.pluginInstance = pluginInstance;
     }
 
-    private HashMap<String, String> getServerAddressMap() {
+    public String getMyServer() {
+        return myServer;
+    }
+
+    private void setMyServer(String myServer) {
+        this.myServer = myServer;
+    }
+
+    public HashMap<String, String> getServerAddressMap() {
         return serverAddressMap;
     }
 
@@ -114,4 +124,11 @@ public class BungeeListener implements PluginMessageListener {
         this.serverAddressMap = serverAddressMap;
     }
 
+    public HashMap<UUID, SerializableLocation> getTransferMap() {
+        return transferMap;
+    }
+
+    private void setTransferMap(HashMap<UUID, SerializableLocation> transferMap) {
+        this.transferMap = transferMap;
+    }
 }

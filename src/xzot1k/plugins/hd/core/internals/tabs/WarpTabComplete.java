@@ -35,7 +35,8 @@ public class WarpTabComplete implements TabCompleter {
                 if (!hasAllAccess && commandSender instanceof Player) {
                     Player player = (Player) commandSender;
                     for (Warp warp : getPluginInstance().getManager().getWarpMap().values()) {
-                        if (!warpNames.contains(warp.getWarpName()) && ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                        if ((args[0] != null && (warp.getWarpName().toLowerCase().contains(args[0].toLowerCase()) || args[0].isEmpty()))
+                                && !warpNames.contains(warp.getWarpName()) && ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
                                 || warp.getAssistants().contains(player.getUniqueId()) || (warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
                                 || warp.getStatus() == EnumContainer.Status.PUBLIC || (warp.getStatus() == EnumContainer.Status.ADMIN
                                 && ((player.hasPermission("hyperdrive.warps." + warp.getWarpName()) || player.hasPermission("hyperdrive.warps.*"))))))

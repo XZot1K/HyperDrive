@@ -485,7 +485,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
-      permission: ""
+      permission: "hyperdrive.addcmd"
       display-name: "&aAdd Command"
       lore:
         - ""
@@ -558,7 +558,7 @@ edit-menu-section:
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
       usage-cost: 80
-      permission: ""
+      permission: "hyperdrive.removecmd"
       display-name: "&cRemove Command"
       lore:
         - ""

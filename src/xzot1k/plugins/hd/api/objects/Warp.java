@@ -11,9 +11,7 @@ import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -242,29 +240,18 @@ public class Warp implements Comparable<Warp> {
             for (int j = -1; ++j < getVoters().size(); )
                 voters.append(getVoters().get(j).toString()).append(",");
 
-            final String locationString = (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + "," + getWarpLocation().getY() + "," + getWarpLocation().getZ() + ","
-                    + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch()), owner = (getOwner() != null ? getOwner().toString() : "");
+            final String locationString = (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + "," + getWarpLocation().getY() + ","
+                    + getWarpLocation().getZ() + "," + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch()),
 
-            Statement statement = getPluginInstance().getDatabaseConnection().createStatement();
-            ResultSet rs = statement.executeQuery("select * from warps where name = '" + getWarpName() + "';");
-
-            final boolean warpExists = rs.next();
-            rs.close();
-            statement.close();
-
-            final String syntax = warpExists ? "update warps set location = '" + locationString + "', status = '" + getStatus().name() + "', "
-                    + "creation_date = '" + getCreationDate() + "', icon_theme = '" + getIconTheme() + "', animation_set = '" + getAnimationSet() + "', description_color = '" + getDescriptionColor().name() + "', "
-                    + "name_color = '" + getDisplayNameColor().name() + "', description = '" + getDescription() + "', commands = '" + commands.toString() + "', owner = '" + (getOwner() != null ? getOwner().toString() : "")
-                    + "', player_list = '" + playerList.toString() + "', " + "assistants = '" + assistants.toString() + "', traffic = " + getTraffic() + ", usage_price = " + getUsagePrice() + ", enchanted_look = " + (hasIconEnchantedLook() ? 1 : 0)
-                    + ", server_ip = '" + getServerIPAddress().replace("localhost", "127.0.0.1") + "', likes = " + getLikes() + ", dislikes = " + getDislikes() + ", voters = '" + voters.toString() + "', "
-                    + "white_list_mode = " + (isWhiteListMode() ? 1 : 0) + " where name = '" + getWarpName().replace("'", "") + "';"
-
-                    : "insert into warps(name, location, status, creation_date, icon_theme, animation_set, description_color, name_color, description, commands, owner, player_list, assistants, traffic, usage_price, "
-                    + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) values ('" + getWarpName().replace("'", "") + "', '" + locationString + "', '" + getStatus().toString()
-                    + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '" + getDescriptionColor().name() + "', '" + getDisplayNameColor().name()
-                    + "', '" + getDescription() + "', '" + commands.toString() + "', '" + (getOwner() != null ? getOwner().toString() : "") + "', '" + playerList.toString() + "', '" + assistants.toString()
-                    + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0) + ", '" + getServerIPAddress().replace("localhost", "127.0.0.1")
-                    + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString() + "', " + (isWhiteListMode() ? 1 : 0) + ");";
+                    syntax = "INSERT OR REPLACE INTO warps(name, location, status, creation_date, icon_theme, animation_set, "
+                            + "description_color, name_color, description, commands, owner, player_list, assistants, traffic, usage_price, "
+                            + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) VALUES('" + getWarpName() + "', '" + locationString + "',"
+                            + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '"
+                            + getDescriptionColor().name() + "', '" + getDisplayNameColor().name() + "', '" + getDescription().replace("'", "")
+                            + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
+                            + "', '" + playerList.toString() + "', '" + assistants.toString() + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
+                            + ", '" + getServerIPAddress().replace("localhost", "127.0.0.1") + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString()
+                            + "', " + (isWhiteListMode() ? 1 : 0) + ");";
 
             PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement(syntax);
             preparedStatement.execute();

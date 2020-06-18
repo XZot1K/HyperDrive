@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019. All rights reserved.
+ * Copyright (c) 2020. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api.events;
@@ -13,15 +13,14 @@ import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 
 public class MenuOpenEvent extends Event implements Cancellable {
-    private static HandlerList handlers = new HandlerList();
+    final private static HandlerList handlers = new HandlerList();
     private boolean cancelled;
     private Inventory openedMenu;
     private EnumContainer.MenuType menuType;
     private String customMenuId;
     private Player player;
 
-    public MenuOpenEvent(HyperDrive pluginInstance, EnumContainer.MenuType menuType, Inventory openedMenu,
-                         Player player) {
+    public MenuOpenEvent(HyperDrive pluginInstance, EnumContainer.MenuType menuType, Inventory openedMenu, Player player) {
         setCancelled(false);
         setOpenedMenu(openedMenu);
         setPlayer(player);
