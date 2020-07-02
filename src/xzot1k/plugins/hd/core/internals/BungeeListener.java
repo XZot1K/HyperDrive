@@ -28,6 +28,10 @@ public class BungeeListener implements PluginMessageListener {
         setServerAddressMap(new HashMap<>());
         setTransferMap(new HashMap<>());
 
+        updateServerList();
+    }
+
+    public void updateServerList() {
         final Player firstPlayer = getFirstPlayer();
         if (firstPlayer != null) {
             requestValue(firstPlayer, "GetServer");
@@ -41,20 +45,13 @@ public class BungeeListener implements PluginMessageListener {
 
         ByteArrayDataInput in = ByteStreams.newDataInput(message);
         String subChannel = in.readUTF();
+
         switch (subChannel) {
             case "HyperDrive":
                 final String[] lineArgs = in.readUTF().split(";");
-                if (getMyServer() == null || (getMyServer() != null && !lineArgs[0].equalsIgnoreCase(getMyServer())))
-                    return;
+                final UUID uuid = UUID.fromString(lineArgs[0]);
 
-                final UUID uuid = UUID.fromString(lineArgs[1]);
-
-                Player foundPlayer = getPluginInstance().getServer().getPlayer(uuid);
-                if (foundPlayer == null || !foundPlayer.isOnline()) return;
-
-                final String[] locationArgs = lineArgs[2].split(":"),
-                        coordArgs = locationArgs[1].split(",");
-
+                final String[] locationArgs = lineArgs[1].split(":"), coordArgs = locationArgs[1].split(",");
                 SerializableLocation location = new SerializableLocation(locationArgs[0], Double.parseDouble(coordArgs[0]),
                         Double.parseDouble(coordArgs[1]), Double.parseDouble(coordArgs[2]), Float.parseFloat(coordArgs[3]),
                         Float.parseFloat(coordArgs[4]));

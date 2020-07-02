@@ -4,8 +4,6 @@
 
 package xzot1k.plugins.hd.api;
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -22,6 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.permissions.PermissionAttachmentInfo;
+import us.eunoians.prisma.ColorProvider;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
@@ -37,10 +36,6 @@ import xzot1k.plugins.hd.core.packets.titles.versions.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -241,8 +236,48 @@ public class Manager {
         return result;
     }
 
-    public String colorText(String text) {
-        return ChatColor.translateAlternateColorCodes('&', text);
+    /**
+     * Colors the text passed.
+     *
+     * @param message The message to translate.
+     * @return The colored text.
+     */
+    public String colorText(String message) {
+        String messageCopy = message;
+        if (getPluginInstance().getServerVersion().startsWith("v1_16") && messageCopy.contains("#")) {
+            if (getPluginInstance().getHookChecker().isPrismaInstalled())
+                messageCopy = ColorProvider.translatePrisma(messageCopy);
+            else {
+                final List<String> hexToReplace = new ArrayList<>();
+                final char[] charArray = messageCopy.toCharArray();
+
+                StringBuilder hexBuilder = new StringBuilder();
+                for (int i = -1; ++i < charArray.length; ) {
+                    final char currentChar = charArray[i];
+                    if (currentChar == '#') {
+                        final int remainingCharLength = (charArray.length - i);
+                        if (remainingCharLength < 6) break;
+                        else {
+                            hexBuilder.append("#");
+                            for (int increment = 0; ++increment < 7; )
+                                hexBuilder.append(charArray[i + increment]);
+
+                            try {
+                                Integer.parseInt(hexBuilder.toString().substring(1));
+                                hexToReplace.add(hexBuilder.toString());
+                            } catch (NumberFormatException ignored) {}
+                            hexBuilder.setLength(0);
+                        }
+                    }
+                }
+
+                if (!hexToReplace.isEmpty())
+                    for (String hex : hexToReplace)
+                        messageCopy = messageCopy.replace(hex, net.md_5.bungee.api.ChatColor.of(hex).toString());
+            }
+        }
+
+        return ChatColor.translateAlternateColorCodes('&', messageCopy);
     }
 
     public boolean isNotChatColor(String text) {
@@ -252,8 +287,16 @@ public class Manager {
         return true;
     }
 
-    public void sendCustomMessage(String message, Player player) {
+    public void sendCustomMessage(String path, Player player, String... placeholders) {
+        String message = getPluginInstance().getLangConfig().getString(path);
         if (message != null && !message.equalsIgnoreCase("")) {
+
+            for (String phLine : placeholders) {
+                if (!phLine.contains(":")) continue;
+                String[] args = phLine.split(":");
+                message = message.replace(args[0], args[1]);
+            }
+
             String prefix = getPluginInstance().getLangConfig().getString("prefix");
             if (message.contains("<") && message.contains(">")) {
                 message = (prefix != null && !prefix.equalsIgnoreCase("") ? prefix : "") + message;
@@ -386,7 +429,7 @@ public class Manager {
     }
 
     // cross-server stuff
-    public void teleportCrossServer(Player player, String serverIP, String serverName, SerializableLocation location) {
+    public void teleportCrossServer(Player player, String serverName, SerializableLocation location) {
         if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql") && getPluginInstance().getDatabaseConnection() == null)
             return;
 
@@ -404,10 +447,15 @@ public class Manager {
         }
 
         try {
-            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+            ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(byteArray);
+            out.writeUTF("Forward");
+            out.writeUTF(serverName);
+
+            final String data = (player.getUniqueId().toString() + ";" + location.toString());
             out.writeUTF("HyperDrive");
-            out.writeUTF(serverName + ";" + player.getUniqueId().toString() + ";" + location.toString());
-            player.sendPluginMessage(pluginInstance, "BungeeCord", out.toByteArray());
+            out.writeUTF(data);
+            player.sendPluginMessage(pluginInstance, "BungeeCord", byteArray.toByteArray());
         } catch (Exception ex) {
             ex.printStackTrace();
             //  return;
@@ -447,56 +495,6 @@ public class Manager {
                                 + "' server, but the location was unable to be processed.");
             }
         });*/
-    }
-
-    public void teleportCrossServer(Player player, String serverIP, String serverName, String playerName) {
-        if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql") && getPluginInstance().getDatabaseConnection() == null)
-            return;
-
-        try {
-            ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
-            DataOutputStream out = new DataOutputStream(byteArray);
-            out.writeUTF("Connect");
-            out.writeUTF(serverName);
-            player.sendPluginMessage(pluginInstance, "BungeeCord", byteArray.toByteArray());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            getPluginInstance().log(Level.WARNING,
-                    "There seems to have been an issue when switching the player to the '" + serverName + "' server.");
-            return;
-        }
-
-        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-            try {
-                Statement statement = getPluginInstance().getDatabaseConnection().createStatement();
-
-                ResultSet rs = statement.executeQuery("select * from transfer where player_uuid = '" + player.getUniqueId().toString() + "'");
-                if (rs.next()) {
-                    statement.executeUpdate("update transfer set location = '" + playerName + "', server_ip = '" + serverIP + "' where player_uuid = '"
-                            + player.getUniqueId().toString() + "';");
-                    rs.close();
-                    statement.close();
-                    getPluginInstance().log(Level.WARNING, " Updated (" + player.getName() + "_" + player.getUniqueId().toString() + " / "
-                            + serverName + " / Player: " + playerName + ")");
-                    return;
-                }
-
-                PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement("insert into transfer (player_uuid, location, server_ip) values ('"
-                        + player.getUniqueId().toString() + "', '" + playerName + "', '" + serverIP + "');");
-                preparedStatement.executeUpdate();
-                preparedStatement.close();
-                getPluginInstance().log(Level.WARNING, "Cross-Server transfer updated (" + player.getName() + "_" + player.getUniqueId().toString()
-                        + " / " + serverName + " / Player: " + playerName + ")");
-            } catch (SQLException e) {
-                e.printStackTrace();
-                getPluginInstance().log(Level.WARNING,
-                        "There seems to have been an issue communicating with the MySQL database.");
-                getPluginInstance().log(Level.WARNING,
-                        "Cross-Server initiation failed for the player '" + player.getName() + "_"
-                                + player.getUniqueId().toString() + "'. They have been sent to " + "the '" + serverName
-                                + "' server, but the location was unable to be processed.");
-            }
-        });
     }
 
     // cooldown stuff
@@ -1174,7 +1172,7 @@ public class Manager {
 
     public Inventory buildEditMenu(Player player, Warp warp) {
         final Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getMenusConfig().getInt("edit-menu-section.size"),
-                colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title") + "&" + warp.getDisplayNameColor().getChar() + warp.getWarpName()));
+                colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title") + warp.getDisplayNameColor() + warp.getWarpName()));
 
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
             ItemStack emptySlotFiller = null;
@@ -1280,7 +1278,7 @@ public class Manager {
 
     public Inventory buildLikeMenu(Warp warp) {
         final Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getMenusConfig().getInt("like-menu-section.size"),
-                colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title") + "&" + warp.getDisplayNameColor().getChar() + warp.getWarpName()));
+                colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title") + warp.getDisplayNameColor() + warp.getWarpName()));
 
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
             ItemStack emptySlotFiller = null;

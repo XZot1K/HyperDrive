@@ -63,7 +63,6 @@ public class HyperDrive extends JavaPlugin {
 
     @Override
     public void onLoad() {
-
         // Wrapped in try/catch to bypass an issue involving world guard custom flag registration when re-loaded live.
         try {
             Plugin worldGuard = getServer().getPluginManager().getPlugin("WorldGuard");
@@ -128,32 +127,38 @@ public class HyperDrive extends JavaPlugin {
             return;
         }
 
-        getServer().getMessenger().registerOutgoingPluginChannel(getPluginInstance(), "BungeeCord");
-        setBungeeListener(new BungeeListener(getPluginInstance()));
-        getServer().getMessenger().registerIncomingPluginChannel(getPluginInstance(), "BungeeCord", getBungeeListener());
+        if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
+            getServer().getMessenger().registerOutgoingPluginChannel(getPluginInstance(), "BungeeCord");
+            setBungeeListener(new BungeeListener(getPluginInstance()));
+            getServer().getMessenger().registerIncomingPluginChannel(getPluginInstance(), "BungeeCord", getBungeeListener());
+        }
 
         // sets up the manager class including all API methods.
         setManager(new Manager(this));
 
         // sets up all commands and their counterparts.
         setMainCommands(new MainCommands(this));
+        final WarpTabComplete tabCompletion = new WarpTabComplete(this);
+
         String[] commandNames = {"warps", "hyperdrive"};
         for (String cmd : commandNames) {
             PluginCommand command = getCommand(cmd);
             if (command != null) {
                 command.setExecutor(getMainCommands());
-                if (cmd.equalsIgnoreCase("warps")) command.setTabCompleter(new WarpTabComplete(this));
+                if (cmd.equalsIgnoreCase("warps")) command.setTabCompleter(tabCompletion);
             }
         }
 
         setTeleportationCommands(new TeleportationCommands(this));
         String[] teleportCommandNames = {"teleport", "teleporthere", "teleportoverride", "teleportoverridehere",
                 "teleportposition", "teleportask", "teleportaccept", "teleportdeny", "teleporttoggle", "back",
-                "teleportaskhere", "crossserver", "spawn", "randomteleport", "grouprandomteleport"};
+                "teleportaskhere", "crossserver", "spawn", "randomteleport", "randomteleportadmin", "grouprandomteleport"};
         for (String cmd : teleportCommandNames) {
             PluginCommand command = getCommand(cmd);
-            if (command != null)
+            if (command != null) {
                 command.setExecutor(getTeleportationCommands());
+                command.setTabCompleter(tabCompletion);
+            }
         }
 
         // registers events
@@ -222,7 +227,7 @@ public class HyperDrive extends JavaPlugin {
         long startTime = System.currentTimeMillis();
         int totalUpdates = 0;
 
-        boolean isOffhandVersion = (getServerVersion().startsWith("v1_13") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")
+        boolean isOffhandVersion = (getServerVersion().startsWith("v1_13") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_16")
                 || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"));
         String[] configNames = {"config", "lang", "menus"};
         for (int i = -1; ++i < configNames.length; ) {
@@ -330,7 +335,7 @@ public class HyperDrive extends JavaPlugin {
                 if (keyValue != null)
                     switch (keyValue.toUpperCase().replace(" ", "_").replace("-", "_")) {
                         case "INK_SAC":
-                            if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
+                            if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_16")) {
                                 yaml.set(key, "RED_DYE");
                                 updateCount++;
 
@@ -347,13 +352,13 @@ public class HyperDrive extends JavaPlugin {
                             break;
                         case "INK_SACK":
                             if (!getServerVersion().startsWith("v1_12") && !getServerVersion().startsWith("v1_9") && !getServerVersion().startsWith("v1_11") && !getServerVersion().startsWith("v1_10")
-                                    && !getServerVersion().startsWith("v1_13") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15")) {
+                                    && !getServerVersion().startsWith("v1_13") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_16")) {
                                 yaml.set(key, "INK_SAC");
                                 updateCount++;
                             }
                             break;
                         case "ROSE_RED":
-                            if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15")) {
+                            if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_16")) {
                                 yaml.set(key, "RED_DYE");
                                 updateCount++;
                             } else if (!getServerVersion().startsWith("v1_13")) {
@@ -365,45 +370,49 @@ public class HyperDrive extends JavaPlugin {
                             if (getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "ROSE_RED");
                                 updateCount++;
-                            } else if (!getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15")) {
+                            } else if (!getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_16")) {
                                 yaml.set(key, "INK_SACK");
                                 updateCount++;
                             }
 
                             break;
                         case "CLOCK":
-                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14")
+                                    && !getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "WATCH");
                                 updateCount++;
                             }
                             break;
                         case "WATCH":
-                            if (getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")) {
+                            if (getServerVersion().startsWith("v1_16") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14")
+                                    || getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "CLOCK");
                                 updateCount++;
                             }
                             break;
                         case "BLACK_STAINED_GLASS_PANE":
-                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14")
+                                    && !getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "STAINED_GLASS_PANE");
                                 yaml.set(key.replace(".material", ".durability"), 15);
                                 updateCount++;
                             }
                             break;
                         case "STAINED_GLASS_PANE":
-                            if (getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")) {
+                            if (getServerVersion().startsWith("v1_16") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14")
+                                    || getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "BLACK_STAINED_GLASS_PANE");
                                 updateCount++;
                             }
                             break;
                         case "OAK_SIGN":
-                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14")) {
+                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14")) {
                                 yaml.set(key, "SIGN");
                                 updateCount++;
                             }
                             break;
                         case "SIGN":
-                            if (getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14")) {
+                            if (getServerVersion().startsWith("v1_16") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14")) {
                                 yaml.set(key, "OAK_SIGN");
                                 updateCount++;
                             }
@@ -411,13 +420,13 @@ public class HyperDrive extends JavaPlugin {
                         case "GREEN_WOOL":
                         case "LIME_WOOL":
                         case "RED_WOOL":
-                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "WOOL");
                                 updateCount++;
                             }
                             break;
                         case "GRASS_BLOCK":
-                            if (!getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "GRASS");
                                 updateCount++;
                             }
@@ -587,8 +596,18 @@ public class HyperDrive extends JavaPlugin {
             warp.setCommands(yaml.getStringList(warpName + ".commands"));
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
             warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
-            warp.setDescriptionColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.description-color")));
-            warp.setDisplayNameColor(ChatColor.valueOf(yaml.getString(warpName + ".icon.name-color")));
+
+            String descriptionColor = yaml.getString(warpName + ".icon.description-color");
+            if (descriptionColor != null && !descriptionColor.equalsIgnoreCase("")) {
+                final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_");
+                warp.setDescriptionColor((newColor.startsWith("§") || newColor.startsWith("#")) ? newColor : net.md_5.bungee.api.ChatColor.valueOf(newColor).toString());
+            }
+
+            String nameColor = yaml.getString(warpName + ".icon.name-color");
+            if (nameColor != null && !nameColor.equalsIgnoreCase("")) {
+                final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_");
+                warp.setDisplayNameColor((newColor.startsWith("§") || newColor.startsWith("#")) ? newColor : net.md_5.bungee.api.ChatColor.valueOf(newColor).toString());
+            }
 
             List<String> description = yaml.getStringList(warpName + ".icon.description");
             warp.setDescription(ChatColor.stripColor(getManager().colorText(description.toString().replace("[", "")
@@ -620,11 +639,16 @@ public class HyperDrive extends JavaPlugin {
             warp.setAnimationSet(resultSet.getString("animation_set"));
 
             String descriptionColor = resultSet.getString("description_color");
-            if (descriptionColor != null && !descriptionColor.equalsIgnoreCase(""))
-                warp.setDescriptionColor(ChatColor.valueOf(descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+            if (descriptionColor != null && !descriptionColor.equalsIgnoreCase("")) {
+                final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_");
+                warp.setDescriptionColor((newColor.startsWith("§") || newColor.startsWith("#")) ? newColor : net.md_5.bungee.api.ChatColor.valueOf(newColor).toString());
+            }
+
             String nameColor = resultSet.getString("name_color");
-            if (nameColor != null && !nameColor.equalsIgnoreCase(""))
-                warp.setDisplayNameColor(ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")));
+            if (nameColor != null && !nameColor.equalsIgnoreCase("")) {
+                final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_");
+                warp.setDisplayNameColor((newColor.startsWith("§") || newColor.startsWith("#")) ? newColor : net.md_5.bungee.api.ChatColor.valueOf(newColor).toString());
+            }
 
             warp.setDescription(ChatColor.stripColor(getManager().colorText(resultSet.getString("description").replace(",", "").trim().replaceAll("\\s+", " "))));
             String commandsString = resultSet.getString("commands");
@@ -714,10 +738,10 @@ public class HyperDrive extends JavaPlugin {
                             ChatColor descriptionColor = ChatColor.getByChar(
                                     Objects.requireNonNull(ymlFile.getString("Description Color")).replace("&", ""));
                             if (descriptionColor != null)
-                                warp.setDescriptionColor(descriptionColor);
+                                warp.setDescriptionColor(descriptionColor.toString());
 
                             ChatColor displayNameColor = ChatColor.getByChar(Objects.requireNonNull(ymlFile.getString("Name Color")).replace("&", ""));
-                            if (displayNameColor != null) warp.setDisplayNameColor(displayNameColor);
+                            if (displayNameColor != null) warp.setDisplayNameColor(displayNameColor.toString());
 
                             List<String> commandList = new ArrayList<>();
                             commandList.add(ymlFile.getString("Command"));
@@ -846,19 +870,23 @@ public class HyperDrive extends JavaPlugin {
                     e.printStackTrace();
                 }
 
-                List<UUID> playersToClear = new ArrayList<>();
+                if (getBungeeListener().getServerAddressMap() == null || getBungeeListener().getServerAddressMap().isEmpty())
+                    getBungeeListener().updateServerList();
+
                 for (Map.Entry<UUID, SerializableLocation> mapEntry : getBungeeListener().getTransferMap().entrySet()) {
                     if (mapEntry.getKey() == null || mapEntry.getValue() == null) continue;
                     OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(mapEntry.getKey());
                     if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() != null) {
                         getBungeeListener().getTransferMap().remove(mapEntry.getKey());
-                        Location location = mapEntry.getValue().asBukkitLocation();
-                        getTeleportationHandler().teleportPlayer(offlinePlayer.getPlayer(), location);
-                        getManager().sendCustomMessage(Objects.requireNonNull(getLangConfig().getString("cross-teleported"))
-                                .replace("{world}", Objects.requireNonNull(location.getWorld()).getName())
-                                .replace("{x}", String.valueOf(location.getBlockX()))
-                                .replace("{y}", String.valueOf(location.getBlockY()))
-                                .replace("{z}", String.valueOf(location.getBlockZ())), offlinePlayer.getPlayer());
+                        getServer().getScheduler().runTask(getPluginInstance(), () -> {
+                            Location location = mapEntry.getValue().asBukkitLocation();
+                            getTeleportationHandler().teleportPlayer(offlinePlayer.getPlayer(), location);
+                            getManager().sendCustomMessage(Objects.requireNonNull(getLangConfig().getString("cross-teleported"))
+                                    .replace("{world}", Objects.requireNonNull(location.getWorld()).getName())
+                                    .replace("{x}", String.valueOf(location.getBlockX()))
+                                    .replace("{y}", String.valueOf(location.getBlockY()))
+                                    .replace("{z}", String.valueOf(location.getBlockZ())), offlinePlayer.getPlayer());
+                        });
                     }
                 }
             }, 0, 20);

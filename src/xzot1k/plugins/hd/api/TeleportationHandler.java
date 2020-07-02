@@ -141,7 +141,7 @@ public class TeleportationHandler implements Runnable {
                                                     }
 
                                                     getTeleportTempMap().remove(playerUniqueId);
-                                                    getPluginInstance().getManager().teleportCrossServer(player, warp.getServerIPAddress(), server, warp.getWarpLocation());
+                                                    getPluginInstance().getManager().teleportCrossServer(player, server, warp.getWarpLocation());
                                                     getPluginInstance().getManager().updateCooldown(player, "warp");
                                                     return;
                                                 }
@@ -267,14 +267,15 @@ public class TeleportationHandler implements Runnable {
                                                         .replace("-", "_")), 1);
                                     }
 
-                                    if (!getPluginInstance().getTeleportationCommands().getSpawnLocation().getWorldName().equals(serializableLocation.getWorldName())
-                                            && !(getPluginInstance().getTeleportationCommands().getSpawnLocation().getX() != serializableLocation.getX()
-                                            || getPluginInstance().getTeleportationCommands().getSpawnLocation().getY() != serializableLocation.getY())
-                                            || getPluginInstance().getTeleportationCommands().getSpawnLocation().getZ() != serializableLocation.getZ())
-                                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig()
-                                                .getString(".basic-teleportation-engaged")).replace("{world}", Objects.requireNonNull(toLocation.getWorld()).getName())
-                                                .replace("{x}", String.valueOf(toLocation.getBlockX())).replace("{y}", String.valueOf(toLocation.getBlockY())).replace("{z}",
-                                                        String.valueOf(toLocation.getBlockZ())).replace("{duration}", String.valueOf(teleportTemp.getSeconds())), player);
+                                    if (getPluginInstance().getTeleportationCommands() != null && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null)
+                                        if (!getPluginInstance().getTeleportationCommands().getSpawnLocation().getWorldName().equals(serializableLocation.getWorldName())
+                                                && !(getPluginInstance().getTeleportationCommands().getSpawnLocation().getX() != serializableLocation.getX()
+                                                || getPluginInstance().getTeleportationCommands().getSpawnLocation().getY() != serializableLocation.getY())
+                                                || getPluginInstance().getTeleportationCommands().getSpawnLocation().getZ() != serializableLocation.getZ())
+                                            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig()
+                                                    .getString(".basic-teleportation-engaged")).replace("{world}", Objects.requireNonNull(toLocation.getWorld()).getName())
+                                                    .replace("{x}", String.valueOf(toLocation.getBlockX())).replace("{y}", String.valueOf(toLocation.getBlockY())).replace("{z}",
+                                                            String.valueOf(toLocation.getBlockZ())).replace("{duration}", String.valueOf(teleportTemp.getSeconds())), player);
                                 }
                             default:
                                 break;

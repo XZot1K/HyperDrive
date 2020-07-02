@@ -28,7 +28,8 @@ import xzot1k.plugins.hd.HyperDrive;
 public class HookChecker {
 
     private HyperDrive pluginInstance;
-    private boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, aSkyBlockInstalled, residenceInstalled;
+    private boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, aSkyBlockInstalled, residenceInstalled,
+            prismaInstalled;
 
     public HookChecker(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
@@ -41,6 +42,7 @@ public class HookChecker {
         setGriefPreventionInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("GriefPrevention") != null);
         setTownyInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Towny") != null);
         setResidenceInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Residence") != null);
+        setPrismaInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Prisma") != null);
     }
 
     /**
@@ -154,5 +156,13 @@ public class HookChecker {
 
     private void setFactionsUUID(boolean factionsUUID) {
         this.factionsUUID = factionsUUID;
+    }
+
+    public boolean isPrismaInstalled() {
+        return prismaInstalled;
+    }
+
+    private void setPrismaInstalled(boolean prismaInstalled) {
+        this.prismaInstalled = prismaInstalled;
     }
 }

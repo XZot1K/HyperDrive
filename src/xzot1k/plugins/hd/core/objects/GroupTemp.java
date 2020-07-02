@@ -51,14 +51,12 @@ public class GroupTemp {
 
         new BukkitRunnable() {
             int time = 0;
-            int duration = getPluginInstance().getConfig().getInt("teleportation-section.group-request-duration");
-            String animationSet = getPluginInstance().getConfig()
-                    .getString("special-effects-section.group-teleport-animation"),
+            final int duration = getPluginInstance().getConfig().getInt("teleportation-section.group-request-duration");
+            final String animationSet = getPluginInstance().getConfig().getString("special-effects-section.group-teleport-animation"),
                     teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
                             .toUpperCase().replace(" ", "_").replace("-", "_");
-            boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"),
-                    useCrossWarping = getPluginInstance().getConfig()
-                            .getBoolean("mysql-connection.cross-server-warping");
+            final boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"),
+                    useCrossWarping = getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server-warping");
 
             @Override
             public void run() {
@@ -88,6 +86,7 @@ public class GroupTemp {
                         Location destinationLocation = getDestination().getLocation().asBukkitLocation();
                         if (destinationLocation != null) {
                             int teleportCount = 0;
+                            boolean b = animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":");
                             for (int i = -1; ++i < getAcceptedPlayers().size(); ) {
                                 UUID playerUniqueId = getAcceptedPlayers().get(i);
                                 if (playerUniqueId == null)
@@ -109,11 +108,8 @@ public class GroupTemp {
                                             String server = getPluginInstance().getBungeeListener()
                                                     .getServerName(getDestination().getWarp().getServerIPAddress());
                                             if (server != null) {
-                                                getPluginInstance().getManager().teleportCrossServer(offlinePlayer.getPlayer(),
-                                                        getDestination().getWarp().getServerIPAddress(), server,
-                                                        getDestination().getWarp().getWarpLocation());
-                                                getPluginInstance().getManager()
-                                                        .updateCooldown(offlinePlayer.getPlayer(), "warp");
+                                                getPluginInstance().getManager().teleportCrossServer(offlinePlayer.getPlayer(), server, getDestination().getWarp().getWarpLocation());
+                                                getPluginInstance().getManager().updateCooldown(offlinePlayer.getPlayer(), "warp");
                                                 return;
                                             }
                                         }
@@ -132,8 +128,7 @@ public class GroupTemp {
                                 if (!teleportSound.equalsIgnoreCase(""))
                                     player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1,
                                             1);
-                                if (animationSet != null && !animationSet.equalsIgnoreCase("")
-                                        && animationSet.contains(":")) {
+                                if (b) {
                                     String[] themeArgs = animationSet.split(":");
                                     getPluginInstance().getTeleportationHandler().getAnimation()
                                             .stopActiveAnimation(player);
@@ -164,8 +159,7 @@ public class GroupTemp {
                                         String server = getPluginInstance().getBungeeListener()
                                                 .getServerName(getDestination().getWarp().getServerIPAddress());
                                         if (server != null) {
-                                            getPluginInstance().getManager().teleportCrossServer(player, getDestination().getWarp().getServerIPAddress(), server,
-                                                    getDestination().getWarp().getWarpLocation());
+                                            getPluginInstance().getManager().teleportCrossServer(player, server, getDestination().getWarp().getWarpLocation());
                                             getPluginInstance().getManager().updateCooldown(player, "warp");
                                             return;
                                         }
@@ -184,8 +178,7 @@ public class GroupTemp {
 
                             if (!teleportSound.equalsIgnoreCase(""))
                                 player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-                            if (animationSet != null && !animationSet.equalsIgnoreCase("")
-                                    && animationSet.contains(":")) {
+                            if (b) {
                                 String[] themeArgs = animationSet.split(":");
                                 getPluginInstance().getTeleportationHandler().getAnimation()
                                         .stopActiveAnimation(player);

@@ -58,12 +58,12 @@ public class MainCommands implements CommandExecutor {
                                     sendAdminHelpPage(commandSender, 1);
                                 else {
                                     if (commandSender instanceof Player)
-                                        getPluginInstance().getManager().sendCustomMessage(
-                                                getPluginInstance().getLangConfig().getString("no-permission"),
-                                                (Player) commandSender);
-                                    else
-                                        commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                                getPluginInstance().getLangConfig().getString("no-permission")));
+                                        getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+                                    else {
+                                        String message = getPluginInstance().getLangConfig().getString("no-permission");
+                                        if (message != null && !message.isEmpty())
+                                            commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                                    }
                                 }
                                 return true;
                         }
@@ -82,12 +82,12 @@ public class MainCommands implements CommandExecutor {
                             sendAdminHelpPage(commandSender, 1);
                         else {
                             if (commandSender instanceof Player)
-                                getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getLangConfig().getString("no-permission"),
-                                        (Player) commandSender);
-                            else
-                                commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                        getPluginInstance().getLangConfig().getString("no-permission")));
+                                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+                            else {
+                                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                                if (message != null && !message.isEmpty())
+                                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                            }
                         }
 
                         return true;
@@ -101,12 +101,12 @@ public class MainCommands implements CommandExecutor {
                             sendAdminHelpPage(commandSender, 1);
                         else {
                             if (commandSender instanceof Player)
-                                getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getLangConfig().getString("no-permission"),
-                                        (Player) commandSender);
-                            else
-                                commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                        getPluginInstance().getLangConfig().getString("no-permission")));
+                                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+                            else {
+                                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                                if (message != null && !message.isEmpty())
+                                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                            }
                         }
 
                         return true;
@@ -115,12 +115,12 @@ public class MainCommands implements CommandExecutor {
                             sendAdminHelpPage(commandSender, 1);
                         else {
                             if (commandSender instanceof Player)
-                                getPluginInstance().getManager().sendCustomMessage(
-                                        getPluginInstance().getLangConfig().getString("no-permission"),
-                                        (Player) commandSender);
-                            else
-                                commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                        getPluginInstance().getLangConfig().getString("no-permission")));
+                                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+                            else {
+                                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                                if (message != null && !message.isEmpty())
+                                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                            }
                         }
 
                         return true;
@@ -212,10 +212,13 @@ public class MainCommands implements CommandExecutor {
 
     private void initiateVisitsModify(CommandSender commandSender, String commandType, String warpName, String value) {
         if (!commandSender.hasPermission("hyperdrive.admin.visits")) {
-            String message = getPluginInstance().getLangConfig().getString("no-permission");
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-            else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
@@ -223,67 +226,70 @@ public class MainCommands implements CommandExecutor {
         boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                        .replace("{warp}", warpName), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                        .replace("{warp}", warpName)));
+                getPluginInstance().getManager().sendCustomMessage("warp-invalid", (Player) commandSender, "{warp}:" + warpName);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("warp-invalid");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{warp}", warpName)));
+            }
             return;
         }
 
         if (getPluginInstance().getManager().isNotNumeric(value)) {
-            String message = getPluginInstance().getLangConfig().getString("invalid-visit-amount");
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-            else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                getPluginInstance().getManager().sendCustomMessage("invalid-visit-amount", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("invalid-visit-amount");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
-        String message;
         final int foundValue = (int) Double.parseDouble(value);
         switch (commandType.toLowerCase()) {
             case "add":
 
                 warp.setTraffic(warp.getTraffic() + foundValue);
-                message = getPluginInstance().getLangConfig().getString("visits-modified");
-                if (message != null && !message.isEmpty()) if (commandSender instanceof Player)
-                    getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(foundValue))
-                            .replace("{warp}", warp.getWarpName())
-                            .replace("{total}", String.valueOf(warp.getTraffic())), (Player) commandSender);
-                else
-                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{amount}", String.valueOf(foundValue))
-                            .replace("{warp}", warp.getWarpName())
-                            .replace("{total}", String.valueOf(warp.getTraffic()))));
+                if (commandSender instanceof Player)
+                    getPluginInstance().getManager().sendCustomMessage("visits-modified", (Player) commandSender,
+                            "{amount}:" + foundValue, "{warp}:" + warp.getWarpName(), "{total}:" + warp.getTraffic());
+                else {
+                    String message = getPluginInstance().getLangConfig().getString("visits-modified");
+                    if (message != null && !message.isEmpty())
+                        commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{amount}", String.valueOf(foundValue))
+                                .replace("{warp}", warp.getWarpName()).replace("{total}", String.valueOf(warp.getTraffic()))));
+                }
 
                 return;
 
             case "remove":
 
                 warp.setTraffic(Math.max(0, (warp.getTraffic() - foundValue)));
-                message = getPluginInstance().getLangConfig().getString("visits-modified");
-                if (message != null && !message.isEmpty()) if (commandSender instanceof Player)
-                    getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(foundValue))
-                            .replace("{warp}", warp.getWarpName())
-                            .replace("{total}", String.valueOf(warp.getTraffic())), (Player) commandSender);
-                else
-                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{amount}", String.valueOf(foundValue))
-                            .replace("{warp}", warp.getWarpName())
-                            .replace("{total}", String.valueOf(warp.getTraffic()))));
+                if (commandSender instanceof Player)
+                    getPluginInstance().getManager().sendCustomMessage("visits-modified", (Player) commandSender,
+                            "{warp}:" + warp.getWarpName(), "{total}:" + warp.getTraffic(), "{amount}:" + foundValue);
+                else {
+                    String message = getPluginInstance().getLangConfig().getString("visits-modified");
+                    if (message != null && !message.isEmpty())
+                        commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{amount}", String.valueOf(foundValue))
+                                .replace("{warp}", warp.getWarpName()).replace("{total}", String.valueOf(warp.getTraffic()))));
+                }
 
                 return;
 
             case "set":
 
                 warp.setTraffic(foundValue);
-                message = getPluginInstance().getLangConfig().getString("visits-modified");
-                if (message != null && !message.isEmpty()) if (commandSender instanceof Player)
-                    getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(foundValue))
-                            .replace("{warp}", warp.getWarpName())
-                            .replace("{total}", String.valueOf(warp.getTraffic())), (Player) commandSender);
-                else
-                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{amount}", String.valueOf(foundValue))
-                            .replace("{warp}", warp.getWarpName())
-                            .replace("{total}", String.valueOf(warp.getTraffic()))));
+                if (commandSender instanceof Player)
+                    getPluginInstance().getManager().sendCustomMessage("visits-modified", (Player) commandSender,
+                            "{warp}:" + warp.getWarpName(), "{total}:" + warp.getTraffic(), "{amount}:" + foundValue);
+                else {
+                    String message = getPluginInstance().getLangConfig().getString("visits-modified");
+                    if (message != null && !message.isEmpty())
+                        commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{amount}", String.valueOf(foundValue))
+                                .replace("{warp}", warp.getWarpName()).replace("{total}", String.valueOf(warp.getTraffic()))));
+                }
 
                 return;
 
@@ -299,11 +305,13 @@ public class MainCommands implements CommandExecutor {
 
     private void runAssistantsCommand(CommandSender commandSender, String warpName) {
         if (!commandSender.hasPermission("hyperdrive.use.list") && !commandSender.hasPermission("hyperdrive.admin.list")) {
-            String message = getPluginInstance().getLangConfig().getString("no-permission");
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
@@ -311,11 +319,12 @@ public class MainCommands implements CommandExecutor {
         boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                        .replace("{warp}", warpName), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                        .replace("{warp}", warpName)));
+                getPluginInstance().getManager().sendCustomMessage("warp-invalid", (Player) commandSender, "{warp}:" + warp.getWarpName());
+            else {
+                String message = getPluginInstance().getLangConfig().getString("warp-invalid");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{warp}", warpName)));
+            }
             return;
         }
 
@@ -324,7 +333,7 @@ public class MainCommands implements CommandExecutor {
             if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())) || warp.getAssistants().contains(player.getUniqueId())) {
                 String message = getPluginInstance().getLangConfig().getString("warp-no-access");
                 if (message != null && !message.isEmpty())
-                    getPluginInstance().getManager().sendCustomMessage(message.replace("{warp}", warp.getWarpName()), player);
+                    getPluginInstance().getManager().sendCustomMessage("warp-no-access", player, "{warp}:" + warp.getWarpName());
             }
         }
 
@@ -336,19 +345,24 @@ public class MainCommands implements CommandExecutor {
         }
 
         Collections.sort(playerNames);
-        String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("assistants-list"))
-                .replace("{warp}", warp.getWarpName()).replace("{list}", playerNames.toString());
         if (commandSender instanceof Player)
-            getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-        else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            getPluginInstance().getManager().sendCustomMessage("assistants-list", (Player) commandSender, "{warp}:" + warp.getWarpName(), "{list}:" + playerNames.toString());
+        else {
+            String message = getPluginInstance().getLangConfig().getString("assistants-list");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{warp}", warp.getWarpName()).replace("{list}", playerNames.toString())));
+        }
     }
 
     private void runListCommand(CommandSender commandSender, String warpName) {
         if (!commandSender.hasPermission("hyperdrive.use.list") && !commandSender.hasPermission("hyperdrive.admin.list")) {
-            String message = getPluginInstance().getLangConfig().getString("no-permission");
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-            else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
@@ -356,20 +370,19 @@ public class MainCommands implements CommandExecutor {
         boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                        .replace("{warp}", warpName), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                        .replace("{warp}", warpName)));
+                getPluginInstance().getManager().sendCustomMessage("warp-invalid", (Player) commandSender, "{warp}:" + warpName);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("warp-invalid");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{warp}", warpName)));
+            }
             return;
         }
 
         if (commandSender instanceof Player && !commandSender.hasPermission("hyperdrive.admin.list")) {
             Player player = (Player) commandSender;
             if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())) || warp.getAssistants().contains(player.getUniqueId())) {
-                String message = getPluginInstance().getLangConfig().getString("warp-no-access");
-                if (message != null && !message.isEmpty())
-                    getPluginInstance().getManager().sendCustomMessage(message.replace("{warp}", warp.getWarpName()), player);
+                getPluginInstance().getManager().sendCustomMessage("warp-no-access", player, "{warp}:" + warp.getWarpName());
             }
         }
 
@@ -381,20 +394,25 @@ public class MainCommands implements CommandExecutor {
         }
 
         Collections.sort(playerNames);
-        String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("listed-list"))
-                .replace("{warp}", warp.getWarpName()).replace("{list}", playerNames.toString());
         if (commandSender instanceof Player)
-            getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-        else commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            getPluginInstance().getManager().sendCustomMessage("listed-list", (Player) commandSender,
+                    "{warp}:" + warp.getWarpName(), "{list}:" + playerNames.toString());
+        else {
+            String message = getPluginInstance().getLangConfig().getString("listed-list");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{warp}", warp.getWarpName()).replace("{list}", playerNames.toString())));
+        }
     }
 
     private void beginStatusSetCommand(CommandSender commandSender, String warpName, String status) {
         if (!commandSender.hasPermission("hyperdrive.admin.status")) {
-            String message = getPluginInstance().getLangConfig().getString("no-permission");
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
@@ -403,11 +421,12 @@ public class MainCommands implements CommandExecutor {
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                 || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                        .replace("{warp}", warpName), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                        .replace("{warp}", warpName)));
+                getPluginInstance().getManager().sendCustomMessage("warp-invalid", (Player) commandSender, "{warp}:" + warpName);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("warp-invalid");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{warp}", warpName)));
+            }
             return;
         }
 
@@ -419,32 +438,40 @@ public class MainCommands implements CommandExecutor {
             }
 
         if (enteredStatus == null) {
-            String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("invalid-status"))
-                    .replace("{statuses}", Arrays.toString(EnumContainer.Status.values()));
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                getPluginInstance().getManager().sendCustomMessage("invalid-status", (Player) commandSender,
+                        "{statues}:" + Arrays.toString(EnumContainer.Status.values()));
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{statuses}", Arrays.toString(EnumContainer.Status.values()))));
+            }
             return;
         }
 
         warp.setStatus(enteredStatus);
         warp.save(true);
-        String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("status-set"))
-                .replace("{warp}", warp.getWarpName()).replace("{status}", WordUtils.capitalize(enteredStatus.name().toLowerCase()));
         if (commandSender instanceof Player)
-            getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-        else
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            getPluginInstance().getManager().sendCustomMessage("status-set", (Player) commandSender,
+                    "{status}:" + WordUtils.capitalize(enteredStatus.name().toLowerCase()), "{warp}:" + warp.getWarpName());
+        else {
+            String message = getPluginInstance().getLangConfig().getString("status-set");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message
+                        .replace("{warp}", warp.getWarpName())
+                        .replace("{status}", WordUtils.capitalize(enteredStatus.name().toLowerCase()))));
+        }
     }
 
     private void runUpdateIP(CommandSender commandSender, String[] args) {
         if (!commandSender.hasPermission("hyperdrive.updateid")) {
-            String message = getPluginInstance().getLangConfig().getString("no-permission");
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
@@ -467,12 +494,13 @@ public class MainCommands implements CommandExecutor {
         }
 
         if (foundWarps.size() <= 0) {
-            String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-ip-invalid"))
-                    .replace("{ip}", initialIP);
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+                getPluginInstance().getManager().sendCustomMessage("warp-ip-invalid", (Player) commandSender, "{ip}:" + initialIP);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("warp-ip-invalid");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{ip}", initialIP)));
+            }
             return;
         }
 
@@ -482,13 +510,15 @@ public class MainCommands implements CommandExecutor {
                 warp.setServerIPAddress(setIP);
         }
 
-        String message = Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-ip-set"))
-                .replace("{initial-ip}", initialIP).replace("{set-ip}", setIP)
-                .replace("{count}", String.valueOf(foundWarps.size()));
         if (commandSender instanceof Player)
-            getPluginInstance().getManager().sendCustomMessage(message, (Player) commandSender);
-        else
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            getPluginInstance().getManager().sendCustomMessage("warp-ip-set", (Player) commandSender,
+                    "{initial-ip}:" + initialIP, "{set-ip}:" + setIP, "{count}:" + foundWarps.size());
+        else {
+            String message = getPluginInstance().getLangConfig().getString("warp-ip-set");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{initial-ip}", initialIP).replace("{set-ip}", setIP)
+                        .replace("{count}", String.valueOf(foundWarps.size()))));
+        }
     }
 
     private void beginDenyCommand(CommandSender commandSender, String playerName) {
@@ -500,108 +530,85 @@ public class MainCommands implements CommandExecutor {
 
         Player player = (Player) commandSender;
         if (!player.hasPermission("hyperdrive.use.deny")) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("no-permission"), player);
+            getPluginInstance().getManager().sendCustomMessage("no-permission", player);
             return;
         }
 
         @SuppressWarnings("deprecation")
         OfflinePlayer enteredPlayer = getPluginInstance().getServer().getOfflinePlayer(playerName);
         if (!enteredPlayer.isOnline()) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    Objects.requireNonNull(getPluginInstance().getLangConfig().getString("player-invalid"))
-                            .replace("{player}", playerName),
-                    player);
+            getPluginInstance().getManager().sendCustomMessage("player-invalid", player, "{player}:" + playerName);
             return;
         }
 
         GroupTemp groupTemp = getPluginInstance().getTeleportationHandler().getGroupTemp(enteredPlayer.getUniqueId());
         if (groupTemp == null || !groupTemp.getAcceptedPlayers().contains(player.getUniqueId())) {
-            getPluginInstance().getManager()
-                    .sendCustomMessage(Objects
-                            .requireNonNull(
-                                    getPluginInstance().getLangConfig().getString("request-deny-fail"))
-                            .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
+            getPluginInstance().getManager().sendCustomMessage("request-deny-fail", player, "{player}:" + enteredPlayer.getName());
             return;
         }
 
         groupTemp.getAcceptedPlayers().remove(player.getUniqueId());
-        getPluginInstance().getManager()
-                .sendCustomMessage(Objects
-                        .requireNonNull(getPluginInstance().getLangConfig().getString("request-denied"))
-                        .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
+        getPluginInstance().getManager().sendCustomMessage("request-denied", player, "{player}:" + enteredPlayer.getName());
     }
 
     private void beginAcceptCommand(CommandSender commandSender, String playerName) {
         if (!(commandSender instanceof Player)) {
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
+            String message = getPluginInstance().getLangConfig().getString("must-be-player");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!commandSender.hasPermission("hyperdrive.use.accept")) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("no-permission"), player);
+            getPluginInstance().getManager().sendCustomMessage("no-permission", player);
             return;
         }
 
         @SuppressWarnings("deprecation")
         OfflinePlayer enteredPlayer = getPluginInstance().getServer().getOfflinePlayer(playerName);
         if (!enteredPlayer.isOnline()) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    Objects.requireNonNull(getPluginInstance().getLangConfig().getString("player-invalid"))
-                            .replace("{player}", playerName),
-                    player);
+            getPluginInstance().getManager().sendCustomMessage("player-invalid", player, "{player}:" + playerName);
             return;
         }
 
         GroupTemp groupTemp = getPluginInstance().getTeleportationHandler().getGroupTemp(enteredPlayer.getUniqueId());
         if (groupTemp == null || groupTemp.getAcceptedPlayers().contains(player.getUniqueId())) {
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("request-accept-fail"))
-                    .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
+            getPluginInstance().getManager().sendCustomMessage("request-accept-fail", player, "{player}:" + enteredPlayer.getName());
             return;
         }
 
         groupTemp.getAcceptedPlayers().add(player.getUniqueId());
-        getPluginInstance().getManager()
-                .sendCustomMessage(Objects
-                        .requireNonNull(getPluginInstance().getLangConfig().getString("request-accepted"))
-                        .replace("{player}", Objects.requireNonNull(enteredPlayer.getName())), player);
+        getPluginInstance().getManager().sendCustomMessage("request-accepted", player, "{player}:" + enteredPlayer.getName());
     }
 
     private void runWarpListCommand(CommandSender commandSender) {
         if (!commandSender.hasPermission("hyperdrive.use.list")) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getLangConfig().getString("no-permission"),
-                        (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
         if (!(commandSender instanceof Player)) {
             String warpList = new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()).toString()
                     .replace("[", "").replace("]", "");
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(Objects
-                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-list"))
-                            .replace("{list}", warpList).replace("{count}",
-                                    String.valueOf(getPluginInstance().getManager().getWarpMap().keySet().size()))));
+            String message = getPluginInstance().getLangConfig().getString("warp-list");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{list}", warpList).replace("{count}",
+                        String.valueOf(getPluginInstance().getManager().getWarpMap().keySet().size()))));
             return;
         }
 
         Player player = (Player) commandSender;
         List<String> permittedWarpNames = getPluginInstance().getManager().getPermittedWarps(player);
         String warpList = permittedWarpNames.toString().replace("[", "").replace("]", "");
-        getPluginInstance().getManager()
-                .sendCustomMessage(
-                        Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-list"))
-                                .replace("{list}", warpList).replace("{count}",
-                                String.valueOf(getPluginInstance().getManager().getWarpMap().keySet().size())),
-                        player);
+        getPluginInstance().getManager().sendCustomMessage("warp-list", player, "{list}:" + warpList,
+                "{count}:" + getPluginInstance().getManager().getWarpMap().keySet().size());
     }
 
     private void runWarpEditCommand(CommandSender commandSender, String warpName) {
@@ -613,16 +620,12 @@ public class MainCommands implements CommandExecutor {
 
         Player player = (Player) commandSender;
         if (!player.hasPermission("hyperdrive.use.edit") || !player.hasPermission("hyperdrive.admin.edit")) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("no-permission"), player);
+            getPluginInstance().getManager().sendCustomMessage("no-permission", player);
             return;
         }
 
         if (!getPluginInstance().getManager().doesWarpExist(warpName)) {
-            getPluginInstance().getManager()
-                    .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                            .replace("{warp}", warpName), player);
+            getPluginInstance().getManager().sendCustomMessage("warp-invalid", player, "{warp}:" + warpName);
             return;
         }
 
@@ -630,10 +633,7 @@ public class MainCommands implements CommandExecutor {
         if (!player.hasPermission("hyperdrive.admin.edit")
                 && (warp.getOwner().toString().equals(player.getUniqueId().toString())
                 || warp.getAssistants().contains(player.getUniqueId()))) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-no-access"))
-                            .replace("{warp}", warp.getWarpName()),
-                    player);
+            getPluginInstance().getManager().sendCustomMessage("warp-no-access", player, "{warp}:" + warp.getWarpName());
             return;
         }
 
@@ -650,28 +650,23 @@ public class MainCommands implements CommandExecutor {
     private void runWarpDeleteCommand(CommandSender commandSender, String warpName) {
         if (!commandSender.hasPermission("hyperdrive.use.delete")) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getLangConfig().getString("no-permission"),
-                        (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
         if (!getPluginInstance().getManager().doesWarpExist(warpName)) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager()
-                        .sendCustomMessage(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getLangConfig().getString("warp-invalid"))
-                                .replace("{warp}", warpName), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getLangConfig().getString("warp-invalid"))
-                                .replace("{warp}", warpName)));
+                getPluginInstance().getManager().sendCustomMessage("warp-invalid", (Player) commandSender, "{warp}:" + warpName);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("warp-invalid");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{warp}", warpName)));
+            }
             return;
         }
 
@@ -680,17 +675,12 @@ public class MainCommands implements CommandExecutor {
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                 || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager()
-                        .sendCustomMessage(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getLangConfig().getString("warp-invalid"))
-                                .replace("{warp}", warpName), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getLangConfig().getString("warp-invalid"))
-                                .replace("{warp}", warpName)));
+                getPluginInstance().getManager().sendCustomMessage("warp-invalid", (Player) commandSender, "{warp}:" + warp.getWarpName());
+            else {
+                String message = getPluginInstance().getLangConfig().getString("warp-invalid");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{warp}", warp.getWarpName())));
+            }
             return;
         }
 
@@ -698,11 +688,7 @@ public class MainCommands implements CommandExecutor {
             Player player = (Player) commandSender;
             if (!player.hasPermission("hyperdrive.admin.delete")
                     && !warp.getOwner().toString().equals(player.getUniqueId().toString())) {
-                getPluginInstance().getManager()
-                        .sendCustomMessage(Objects
-                                .requireNonNull(
-                                        getPluginInstance().getLangConfig().getString("delete-not-owner"))
-                                .replace("{warp}", warpName), (Player) commandSender);
+                getPluginInstance().getManager().sendCustomMessage("delete-not-owner", (Player) commandSender, "{warp}:" + warp.getWarpName());
                 return;
             }
         }
@@ -711,45 +697,40 @@ public class MainCommands implements CommandExecutor {
         warp.deleteSaved(true);
 
         if (commandSender instanceof Player)
-            getPluginInstance().getManager()
-                    .sendCustomMessage(Objects
-                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-deleted"))
-                            .replace("{warp}", warpName), (Player) commandSender);
-        else
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(Objects
-                            .requireNonNull(getPluginInstance().getLangConfig().getString("warp-deleted"))
-                            .replace("{warp}", warpName)));
+            getPluginInstance().getManager().sendCustomMessage("warp-deleted", (Player) commandSender, "{warp}:" + warp.getWarpName());
+        else {
+            String message = getPluginInstance().getLangConfig().getString("warp-deleted");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{warp}", warp.getWarpName())));
+        }
     }
 
     private void runWarpCreationCommand(CommandSender commandSender, String warpName) {
         if (!(commandSender instanceof Player)) {
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
+            String message = getPluginInstance().getLangConfig().getString("must-be-player");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!player.hasPermission("hyperdrive.use.create")) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("no-permission"), player);
+            getPluginInstance().getManager().sendCustomMessage("no-permission", player);
             return;
         }
 
         if (getPluginInstance().getManager().isBlockedWorld(player.getWorld())) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("blocked-world"), player);
+            getPluginInstance().getManager().sendCustomMessage("blocked-world", player);
             return;
         }
 
         if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation())) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("not-hook-safe"), player);
+            getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player);
             return;
         }
 
         if (getPluginInstance().getManager().hasMetWarpLimit(player)) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("warp-limit-met"), player);
+            getPluginInstance().getManager().sendCustomMessage("warp-limit-met", player);
             return;
         }
 
@@ -762,22 +743,19 @@ public class MainCommands implements CommandExecutor {
 
         warpName = ChatColor.stripColor(getPluginInstance().getManager().colorText(warpName));
         if (getPluginInstance().getManager().doesWarpExist(warpName)) {
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-exists"))
-                    .replace("{warp}", warpName), player);
+            getPluginInstance().getManager().sendCustomMessage("warp-exists", player, "{warp}:" + warpName);
             return;
         }
 
-        warpName = warpName.replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", "");
+        warpName = warpName.replace("'", "").replace("\"", "");
         Warp warp = new Warp(warpName, player, player.getLocation());
         boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
         if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warpName))) {
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-exists"))
-                    .replace("{warp}", warpName), player);
+            getPluginInstance().getManager().sendCustomMessage("warp-exists", player, "{warp}:" + warp.getWarpName());
         } else {
             warp.register();
             warp.save(true);
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-created"))
-                    .replace("{warp}", warpName), player);
+            getPluginInstance().getManager().sendCustomMessage("warp-created", player, "{warp}:" + warp.getWarpName());
         }
     }
 
@@ -806,11 +784,14 @@ public class MainCommands implements CommandExecutor {
                 String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
                 if (server == null) {
                     if (commandSender instanceof Player)
-                        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("ip-ping-fail"))
-                                .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress()), (Player) commandSender);
-                    else
-                        commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("ip-ping-fail"))
-                                .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress())));
+                        getPluginInstance().getManager().sendCustomMessage("ip-ping-fail", (Player) commandSender,
+                                "{warp}:" + warp.getWarpName(), "{ip}:" + warp.getServerIPAddress());
+                    else {
+                        String message = getPluginInstance().getLangConfig().getString("ip-ping-fail");
+                        if (message != null && !message.isEmpty())
+                            commandSender.sendMessage(getPluginInstance().getManager().colorText(message
+                                    .replace("{ip}", warp.getServerIPAddress()).replace("{warp}", warp.getWarpName())));
+                    }
                     return true;
                 }
             }
@@ -823,12 +804,12 @@ public class MainCommands implements CommandExecutor {
     private void runInfoCommand(CommandSender commandSender) {
         if (!commandSender.hasPermission("hyperdrive.info")) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(
-                        getPluginInstance().getLangConfig().getString("no-permission"),
-                        (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager()
-                        .colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
@@ -845,9 +826,12 @@ public class MainCommands implements CommandExecutor {
     private void runReloadCommand(CommandSender commandSender) {
         if (!commandSender.hasPermission("hyperdrive.reload")) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("no-permission"), (Player) commandSender);
-            else
-                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
             return;
         }
 
@@ -862,11 +846,11 @@ public class MainCommands implements CommandExecutor {
         });
 
         if (!(commandSender instanceof Player)) {
-            commandSender.sendMessage(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getLangConfig().getString("reload")));
+            String message = getPluginInstance().getLangConfig().getString("reload");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
         } else
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("reload"), (Player) commandSender);
+            getPluginInstance().getManager().sendCustomMessage("reload", (Player) commandSender);
     }
 
     private void beginWarpCommand(CommandSender commandSender, String warpName) {
@@ -878,8 +862,7 @@ public class MainCommands implements CommandExecutor {
 
         Player player = (Player) commandSender;
         if (!getPluginInstance().getManager().doesWarpExist(warpName)) {
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-invalid"))
-                    .replace("{warp}", warpName), player);
+            getPluginInstance().getManager().sendCustomMessage("warp-invalid", player, "{warp}:" + warpName);
             return;
         }
 
@@ -887,7 +870,7 @@ public class MainCommands implements CommandExecutor {
         if (warp.getStatus() != EnumContainer.Status.PUBLIC && !warp.getOwner().toString().equals(player.getUniqueId().toString())
                 && !warp.getAssistants().contains(player.getUniqueId()) && (warp.isWhiteListMode() != warp.getPlayerList().contains(player.getUniqueId()))
                 && !(player.hasPermission("hyperdrive.warps." + warp.getWarpName()) || player.hasPermission("hyperdrive.warps.*"))) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("no-permission"), player);
+            getPluginInstance().getManager().sendCustomMessage("no-permission", player);
             return;
         }
 
@@ -900,8 +883,7 @@ public class MainCommands implements CommandExecutor {
             if (!warpIP.equalsIgnoreCase(serverIP)) {
                 String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
                 if (server == null) {
-                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("ip-ping-fail"))
-                            .replace("{warp}", warp.getWarpName()).replace("{ip}", warp.getServerIPAddress()), (Player) commandSender);
+                    getPluginInstance().getManager().sendCustomMessage("ip-ping-fail", (Player) commandSender, "{warp}:" + warp.getWarpName(), "{ip}:" + warp.getServerIPAddress());
                     return;
                 }
             }
@@ -909,13 +891,12 @@ public class MainCommands implements CommandExecutor {
 
         long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration"));
         if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
-            getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("warp-cooldown"))
-                    .replace("{duration}", String.valueOf(currentCooldown)), player);
+            getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
             return;
         }
 
         if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("already-teleporting"), player);
+            getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
             return;
         }
 
@@ -926,8 +907,7 @@ public class MainCommands implements CommandExecutor {
             getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
             if (!economyChargeEvent.isCancelled()) {
                 if (!getPluginInstance().getVaultHandler().getEconomy().has(player, economyChargeEvent.getAmount())) {
-                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("insufficient-funds"))
-                            .replace("{amount}", String.valueOf(economyChargeEvent.getAmount())), player);
+                    getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + economyChargeEvent.getAmount());
                     return;
                 }
 
@@ -938,8 +918,7 @@ public class MainCommands implements CommandExecutor {
                     getPluginInstance().getVaultHandler().getEconomy().depositPlayer(owner, economyChargeEvent.getAmount());
                 }
 
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("transaction-success"))
-                        .replace("{amount}", String.valueOf(economyChargeEvent.getAmount())), player);
+                getPluginInstance().getManager().sendCustomMessage("transaction-success", player, "{amount}:" + economyChargeEvent.getAmount());
             }
         }
 
@@ -962,24 +941,25 @@ public class MainCommands implements CommandExecutor {
                     .replace("{warp}", warp.getWarpName()), subTitle.replace("{duration}", String.valueOf(duration))
                     .replace("{warp}", warp.getWarpName()), 0, 5, 0);
 
-        getPluginInstance().getManager().sendActionBar(player, Objects.requireNonNull(getPluginInstance().getConfig().getString("teleportation-section.start-bar-message"))
-                .replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
+        String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.start-bar-message");
+        if (actionMessage != null && !actionMessage.isEmpty())
+            getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
 
-        getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("teleportation-start"))
-                .replace("{warp}", warp.getWarpName()).replace("{duration}", String.valueOf(duration)), player);
-
+        getPluginInstance().getManager().sendCustomMessage("teleportation-start", player, "{warp}:" + warp.getWarpName(), "{duration}:" + duration);
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(), duration);
     }
 
     private void openListMenu(CommandSender commandSender) {
         if (!(commandSender instanceof Player)) {
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
+            String message = getPluginInstance().getLangConfig().getString("must-be-player");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
             return;
         }
 
         Player player = (Player) commandSender;
         if (!player.hasPermission("hyperdrive.use")) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("no-permission"), player);
+            getPluginInstance().getManager().sendCustomMessage("no-permission", player);
             return;
         }
 
@@ -1177,7 +1157,7 @@ public class MainCommands implements CommandExecutor {
 
         Player player = (Player) commandSender;
         if (!getAdminHelpPages().containsKey(page)) {
-            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("invalid-help-page"), player);
+            getPluginInstance().getManager().sendCustomMessage("invalid-help-page", player);
             return;
         }
 
@@ -1206,8 +1186,7 @@ public class MainCommands implements CommandExecutor {
 
         Player player = (Player) commandSender;
         if (!getHelpPages().containsKey(page)) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getLangConfig().getString("invalid-help-page"), player);
+            getPluginInstance().getManager().sendCustomMessage("invalid-help-page", player);
             return;
         }
 
