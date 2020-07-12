@@ -169,22 +169,8 @@ public class Manager {
                 Double.parseDouble(coordSplit[2]), (float) Double.parseDouble(coordSplit[3]), (float) Double.parseDouble(coordSplit[4]));
     }
 
-    /**
-     * This will determine if the plugin is 1.13+ or not.
-     *
-     * @return Whether the plugin exceeds version 1.13.
-     */
-    public boolean isBlockStateVersion() {
-        return !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
-                || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9") || getPluginInstance().getServerVersion().startsWith("v1_8")
-                || getPluginInstance().getServerVersion().startsWith("v1_7"));
-    }
-
     public ItemStack getHandItem(Player player) {
-        if (getPluginInstance().getServerVersion().startsWith("v1_9") || getPluginInstance().getServerVersion().startsWith("v1_10")
-                || getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_12")
-                || getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
-                || getPluginInstance().getServerVersion().startsWith("v1_15"))
+        if (!getPluginInstance().getServerVersion().startsWith("v1_8"))
             return player.getInventory().getItemInMainHand();
         else return player.getItemInHand();
     }
@@ -280,13 +266,6 @@ public class Manager {
         return ChatColor.translateAlternateColorCodes('&', messageCopy);
     }
 
-    public boolean isNotChatColor(String text) {
-        for (int i = -1; ++i < ChatColor.values().length; )
-            if (ChatColor.values()[i].name().equalsIgnoreCase(text))
-                return false;
-        return true;
-    }
-
     public void sendCustomMessage(String path, Player player, String... placeholders) {
         String message = getPluginInstance().getLangConfig().getString(path);
         if (message != null && !message.equalsIgnoreCase("")) {
@@ -294,7 +273,8 @@ public class Manager {
             for (String phLine : placeholders) {
                 if (!phLine.contains(":")) continue;
                 String[] args = phLine.split(":");
-                message = message.replace(args[0], args[1]);
+                if (args.length >= 2)
+                    message = message.replace(args[0], args[1]);
             }
 
             String prefix = getPluginInstance().getLangConfig().getString("prefix");
@@ -539,7 +519,7 @@ public class Manager {
         itemStack.setDurability((short) durability);
         ItemMeta itemMeta = itemStack.getItemMeta();
         if (itemMeta != null) {
-            itemMeta.setDisplayName(colorText(displayName));
+            itemMeta.setDisplayName(displayName);
             itemMeta.setLore(lore);
             itemStack.setItemMeta(itemMeta);
         }
@@ -549,8 +529,9 @@ public class Manager {
 
     @SuppressWarnings("deprecation")
     private ItemStack getPlayerHead(String playerName, String displayName, List<String> lore, int amount) {
-        boolean isNew = (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
-                || getPluginInstance().getServerVersion().startsWith("v1_15"));
+        boolean isNew = !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
+                || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9")
+                || getPluginInstance().getServerVersion().startsWith("v1_8"));
         ItemStack itemStack;
 
         if (isNew) {
@@ -562,7 +543,7 @@ public class Manager {
                     skullMeta.setOwningPlayer(player);
                 }
 
-                skullMeta.setDisplayName(colorText(displayName));
+                skullMeta.setDisplayName(displayName);
                 skullMeta.setLore(lore);
                 itemStack.setItemMeta(skullMeta);
             }
@@ -573,7 +554,7 @@ public class Manager {
             if (skullMeta != null) {
                 if (playerName != null && !playerName.equalsIgnoreCase(""))
                     skullMeta.setOwner(playerName);
-                skullMeta.setDisplayName(colorText(displayName));
+                skullMeta.setDisplayName(displayName);
                 skullMeta.setLore(lore);
                 itemStack.setItemMeta(skullMeta);
             }
@@ -585,7 +566,7 @@ public class Manager {
     @SuppressWarnings("deprecation")
     public ItemStack getPlayerSelectionHead(OfflinePlayer player, boolean isSelected) {
         boolean isNew = getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
-                || getPluginInstance().getServerVersion().startsWith("v1_15");
+                || getPluginInstance().getServerVersion().startsWith("v1_15") || getPluginInstance().getServerVersion().startsWith("v1_16");
         ItemStack itemStack;
 
         if (isNew) {
@@ -739,7 +720,7 @@ public class Manager {
             if (formatLine.equalsIgnoreCase("{description}") && warp.getDescription() != null) {
                 if (wrappedDescription != null && wrappedDescription.size() > 0)
                     for (int j = -1; ++j < wrappedDescription.size(); )
-                        newLore.add(warp.getDescriptionColor() + wrappedDescription.get(j));
+                        newLore.add(colorText(warp.getDescriptionColor()) + wrappedDescription.get(j));
                 continue;
             }
 
@@ -834,7 +815,7 @@ public class Manager {
                 int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
                 if (materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) {
                     OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                    ItemStack item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
+                    ItemStack item = getPlayerHead(offlinePlayer.getName(), colorText(warp.getDisplayNameColor() + warp.getWarpName()), newLore, amount);
                     ItemMeta itemMeta = item.getItemMeta();
                     if (warp.hasIconEnchantedLook() && itemMeta != null) {
                         itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
@@ -850,7 +831,7 @@ public class Manager {
                         material = Material.ARROW;
                     }
 
-                    ItemStack item = buildItem(material, durability, warp.getDisplayNameColor() + warp.getWarpName(), newLore, amount);
+                    ItemStack item = buildItem(material, durability, colorText(warp.getDisplayNameColor() + warp.getWarpName()), newLore, amount);
                     ItemMeta itemMeta = item.getItemMeta();
                     if (warp.hasIconEnchantedLook() && itemMeta != null) {
                         itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
@@ -867,7 +848,7 @@ public class Manager {
         ItemStack item;
         if (warp.getOwner() != null) {
             OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-            item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
+            item = getPlayerHead(offlinePlayer.getName(), colorText(warp.getDisplayNameColor() + warp.getWarpName()), newLore, 1);
             ItemMeta itemMeta = item.getItemMeta();
             if (warp.hasIconEnchantedLook() && itemMeta != null) {
                 itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
@@ -875,8 +856,9 @@ public class Manager {
                 item.setItemMeta(itemMeta);
             }
         } else {
-            if (getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_14")
-                    || getPluginInstance().getServerVersion().startsWith("v1_15"))
+            if (!(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
+                    || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9")
+                    || getPluginInstance().getServerVersion().startsWith("v1_8")))
                 item = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), 1);
             else item = new ItemStack(Objects.requireNonNull(Material.getMaterial("SKULL_ITEM")), 1, (short) 3);
 
@@ -947,8 +929,7 @@ public class Manager {
                 boolean usePlayerHead = getPluginInstance().getMenusConfig().getBoolean(menuPath + ".items." + itemId + ".use-player-head");
                 final String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None",
                         replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) : "None";
-                String displayName = Objects
-                        .requireNonNull(getPluginInstance().getMenusConfig().getString(menuPath + ".items." + itemId + ".display-name"))
+                String displayName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString(menuPath + ".items." + itemId + ".display-name"))
                         .replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement).replace("{next-page}", replacement1)
                         .replace("{next-status}", Objects.requireNonNull(statusFormat)).replace("{current-status}", statusFormat);
                 if (usePlayerHead) {
@@ -957,10 +938,8 @@ public class Manager {
                         newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
                                 .replace("{previous-page}", replacement).replace("{next-page}", replacement1)
                                 .replace("{next-status}", statusFormat).replace("{current-status}", statusFormat)));
-                    return getPlayerHead(
-                            getPluginInstance().getMenusConfig().getString(menuPath + ".items." + itemId + ".player-head-name"),
-                            displayName, newLore,
-                            getPluginInstance().getMenusConfig().getInt(menuPath + ".items." + itemId + ".amount"));
+                    return getPlayerHead(getPluginInstance().getMenusConfig().getString(menuPath + ".items." + itemId + ".player-head-name"),
+                            colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt(menuPath + ".items." + itemId + ".amount"));
                 } else {
                     List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getMenusConfig().getStringList(menuPath + ".items." + itemId + ".lore");
                     for (int j = -1; ++j < lore.size(); )
@@ -971,8 +950,7 @@ public class Manager {
                             .toUpperCase().replace(" ", "_").replace("-", "_"));
                     return buildItem(material,
                             getPluginInstance().getMenusConfig().getInt(menuPath + ".items." + itemId + ".durability"),
-                            displayName, newLore,
-                            getPluginInstance().getMenusConfig().getInt(menuPath + ".items." + itemId + ".amount"));
+                            colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt(menuPath + ".items." + itemId + ".amount"));
                 }
             }
         }
@@ -1051,7 +1029,7 @@ public class Manager {
                                         .replace("{current-status}", currentStatus)));
 
                             ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".player-head-name"),
-                                    displayName, newLore, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
+                                    colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
                             inventory.setItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".slot"), playerHeadItem);
                             if (fillEmptySlots) emptySlotFiller = playerHeadItem;
                         } else {
@@ -1061,8 +1039,8 @@ public class Manager {
                                         .replace("{next-page}", replacement1).replace("{current-status}", currentStatus)));
                             Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".material"))
                                     .toUpperCase().replace(" ", "_").replace("-", "_"));
-                            ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".durability"), displayName, newLore,
-                                    getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
+                            ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".durability"),
+                                    colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
                             inventory.setItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".slot"), itemStack);
                             if (fillEmptySlots)
                                 emptySlotFiller = itemStack;
@@ -1140,7 +1118,7 @@ public class Manager {
                             .replace("{previous-page}", replacement).replace("{next-page}", replacement1)));
 
                 ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".player-head-name"),
-                        displayName, newLore, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
+                        colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
                 inventory.setItem(getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".slot"), playerHeadItem);
                 if (fillEmptySlots) emptySlotFiller = playerHeadItem;
             } else {
@@ -1152,7 +1130,7 @@ public class Manager {
                         .toUpperCase().replace(" ", "_").replace("-", "_"));
 
                 ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".durability"),
-                        displayName, newLore, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
+                        colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
                 inventory.setItem(getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".slot"), itemStack);
                 if (fillEmptySlots)
                     emptySlotFiller = itemStack;
@@ -1238,7 +1216,7 @@ public class Manager {
                                 .replace("{usage-price}", String.valueOf(getPluginInstance().getMenusConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
 
                     ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".player-head-name"),
-                            displayName, newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
+                            colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
                     inventory.setItem(getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".slot"), playerHeadItem);
                     if (fillEmptySlots) emptySlotFiller = playerHeadItem;
                 } else {
@@ -1258,7 +1236,7 @@ public class Manager {
                             .toUpperCase().replace(" ", "_").replace("-", "_"));
 
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".durability"),
-                            displayName, newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
+                            colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
                     inventory.setItem(getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".slot"), itemStack);
                     if (fillEmptySlots) emptySlotFiller = itemStack;
                 }
@@ -1296,7 +1274,7 @@ public class Manager {
                                 .replace("{usage-price}", String.valueOf(getPluginInstance().getMenusConfig().getDouble("like-menu-section.items." + itemId + ".usage-cost")))));
 
                     ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".player-head-name"),
-                            displayName, newLore, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".amount"));
+                            colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".amount"));
                     inventory.setItem(getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".slot"), playerHeadItem);
                     if (fillEmptySlots) emptySlotFiller = playerHeadItem;
                 } else {
@@ -1308,7 +1286,7 @@ public class Manager {
                             .toUpperCase().replace(" ", "_").replace("-", "_"));
 
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".durability"),
-                            displayName, newLore, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".amount"));
+                            colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".amount"));
                     inventory.setItem(getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".slot"), itemStack);
                     if (fillEmptySlots) emptySlotFiller = itemStack;
                 }
@@ -1376,7 +1354,7 @@ public class Manager {
                                 .replace("{current-status}", WordUtils.capitalize(currentFilterStatus))));
 
                     ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("custom-menus-section." + menuId + ".items." + itemId + ".player-head-name"),
-                            displayName, newLore, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".amount"));
+                            colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".amount"));
                     inventory.setItem(getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".slot"), playerHeadItem);
                     if (fillEmptySlots)
                         emptySlotFiller = playerHeadItem;
@@ -1390,7 +1368,7 @@ public class Manager {
                             .toUpperCase().replace(" ", "_").replace("-", "_"));
 
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".durability"),
-                            displayName, newLore, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".amount"));
+                            colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".amount"));
                     inventory.setItem(getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".slot"), itemStack);
                     if (fillEmptySlots)
                         emptySlotFiller = itemStack;
@@ -1417,16 +1395,12 @@ public class Manager {
             getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent));
             if (!economyChargeEvent.isCancelled()) {
                 if (!getPluginInstance().getVaultHandler().getEconomy().has(player, economyChargeEvent.getAmount())) {
-                    String message = getPluginInstance().getLangConfig().getString("insufficient-funds");
-                    if (message != null && !message.equalsIgnoreCase(""))
-                        getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(chargeAmount)).replace("{player}", player.getName()), player);
+                    getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + chargeAmount, "{player}:" + player.getName());
                     return false;
                 }
 
                 getPluginInstance().getVaultHandler().getEconomy().withdrawPlayer(player, chargeAmount);
-                String message = getPluginInstance().getLangConfig().getString("transaction-success");
-                if (message != null && !message.equalsIgnoreCase(""))
-                    getPluginInstance().getManager().sendCustomMessage(message.replace("{amount}", String.valueOf(chargeAmount)).replace("{player}", player.getName()), player);
+                getPluginInstance().getManager().sendCustomMessage("transaction-success", player, "{amount}:" + chargeAmount, "{player}:" + player.getName());
             }
         }
 

@@ -304,7 +304,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        if (!bypassLimits || !enteredPlayer.hasPermission("hyperdrive.rtpbypass")) {
+        if (!bypassLimits && !enteredPlayer.hasPermission("hyperdrive.rtpbypass")) {
             long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(enteredPlayer, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
             if (cooldownDurationLeft > 0) {
                 getPluginInstance().getManager().sendCustomMessage("random-teleport-cooldown", enteredPlayer, "{duration}:" + cooldownDurationLeft);
@@ -343,7 +343,7 @@ public class TeleportationCommands implements CommandExecutor {
         final String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"),
                 subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
         final int rtpDelay = getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration");
-        int duration = (!bypassLimits || !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass")) ? rtpDelay : 0;
+        int duration = (!bypassLimits && !enteredPlayer.hasPermission("hyperdrive.tpdelaybypass")) ? rtpDelay : 0;
         if (duration > 0) {
             getPluginInstance().getTeleportationHandler().updateTeleportTemp(enteredPlayer, "rtp", world.getName(), duration);
             if (title != null && subTitle != null)
@@ -370,12 +370,12 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         Player player = (Player) commandSender;
-        if (!player.hasPermission("hyperdrive.rtp")) {
+        if (!player.hasPermission(bypassLimits ? "hyperdrive.admin.rtp" : "hyperdrive.rtp")) {
             getPluginInstance().getManager().sendCustomMessage("no-permission", player);
             return;
         }
 
-        if (!bypassLimits || !player.hasPermission("hyperdrive.rtpbypass")) {
+        if (!bypassLimits && !player.hasPermission("hyperdrive.rtpbypass")) {
             long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(player, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
             if (cooldownDurationLeft > 0) {
                 getPluginInstance().getManager().sendCustomMessage("random-teleport-cooldown", player, "{duration}:" + cooldownDurationLeft);
@@ -398,7 +398,7 @@ public class TeleportationCommands implements CommandExecutor {
         final String title = getPluginInstance().getConfig().getString("random-teleport-section.start-title"),
                 subTitle = getPluginInstance().getConfig().getString("random-teleport-section.start-sub-title");
         final int rtpDelay = getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration");
-        int duration = (!bypassLimits || !player.hasPermission("hyperdrive.tpdelaybypass")) ? rtpDelay : 0;
+        int duration = (!bypassLimits && !player.hasPermission("hyperdrive.tpdelaybypass")) ? rtpDelay : 0;
         if (duration > 0) {
             getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "rtp", player.getWorld().getName(), duration);
             if (title != null && subTitle != null)

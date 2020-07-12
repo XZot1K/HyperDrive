@@ -120,7 +120,9 @@ public class RandomTeleportation implements Runnable {
                 }
 
                 getPluginInstance().getTeleportationHandler().teleportPlayer(getPlayer(), finalNewLocation);
-                getPluginInstance().getManager().updateCooldown(getPlayer(), "rtp");
+
+                if (!getPlayer().hasPermission("hyperdrive.rtpbypass"))
+                    getPluginInstance().getManager().updateCooldown(getPlayer(), "rtp");
 
                 String animationLine = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-animation");
                 if (animationLine != null && animationLine.contains(":")) {
@@ -134,14 +136,12 @@ public class RandomTeleportation implements Runnable {
                 if (getTeleportSound() != null && !getTeleportSound().equalsIgnoreCase(""))
                     Objects.requireNonNull(finalNewLocation.getWorld()).playSound(finalNewLocation, Sound.valueOf(getTeleportSound()), 1, 1);
 
-                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString(".random-teleported"))
-                        .replace("{tries}", String.valueOf(getAttempts())).replace("{x}", String.valueOf(finalNewLocation.getBlockX()))
-                        .replace("{y}", String.valueOf(finalNewLocation.getBlockY())).replace("{z}", String.valueOf(finalNewLocation.getBlockZ()))
-                        .replace("{world}", Objects.requireNonNull(finalNewLocation.getWorld()).getName()), getPlayer());
+                getPluginInstance().getManager().sendCustomMessage("random-teleported", getPlayer(), "{tries}:" + String.valueOf(getAttempts()),
+                        "{x}:" + finalNewLocation.getBlockX(), "{y}:" + finalNewLocation.getBlockY(), "{z}:" + finalNewLocation.getBlockZ(), "{world}:" + finalNewLocation.getWorld().getName());
             });
         } else {
-            getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString(".random-teleport-fail"))
-                    .replace("{tries}", String.valueOf(getAttempts())), getPlayer()));
+            getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () ->
+                    getPluginInstance().getManager().sendCustomMessage("random-teleport-fail", getPlayer(), "{tries}:" + getAttempts()));
             getPluginInstance().getManager().clearCooldown(getPlayer(), "rtp");
             getPluginInstance().getTeleportationHandler().getRandomTeleportingPlayers().remove(getPlayer().getUniqueId());
         }
@@ -149,7 +149,7 @@ public class RandomTeleportation implements Runnable {
 
     private int getHighestY(World world, double x, double z) {
         if (world.getEnvironment() == World.Environment.NETHER) {
-            for (int i = 127; --i > 0; ) {
+            for (int i = 120; --i > 0; ) {
                 final Block block = world.getBlockAt((int) x, i, (int) z);
                 if (block.getType().name().contains("AIR")) continue;
 

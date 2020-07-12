@@ -227,8 +227,7 @@ public class HyperDrive extends JavaPlugin {
         long startTime = System.currentTimeMillis();
         int totalUpdates = 0;
 
-        boolean isOffhandVersion = (getServerVersion().startsWith("v1_13") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_16")
-                || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"));
+        boolean isOffhandVersion = !getPluginInstance().getServerVersion().startsWith("v1_8");
         String[] configNames = {"config", "lang", "menus"};
         for (int i = -1; ++i < configNames.length; ) {
             String name = configNames[i];
@@ -597,16 +596,22 @@ public class HyperDrive extends JavaPlugin {
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
             warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
 
+            boolean isHexVersion = !(getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")
+                    || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"));
+
             String descriptionColor = yaml.getString(warpName + ".icon.description-color");
             if (descriptionColor != null && !descriptionColor.equalsIgnoreCase("")) {
                 final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_");
-                warp.setDescriptionColor((newColor.startsWith("§") || newColor.startsWith("#")) ? newColor : net.md_5.bungee.api.ChatColor.valueOf(newColor).toString());
+                warp.setDescriptionColor(newColor.startsWith("§") ? newColor
+                        : (isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString()));
             }
 
             String nameColor = yaml.getString(warpName + ".icon.name-color");
             if (nameColor != null && !nameColor.equalsIgnoreCase("")) {
                 final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_");
-                warp.setDisplayNameColor((newColor.startsWith("§") || newColor.startsWith("#")) ? newColor : net.md_5.bungee.api.ChatColor.valueOf(newColor).toString());
+                warp.setDisplayNameColor(newColor.startsWith("§") ? newColor
+                        : (isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString()));
             }
 
             List<String> description = yaml.getStringList(warpName + ".icon.description");
@@ -638,16 +643,22 @@ public class HyperDrive extends JavaPlugin {
             warp.setIconTheme(resultSet.getString("icon_theme").replace(":", ","));
             warp.setAnimationSet(resultSet.getString("animation_set"));
 
+            boolean isHexVersion = !(getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")
+                    || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"));
+
             String descriptionColor = resultSet.getString("description_color");
             if (descriptionColor != null && !descriptionColor.equalsIgnoreCase("")) {
                 final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_");
-                warp.setDescriptionColor((newColor.startsWith("§") || newColor.startsWith("#")) ? newColor : net.md_5.bungee.api.ChatColor.valueOf(newColor).toString());
+                warp.setDescriptionColor(newColor.startsWith("§") ? newColor
+                        : (isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString()));
             }
 
             String nameColor = resultSet.getString("name_color");
             if (nameColor != null && !nameColor.equalsIgnoreCase("")) {
                 final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_");
-                warp.setDisplayNameColor((newColor.startsWith("§") || newColor.startsWith("#")) ? newColor : net.md_5.bungee.api.ChatColor.valueOf(newColor).toString());
+                warp.setDisplayNameColor(newColor.startsWith("§") ? newColor
+                        : (isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString()));
             }
 
             warp.setDescription(ChatColor.stripColor(getManager().colorText(resultSet.getString("description").replace(",", "").trim().replaceAll("\\s+", " "))));

@@ -170,9 +170,9 @@ warp-icon-section:
   # Current Status Values: [PUBLIC, PRIVATE, SERVER]
   default-status: "PUBLIC"
   # This is the default display name color that is used when a warp is created.
-  default-description-color: "GRAY"
+  default-description-color: "&7"
   # This is the default display name color that is used when a warp is created.
-  default-name-color: "GREEN"
+  default-name-color: "&a"
   # This is the default material a warp icon will be set to upon creation.
   default-icon-material: "PLAYER_HEAD,0,1"
   # When the player sets the description to only this symbol, the description will be cleared.

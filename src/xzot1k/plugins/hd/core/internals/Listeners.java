@@ -53,7 +53,9 @@ public class Listeners implements Listener {
             String inventoryName;
 
             try {
-                if (getPluginInstance().getServerVersion().startsWith("v1_14") || getPluginInstance().getServerVersion().startsWith("v1_15"))
+                if (!(getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_12")
+                        || getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_10")
+                        || getPluginInstance().getServerVersion().startsWith("v1_9") || getPluginInstance().getServerVersion().startsWith("v1_8")))
                     inventoryName = e.getView().getTitle();
                 else {
                     Method method = e.getInventory().getClass().getMethod("getName");
@@ -84,7 +86,7 @@ public class Listeners implements Listener {
     }
 
     @SuppressWarnings("deprecation")
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onChat(AsyncPlayerChatEvent e) {
         InteractionModule interactionModule = getPluginInstance().getManager().getChatInteraction(e.getPlayer());
         if (interactionModule == null)
@@ -102,6 +104,7 @@ public class Listeners implements Listener {
 
         final String colorNames = WordUtils.capitalize(getPluginInstance().getManager().getColorNames().toString().toLowerCase());
         boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+        final String colorString = textEntry.toUpperCase().replace("-", "_").replace(" ", "_");
         switch (interactionModule.getInteractionId().toLowerCase()) {
             case "create-warp":
                 e.setCancelled(true);
@@ -264,13 +267,20 @@ public class Listeners implements Listener {
                         return;
                     }
                 } else {
-                    enteredColor = net.md_5.bungee.api.ChatColor.valueOf(textEntry);
-                    if (enteredColor == net.md_5.bungee.api.ChatColor.BOLD || enteredColor == net.md_5.bungee.api.ChatColor.MAGIC
+
+                    if (!colorNames.contains(colorString)) {
+                        getPluginInstance().getManager().sendCustomMessage(message, e.getPlayer(), "{colors}:" + colorNames);
+                        return;
+                    }
+
+                    enteredColor = net.md_5.bungee.api.ChatColor.valueOf(colorString);
+                    if (enteredColor == null || enteredColor == net.md_5.bungee.api.ChatColor.BOLD || enteredColor == net.md_5.bungee.api.ChatColor.MAGIC
                             || enteredColor == net.md_5.bungee.api.ChatColor.UNDERLINE || enteredColor == net.md_5.bungee.api.ChatColor.STRIKETHROUGH
                             || enteredColor == net.md_5.bungee.api.ChatColor.ITALIC || enteredColor == net.md_5.bungee.api.ChatColor.RESET) {
                         getPluginInstance().getManager().sendCustomMessage(message, e.getPlayer(), "{colors}:" + colorNames);
                         return;
                     }
+
                 }
 
                 if (!getPluginInstance().getManager().initiateEconomyCharge(e.getPlayer(), interactionModule.getPassedChargeAmount())) {
@@ -307,13 +317,20 @@ public class Listeners implements Listener {
                         return;
                     }
                 } else {
-                    enteredColor = net.md_5.bungee.api.ChatColor.valueOf(textEntry);
-                    if (enteredColor == net.md_5.bungee.api.ChatColor.BOLD || enteredColor == net.md_5.bungee.api.ChatColor.MAGIC
+
+                    if (!colorNames.contains(colorString)) {
+                        getPluginInstance().getManager().sendCustomMessage(message, e.getPlayer(), "{colors}:" + colorNames);
+                        return;
+                    }
+
+                    enteredColor = net.md_5.bungee.api.ChatColor.valueOf(colorString);
+                    if (enteredColor == null || enteredColor == net.md_5.bungee.api.ChatColor.BOLD || enteredColor == net.md_5.bungee.api.ChatColor.MAGIC
                             || enteredColor == net.md_5.bungee.api.ChatColor.UNDERLINE || enteredColor == net.md_5.bungee.api.ChatColor.STRIKETHROUGH
                             || enteredColor == net.md_5.bungee.api.ChatColor.ITALIC || enteredColor == net.md_5.bungee.api.ChatColor.RESET) {
                         getPluginInstance().getManager().sendCustomMessage(message, e.getPlayer(), "{colors}:" + colorNames);
                         return;
                     }
+
                 }
 
                 if (!getPluginInstance().getManager().initiateEconomyCharge(e.getPlayer(), interactionModule.getPassedChargeAmount()))
@@ -579,9 +596,8 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
-        if ((e.getFrom().getBlockX() != Objects.requireNonNull(e.getTo()).getBlockX()) || (e.getFrom().getBlockY() != e.getTo().getBlockY())
-                || (e.getFrom().getBlockZ() != e.getTo().getBlockZ()) || !Objects.requireNonNull(e.getFrom().getWorld())
-                .getName().equalsIgnoreCase(Objects.requireNonNull(e.getTo().getWorld()).getName())) {
+        if ((e.getFrom().getBlockX() != Objects.requireNonNull(e.getTo()).getBlockX()) || (e.getFrom().getBlockZ() != e.getTo().getBlockZ())
+                || !Objects.requireNonNull(e.getFrom().getWorld()).getName().equalsIgnoreCase(Objects.requireNonNull(e.getTo().getWorld()).getName())) {
             boolean moveCancellation = getPluginInstance().getConfig()
                     .getBoolean("teleportation-section.move-cancellation");
             if (moveCancellation) {
@@ -1874,7 +1890,9 @@ public class Listeners implements Listener {
                                 warp.setIconEnchantedLook(!warp.hasIconEnchantedLook());
                                 if (toggleFormat != null && toggleFormat.contains(":")) {
                                     String[] toggleFormatArgs = toggleFormat.split(":");
-                                    getPluginInstance().getManager().sendCustomMessage("enchanted-look-toggle", player);
+                                    getPluginInstance().getManager().sendCustomMessage("enchanted-look-toggle", player,
+                                            "{warp}:" + warp.getWarpName(), "{status}:"
+                                                    + (warp.hasIconEnchantedLook() ? "&a" + toggleFormatArgs[0] : "&c" + toggleFormatArgs[1]));
                                 } else
                                     getPluginInstance().getManager().sendCustomMessage("enchanted-look-toggle", player,
                                             "{warp}:" + warp.getWarpName(), "{status}:" + (warp.hasIconEnchantedLook() ? "&aEnabled" : "&cDisabled"));
@@ -1918,7 +1936,7 @@ public class Listeners implements Listener {
                                     getPluginInstance().getManager().sendCustomMessage("animation-set-changed", player, "{warp}:" + warp.getWarpName(),
                                             "{animation-set}:" + nextAnimationSet.split(":")[0]);
                                 } else
-                                    getPluginInstance().getManager().sendCustomMessage("animation-set-invalid", player);
+                                    getPluginInstance().getManager().sendCustomMessage("animation-set-invalid", player, "{warp}:" + warp.getWarpName());
                             } else {
                                 getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
                             }
