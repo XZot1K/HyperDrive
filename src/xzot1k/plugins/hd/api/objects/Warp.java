@@ -4,6 +4,7 @@
 
 package xzot1k.plugins.hd.api.objects;
 
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import xzot1k.plugins.hd.HyperDrive;
@@ -325,7 +326,16 @@ public class Warp implements Comparable<Warp> {
     }
 
     public String getDisplayNameColor() {
-        return displayNameColor;
+        try {
+            return (!displayNameColor.startsWith("&") && !displayNameColor.startsWith("§"))
+                    ? (getPluginInstance().getManager().isHexVersion() ? ChatColor.of(displayNameColor).toString() : org.bukkit.ChatColor.valueOf(displayNameColor).toString())
+                    : displayNameColor.replace("&", "§");
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            getPluginInstance().log(Level.WARNING, "The warp '" + getWarpName() + "' has a display name color of '" + displayNameColor + "' which is invalid.");
+        }
+
+        return "§7";
     }
 
     public void setDisplayNameColor(String displayNameColor) {
@@ -429,7 +439,16 @@ public class Warp implements Comparable<Warp> {
     }
 
     public String getDescriptionColor() {
-        return descriptionColor;
+        try {
+            return (!descriptionColor.startsWith("&") && !descriptionColor.startsWith("§"))
+                    ? (getPluginInstance().getManager().isHexVersion() ? ChatColor.of(descriptionColor).toString() : org.bukkit.ChatColor.valueOf(descriptionColor).toString())
+                    : descriptionColor.replace("&", "§");
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            getPluginInstance().log(Level.WARNING, "The warp '" + getWarpName() + "' has a description color of '" + descriptionColor + "' which is invalid.");
+        }
+
+        return "§7";
     }
 
     public void setDescriptionColor(String descriptionColor) {

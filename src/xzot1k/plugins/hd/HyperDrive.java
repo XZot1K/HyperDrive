@@ -605,13 +605,19 @@ public class HyperDrive extends JavaPlugin {
                 final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_");
                 warp.setDescriptionColor(newColor.startsWith("§") ? newColor
                         : (isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString()));
+                if (newColor.startsWith("§")) warp.setDescriptionColor(newColor);
+                else if (newColor.startsWith("&")) warp.setDescriptionColor(newColor.replace("&", "§"));
+                else
+                    warp.setDescriptionColor(isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString());
             }
 
             String nameColor = yaml.getString(warpName + ".icon.name-color");
             if (nameColor != null && !nameColor.equalsIgnoreCase("")) {
                 final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_");
-                warp.setDisplayNameColor(newColor.startsWith("§") ? newColor
-                        : (isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString()));
+                if (newColor.startsWith("§")) warp.setDisplayNameColor(newColor);
+                else if (newColor.startsWith("&")) warp.setDisplayNameColor(newColor.replace("&", "§"));
+                else
+                    warp.setDisplayNameColor(isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString());
             }
 
             List<String> description = yaml.getStringList(warpName + ".icon.description");
@@ -650,15 +656,19 @@ public class HyperDrive extends JavaPlugin {
             String descriptionColor = resultSet.getString("description_color");
             if (descriptionColor != null && !descriptionColor.equalsIgnoreCase("")) {
                 final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_");
-                warp.setDescriptionColor(newColor.startsWith("§") ? newColor
-                        : (isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString()));
+                if (newColor.startsWith("§")) warp.setDescription(newColor);
+                else if (newColor.startsWith("&")) warp.setDescription(newColor.replace("&", "§"));
+                else
+                    warp.setDescriptionColor(isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString());
             }
 
             String nameColor = resultSet.getString("name_color");
             if (nameColor != null && !nameColor.equalsIgnoreCase("")) {
                 final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_");
-                warp.setDisplayNameColor(newColor.startsWith("§") ? newColor
-                        : (isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString()));
+                if (newColor.startsWith("§")) warp.setDisplayNameColor(newColor);
+                else if (newColor.startsWith("&")) warp.setDisplayNameColor(newColor.replace("&", "§"));
+                else
+                    warp.setDisplayNameColor(isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString());
             }
 
             warp.setDescription(ChatColor.stripColor(getManager().colorText(resultSet.getString("description").replace(",", "").trim().replaceAll("\\s+", " "))));

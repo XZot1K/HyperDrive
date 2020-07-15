@@ -156,6 +156,18 @@ public class Manager {
     }
 
     /**
+     * Determines if the server is 1.16+.
+     *
+     * @return Whether the server can use Hex.
+     */
+    public boolean isHexVersion() {
+        return !(getPluginInstance().getServerVersion().startsWith("v1_8") || getPluginInstance().getServerVersion().startsWith("v1_9")
+                || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_11")
+                || getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_13")
+                || getPluginInstance().getServerVersion().startsWith("v1_14") || getPluginInstance().getServerVersion().startsWith("v1_15"));
+    }
+
+    /**
      * Gets a Serializable location instance from a string format.
      *
      * @param locationString The location string.
@@ -333,17 +345,41 @@ public class Manager {
         getParticleHandler().displayParticle(particleEffect, location, 0, 0, 0, 0, 1);
     }
 
+    /**
+     * Gets a list of all colors with the first letter capitalized.
+     *
+     * @return The list of colors formatted.
+     */
     public List<String> getColorNames() {
         List<String> colorNames = new ArrayList<>();
-        for (int i = -1; ++i < ChatColor.values().length; ) {
-            ChatColor color = ChatColor.values()[i];
-            if (color == ChatColor.BOLD || color == ChatColor.ITALIC || color == ChatColor.UNDERLINE
-                    || color == ChatColor.STRIKETHROUGH || color == ChatColor.MAGIC || color == ChatColor.RESET)
+        for (int i = -1; ++i < net.md_5.bungee.api.ChatColor.values().length; ) {
+            net.md_5.bungee.api.ChatColor color = net.md_5.bungee.api.ChatColor.values()[i];
+            if (color == net.md_5.bungee.api.ChatColor.BOLD || color == net.md_5.bungee.api.ChatColor.ITALIC || color == net.md_5.bungee.api.ChatColor.UNDERLINE
+                    || color == net.md_5.bungee.api.ChatColor.STRIKETHROUGH || color == net.md_5.bungee.api.ChatColor.MAGIC || color == net.md_5.bungee.api.ChatColor.RESET)
                 continue;
             colorNames.add(WordUtils.capitalize(color.name().toLowerCase().replace("_", " ").replace("-", " ")));
         }
 
         return colorNames;
+    }
+
+    /**
+     * Gets a string of all colors with the first letter capitalized and each color correct color coded.
+     *
+     * @param colorNames The color names list to use
+     * @return The list of colors in string form.
+     */
+    public String getColorNames(List<String> colorNames) {
+        final StringBuilder builder = new StringBuilder();
+        final boolean isHex = isHexVersion();
+        for (int i = -1; ++i < colorNames.size(); ) {
+            final String colorName = colorNames.get(i);
+            final String replace = colorName.toUpperCase().replace("-", "_").replace(" ", "_");
+            builder.append((isHex ? net.md_5.bungee.api.ChatColor.of(replace) : net.md_5.bungee.api.ChatColor.valueOf(replace)) + colorName);
+            //if(i < (colorNames.size() - 1)) builder.append(", ");
+        }
+
+        return builder.toString();
     }
 
     public List<UUID> getPlayerUUIDs() {
@@ -720,7 +756,7 @@ public class Manager {
             if (formatLine.equalsIgnoreCase("{description}") && warp.getDescription() != null) {
                 if (wrappedDescription != null && wrappedDescription.size() > 0)
                     for (int j = -1; ++j < wrappedDescription.size(); )
-                        newLore.add(colorText(warp.getDescriptionColor()) + wrappedDescription.get(j));
+                        newLore.add(warp.getDescriptionColor() + wrappedDescription.get(j));
                 continue;
             }
 
@@ -848,7 +884,7 @@ public class Manager {
         ItemStack item;
         if (warp.getOwner() != null) {
             OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-            item = getPlayerHead(offlinePlayer.getName(), colorText(warp.getDisplayNameColor() + warp.getWarpName()), newLore, 1);
+            item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
             ItemMeta itemMeta = item.getItemMeta();
             if (warp.hasIconEnchantedLook() && itemMeta != null) {
                 itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
@@ -864,7 +900,7 @@ public class Manager {
 
             ItemMeta itemMeta = item.getItemMeta();
             if (itemMeta != null) {
-                itemMeta.setDisplayName(colorText(warp.getDisplayNameColor() + warp.getWarpName()));
+                itemMeta.setDisplayName(warp.getDisplayNameColor() + warp.getWarpName());
                 itemMeta.setLore(newLore);
 
                 if (warp.hasIconEnchantedLook()) {
