@@ -334,6 +334,9 @@ public class TeleportationHandler implements Runnable {
 
     // teleport methods
     public void teleportPlayer(Player player, Location location) {
+        if (player == null || (player != null && !player.isOnline()) || location == null || (location != null && location.getWorld() == null))
+            return;
+
         player.setVelocity(new Vector(0, 0, 0));
 
         boolean teleportVehicle = getPluginInstance().getConfig().getBoolean("teleportation-section.teleport-vehicles");

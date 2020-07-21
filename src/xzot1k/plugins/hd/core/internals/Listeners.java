@@ -181,7 +181,7 @@ public class Listeners implements Listener {
                 }
 
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
@@ -224,7 +224,7 @@ public class Listeners implements Listener {
                 }
 
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "warp:" + warp.getWarpName());
                     return;
@@ -255,7 +255,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
@@ -304,7 +304,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
@@ -354,7 +354,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
@@ -384,7 +384,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
@@ -420,7 +420,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
@@ -458,7 +458,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
@@ -495,7 +495,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
@@ -532,7 +532,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
@@ -567,7 +567,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
                     return;
