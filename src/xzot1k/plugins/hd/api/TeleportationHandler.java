@@ -83,7 +83,7 @@ public class TeleportationHandler implements Runnable {
                                             .replace("{duration}", String.valueOf(delayDuration)).replace("{duration-left}", String.valueOf(teleportTemp.getSeconds()))
                                             .replace("{warp}", warp.getWarpName()));
 
-                                getPluginInstance().getManager().sendCustomMessage("teleportation-delay", player, "{warp}:" + warp.getWarpName(), "{duration}" + teleportTemp.getSeconds());
+                                getPluginInstance().getManager().sendCustomMessage("teleportation-delay", player, "{warp}:" + warp.getWarpName(), "{duration}:" + teleportTemp.getSeconds());
                             } else if (teleportTemp.getTeleportTypeId().equalsIgnoreCase("rtp")) {
                                 if (randomTeleportDelayTitle != null && randomTeleportSubDelayTitle != null)
                                     getPluginInstance().getManager().sendTitle(player, randomTeleportDelayTitle.replace("{duration}", String.valueOf(teleportTemp.getSeconds())),

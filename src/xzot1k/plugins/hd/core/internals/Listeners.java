@@ -263,9 +263,18 @@ public class Listeners implements Listener {
 
                 if (getPluginInstance().getManager().isHexVersion() && textEntry.startsWith("#")) {
                     try {
-                        Integer.parseInt(textEntry.substring(1));
+                        //  Integer.parseInt(textEntry.substring(1));
                         enteredColor = net.md_5.bungee.api.ChatColor.of(textEntry);
-                    } catch (NumberFormatException ignored) {
+                    } catch (Exception ignored) {
+                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
+                        return;
+                    }
+                } else if (getPluginInstance().getManager().isHexVersion() && textEntry.startsWith("{#")) {
+                    try {
+                        //Integer.parseInt(textEntry.substring(2, 7));
+                        enteredColor = net.md_5.bungee.api.ChatColor.of(textEntry.replace("{", "").replace("}", ""));
+                    } catch (Exception ignored) {
+                        getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                         getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
                         return;
                     }
@@ -312,9 +321,18 @@ public class Listeners implements Listener {
 
                 if (getPluginInstance().getManager().isHexVersion() && textEntry.startsWith("#")) {
                     try {
-                        Integer.parseInt(textEntry.substring(1));
+                        //   Integer.parseInt(textEntry.substring(1));
                         enteredColor = net.md_5.bungee.api.ChatColor.of(textEntry);
-                    } catch (NumberFormatException ignored) {
+                    } catch (Exception ignored) {
+                        getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
+                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
+                        return;
+                    }
+                } else if (getPluginInstance().getManager().isHexVersion() && textEntry.startsWith("{#")) {
+                    try {
+                        //   Integer.parseInt(textEntry.substring(2, 7));
+                        enteredColor = net.md_5.bungee.api.ChatColor.of(textEntry.replace("{", "").replace("}", ""));
+                    } catch (Exception ignored) {
                         getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                         getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
                         return;

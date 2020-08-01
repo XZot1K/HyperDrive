@@ -485,7 +485,7 @@ public class TeleportationCommands implements CommandExecutor {
         World world = getPluginInstance().getServer().getWorld(args[2]);
         if (world == null) {
             if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage("world-invalid", (Player) commandSender, "{world}" + args[1]);
+                getPluginInstance().getManager().sendCustomMessage("world-invalid", (Player) commandSender, "{world}:" + args[1]);
             else {
                 String message = getPluginInstance().getLangConfig().getString("world-invalid");
                 if (message != null && !message.isEmpty())

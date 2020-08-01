@@ -252,16 +252,16 @@ public class Manager {
                 StringBuilder hexBuilder = new StringBuilder();
                 for (int i = -1; ++i < charArray.length; ) {
                     final char currentChar = charArray[i];
-                    if (currentChar == '#') {
+                    if (currentChar == '{') {
                         final int remainingCharLength = (charArray.length - i);
-                        if (remainingCharLength < 6) break;
+                        if (remainingCharLength < 8) break;
                         else {
-                            hexBuilder.append("#");
-                            for (int increment = 0; ++increment < 7; )
+                            hexBuilder.append("{");
+                            for (int increment = 0; ++increment < 8; )
                                 hexBuilder.append(charArray[i + increment]);
 
                             try {
-                                Integer.parseInt(hexBuilder.toString().substring(1));
+                                Integer.parseInt(hexBuilder.substring(2, 7));
                                 hexToReplace.add(hexBuilder.toString());
                             } catch (NumberFormatException ignored) {}
                             hexBuilder.setLength(0);
@@ -293,20 +293,21 @@ public class Manager {
             if (message.contains("<") && message.contains(">")) {
                 message = (prefix != null && !prefix.equalsIgnoreCase("") ? prefix : "") + message;
                 String jsonFormat = StringUtils.substringBetween(message, "<", ">");
+                if (jsonFormat != null) {
+                    String splitMessage = message.replace("<" + jsonFormat + ">", "_.SPLIT._");
+                    String[] splitMessageArgs = splitMessage.split("_.SPLIT._");
 
-                String splitMessage = message.replace("<" + jsonFormat + ">", "_.SPLIT._");
-                String[] splitMessageArgs = splitMessage.split("_.SPLIT._");
+                    BaseComponent originalMessage = new TextComponent(colorText(splitMessageArgs[0]));
 
-                BaseComponent originalMessage = new TextComponent(colorText(splitMessageArgs[0]));
+                    if (jsonFormat.contains(",")) {
+                        String[] extraSplits = jsonFormat.split(",");
+                        for (int i = -1; ++i < extraSplits.length; )
+                            implementJSONExtras(extraSplits[i], splitMessageArgs, originalMessage);
+                    } else implementJSONExtras(jsonFormat, splitMessageArgs, originalMessage);
 
-                if (jsonFormat.contains(",")) {
-                    String[] extraSplits = jsonFormat.split(",");
-                    for (int i = -1; ++i < extraSplits.length; )
-                        implementJSONExtras(extraSplits[i], splitMessageArgs, originalMessage);
-                } else implementJSONExtras(jsonFormat, splitMessageArgs, originalMessage);
-
-                player.spigot().sendMessage(originalMessage);
-                return;
+                    player.spigot().sendMessage(originalMessage);
+                    return;
+                }
             }
 
             player.sendMessage(colorText(prefix + message));
@@ -1051,6 +1052,9 @@ public class Manager {
                 for (int i = -1; ++i < itemIds.size(); ) {
                     String itemId = itemIds.get(i);
                     if (itemId != null && !itemId.equalsIgnoreCase("")) {
+                        final int slot = getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".slot");
+                        if (slot <= -1) continue;
+
                         boolean usePlayerHead = getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
                                 fillEmptySlots = getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".fill-empty-slots");
                         String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None", replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) : "None";
@@ -1066,7 +1070,7 @@ public class Manager {
 
                             ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".player-head-name"),
                                     colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                            inventory.setItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".slot"), playerHeadItem);
+                            inventory.setItem(slot, playerHeadItem);
                             if (fillEmptySlots) emptySlotFiller = playerHeadItem;
                         } else {
                             List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getMenusConfig().getStringList("list-menu-section.items." + itemId + ".lore");
@@ -1077,7 +1081,7 @@ public class Manager {
                                     .toUpperCase().replace(" ", "_").replace("-", "_"));
                             ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".durability"),
                                     colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
-                            inventory.setItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".slot"), itemStack);
+                            inventory.setItem(slot, itemStack);
                             if (fillEmptySlots)
                                 emptySlotFiller = itemStack;
                         }
@@ -1139,6 +1143,9 @@ public class Manager {
         List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("ps-menu-section.items")).getKeys(false));
         for (int i = -1; ++i < itemIds.size(); ) {
             String itemId = itemIds.get(i);
+            final int slot = getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".slot");
+            if (slot <= -1) continue;
+
             boolean usePlayerHead = getPluginInstance().getMenusConfig().getBoolean("ps-menu-section.items." + itemId + ".use-player-head"),
                     fillEmptySlots = getPluginInstance().getMenusConfig().getBoolean("ps-menu-section.items." + itemId + ".fill-empty-slots");
             String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None",
@@ -1155,7 +1162,7 @@ public class Manager {
 
                 ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".player-head-name"),
                         colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
-                inventory.setItem(getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".slot"), playerHeadItem);
+                inventory.setItem(slot, playerHeadItem);
                 if (fillEmptySlots) emptySlotFiller = playerHeadItem;
             } else {
                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getMenusConfig().getStringList("ps-menu-section.items." + itemId + ".lore");
@@ -1167,7 +1174,7 @@ public class Manager {
 
                 ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".durability"),
                         colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
-                inventory.setItem(getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".slot"), itemStack);
+                inventory.setItem(slot, itemStack);
                 if (fillEmptySlots)
                     emptySlotFiller = itemStack;
             }
@@ -1235,6 +1242,9 @@ public class Manager {
             List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("edit-menu-section.items")).getKeys(false));
             for (int i = -1; ++i < itemIds.size(); ) {
                 String itemId = itemIds.get(i);
+                final int slot = getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".slot");
+                if (slot <= -1) continue;
+
                 boolean usePlayerHead = getPluginInstance().getMenusConfig().getBoolean("edit-menu-section.items." + itemId + ".use-player-head"),
                         fillEmptySlots = getPluginInstance().getMenusConfig().getBoolean("edit-menu-section.items." + itemId + ".fill-empty-slots");
                 if (usePlayerHead) {
@@ -1253,7 +1263,7 @@ public class Manager {
 
                     ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".player-head-name"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
-                    inventory.setItem(getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".slot"), playerHeadItem);
+                    inventory.setItem(slot, playerHeadItem);
                     if (fillEmptySlots) emptySlotFiller = playerHeadItem;
                 } else {
                     String displayName = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".display-name"),
@@ -1273,7 +1283,7 @@ public class Manager {
 
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".durability"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
-                    inventory.setItem(getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".slot"), itemStack);
+                    inventory.setItem(slot, itemStack);
                     if (fillEmptySlots) emptySlotFiller = itemStack;
                 }
             }
@@ -1300,6 +1310,9 @@ public class Manager {
             List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("like-menu-section.items")).getKeys(false));
             for (int i = -1; ++i < itemIds.size(); ) {
                 String itemId = itemIds.get(i);
+                final int slot = getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".slot");
+                if (slot <= -1) continue;
+
                 boolean usePlayerHead = getPluginInstance().getMenusConfig().getBoolean("like-menu-section.items." + itemId + ".use-player-head"),
                         fillEmptySlots = getPluginInstance().getMenusConfig().getBoolean("like-menu-section.items." + itemId + ".fill-empty-slots");
                 String displayName = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".display-name");
@@ -1311,7 +1324,7 @@ public class Manager {
 
                     ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".player-head-name"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".amount"));
-                    inventory.setItem(getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".slot"), playerHeadItem);
+                    inventory.setItem(slot, playerHeadItem);
                     if (fillEmptySlots) emptySlotFiller = playerHeadItem;
                 } else {
                     List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getMenusConfig().getStringList("like-menu-section.items." + itemId + ".lore");
@@ -1323,7 +1336,7 @@ public class Manager {
 
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".durability"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".amount"));
-                    inventory.setItem(getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".slot"), itemStack);
+                    inventory.setItem(slot, itemStack);
                     if (fillEmptySlots) emptySlotFiller = itemStack;
                 }
             }
@@ -1374,6 +1387,9 @@ public class Manager {
                     + menuId + ".items")).getKeys(false));
             for (int i = -1; ++i < itemIds.size(); ) {
                 String itemId = itemIds.get(i);
+                final int slot = getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".slot");
+                if (slot <= -1) continue;
+
                 boolean usePlayerHead = getPluginInstance().getMenusConfig().getBoolean("custom-menus-section." + menuId + ".items." + itemId + ".use-player-head"),
                         fillEmptySlots = getPluginInstance().getMenusConfig().getBoolean("custom-menus-section." + menuId + ".items." + itemId + ".fill-empty-slots");
                 String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None",
@@ -1391,7 +1407,7 @@ public class Manager {
 
                     ItemStack playerHeadItem = getPlayerHead(getPluginInstance().getMenusConfig().getString("custom-menus-section." + menuId + ".items." + itemId + ".player-head-name"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".amount"));
-                    inventory.setItem(getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".slot"), playerHeadItem);
+                    inventory.setItem(slot, playerHeadItem);
                     if (fillEmptySlots)
                         emptySlotFiller = playerHeadItem;
                 } else {
@@ -1405,7 +1421,7 @@ public class Manager {
 
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".durability"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".amount"));
-                    inventory.setItem(getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".slot"), itemStack);
+                    inventory.setItem(slot, itemStack);
                     if (fillEmptySlots)
                         emptySlotFiller = itemStack;
                 }

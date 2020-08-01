@@ -903,6 +903,12 @@ public class MainCommands implements CommandExecutor {
         if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
                 && (warp.getOwner() != null && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())) && !warp.getAssistants().contains(player.getUniqueId())
                 && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
+
+            if (warp.getUsagePrice() > 0) {
+                getPluginInstance().getManager().sendCustomMessage("warp-use-cost", (Player) commandSender, "{warp}:" + warp.getWarpName(), "{price}:" + warp.getUsagePrice());
+                return;
+            }
+
             EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
             getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
             if (!economyChargeEvent.isCancelled()) {

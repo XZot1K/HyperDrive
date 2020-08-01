@@ -655,7 +655,8 @@ public class HyperDrive extends JavaPlugin {
 
             String descriptionColor = resultSet.getString("description_color");
             if (descriptionColor != null && !descriptionColor.equalsIgnoreCase("")) {
-                final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_");
+                final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")
+                        .replace("{", "").replace("}", "");
                 if (newColor.startsWith("§")) warp.setDescription(newColor);
                 else if (newColor.startsWith("&")) warp.setDescription(newColor.replace("&", "§"));
                 else
@@ -664,7 +665,8 @@ public class HyperDrive extends JavaPlugin {
 
             String nameColor = resultSet.getString("name_color");
             if (nameColor != null && !nameColor.equalsIgnoreCase("")) {
-                final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_");
+                final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_")
+                        .replace("{", "").replace("}", "");
                 if (newColor.startsWith("§")) warp.setDisplayNameColor(newColor);
                 else if (newColor.startsWith("&")) warp.setDisplayNameColor(newColor.replace("&", "§"));
                 else
