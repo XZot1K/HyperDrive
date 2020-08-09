@@ -4,7 +4,6 @@
 
 package xzot1k.plugins.hd.api.objects;
 
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import xzot1k.plugins.hd.HyperDrive;
@@ -18,14 +17,14 @@ import java.util.logging.Level;
 public class Warp implements Comparable<Warp> {
     private HyperDrive pluginInstance;
     private SerializableLocation warpLocation;
-    private String warpName, creationDate, iconTheme, animationSet, serverIPAddress, description, displayNameColor, descriptionColor;
+    private String warpName, creationDate, iconTheme, animationSet, serverIPAddress, description;
     private EnumContainer.Status status;
     private UUID owner;
     private List<UUID> playerList, assistants, voters;
     private List<String> commands;
     private int traffic, likes, dislikes;
     private double usagePrice;
-    private boolean enchantedLook, whiteListMode;
+    private boolean enchantedLook, whiteListMode, notify;
 
     public Warp(String warpName, OfflinePlayer player, Location location) {
         setPluginInstance(HyperDrive.getPluginInstance());
@@ -43,11 +42,6 @@ public class Warp implements Comparable<Warp> {
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
-
-        setDisplayNameColor(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-name-color"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"));
-        setDescriptionColor(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-description-color"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
@@ -61,6 +55,7 @@ public class Warp implements Comparable<Warp> {
         setAssistants(new ArrayList<>());
         setWhiteListMode(true);
         setIconEnchantedLook(false);
+        setNotify(true);
     }
 
     public Warp(String warpName, Location location) {
@@ -78,11 +73,6 @@ public class Warp implements Comparable<Warp> {
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
-
-        setDisplayNameColor(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-name-color"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"));
-        setDescriptionColor(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-description-color"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
@@ -96,6 +86,7 @@ public class Warp implements Comparable<Warp> {
         setAssistants(new ArrayList<>());
         setWhiteListMode(true);
         setIconEnchantedLook(false);
+        setNotify(true);
     }
 
     public Warp(String warpName, OfflinePlayer player, SerializableLocation serializableLocation) {
@@ -114,11 +105,6 @@ public class Warp implements Comparable<Warp> {
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
-
-        setDisplayNameColor(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-name-color"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"));
-        setDescriptionColor(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-description-color"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
@@ -132,6 +118,7 @@ public class Warp implements Comparable<Warp> {
         setAssistants(new ArrayList<>());
         setWhiteListMode(true);
         setIconEnchantedLook(false);
+        setNotify(true);
     }
 
     public Warp(String warpName, SerializableLocation serializableLocation) {
@@ -149,11 +136,6 @@ public class Warp implements Comparable<Warp> {
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
-
-        setDisplayNameColor(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-name-color"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"));
-        setDescriptionColor(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-description-color"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"));
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
@@ -167,6 +149,7 @@ public class Warp implements Comparable<Warp> {
         setAssistants(new ArrayList<>());
         setWhiteListMode(true);
         setIconEnchantedLook(false);
+        setNotify(true);
     }
 
     public void register() {
@@ -227,7 +210,7 @@ public class Warp implements Comparable<Warp> {
 
     private void save() {
         try {
-            setWarpName(getWarpName().replace("§", "").replace("'", "").replace("\"", ""));
+            setWarpName(getWarpName().replace("'", "").replace("\"", ""));
 
             StringBuilder commands = new StringBuilder(), playerList = new StringBuilder(), assistants = new StringBuilder(), voters = new StringBuilder();
             for (int j = -1; ++j < getCommands().size(); )
@@ -244,32 +227,27 @@ public class Warp implements Comparable<Warp> {
 
             String syntax;
             if (!getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))
-                syntax = "INSERT OR REPLACE INTO warps(name, location, status, creation_date, icon_theme, animation_set, "
-                        + "description_color, name_color, description, commands, owner, player_list, assistants, traffic, usage_price, "
-                        + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) VALUES('" + getWarpName() + "', '" + locationString + "',"
-                        + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '"
-                        + getDescriptionColor() + "', '" + getDisplayNameColor() + "', '" + getDescription().replace("'", "")
+                syntax = "INSERT OR REPLACE INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, traffic, usage_price, "
+                        + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
+                        + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', '" + playerList.toString() + "', '" + assistants.toString() + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
                         + ", '" + getServerIPAddress().replace("localhost", "127.0.0.1") + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString()
-                        + "', " + (isWhiteListMode() ? 1 : 0) + ");";
+                        + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ");";
             else
-                syntax = "INSERT INTO warps(name, location, status, creation_date, icon_theme, animation_set, "
-                        + "description_color, name_color, description, commands, owner, player_list, assistants, traffic, usage_price, "
-                        + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode) VALUES('" + getWarpName() + "', '" + locationString + "',"
-                        + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '"
-                        + getDescriptionColor() + "', '" + getDisplayNameColor() + "', '" + getDescription().replace("'", "")
+                syntax = "INSERT INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, traffic, usage_price, "
+                        + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
+                        + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', '" + playerList.toString() + "', '" + assistants.toString() + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
                         + ", '" + getServerIPAddress().replace("localhost", "127.0.0.1") + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString()
-                        + "', " + (isWhiteListMode() ? 1 : 0) + ") ON DUPLICATE KEY UPDATE name = '" + getWarpName() + "',"
+                        + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ") ON DUPLICATE KEY UPDATE name = '" + getWarpName() + "',"
                         + " location = '" + locationString + "', status = '" + getStatus().name() + "', creation_date = '" + getCreationDate() + "', "
-                        + "icon_theme = '" + getIconTheme() + "', animation_set = '" + getAnimationSet() + "', description_color = '" + getDescriptionColor() + "',"
-                        + "name_color = '" + getDisplayNameColor() + "', description = '" + getDescription().replace("§", "").replace("'", "").replace("\"", "")
+                        + "icon_theme = '" + getIconTheme() + "', animation_set = '" + getAnimationSet() + "', description = '" + getDescription().replace("§", "").replace("'", "").replace("\"", "")
                         + "', commands = '" + commands.toString().replace("'", "").replace("\"", "") + "', owner = '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', player_list = '" + playerList.toString() + "', assistants = '" + assistants.toString() + "', traffic = '" + getTraffic() + "', usage_price = '" + getUsagePrice() + "',"
                         + " enchanted_look = '" + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress().replace("localhost", "127.0.0.1") + "',"
-                        + " likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters.toString() + "', white_list_mode = '" + (isWhiteListMode() ? 1 : 0) + "';";
+                        + " likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters.toString() + "', white_list_mode = '" + (isWhiteListMode() ? 1 : 0) + "', notify = '" + (canNotify() ? 1 : 0) + "';";
 
             PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement(syntax);
             preparedStatement.execute();
@@ -323,23 +301,6 @@ public class Warp implements Comparable<Warp> {
 
     private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
-    }
-
-    public String getDisplayNameColor() {
-        try {
-            return (!displayNameColor.startsWith("&") && !displayNameColor.startsWith("§"))
-                    ? (getPluginInstance().getManager().isHexVersion() ? ChatColor.of(displayNameColor).toString() : org.bukkit.ChatColor.valueOf(displayNameColor).toString())
-                    : displayNameColor.replace("&", "§");
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            getPluginInstance().log(Level.WARNING, "The warp '" + getWarpName() + "' has a display name color of '" + displayNameColor + "' which is invalid.");
-        }
-
-        return "§7";
-    }
-
-    public void setDisplayNameColor(String displayNameColor) {
-        this.displayNameColor = displayNameColor;
     }
 
     public String getDescription() {
@@ -438,23 +399,6 @@ public class Warp implements Comparable<Warp> {
         this.serverIPAddress = serverIPAddress;
     }
 
-    public String getDescriptionColor() {
-        try {
-            return (!descriptionColor.startsWith("&") && !descriptionColor.startsWith("§"))
-                    ? (getPluginInstance().getManager().isHexVersion() ? ChatColor.of(descriptionColor).toString() : org.bukkit.ChatColor.valueOf(descriptionColor).toString())
-                    : descriptionColor.replace("&", "§");
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            getPluginInstance().log(Level.WARNING, "The warp '" + getWarpName() + "' has a description color of '" + descriptionColor + "' which is invalid.");
-        }
-
-        return "§7";
-    }
-
-    public void setDescriptionColor(String descriptionColor) {
-        this.descriptionColor = descriptionColor;
-    }
-
     public int getTraffic() {
         return traffic;
     }
@@ -506,5 +450,13 @@ public class Warp implements Comparable<Warp> {
     @Override
     public int compareTo(Warp warp) {
         return warp.getWarpName().compareToIgnoreCase(getWarpName());
+    }
+
+    public boolean canNotify() {
+        return notify;
+    }
+
+    public void setNotify(boolean notify) {
+        this.notify = notify;
     }
 }

@@ -505,10 +505,16 @@ public class HyperDrive extends JavaPlugin {
             }
 
             statement = getDatabaseConnection().createStatement();
+
             statement.executeUpdate("create table if not exists warps (name varchar(100), location varchar(255), status varchar(100), creation_date varchar(100),"
-                    + " icon_theme varchar(100), animation_set varchar(100), description_color varchar(100), name_color varchar(100), description varchar(255), commands varchar(255),"
-                    + " owner varchar(100), player_list varchar(255), assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int,"
-                    + " dislikes int, voters longtext, white_list_mode int, primary key (name))");
+                    + " icon_theme varchar(100), animation_set varchar(100), description varchar(255), commands varchar(255), owner varchar(100), player_list varchar(255), "
+                    + "assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int, dislikes int, voters longtext, "
+                    + "white_list_mode int, notify int, primary key (name))");
+
+            DatabaseMetaData md = getDatabaseConnection().getMetaData();
+            ResultSet rs = md.getColumns(null, null, "warps", "notify");
+            if (!rs.next()) statement.executeUpdate("alter table warps add column notify int");
+            rs.close();
 
             /*
                     statement.executeUpdate("alter table warps drop column " + columnArgs[0] + "");
@@ -534,11 +540,17 @@ public class HyperDrive extends JavaPlugin {
         File file = new File(getDataFolder(), "/warps.yml");
         if (file.exists()) {
             YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-            List<String> configurationLines = new ArrayList<>(Objects.requireNonNull(yaml.getConfigurationSection("")).getKeys(false));
+            ConfigurationSection cs = yaml.getConfigurationSection("");
+            if (cs == null) return;
+
+            List<String> configurationLines = new ArrayList<>(cs.getKeys(false));
             for (int i = -1; ++i < configurationLines.size(); ) {
                 try {
                     String warpName = configurationLines.get(i);
-                    UUID uuid = UUID.fromString(Objects.requireNonNull(yaml.getString(warpName + ".owner")));
+
+                    String id = yaml.getString(warpName + ".owner");
+                    if (id == null || id.isEmpty()) continue;
+                    UUID uuid = UUID.fromString(id);
 
                     SerializableLocation serializableLocation = new SerializableLocation(
                             yaml.getString(warpName + ".location.world"), yaml.getDouble(warpName + ".location.x"),
@@ -596,30 +608,6 @@ public class HyperDrive extends JavaPlugin {
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
             warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
 
-            boolean isHexVersion = !(getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")
-                    || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"));
-
-            String descriptionColor = yaml.getString(warpName + ".icon.description-color");
-            if (descriptionColor != null && !descriptionColor.equalsIgnoreCase("")) {
-                final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_");
-                warp.setDescriptionColor(newColor.startsWith("§") ? newColor
-                        : (isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString()));
-                if (newColor.startsWith("§")) warp.setDescriptionColor(newColor);
-                else if (newColor.startsWith("&")) warp.setDescriptionColor(newColor.replace("&", "§"));
-                else
-                    warp.setDescriptionColor(isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString());
-            }
-
-            String nameColor = yaml.getString(warpName + ".icon.name-color");
-            if (nameColor != null && !nameColor.equalsIgnoreCase("")) {
-                final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_");
-                if (newColor.startsWith("§")) warp.setDisplayNameColor(newColor);
-                else if (newColor.startsWith("&")) warp.setDisplayNameColor(newColor.replace("&", "§"));
-                else
-                    warp.setDisplayNameColor(isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString());
-            }
-
             List<String> description = yaml.getStringList(warpName + ".icon.description");
             warp.setDescription(ChatColor.stripColor(getManager().colorText(description.toString().replace("[", "")
                     .replace("]", "").replace(",", "").trim().replaceAll("\\s+", " "))));
@@ -648,30 +636,6 @@ public class HyperDrive extends JavaPlugin {
             warp.setCreationDate(resultSet.getString("creation_date"));
             warp.setIconTheme(resultSet.getString("icon_theme").replace(":", ","));
             warp.setAnimationSet(resultSet.getString("animation_set"));
-
-            boolean isHexVersion = !(getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_13")
-                    || getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"));
-
-            String descriptionColor = resultSet.getString("description_color");
-            if (descriptionColor != null && !descriptionColor.equalsIgnoreCase("")) {
-                final String newColor = descriptionColor.toUpperCase().replace(" ", "_").replace("-", "_")
-                        .replace("{", "").replace("}", "");
-                if (newColor.startsWith("§")) warp.setDescription(newColor);
-                else if (newColor.startsWith("&")) warp.setDescription(newColor.replace("&", "§"));
-                else
-                    warp.setDescriptionColor(isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString());
-            }
-
-            String nameColor = resultSet.getString("name_color");
-            if (nameColor != null && !nameColor.equalsIgnoreCase("")) {
-                final String newColor = nameColor.toUpperCase().replace(" ", "_").replace("-", "_")
-                        .replace("{", "").replace("}", "");
-                if (newColor.startsWith("§")) warp.setDisplayNameColor(newColor);
-                else if (newColor.startsWith("&")) warp.setDisplayNameColor(newColor.replace("&", "§"));
-                else
-                    warp.setDisplayNameColor(isHexVersion ? net.md_5.bungee.api.ChatColor.of(newColor).toString() : ChatColor.valueOf(newColor).toString());
-            }
 
             warp.setDescription(ChatColor.stripColor(getManager().colorText(resultSet.getString("description").replace(",", "").trim().replaceAll("\\s+", " "))));
             String commandsString = resultSet.getString("commands");
@@ -719,6 +683,7 @@ public class HyperDrive extends JavaPlugin {
             warp.setDislikes(resultSet.getInt("dislikes"));
             warp.setServerIPAddress(ipAddress);
             warp.setWhiteListMode(resultSet.getInt("white_list_mode") >= 1);
+            warp.setNotify(resultSet.getInt("notify") >= 1);
         } catch (Exception e) {
             e.printStackTrace();
             log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
@@ -757,14 +722,6 @@ public class HyperDrive extends JavaPlugin {
                             warp.setUsagePrice(ymlFile.getDouble("Usage Price"));
                             warp.setIconEnchantedLook(ymlFile.getBoolean("Enchanted Look"));
                             warp.setCreationDate(ymlFile.getString("Creation Date"));
-
-                            ChatColor descriptionColor = ChatColor.getByChar(
-                                    Objects.requireNonNull(ymlFile.getString("Description Color")).replace("&", ""));
-                            if (descriptionColor != null)
-                                warp.setDescriptionColor(descriptionColor.toString());
-
-                            ChatColor displayNameColor = ChatColor.getByChar(Objects.requireNonNull(ymlFile.getString("Name Color")).replace("&", ""));
-                            if (displayNameColor != null) warp.setDisplayNameColor(displayNameColor.toString());
 
                             List<String> commandList = new ArrayList<>();
                             commandList.add(ymlFile.getString("Command"));
@@ -821,7 +778,6 @@ public class HyperDrive extends JavaPlugin {
                                         SerializableLocation serializableLocation = new SerializableLocation(ymlFile.getString("world"), x, y, z, yaw, pitch);
 
                                         Warp warp = new Warp(warpName, serializableLocation);
-                                        warp.setIconTheme("ARROW,0,1");
                                         warp.register();
                                         convertedWarpCount += 1;
                                     } catch (Exception ignored) {
@@ -961,7 +917,7 @@ public class HyperDrive extends JavaPlugin {
             while (resultSet.next()) {
                 String warpName = resultSet.getString("name");
                 if (warpName == null || warpName.equalsIgnoreCase("")) continue;
-                warpName = warpName.replaceAll("[.,?:;'\"\\\\|`~!@#$%^&*()+=/<>]", "");
+                warpName = getManager().colorText(warpName).replace("'", "").replace("\"", "");
 
                 String ipAddress = resultSet.getString("server_ip").replace("localhost", "127.0.0.1"),
                         locationString = resultSet.getString("location");
@@ -1040,7 +996,11 @@ public class HyperDrive extends JavaPlugin {
     }
 
     public boolean doesWarpExistInDatabase(String warpName) {
-        return getDatabaseWarps().contains(warpName.toLowerCase());
+        if (!getDatabaseWarps().isEmpty())
+            for (String name : getDatabaseWarps())
+                if (net.md_5.bungee.api.ChatColor.stripColor(name).equalsIgnoreCase(warpName))
+                    return true;
+        return false;
     }
 
     private static void copy(File source, File destination) throws IOException {

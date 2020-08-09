@@ -5,7 +5,6 @@
 package xzot1k.plugins.hd.core.internals;
 
 import net.milkbowl.vault.economy.EconomyResponse;
-import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
@@ -93,22 +92,19 @@ public class Listeners implements Listener {
             return;
 
         Warp warp;
-        net.md_5.bungee.api.ChatColor enteredColor;
         OfflinePlayer offlinePlayer;
-        String textEntry = e.getMessage().replace("'", "").replace("\"", "").replace("&", "")
-                .replace("§", ""), chatInteractionCancelKey = getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel");
+        String textEntry = getPluginInstance().getManager().colorText(e.getMessage().replace("'", "").replace("\"", "")),
+                chatInteractionCancelKey = getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel");
 
         List<String> globalFilterStrings = getPluginInstance().getConfig().getStringList("filter-section.global-filter");
         for (int i = -1; ++i < globalFilterStrings.size(); ) {
             final String replacement = globalFilterStrings.get(i);
-            if (replacement.equalsIgnoreCase("#") && interactionModule.getInteractionId().toLowerCase().contains("color"))
+            if (replacement.equalsIgnoreCase("#") || replacement.equalsIgnoreCase("{") || replacement.equalsIgnoreCase("}"))
                 continue;
             textEntry = textEntry.replaceAll("(?i)" + globalFilterStrings.get(i), "");
         }
 
-        final List<String> colors = getPluginInstance().getManager().getColorNames();
         boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-        final String colorString = textEntry.toUpperCase().replace("-", "_").replace(" ", "_");
         switch (interactionModule.getInteractionId().toLowerCase()) {
             case "create-warp":
                 e.setCancelled(true);
@@ -136,7 +132,7 @@ public class Listeners implements Listener {
                 }
 
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                warp = new Warp(textEntry, e.getPlayer(), e.getPlayer().getLocation());
+                warp = new Warp(ChatColor.WHITE + textEntry, e.getPlayer(), e.getPlayer().getLocation());
                 warp.save(true);
                 warp.register();
                 getPluginInstance().getManager().sendCustomMessage("warp-created", e.getPlayer(), "{warp}:" + warp.getWarpName());
@@ -152,11 +148,13 @@ public class Listeners implements Listener {
 
                 String previousName = interactionModule.getInteractionValue();
                 warp = getPluginInstance().getManager().getWarp(previousName);
-                if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(textEntry)) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(textEntry))) {
-                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-exists", e.getPlayer(), "{warp}:" + textEntry);
-                    return;
-                }
+
+                if (!net.md_5.bungee.api.ChatColor.stripColor(textEntry).equalsIgnoreCase(net.md_5.bungee.api.ChatColor.stripColor(warp.getWarpName())))
+                    if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(textEntry)) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(textEntry))) {
+                        getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
+                        getPluginInstance().getManager().sendCustomMessage("warp-exists", e.getPlayer(), "{warp}:" + textEntry);
+                        return;
+                    }
 
                 if (!getPluginInstance().getManager().initiateEconomyCharge(e.getPlayer(), interactionModule.getPassedChargeAmount())) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
@@ -183,7 +181,7 @@ public class Listeners implements Listener {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
+                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + interactionModule.getInteractionValue());
                     return;
                 }
 
@@ -226,7 +224,7 @@ public class Listeners implements Listener {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "warp:" + warp.getWarpName());
+                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "warp:" + interactionModule.getInteractionValue());
                     return;
                 }
 
@@ -241,126 +239,9 @@ public class Listeners implements Listener {
                     getPluginInstance().getManager().sendCustomMessage("description-cleared", e.getPlayer(), "{warp}:" + warp.getWarpName());
                 } else {
                     warp.setDescription(textEntry);
-                    getPluginInstance().getManager().sendCustomMessage("description-set", e.getPlayer(), "{warp}:" + warp.getWarpName(),
-                            "{description}:" + (warp.getDescriptionColor() + textEntry));
+                    getPluginInstance().getManager().sendCustomMessage("description-set", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{description}:" + textEntry);
                 }
 
-                break;
-            case "change-description-color":
-                e.setCancelled(true);
-                warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
-                if (textEntry.equalsIgnoreCase(chatInteractionCancelKey)) {
-                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("chat-interaction-cancelled", e.getPlayer());
-                    return;
-                }
-
-                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
-                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
-                    return;
-                }
-
-                if (getPluginInstance().getManager().isHexVersion() && textEntry.startsWith("#")) {
-                    try {
-                        //  Integer.parseInt(textEntry.substring(1));
-                        enteredColor = net.md_5.bungee.api.ChatColor.of(textEntry);
-                    } catch (Exception ignored) {
-                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
-                        return;
-                    }
-                } else if (getPluginInstance().getManager().isHexVersion() && textEntry.startsWith("{#")) {
-                    try {
-                        //Integer.parseInt(textEntry.substring(2, 7));
-                        enteredColor = net.md_5.bungee.api.ChatColor.of(textEntry.replace("{", "").replace("}", ""));
-                    } catch (Exception ignored) {
-                        getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
-                        return;
-                    }
-                } else {
-                    if (!contains(colors, colorString)) {
-                        getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
-                        return;
-                    }
-
-                    enteredColor = net.md_5.bungee.api.ChatColor.valueOf(colorString);
-                    if (enteredColor == null || enteredColor == net.md_5.bungee.api.ChatColor.BOLD || enteredColor == net.md_5.bungee.api.ChatColor.MAGIC
-                            || enteredColor == net.md_5.bungee.api.ChatColor.UNDERLINE || enteredColor == net.md_5.bungee.api.ChatColor.STRIKETHROUGH
-                            || enteredColor == net.md_5.bungee.api.ChatColor.ITALIC || enteredColor == net.md_5.bungee.api.ChatColor.RESET) {
-                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
-                        return;
-                    }
-                }
-
-                if (!getPluginInstance().getManager().initiateEconomyCharge(e.getPlayer(), interactionModule.getPassedChargeAmount())) {
-                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    return;
-                }
-
-                warp.setDescriptionColor(enteredColor.toString());
-                getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                getPluginInstance().getManager().sendCustomMessage("description-color-changed", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{color}:"
-                        + (enteredColor.toString() + WordUtils.capitalize(enteredColor.name().toLowerCase().replace("_", " "))));
-                break;
-            case "change-name-color":
-                e.setCancelled(true);
-                warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
-                if (textEntry.equalsIgnoreCase(chatInteractionCancelKey)) {
-                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("chat-interaction-cancelled", e.getPlayer());
-                    return;
-                }
-
-                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
-                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
-                    return;
-                }
-
-                if (getPluginInstance().getManager().isHexVersion() && textEntry.startsWith("#")) {
-                    try {
-                        //   Integer.parseInt(textEntry.substring(1));
-                        enteredColor = net.md_5.bungee.api.ChatColor.of(textEntry);
-                    } catch (Exception ignored) {
-                        getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
-                        return;
-                    }
-                } else if (getPluginInstance().getManager().isHexVersion() && textEntry.startsWith("{#")) {
-                    try {
-                        //   Integer.parseInt(textEntry.substring(2, 7));
-                        enteredColor = net.md_5.bungee.api.ChatColor.of(textEntry.replace("{", "").replace("}", ""));
-                    } catch (Exception ignored) {
-                        getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
-                        return;
-                    }
-                } else {
-                    if (!contains(colors, colorString)) {
-                        getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
-                        return;
-                    }
-
-                    enteredColor = net.md_5.bungee.api.ChatColor.valueOf(colorString);
-                    if (enteredColor == null || enteredColor == net.md_5.bungee.api.ChatColor.BOLD || enteredColor == net.md_5.bungee.api.ChatColor.MAGIC
-                            || enteredColor == net.md_5.bungee.api.ChatColor.UNDERLINE || enteredColor == net.md_5.bungee.api.ChatColor.STRIKETHROUGH
-                            || enteredColor == net.md_5.bungee.api.ChatColor.ITALIC || enteredColor == net.md_5.bungee.api.ChatColor.RESET) {
-                        getPluginInstance().getManager().sendCustomMessage("invalid-color", e.getPlayer(), "{colors}:" + colors.toString());
-                        return;
-                    }
-
-                }
-
-                if (!getPluginInstance().getManager().initiateEconomyCharge(e.getPlayer(), interactionModule.getPassedChargeAmount()))
-                    return;
-
-                warp.setDisplayNameColor(enteredColor.toString());
-                getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                getPluginInstance().getManager().sendCustomMessage("name-color-changed", e.getPlayer(), "{warp}:" + warp.getWarpName(),
-                        "{color}:" + (enteredColor.toString() + WordUtils.capitalize(enteredColor.name().toLowerCase().replace("_", " "))));
                 break;
             case "change-usage-price":
                 e.setCancelled(true);
@@ -374,7 +255,7 @@ public class Listeners implements Listener {
 
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
+                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + interactionModule.getInteractionValue());
                     return;
                 }
 
@@ -404,7 +285,7 @@ public class Listeners implements Listener {
 
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
+                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + interactionModule.getInteractionValue());
                     return;
                 }
 
@@ -440,7 +321,7 @@ public class Listeners implements Listener {
 
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
+                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + interactionModule.getInteractionValue());
                     return;
                 }
 
@@ -478,7 +359,7 @@ public class Listeners implements Listener {
 
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
+                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + interactionModule.getInteractionValue());
                     return;
                 }
 
@@ -515,7 +396,7 @@ public class Listeners implements Listener {
 
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
+                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + interactionModule.getInteractionValue());
                     return;
                 }
 
@@ -552,7 +433,7 @@ public class Listeners implements Listener {
 
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
+                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + interactionModule.getInteractionValue());
                     return;
                 }
 
@@ -587,7 +468,7 @@ public class Listeners implements Listener {
 
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + warp.getWarpName());
+                    getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + interactionModule.getInteractionValue());
                     return;
                 }
 
@@ -1060,6 +941,7 @@ public class Listeners implements Listener {
         getPluginInstance().getManager().getPaging().getCurrentPageMap().remove(e.getPlayer().getUniqueId());
         getPluginInstance().getTeleportationCommands().getToggledPlayers().remove(e.getPlayer().getUniqueId());
         getPluginInstance().getTeleportationCommands().getTpaHereSentPlayers().remove(e.getPlayer().getUniqueId());
+        getPluginInstance().getMainCommands().clearConfirmation(e.getPlayer());
     }
 
     // methods
@@ -1070,13 +952,11 @@ public class Listeners implements Listener {
 
             List<Integer> warpSlots = getPluginInstance().getMenusConfig().getIntegerList("list-menu-section.warp-slots");
             if (warpSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta()) {
-                ClickType clickType = e.getClick();
-                String warpName = ChatColor
-                        .stripColor(Objects.requireNonNull(e.getCurrentItem().getItemMeta()).getDisplayName());
+                final ClickType clickType = e.getClick();
+                final String warpName = e.getCurrentItem().getItemMeta().getDisplayName();
                 Warp warp = getPluginInstance().getManager().getWarp(warpName);
 
                 if (warp != null) {
-
                     String soundName = getPluginInstance().getConfig().getString("warp-icon-section.click-sound");
                     if (soundName != null && !soundName.equalsIgnoreCase(""))
                         player.getWorld().playSound(player.getLocation(),
@@ -1085,9 +965,7 @@ public class Listeners implements Listener {
                     switch (clickType) {
                         case LEFT:
 
-                            if (warp.getStatus() == EnumContainer.Status.PUBLIC || (player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive.warps.*"))
-                                    || warp.getOwner().toString().equals(player.getUniqueId().toString()) || warp.getAssistants().contains(player.getUniqueId())
-                                    || (!warp.getPlayerList().isEmpty() && (warp.isWhiteListMode() == warp.getPlayerList().contains(player.getUniqueId())))) {
+                            if (getPluginInstance().getManager().canUseWarp(player, warp)) {
                                 player.closeInventory();
 
                                 if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
@@ -1120,8 +998,7 @@ public class Listeners implements Listener {
                                 }
 
                                 if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
-                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
-                                        && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
+                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())) {
                                     EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
                                     getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                                     if (!economyChargeEvent.isCancelled()) {
@@ -1169,12 +1046,8 @@ public class Listeners implements Listener {
 
                         case RIGHT:
 
-                            if ((warp.getStatus() == EnumContainer.Status.PUBLIC || player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive.warps.*")
-                                    || warp.getOwner().toString().equals(player.getUniqueId().toString()) || warp.getAssistants().contains(player.getUniqueId())
-                                    || (!warp.getPlayerList().isEmpty() && (warp.isWhiteListMode() == warp.getPlayerList().contains(player.getUniqueId()))))
-                                    && player.hasPermission("hyperdrive.groups.use")) {
+                            if (getPluginInstance().getManager().canUseWarp(player, warp) && player.hasPermission("hyperdrive.groups.use")) {
                                 player.closeInventory();
-
                                 if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
                                     String serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
                                             ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
@@ -1203,8 +1076,7 @@ public class Listeners implements Listener {
                                 }
 
                                 if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
-                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
-                                        && (!warp.getPlayerList().isEmpty() && !warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
+                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())) {
                                     EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
                                     getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
                                     if (!economyChargeEvent.isCancelled()) {
@@ -1274,8 +1146,7 @@ public class Listeners implements Listener {
                             break;
                         case SHIFT_RIGHT:
 
-                            if (player.hasPermission("hyperdrive.admin.edit") || player.hasPermission("hyperdrive.edit.*") || player.hasPermission("hyperdrive.edit." + warpName)
-                                    || player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) || warp.getAssistants().contains(player.getUniqueId())) {
+                            if (getPluginInstance().getManager().canEditWarp(player, warp)) {
                                 Inventory inventory = getPluginInstance().getManager().buildEditMenu(player, warp);
 
                                 MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.EDIT, inventory, player.getPlayer());
@@ -1560,8 +1431,7 @@ public class Listeners implements Listener {
 
                 String clickAction = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".click-action"),
                         toggleFormat = getPluginInstance().getConfig().getString("general-section.option-toggle-format"),
-                        warpName = Objects.requireNonNull(ChatColor.stripColor(inventoryName)).replace(ChatColor.stripColor(getPluginInstance().getManager().colorText(
-                                getPluginInstance().getMenusConfig().getString("edit-menu-section.title"))), "");
+                        warpName = inventoryName.replace(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title")), "");
                 Warp warp = getPluginInstance().getManager().getWarp(warpName);
 
                 ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("edit-menu-section.items." + itemId);
@@ -1770,34 +1640,6 @@ public class Listeners implements Listener {
 
                             break;
 
-                        case "change-name-color":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "change-name-color", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("change-name-color-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{colors}:" + WordUtils.capitalize(getPluginInstance().getManager().getColorNames().toString().toLowerCase()),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("interaction-already-active"), player);
-
-                            break;
-
-                        case "change-description-color":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "change-description-color", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("change-description-color-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{colors}:" + WordUtils.capitalize(getPluginInstance().getManager().getColorNames().toString().toLowerCase()),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
                         case "change-usage-price":
 
                             player.closeInventory();
@@ -1925,6 +1767,26 @@ public class Listeners implements Listener {
                             player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
                             break;
 
+                        case "notify":
+                            player.closeInventory();
+                            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                    return;
+
+                                warp.setNotify(!warp.canNotify());
+                                if (toggleFormat != null && toggleFormat.contains(":")) {
+                                    String[] toggleFormatArgs = toggleFormat.split(":");
+                                    getPluginInstance().getManager().sendCustomMessage("notify-toggle", player, "{warp}:" + warp.getWarpName(),
+                                            "{status}:" + (warp.canNotify() ? "&a" + toggleFormatArgs[0] : "&c" + toggleFormatArgs[1]));
+                                } else
+                                    getPluginInstance().getManager().sendCustomMessage("notify-toggle", player, "{warp}:" + warp.getWarpName(),
+                                            "{status}:" + (warp.canNotify() ? "&aEnabled" : "&cDisabled"));
+                            } else
+                                getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
+
+                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
+                            break;
+
                         case "change-icon":
 
                             player.closeInventory();
@@ -1992,8 +1854,7 @@ public class Listeners implements Listener {
                         "{player}:" + player.getName(), "{item-id}:" + itemId);
 
                 String clickAction = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".click-action"),
-                        warpName = Objects.requireNonNull(ChatColor.stripColor(inventoryName)).replace(ChatColor.stripColor(getPluginInstance().getManager().colorText(
-                                getPluginInstance().getMenusConfig().getString("like-menu-section.title"))), "");
+                        warpName = inventoryName.replace(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title")), "");
                 Warp warp = getPluginInstance().getManager().getWarp(warpName);
 
                 ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("like-menu-section.items." + itemId);
@@ -2399,12 +2260,6 @@ public class Listeners implements Listener {
                 }
             }
         }
-    }
-
-    private boolean contains(List<String> list, String value) {
-        for (String key : list)
-            if (key.replace(" ", "_").replace("-", "_").equalsIgnoreCase(value)) return true;
-        return false;
     }
 
     // getters & setters

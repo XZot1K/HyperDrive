@@ -258,6 +258,28 @@ edit-menu-section:
       durability: 0
       # This is the stack count of the item.
       amount: 1
+    notify:
+      click-action: "notify"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 65
+      permission: ""
+      display-name: "&cToggle Notify"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&7Current Status: &e{notify-status}"
+        - ""
+        - "&eClick to toggle notifications&e."
+      slot: 19
+      use-player-head: false
+      player-head-name: ""
+      material: "PAPER"
+      durability: 0
+      amount: 1
     change-status:
       click-action: "change-status"
       click-message: ""
@@ -325,48 +347,6 @@ edit-menu-section:
       material: "TRIPWIRE_HOOK"
       durability: 0
       amount: 1
-    change-description-color:
-      click-action: "change-description-color"
-      click-message: ""
-      fill-empty-slots: false
-      click-sound: true
-      sound-name: "UI_BUTTON_CLICK"
-      usage-cost: 120
-      permission: ""
-      display-name: "&cChange Description Color"
-      lore:
-        - ""
-        - "&7Usage Price: &e{usage-price}"
-        - ""
-        - "&eClick to change the description"
-        - "&ecolor of the warp &a{warp-name}&e."
-      slot: 14
-      use-player-head: false
-      player-head-name: ""
-      material: "COAL"
-      durability: 0
-      amount: 1
-    change-name-color:
-      click-action: "change-name-color"
-      click-message: ""
-      fill-empty-slots: false
-      click-sound: true
-      sound-name: "UI_BUTTON_CLICK"
-      usage-cost: 120
-      permission: ""
-      display-name: "&cChange Name Color"
-      lore:
-        - ""
-        - "&7Usage Price: &e{usage-price}"
-        - ""
-        - "&eClick to change the name color"
-        - "&eof the warp &a{warp-name}&e."
-      slot: 15
-      use-player-head: false
-      player-head-name: ""
-      material: "FEATHER"
-      durability: 0
-      amount: 1
     edit-description:
       click-action: "edit-description"
       click-message: ""
@@ -382,7 +362,7 @@ edit-menu-section:
         - ""
         - "&eClick to edit the description"
         - "&eof the warp &a{warp-name}&e."
-      slot: 16
+      slot: 14
       use-player-head: false
       player-head-name: ""
       material: "BOOK"
@@ -403,7 +383,7 @@ edit-menu-section:
         - ""
         - "&eClick to change the usage price"
         - "&eof the warp &a{warp-name}&e."
-      slot: 19
+      slot: 15
       use-player-head: false
       player-head-name: ""
       material: "GOLD_INGOT"
@@ -425,7 +405,7 @@ edit-menu-section:
         - ""
         - "&eClick to toggle the whether the"
         - "&ewarp icon looks enchanted or not."
-      slot: 20
+      slot: 16
       use-player-head: false
       player-head-name: ""
       material: "ENCHANTED_BOOK"
@@ -614,7 +594,7 @@ edit-menu-section:
         - ""
         - "&eClick to switch the player list"
         - "&ebetween whitelist and blacklist."
-      slot: 22
+      slot: 20
       use-player-head: false
       player-head-name: ""
       material: "PAPER"
@@ -666,7 +646,7 @@ edit-menu-section:
       fill-empty-slots: false
       click-sound: true
       sound-name: "UI_BUTTON_CLICK"
-      usage-cost: 80
+      usage-cost: 0
       permission: ""
       display-name: "&cBack"
       lore:

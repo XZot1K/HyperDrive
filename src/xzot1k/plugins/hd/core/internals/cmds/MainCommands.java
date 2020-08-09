@@ -29,11 +29,13 @@ import java.util.*;
 public class MainCommands implements CommandExecutor {
     private HyperDrive pluginInstance;
     private HashMap<Integer, ArrayList<String>> adminHelpPages, helpPages;
+    private HashMap<UUID, String> warpConfirmationMap;
 
     public MainCommands(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
         setAdminHelpPages(new HashMap<>());
         setHelpPages(new HashMap<>());
+        setWarpConfirmationMap(new HashMap<>());
 
         setupAdminPages();
         setupHelpPages();
@@ -630,9 +632,7 @@ public class MainCommands implements CommandExecutor {
         }
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-        if (!player.hasPermission("hyperdrive.admin.edit")
-                && (warp.getOwner().toString().equals(player.getUniqueId().toString())
-                || warp.getAssistants().contains(player.getUniqueId()))) {
+        if (!getPluginInstance().getManager().canEditWarp(player, warp)) {
             getPluginInstance().getManager().sendCustomMessage("warp-no-access", player, "{warp}:" + warp.getWarpName());
             return;
         }
@@ -686,8 +686,7 @@ public class MainCommands implements CommandExecutor {
 
         if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
-            if (!player.hasPermission("hyperdrive.admin.delete")
-                    && !warp.getOwner().toString().equals(player.getUniqueId().toString())) {
+            if (!player.hasPermission("hyperdrive.admin.delete") && !warp.getOwner().toString().equals(player.getUniqueId().toString())) {
                 getPluginInstance().getManager().sendCustomMessage("delete-not-owner", (Player) commandSender, "{warp}:" + warp.getWarpName());
                 return;
             }
@@ -867,9 +866,7 @@ public class MainCommands implements CommandExecutor {
         }
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-        if (warp.getStatus() != EnumContainer.Status.PUBLIC && !warp.getOwner().toString().equals(player.getUniqueId().toString())
-                && !warp.getAssistants().contains(player.getUniqueId()) && (warp.isWhiteListMode() != warp.getPlayerList().contains(player.getUniqueId()))
-                && !(player.hasPermission("hyperdrive.warps." + warp.getWarpName()) || player.hasPermission("hyperdrive.warps.*"))) {
+        if (!getPluginInstance().getManager().canUseWarp(player, warp)) {
             getPluginInstance().getManager().sendCustomMessage("no-permission", player);
             return;
         }
@@ -904,11 +901,14 @@ public class MainCommands implements CommandExecutor {
                 && (warp.getOwner() != null && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())) && !warp.getAssistants().contains(player.getUniqueId())
                 && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())) {
 
-            if (warp.getUsagePrice() > 0) {
-                getPluginInstance().getManager().sendCustomMessage("warp-use-cost", (Player) commandSender, "{warp}:" + warp.getWarpName(), "{price}:" + warp.getUsagePrice());
+            if (warp.getUsagePrice() > 0 && !isConfirming(player, warp)) {
+                updateConfirmation(player, warp);
+                getPluginInstance().getManager().sendCustomMessage("warp-confirm", player, "{warp}:" + warp.getWarpName(),
+                        "{price}:" + warp.getUsagePrice());
                 return;
             }
 
+            clearConfirmation(player);
             EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
             getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
             if (!economyChargeEvent.isCancelled()) {
@@ -1204,6 +1204,21 @@ public class MainCommands implements CommandExecutor {
         sendJSONLine(player, page);
     }
 
+    // confirmation methods
+
+    private boolean isConfirming(Player player, Warp warp) {
+        return !getWarpConfirmationMap().isEmpty() && getWarpConfirmationMap().containsKey(player.getUniqueId())
+                && (!getWarpConfirmationMap().containsKey(player.getUniqueId()) || getWarpConfirmationMap().get(player.getUniqueId()).equalsIgnoreCase(warp.getWarpName()));
+    }
+
+    private void updateConfirmation(Player player, Warp warp) {
+        getWarpConfirmationMap().put(player.getUniqueId(), warp.getWarpName());
+    }
+
+    public void clearConfirmation(Player player) {
+        getWarpConfirmationMap().remove(player.getUniqueId());
+    }
+
     // getters & setters
     private HyperDrive getPluginInstance() {
         return pluginInstance;
@@ -1227,5 +1242,13 @@ public class MainCommands implements CommandExecutor {
 
     private void setAdminHelpPages(HashMap<Integer, ArrayList<String>> adminHelpPages) {
         this.adminHelpPages = adminHelpPages;
+    }
+
+    private HashMap<UUID, String> getWarpConfirmationMap() {
+        return warpConfirmationMap;
+    }
+
+    private void setWarpConfirmationMap(HashMap<UUID, String> warpConfirmationMap) {
+        this.warpConfirmationMap = warpConfirmationMap;
     }
 }

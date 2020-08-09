@@ -40,6 +40,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Manager {
     private HyperDrive pluginInstance;
@@ -156,18 +158,6 @@ public class Manager {
     }
 
     /**
-     * Determines if the server is 1.16+.
-     *
-     * @return Whether the server can use Hex.
-     */
-    public boolean isHexVersion() {
-        return !(getPluginInstance().getServerVersion().startsWith("v1_8") || getPluginInstance().getServerVersion().startsWith("v1_9")
-                || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_11")
-                || getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_13")
-                || getPluginInstance().getServerVersion().startsWith("v1_14") || getPluginInstance().getServerVersion().startsWith("v1_15"));
-    }
-
-    /**
      * Gets a Serializable location instance from a string format.
      *
      * @param locationString The location string.
@@ -242,40 +232,28 @@ public class Manager {
      */
     public String colorText(String message) {
         String messageCopy = message;
-        if (getPluginInstance().getServerVersion().startsWith("v1_16") && messageCopy.contains("#")) {
+        if ((!getPluginInstance().getServerVersion().startsWith("v1_15") && !getPluginInstance().getServerVersion().startsWith("v1_14")
+                && !getPluginInstance().getServerVersion().startsWith("v1_13") && !getPluginInstance().getServerVersion().startsWith("v1_12")
+                && !getPluginInstance().getServerVersion().startsWith("v1_11") && !getPluginInstance().getServerVersion().startsWith("v1_10")
+                && !getPluginInstance().getServerVersion().startsWith("v1_9") && !getPluginInstance().getServerVersion().startsWith("v1_8"))
+                && messageCopy.contains("#")) {
             if (getPluginInstance().getHookChecker().isPrismaInstalled())
                 messageCopy = ColorProvider.translatePrisma(messageCopy);
             else {
-                final List<String> hexToReplace = new ArrayList<>();
-                final char[] charArray = messageCopy.toCharArray();
-
-                StringBuilder hexBuilder = new StringBuilder();
-                for (int i = -1; ++i < charArray.length; ) {
-                    final char currentChar = charArray[i];
-                    if (currentChar == '{') {
-                        final int remainingCharLength = (charArray.length - i);
-                        if (remainingCharLength < 8) break;
-                        else {
-                            hexBuilder.append("{");
-                            for (int increment = 0; ++increment < 8; )
-                                hexBuilder.append(charArray[i + increment]);
-
-                            try {
-                                Integer.parseInt(hexBuilder.substring(2, 7));
-                                hexToReplace.add(hexBuilder.toString());
-                            } catch (NumberFormatException ignored) {}
-                            hexBuilder.setLength(0);
-                        }
+                try {
+                    final Pattern hexPattern = Pattern.compile("\\{#([A-Fa-f0-9]){6}}");
+                    Matcher matcher = hexPattern.matcher(message);
+                    while (matcher.find()) {
+                        final net.md_5.bungee.api.ChatColor hex = net.md_5.bungee.api.ChatColor.of(matcher.group().substring(1, matcher.group().length() - 1));
+                        final String pre = message.substring(0, matcher.start()), post = message.substring(matcher.end());
+                        matcher = hexPattern.matcher(message = (pre + hex + post));
                     }
-                }
-
-                if (!hexToReplace.isEmpty())
-                    for (String hex : hexToReplace)
-                        messageCopy = messageCopy.replace(hex, net.md_5.bungee.api.ChatColor.of(hex).toString());
+                } catch (IllegalArgumentException ignored) {}
+                return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', message);
             }
         }
 
-        return ChatColor.translateAlternateColorCodes('&', messageCopy);
+        return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', messageCopy);
     }
 
     public void sendCustomMessage(String path, Player player, String... placeholders) {
@@ -287,6 +265,11 @@ public class Manager {
                 String[] args = phLine.split(":");
                 if (args.length >= 2)
                     message = message.replace(args[0], args[1]);
+            }
+
+            if (message.toLowerCase().startsWith("{bar}")) {
+                sendActionBar(player, message.substring(5));
+                return;
             }
 
             String prefix = getPluginInstance().getLangConfig().getString("prefix");
@@ -344,43 +327,6 @@ public class Manager {
     public void displayParticle(Location location, String particleEffect) {
         if (location == null || (particleEffect == null || particleEffect.isEmpty())) return;
         getParticleHandler().displayParticle(particleEffect, location, 0, 0, 0, 0, 1);
-    }
-
-    /**
-     * Gets a list of all colors with the first letter capitalized.
-     *
-     * @return The list of colors formatted.
-     */
-    public List<String> getColorNames() {
-        List<String> colorNames = new ArrayList<>();
-        for (int i = -1; ++i < net.md_5.bungee.api.ChatColor.values().length; ) {
-            net.md_5.bungee.api.ChatColor color = net.md_5.bungee.api.ChatColor.values()[i];
-            if (color == net.md_5.bungee.api.ChatColor.BOLD || color == net.md_5.bungee.api.ChatColor.ITALIC || color == net.md_5.bungee.api.ChatColor.UNDERLINE
-                    || color == net.md_5.bungee.api.ChatColor.STRIKETHROUGH || color == net.md_5.bungee.api.ChatColor.MAGIC || color == net.md_5.bungee.api.ChatColor.RESET)
-                continue;
-            colorNames.add(WordUtils.capitalize(color.name().toLowerCase().replace("_", " ").replace("-", " ")));
-        }
-
-        return colorNames;
-    }
-
-    /**
-     * Gets a string of all colors with the first letter capitalized and each color correct color coded.
-     *
-     * @param colorNames The color names list to use
-     * @return The list of colors in string form.
-     */
-    public String getColorNames(List<String> colorNames) {
-        final StringBuilder builder = new StringBuilder();
-        final boolean isHex = isHexVersion();
-        for (int i = -1; ++i < colorNames.size(); ) {
-            final String colorName = colorNames.get(i);
-            final String replace = colorName.toUpperCase().replace("-", "_").replace(" ", "_");
-            builder.append((isHex ? net.md_5.bungee.api.ChatColor.of(replace) : net.md_5.bungee.api.ChatColor.valueOf(replace)) + colorName);
-            //if(i < (colorNames.size() - 1)) builder.append(", ");
-        }
-
-        return builder.toString();
     }
 
     public List<UUID> getPlayerUUIDs() {
@@ -558,6 +504,7 @@ public class Manager {
         if (itemMeta != null) {
             itemMeta.setDisplayName(displayName);
             itemMeta.setLore(lore);
+            itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             itemStack.setItemMeta(itemMeta);
         }
 
@@ -582,6 +529,7 @@ public class Manager {
 
                 skullMeta.setDisplayName(displayName);
                 skullMeta.setLore(lore);
+                skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 itemStack.setItemMeta(skullMeta);
             }
         } else {
@@ -593,6 +541,7 @@ public class Manager {
                     skullMeta.setOwner(playerName);
                 skullMeta.setDisplayName(displayName);
                 skullMeta.setLore(lore);
+                skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 itemStack.setItemMeta(skullMeta);
             }
         }
@@ -615,12 +564,12 @@ public class Manager {
                         : getPluginInstance().getMenusConfig().getString("ps-menu-section.unselected-player-head.display-name") + player.getName()));
 
                 List<String> lore = isSelected ? getPluginInstance().getMenusConfig().getStringList("ps-menu-section.selected-player-head.lore")
-                        : getPluginInstance().getMenusConfig().getStringList("ps-menu-section.unselected-player-head.lore"),
-                        newLore = new ArrayList<>();
+                        : getPluginInstance().getMenusConfig().getStringList("ps-menu-section.unselected-player-head.lore"), newLore = new ArrayList<>();
                 for (int i = -1; ++i < lore.size(); )
                     newLore.add(getPluginInstance().getManager().colorText(lore.get(i)));
 
                 skullMeta.setLore(newLore);
+                skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 itemStack.setItemMeta(skullMeta);
             }
         } else {
@@ -632,12 +581,12 @@ public class Manager {
                         : getPluginInstance().getMenusConfig().getString("ps-menu-section.unselected-player-head.display-name") + player.getName()));
 
                 List<String> lore = isSelected ? getPluginInstance().getMenusConfig().getStringList("ps-menu-section.selected-player-head.lore")
-                        : getPluginInstance().getMenusConfig().getStringList("ps-menu-section.unselected-player-head.lore"),
-                        newLore = new ArrayList<>();
+                        : getPluginInstance().getMenusConfig().getStringList("ps-menu-section.unselected-player-head.lore"), newLore = new ArrayList<>();
                 for (int i = -1; ++i < lore.size(); )
                     newLore.add(getPluginInstance().getManager().colorText(lore.get(i)));
 
                 skullMeta.setLore(newLore);
+                skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 itemStack.setItemMeta(skullMeta);
             }
         }
@@ -757,7 +706,7 @@ public class Manager {
             if (formatLine.equalsIgnoreCase("{description}") && warp.getDescription() != null) {
                 if (wrappedDescription != null && wrappedDescription.size() > 0)
                     for (int j = -1; ++j < wrappedDescription.size(); )
-                        newLore.add(warp.getDescriptionColor() + wrappedDescription.get(j));
+                        newLore.add(ChatColor.GRAY + colorText(wrappedDescription.get(j)));
                 continue;
             }
 
@@ -852,7 +801,7 @@ public class Manager {
                 int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
                 if (materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) {
                     OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                    ItemStack item = getPlayerHead(offlinePlayer.getName(), colorText(warp.getDisplayNameColor() + warp.getWarpName()), newLore, amount);
+                    ItemStack item = getPlayerHead(offlinePlayer.getName(), colorText(warp.getWarpName()), newLore, amount);
                     ItemMeta itemMeta = item.getItemMeta();
                     if (warp.hasIconEnchantedLook() && itemMeta != null) {
                         itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
@@ -868,7 +817,7 @@ public class Manager {
                         material = Material.ARROW;
                     }
 
-                    ItemStack item = buildItem(material, durability, colorText(warp.getDisplayNameColor() + warp.getWarpName()), newLore, amount);
+                    ItemStack item = buildItem(material, durability, colorText(warp.getWarpName()), newLore, amount);
                     ItemMeta itemMeta = item.getItemMeta();
                     if (warp.hasIconEnchantedLook() && itemMeta != null) {
                         itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
@@ -885,11 +834,12 @@ public class Manager {
         ItemStack item;
         if (warp.getOwner() != null) {
             OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-            item = getPlayerHead(offlinePlayer.getName(), warp.getDisplayNameColor() + warp.getWarpName(), newLore, 1);
+            item = getPlayerHead(offlinePlayer.getName(), warp.getWarpName(), newLore, 1);
             ItemMeta itemMeta = item.getItemMeta();
             if (warp.hasIconEnchantedLook() && itemMeta != null) {
                 itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
                 itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 item.setItemMeta(itemMeta);
             }
         } else {
@@ -901,7 +851,7 @@ public class Manager {
 
             ItemMeta itemMeta = item.getItemMeta();
             if (itemMeta != null) {
-                itemMeta.setDisplayName(warp.getDisplayNameColor() + warp.getWarpName());
+                itemMeta.setDisplayName(warp.getWarpName());
                 itemMeta.setLore(newLore);
 
                 if (warp.hasIconEnchantedLook()) {
@@ -909,6 +859,7 @@ public class Manager {
                     itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 }
 
+                itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 item.setItemMeta(itemMeta);
             }
         }
@@ -985,8 +936,7 @@ public class Manager {
                                 .replace("{next-status}", statusFormat).replace("{current-status}", statusFormat)));
                     Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getMenusConfig().getString(menuPath + ".items." + itemId + ".material"))
                             .toUpperCase().replace(" ", "_").replace("-", "_"));
-                    return buildItem(material,
-                            getPluginInstance().getMenusConfig().getInt(menuPath + ".items." + itemId + ".durability"),
+                    return buildItem(material, getPluginInstance().getMenusConfig().getInt(menuPath + ".items." + itemId + ".durability"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt(menuPath + ".items." + itemId + ".amount"));
                 }
             }
@@ -1193,7 +1143,7 @@ public class Manager {
 
     public Inventory buildEditMenu(Player player, Warp warp) {
         final Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getMenusConfig().getInt("edit-menu-section.size"),
-                colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title") + warp.getDisplayNameColor() + warp.getWarpName()));
+                colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title") + warp.getWarpName()));
 
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
             ItemStack emptySlotFiller = null;
@@ -1234,10 +1184,8 @@ public class Manager {
                     break;
             }
 
-            if (!player.hasPermission("hyperdrive.admin.status") && nextStatus == EnumContainer.Status.ADMIN) {
-                nextStatus = EnumContainer.Status.PUBLIC;
+            if (!player.hasPermission("hyperdrive.admin.status") && nextStatus == EnumContainer.Status.ADMIN)
                 nextStatusName = publicFormat;
-            }
 
             List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("edit-menu-section.items")).getKeys(false));
             for (int i = -1; ++i < itemIds.size(); ) {
@@ -1254,6 +1202,8 @@ public class Manager {
                     for (int j = -1; ++j < lore.size(); )
                         newLore.add(colorText(lore.get(j).replace("{warp-name}", warp.getWarpName()).replace("{warp}", warp.getWarpName())
                                 .replace("{enchant-status}", (toggleFormat != null && toggleFormat.contains(":")) ? warp.hasIconEnchantedLook()
+                                        ? toggleFormat.split(":")[0] : toggleFormat.split(":")[1] : "")
+                                .replace("{notify-status}", (toggleFormat != null && toggleFormat.contains(":")) ? warp.canNotify()
                                         ? toggleFormat.split(":")[0] : toggleFormat.split(":")[1] : "")
                                 .replace("{current-status}", Objects.requireNonNull(currentStatusName))
                                 .replace("{next-status}", Objects.requireNonNull(nextStatusName))
@@ -1273,6 +1223,8 @@ public class Manager {
                         newLore.add(colorText(lore.get(j).replace("{warp-name}", warp.getWarpName()).replace("{warp}", warp.getWarpName())
                                 .replace("{enchant-status}", (toggleFormat != null && toggleFormat.contains(":"))
                                         ? warp.hasIconEnchantedLook() ? toggleFormat.split(":")[0] : toggleFormat.split(":")[1] : "")
+                                .replace("{notify-status}", (toggleFormat != null && toggleFormat.contains(":")) ? warp.canNotify()
+                                        ? toggleFormat.split(":")[0] : toggleFormat.split(":")[1] : "")
                                 .replace("{current-status}", Objects.requireNonNull(currentStatusName))
                                 .replace("{next-status}", Objects.requireNonNull(nextStatusName))
                                 .replace("{next-list-type}", warp.isWhiteListMode() ? "Blacklist" : "Whitelist")
@@ -1302,7 +1254,7 @@ public class Manager {
 
     public Inventory buildLikeMenu(Warp warp) {
         final Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getMenusConfig().getInt("like-menu-section.size"),
-                colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title") + warp.getDisplayNameColor() + warp.getWarpName()));
+                colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title") + warp.getWarpName()));
 
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
             ItemStack emptySlotFiller = null;
@@ -1460,6 +1412,36 @@ public class Manager {
     }
 
     // warp stuff
+
+    /**
+     * Checks if the passed player can edit the passed warp.
+     *
+     * @param player The player to check.
+     * @param warp   The warp to check access for.
+     * @return Whether the player can edit the warp.
+     */
+    public boolean canEditWarp(Player player, Warp warp) {
+        return (player.hasPermission("hyperdrive.admin.edit") || player.hasPermission("hyperdrive.edit.*")
+                || player.hasPermission("hyperdrive.edit." + net.md_5.bungee.api.ChatColor.stripColor(warp.getWarpName()))
+                || warp.getOwner().toString().equals(player.getUniqueId().toString())
+                || warp.getAssistants().contains(player.getUniqueId()));
+    }
+
+    /**
+     * Checks if the passed player can use the passed warp.
+     *
+     * @param player The player to check.
+     * @param warp   The warp to check access for.
+     * @return Whether the place can use the warp.
+     */
+    public boolean canUseWarp(Player player, Warp warp) {
+        return (warp.getStatus() == EnumContainer.Status.PUBLIC || (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                || warp.getAssistants().contains(player.getUniqueId()) || (warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
+                || (!warp.isWhiteListMode() && !warp.getPlayerList().contains(player.getUniqueId()))
+                || player.hasPermission("hyperdrive.warps." + net.md_5.bungee.api.ChatColor.stripColor(warp.getWarpName()))
+                || player.hasPermission("hyperdrive.warps.*"));
+    }
+
     public String getNextAnimationSet(Warp warp) {
         List<String> animationSetList = getPluginInstance().getConfig()
                 .getStringList("special-effects-section.warp-animation-list");
@@ -1536,24 +1518,30 @@ public class Manager {
     }
 
     public boolean doesWarpExist(String warpName) {
-        return !getWarpMap().isEmpty() && getWarpMap().containsKey(warpName.toLowerCase());
+        if (!getWarpMap().isEmpty())
+            for (Map.Entry<String, Warp> entry : getWarpMap().entrySet())
+                if (net.md_5.bungee.api.ChatColor.stripColor(entry.getKey()).equalsIgnoreCase(net.md_5.bungee.api.ChatColor.stripColor(warpName)))
+                    return true;
+        return false;
     }
 
     public Warp getWarp(String warpName) {
-        if (!getWarpMap().isEmpty() && getWarpMap().containsKey(warpName.toLowerCase()))
-            return getWarpMap().get(warpName.toLowerCase());
+        if (!getWarpMap().isEmpty())
+            for (Map.Entry<String, Warp> entry : getWarpMap().entrySet()) {
+                if (net.md_5.bungee.api.ChatColor.stripColor(entry.getKey()).equalsIgnoreCase(net.md_5.bungee.api.ChatColor.stripColor(warpName)))
+                    return entry.getValue();
+            }
         return null;
     }
 
     public List<String> getPermittedWarps(OfflinePlayer player) {
-        List<String> permittedWarpNames = new ArrayList<>(), warpNames = new ArrayList<>(getWarpMap().keySet());
-        for (int i = -1; ++i < warpNames.size(); ) {
-            String warpName = warpNames.get(i);
-            Warp warp = getWarp(warpName);
+        List<String> permittedWarpNames = new ArrayList<>();
+        for (Map.Entry<String, Warp> entry : getWarpMap().entrySet()) {
+            final String warpName = net.md_5.bungee.api.ChatColor.stripColor(entry.getKey());
+            final Warp warp = entry.getValue();
             if (warp != null && (warp.getOwner().toString().equals(player.getUniqueId().toString())
                     || warp.getAssistants().contains(player.getUniqueId())))
-                if (!permittedWarpNames.contains(warpName))
-                    permittedWarpNames.add(warpName);
+                if (!permittedWarpNames.contains(warpName)) permittedWarpNames.add(warpName);
         }
 
         return permittedWarpNames;
