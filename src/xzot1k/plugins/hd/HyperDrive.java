@@ -4,6 +4,7 @@
 
 package xzot1k.plugins.hd;
 
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -608,7 +609,7 @@ public class HyperDrive extends JavaPlugin {
             warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
 
             final String descriptionColor = yaml.getString(warpName + ".description-color"),
-                    colorToAppend = (descriptionColor != null && !descriptionColor.isEmpty()) ? descriptionColor : "";
+                    colorToAppend = (descriptionColor != null && !descriptionColor.isEmpty()) ? (descriptionColor.contains("§") ? descriptionColor : ChatColor.valueOf(descriptionColor)).toString() : "";
             StringBuilder sb = new StringBuilder();
             List<String> description = yaml.getStringList(warpName + ".icon.description");
             for (String line : description) sb.append(colorToAppend + line);
@@ -646,7 +647,7 @@ public class HyperDrive extends JavaPlugin {
                 descriptionColor = resultSet.getString("description_color");
             } catch (SQLException ignored) {}
 
-            String colorToAppend = (descriptionColor != null && !descriptionColor.isEmpty()) ? descriptionColor : "";
+            String colorToAppend = (descriptionColor != null && !descriptionColor.isEmpty()) ? (descriptionColor.contains("§") ? descriptionColor : ChatColor.valueOf(descriptionColor)).toString() : "";
             StringBuilder sb = new StringBuilder();
             String[] description = resultSet.getString("description").split(" ");
             for (String line : description) sb.append(colorToAppend + line);
@@ -930,39 +931,41 @@ public class HyperDrive extends JavaPlugin {
             Statement statement = getDatabaseConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from warps");
             while (resultSet.next()) {
-                String warpName = resultSet.getString("name"), nameColor = null;
-                if (warpName == null || !warpName.isEmpty()) continue;
-
                 try {
-                    nameColor = resultSet.getString("name_color");
-                } catch (SQLException ignored) {}
+                    String warpName = resultSet.getString("name"), nameColor = null;
+                    if (warpName == null || !warpName.isEmpty()) continue;
 
-                warpName = getManager().colorText((nameColor != null && !nameColor.isEmpty()) ? nameColor : "" + warpName)
-                        .replace("'", "").replace("\"", "");
+                    try {
+                        nameColor = resultSet.getString("name_color");
+                    } catch (SQLException ignored) {}
 
-                String ipAddress = resultSet.getString("server_ip").replace("localhost", "127.0.0.1"),
-                        locationString = resultSet.getString("location");
-                if (locationString.contains(",")) {
-                    String[] locationStringArgs = locationString.split(",");
+                    warpName = getManager().colorText((nameColor != null && !nameColor.isEmpty()) ? (nameColor.contains("§") ? nameColor : ChatColor.valueOf(nameColor)).toString() : "" + warpName)
+                            .replace("'", "").replace("\"", "");
 
-                    SerializableLocation serializableLocation = new SerializableLocation(locationStringArgs[0],
-                            Double.parseDouble(locationStringArgs[1]), Double.parseDouble(locationStringArgs[2]),
-                            Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]),
-                            Float.parseFloat(locationStringArgs[5]));
-                    UUID uuid = null;
-                    String ownerId = resultSet.getString("owner");
-                    if (ownerId != null && !ownerId.equalsIgnoreCase(""))
-                        uuid = UUID.fromString(ownerId);
+                    String ipAddress = resultSet.getString("server_ip").replace("localhost", "127.0.0.1"),
+                            locationString = resultSet.getString("location");
+                    if (locationString.contains(",")) {
+                        String[] locationStringArgs = locationString.split(",");
 
-                    Warp warp;
-                    if (uuid == null) warp = new Warp(warpName, serializableLocation);
-                    else
-                        warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
-                    warp.register();
-                    loadedWarps += 1;
+                        SerializableLocation serializableLocation = new SerializableLocation(locationStringArgs[0],
+                                Double.parseDouble(locationStringArgs[1]), Double.parseDouble(locationStringArgs[2]),
+                                Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]),
+                                Float.parseFloat(locationStringArgs[5]));
+                        UUID uuid = null;
+                        String ownerId = resultSet.getString("owner");
+                        if (ownerId != null && !ownerId.equalsIgnoreCase(""))
+                            uuid = UUID.fromString(ownerId);
 
-                    converterWarpSpecifics(resultSet, ipAddress, warp);
-                }
+                        Warp warp;
+                        if (uuid == null) warp = new Warp(warpName, serializableLocation);
+                        else
+                            warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
+                        warp.register();
+                        loadedWarps += 1;
+
+                        converterWarpSpecifics(resultSet, ipAddress, warp);
+                    }
+                } catch (Exception e) { e.printStackTrace(); }
             }
 
             resultSet.close();
