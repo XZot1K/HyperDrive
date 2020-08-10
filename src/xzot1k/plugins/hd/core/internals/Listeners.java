@@ -110,12 +110,19 @@ public class Listeners implements Listener {
             textEntry = textEntry.replaceAll("(?i)" + globalFilterStrings.get(i), "");
         }
 
+        final String strippedName = net.md_5.bungee.api.ChatColor.stripColor(textEntry);
         boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
         switch (interactionModule.getInteractionId().toLowerCase()) {
             case "create-warp":
                 if (getPluginInstance().getManager().hasMetWarpLimit(e.getPlayer())) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-limit-met", e.getPlayer());
+                    return;
+                }
+
+                if (strippedName.equalsIgnoreCase("") || strippedName.isEmpty()) {
+                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage("invalid-warp-name", e.getPlayer());
                     return;
                 }
 
@@ -139,6 +146,12 @@ public class Listeners implements Listener {
             case "rename":
                 String previousName = interactionModule.getInteractionValue();
                 warp = getPluginInstance().getManager().getWarp(previousName);
+
+                if (strippedName.equalsIgnoreCase("") || strippedName.isEmpty()) {
+                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage("invalid-warp-name", e.getPlayer());
+                    return;
+                }
 
                 if (!net.md_5.bungee.api.ChatColor.stripColor(textEntry).equalsIgnoreCase(net.md_5.bungee.api.ChatColor.stripColor(warp.getWarpName())))
                     if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(textEntry)) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(textEntry))) {

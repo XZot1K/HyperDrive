@@ -175,3 +175,4 @@ visits-modified: "&aThe warp &e{warp} &ahas had its visit count modified by &e{a
 warp-notify: "{bar}&aThe player &e{player} &ahas teleported to the &e{warp}&a."
 warp-confirm: "&cThe warp &e{warp} &cis charging &e${price} &cto use. Please try again to confirm."
 notify-toggle: "&aTeleport notifications have been &e{status} &afor the warp &e{warp}&a!"
+invalid-warp-name: "&cThe name you entered was invalid. Please try another name."

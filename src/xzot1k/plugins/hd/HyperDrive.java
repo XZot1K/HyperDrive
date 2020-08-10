@@ -932,15 +932,19 @@ public class HyperDrive extends JavaPlugin {
             ResultSet resultSet = statement.executeQuery("select * from warps");
             while (resultSet.next()) {
                 try {
-                    String warpName = resultSet.getString("name"), nameColor = null;
-                    if (warpName == null || !warpName.isEmpty()) continue;
+                    String warpName = resultSet.getString("name").replace("'", "").replace("\"", ""), nameColor = null;
+                    if (warpName == null || warpName.isEmpty()) continue;
 
                     try {
                         nameColor = resultSet.getString("name_color");
+                        if (nameColor != null && !nameColor.isEmpty() && !nameColor.contains("§"))
+                            nameColor = ChatColor.valueOf(nameColor).toString();
                     } catch (SQLException ignored) {}
 
-                    warpName = getManager().colorText((nameColor != null && !nameColor.isEmpty()) ? (nameColor.contains("§") ? nameColor : ChatColor.valueOf(nameColor)).toString() : "" + warpName)
-                            .replace("'", "").replace("\"", "");
+                    warpName = getManager().colorText(nameColor + warpName);
+
+                    final String strippedName = ChatColor.stripColor(warpName);
+                    if (strippedName.equalsIgnoreCase("") || strippedName.isEmpty()) continue;
 
                     String ipAddress = resultSet.getString("server_ip").replace("localhost", "127.0.0.1"),
                             locationString = resultSet.getString("location");

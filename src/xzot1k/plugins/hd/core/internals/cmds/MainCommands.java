@@ -4,12 +4,12 @@
 
 package xzot1k.plugins.hd.core.internals.cmds;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.WordUtils;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -597,7 +597,7 @@ public class MainCommands implements CommandExecutor {
         }
 
         if (!(commandSender instanceof Player)) {
-            String warpList = new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()).toString()
+            String warpList = getPluginInstance().getManager().getWarpMap().keySet().isEmpty() ? "[]" : new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()).toString()
                     .replace("[", "").replace("]", "");
             String message = getPluginInstance().getLangConfig().getString("warp-list");
             if (message != null && !message.isEmpty())
@@ -608,7 +608,7 @@ public class MainCommands implements CommandExecutor {
 
         Player player = (Player) commandSender;
         List<String> permittedWarpNames = getPluginInstance().getManager().getPermittedWarps(player);
-        String warpList = permittedWarpNames.toString().replace("[", "").replace("]", "");
+        String warpList = permittedWarpNames.isEmpty() ? "[]" : permittedWarpNames.toString().replace("[", "").replace("]", "");
         getPluginInstance().getManager().sendCustomMessage("warp-list", player, "{list}:" + warpList,
                 "{count}:" + getPluginInstance().getManager().getWarpMap().keySet().size());
     }
@@ -740,7 +740,13 @@ public class MainCommands implements CommandExecutor {
             warpName = warpName.replace(filterString, "");
         }
 
-        warpName = ChatColor.stripColor(getPluginInstance().getManager().colorText(warpName));
+        warpName = getPluginInstance().getManager().colorText(warpName);
+        final String strippedName = ChatColor.stripColor(warpName);
+        if (strippedName.equalsIgnoreCase("") || strippedName.isEmpty()) {
+            getPluginInstance().getManager().sendCustomMessage("invalid-warp-name", player);
+            return;
+        }
+
         if (getPluginInstance().getManager().doesWarpExist(warpName)) {
             getPluginInstance().getManager().sendCustomMessage("warp-exists", player, "{warp}:" + warpName);
             return;
