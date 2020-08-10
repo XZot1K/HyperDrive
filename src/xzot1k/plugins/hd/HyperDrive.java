@@ -4,7 +4,6 @@
 
 package xzot1k.plugins.hd;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -608,9 +607,12 @@ public class HyperDrive extends JavaPlugin {
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
             warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
 
+            final String descriptionColor = yaml.getString(warpName + ".description-color"),
+                    colorToAppend = (descriptionColor != null && !descriptionColor.isEmpty()) ? descriptionColor : "";
+            StringBuilder sb = new StringBuilder();
             List<String> description = yaml.getStringList(warpName + ".icon.description");
-            warp.setDescription(ChatColor.stripColor(getManager().colorText(description.toString().replace("[", "")
-                    .replace("]", "").replace(",", "").trim().replaceAll("\\s+", " "))));
+            for (String line : description) sb.append(colorToAppend + line);
+            warp.setDescription(getManager().colorText(sb.toString().replace("'", "").replace("\"", "")));
 
             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
             warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
@@ -637,7 +639,20 @@ public class HyperDrive extends JavaPlugin {
             warp.setIconTheme(resultSet.getString("icon_theme").replace(":", ","));
             warp.setAnimationSet(resultSet.getString("animation_set"));
 
-            warp.setDescription(ChatColor.stripColor(getManager().colorText(resultSet.getString("description").replace(",", "").trim().replaceAll("\\s+", " "))));
+
+            String descriptionColor = null;
+
+            try {
+                descriptionColor = resultSet.getString("description_color");
+            } catch (SQLException ignored) {}
+
+            String colorToAppend = (descriptionColor != null && !descriptionColor.isEmpty()) ? descriptionColor : "";
+            StringBuilder sb = new StringBuilder();
+            String[] description = resultSet.getString("description").split(" ");
+            for (String line : description) sb.append(colorToAppend + line);
+            warp.setDescription(getManager().colorText(sb.toString().replace("'", "").replace("\"", "")));
+
+
             String commandsString = resultSet.getString("commands");
             if (commandsString.contains(",")) {
                 List<String> commands = new ArrayList<>();
@@ -915,9 +930,15 @@ public class HyperDrive extends JavaPlugin {
             Statement statement = getDatabaseConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from warps");
             while (resultSet.next()) {
-                String warpName = resultSet.getString("name");
-                if (warpName == null || warpName.equalsIgnoreCase("")) continue;
-                warpName = getManager().colorText(warpName).replace("'", "").replace("\"", "");
+                String warpName = resultSet.getString("name"), nameColor = null;
+                if (warpName == null || !warpName.isEmpty()) continue;
+
+                try {
+                    nameColor = resultSet.getString("name_color");
+                } catch (SQLException ignored) {}
+
+                warpName = getManager().colorText((nameColor != null && !nameColor.isEmpty()) ? nameColor : "" + warpName)
+                        .replace("'", "").replace("\"", "");
 
                 String ipAddress = resultSet.getString("server_ip").replace("localhost", "127.0.0.1"),
                         locationString = resultSet.getString("location");

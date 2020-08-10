@@ -264,8 +264,6 @@ public class Warp implements Comparable<Warp> {
      * @param newName The new name (Does NOT filter).
      */
     public void rename(String newName) {
-        if (getPluginInstance().getManager().doesWarpExist(newName)) return;
-
         unRegister();
         final String finalWarpName = getWarpName();
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> delete(finalWarpName));
