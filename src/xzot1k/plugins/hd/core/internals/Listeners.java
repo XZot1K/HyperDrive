@@ -35,6 +35,7 @@ import xzot1k.plugins.hd.core.objects.InteractionModule;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.logging.Level;
 
 public class Listeners implements Listener {
     private HyperDrive pluginInstance;
@@ -1199,20 +1200,26 @@ public class Listeners implements Listener {
                             if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(currentPage))
                                 pageWarpList = new ArrayList<>(warpPageMap.get(currentPage));
 
-                            if (!pageWarpList.isEmpty())
-                                for (int i = -1; ++i < warpSlots.size(); ) {
-                                    int warpSlot = warpSlots.get(i);
-                                    e.getInventory().setItem(warpSlot, null);
+                            final List<Warp> finalPageWarpList1 = pageWarpList;
+                            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                                if (!finalPageWarpList1.isEmpty())
+                                    for (int i = -1; ++i < warpSlots.size(); ) {
+                                        int warpSlot = warpSlots.get(i);
+                                        e.getInventory().setItem(warpSlot, null);
 
-                                    if (pageWarpList.size() >= 1) {
-                                        Warp warp = pageWarpList.get(0);
-                                        e.getInventory().setItem(warpSlots.get(i),
-                                                getPluginInstance().getManager().buildWarpIcon(player, warp));
-                                        pageWarpList.remove(warp);
+                                        if (finalPageWarpList1.size() >= 1) {
+                                            Warp warp = finalPageWarpList1.get(0);
+                                            final ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
+                                            if (warpIcon != null) {
+                                                final int finalI = i;
+                                                getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> e.getInventory().setItem(warpSlots.get(finalI), warpIcon));
+                                            }
+                                            finalPageWarpList1.remove(warp);
+                                        }
                                     }
-                                }
-                            else
-                                getPluginInstance().getManager().sendCustomMessage("refresh-fail", player);
+                                else
+                                    getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> getPluginInstance().getManager().sendCustomMessage("refresh-fail", player));
+                            });
 
                             break;
                         case "next-page":
@@ -1225,18 +1232,25 @@ public class Listeners implements Listener {
                                 if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(currentPage + 1))
                                     pageWarpList = new ArrayList<>(warpPageMap.get(currentPage + 1));
 
-                                if (!pageWarpList.isEmpty()) {
-                                    getPluginInstance().getManager().getPaging().updateCurrentWarpPage(player, true);
-                                    for (int i = -1; ++i < warpSlots.size(); ) {
-                                        e.getInventory().setItem(warpSlots.get(i), null);
-                                        if (pageWarpList.size() >= 1) {
-                                            Warp warp = pageWarpList.get(0);
-                                            e.getInventory().setItem(warpSlots.get(i),
-                                                    getPluginInstance().getManager().buildWarpIcon(player, warp));
-                                            pageWarpList.remove(warp);
+                                final List<Warp> finalPageWarpList = pageWarpList;
+                                getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                                    if (!finalPageWarpList.isEmpty()) {
+                                        getPluginInstance().getManager().getPaging().updateCurrentWarpPage(player, true);
+                                        for (int i = -1; ++i < warpSlots.size(); ) {
+                                            e.getInventory().setItem(warpSlots.get(i), null);
+                                            if (finalPageWarpList.size() >= 1) {
+                                                Warp warp = finalPageWarpList.get(0);
+                                                final ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
+                                                if (warpIcon != null) {
+                                                    final int finalI = i;
+                                                    getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> e.getInventory().setItem(warpSlots.get(finalI), warpIcon));
+                                                } else
+                                                    getPluginInstance().log(Level.WARNING, "The warp '" + warp.getWarpName() + "' had an issue with its warp icon.");
+                                                finalPageWarpList.remove(warp);
+                                            }
                                         }
                                     }
-                                }
+                                });
                             } else
                                 getPluginInstance().getManager().sendCustomMessage("no-next-page", player);
                             break;
@@ -1253,18 +1267,25 @@ public class Listeners implements Listener {
                                         && warpPageMap.containsKey(currentPage - 1))
                                     pageWarpList = new ArrayList<>(warpPageMap.get(currentPage - 1));
 
-                                if (!pageWarpList.isEmpty()) {
-                                    getPluginInstance().getManager().getPaging().updateCurrentWarpPage(player, false);
-                                    for (int i = -1; ++i < warpSlots.size(); ) {
-                                        e.getInventory().setItem(warpSlots.get(i), null);
-                                        if (pageWarpList.size() >= 1) {
-                                            Warp warp = pageWarpList.get(0);
-                                            e.getInventory().setItem(warpSlots.get(i),
-                                                    getPluginInstance().getManager().buildWarpIcon(player, warp));
-                                            pageWarpList.remove(warp);
+                                final List<Warp> finalPageWarpList2 = pageWarpList;
+                                getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                                    if (!finalPageWarpList2.isEmpty()) {
+                                        getPluginInstance().getManager().getPaging().updateCurrentWarpPage(player, false);
+                                        for (int i = -1; ++i < warpSlots.size(); ) {
+                                            e.getInventory().setItem(warpSlots.get(i), null);
+                                            if (finalPageWarpList2.size() >= 1) {
+                                                Warp warp = finalPageWarpList2.get(0);
+                                                final ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
+                                                if (warpIcon != null) {
+                                                    final int finalI = i;
+                                                    getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> e.getInventory().setItem(warpSlots.get(finalI), warpIcon));
+                                                } else
+                                                    getPluginInstance().log(Level.WARNING, "The warp '" + warp.getWarpName() + "' had an issue with its warp icon.");
+                                                finalPageWarpList2.remove(warp);
+                                            }
                                         }
                                     }
-                                }
+                                });
                             } else
                                 getPluginInstance().getManager().sendCustomMessage("no-previous-page", player);
                             break;
@@ -1319,14 +1340,21 @@ public class Listeners implements Listener {
                                 if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(currentPage))
                                     pageWarpList = new ArrayList<>(warpPageMap.get(currentPage));
 
-                                if (!pageWarpList.isEmpty())
-                                    for (int i = -1; ++i < warpSlots.size(); ) {
-                                        if (pageWarpList.size() >= 1) {
-                                            Warp warp = pageWarpList.get(0);
-                                            e.getInventory().setItem(warpSlots.get(i), getPluginInstance().getManager().buildWarpIcon(player, warp));
-                                            pageWarpList.remove(warp);
+                                final List<Warp> finalPageWarpList3 = pageWarpList;
+                                getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                                    if (!finalPageWarpList3.isEmpty())
+                                        for (int i = -1; ++i < warpSlots.size(); ) {
+                                            if (finalPageWarpList3.size() >= 1) {
+                                                Warp warp = finalPageWarpList3.get(0);
+                                                final ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
+                                                if (warpIcon != null) {
+                                                    final int finalI = i;
+                                                    getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> e.getInventory().setItem(warpSlots.get(finalI), warpIcon));
+                                                }
+                                                finalPageWarpList3.remove(warp);
+                                            }
                                         }
-                                    }
+                                });
                             }
 
                             break;

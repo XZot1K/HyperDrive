@@ -4,6 +4,7 @@
 
 package xzot1k.plugins.hd.core.internals.tabs;
 
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -34,7 +35,7 @@ public class WarpTabComplete implements TabCompleter {
             if (hasAllAccess) {
                 for (Warp warp : getPluginInstance().getManager().getWarpMap().values())
                     if (warp.getWarpName().toLowerCase().contains(args[0].toLowerCase()))
-                        warpNames.add(warp.getWarpName());
+                        warpNames.add(ChatColor.stripColor(warp.getWarpName()));
             } else if (commandSender instanceof Player) {
                 Player player = (Player) commandSender;
                 for (Warp warp : getPluginInstance().getManager().getWarpMap().values()) {
@@ -43,7 +44,7 @@ public class WarpTabComplete implements TabCompleter {
                             || warp.getAssistants().contains(player.getUniqueId()) || (warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
                             || warp.getStatus() == EnumContainer.Status.PUBLIC || (warp.getStatus() == EnumContainer.Status.ADMIN
                             && ((player.hasPermission("hyperdrive.warps." + warp.getWarpName()) || player.hasPermission("hyperdrive.warps.*"))))))
-                        warpNames.add(warp.getWarpName());
+                        warpNames.add(ChatColor.stripColor(warp.getWarpName()));
                 }
             }
 
