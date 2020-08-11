@@ -50,7 +50,7 @@ public class HyperDrive extends JavaPlugin {
     private Connection databaseConnection;
     private List<String> databaseWarps;
 
-    private String serverVersion;
+    private String serverVersion, tableName;
     private boolean asyncChunkMethodExists;
     private int teleportationHandlerTaskId, autoSaveTaskId, crossServerTaskId;
 
@@ -76,6 +76,10 @@ public class HyperDrive extends JavaPlugin {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
         setServerVersion(getPluginInstance().getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
+        tableName = "create table if not exists warps (name varchar(100), location varchar(255), status varchar(100), creation_date varchar(100),"
+                + " icon_theme varchar(100), animation_set varchar(100), description varchar(255), commands varchar(255), owner varchar(100), player_list varchar(255), "
+                + "assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int, dislikes int, voters longtext, "
+                + "white_list_mode int, notify int, primary key (name))";
 
         // duplicates old configuration.
         File file = new File(getDataFolder(), "/config.yml");
@@ -506,10 +510,7 @@ public class HyperDrive extends JavaPlugin {
 
             statement = getDatabaseConnection().createStatement();
 
-            statement.executeUpdate("create table if not exists warps (name varchar(100), location varchar(255), status varchar(100), creation_date varchar(100),"
-                    + " icon_theme varchar(100), animation_set varchar(100), description varchar(255), commands varchar(255), owner varchar(100), player_list varchar(255), "
-                    + "assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int, dislikes int, voters longtext, "
-                    + "white_list_mode int, notify int, primary key (name))");
+            statement.executeUpdate(tableName);
 
             DatabaseMetaData md = getDatabaseConnection().getMetaData();
             ResultSet rs = md.getColumns(null, null, "warps", "notify");
@@ -608,12 +609,20 @@ public class HyperDrive extends JavaPlugin {
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
             warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
 
-            final String descriptionColor = yaml.getString(warpName + ".description-color"),
-                    colorToAppend = (descriptionColor != null && !descriptionColor.isEmpty()) ? (descriptionColor.contains("§") ? descriptionColor : ChatColor.valueOf(descriptionColor)).toString() : "";
+            String descriptionColor = "";
+            try {
+                descriptionColor = yaml.getString(warpName + ".description-color");
+                if (descriptionColor != null && !descriptionColor.isEmpty() && !descriptionColor.contains("§"))
+                    if (descriptionColor.contains("&"))
+                        descriptionColor = ChatColor.translateAlternateColorCodes('&', descriptionColor);
+                    else descriptionColor = ChatColor.valueOf(descriptionColor).toString();
+            } catch (Exception ignored) {}
+
             StringBuilder sb = new StringBuilder();
             List<String> description = yaml.getStringList(warpName + ".icon.description");
-            for (String line : description) sb.append(colorToAppend + line);
-            warp.setDescription(getManager().colorText(sb.toString().replace("'", "").replace("\"", "")));
+            for (String line : description)
+                sb.append(((descriptionColor == null || descriptionColor.isEmpty()) ? "" : descriptionColor) + (line + " "));
+            warp.setDescription(getManager().colorText(sb.toString().trim().replaceAll("\\s+", " ").replace("'", "").replace("\"", "")));
 
             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
             warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
@@ -641,17 +650,21 @@ public class HyperDrive extends JavaPlugin {
             warp.setAnimationSet(resultSet.getString("animation_set"));
 
 
-            String descriptionColor = null;
-
+            String descriptionColor = "";
             try {
                 descriptionColor = resultSet.getString("description_color");
+                if (descriptionColor != null && !descriptionColor.isEmpty() && !descriptionColor.contains("§"))
+                    if (descriptionColor.contains("&"))
+                        descriptionColor = ChatColor.translateAlternateColorCodes('&', descriptionColor);
+                    else descriptionColor = ChatColor.valueOf(descriptionColor).toString();
             } catch (SQLException ignored) {}
 
             String colorToAppend = (descriptionColor != null && !descriptionColor.isEmpty()) ? (descriptionColor.contains("§") ? descriptionColor : ChatColor.valueOf(descriptionColor)).toString() : "";
             StringBuilder sb = new StringBuilder();
             String[] description = resultSet.getString("description").split(" ");
-            for (String line : description) sb.append(colorToAppend + line);
-            warp.setDescription(getManager().colorText(sb.toString().replace("'", "").replace("\"", "")));
+            for (String line : description)
+                sb.append(((colorToAppend == null || colorToAppend.isEmpty()) ? "" : colorToAppend) + (line + " "));
+            warp.setDescription(getManager().colorText(sb.toString().trim().replaceAll("\\s+", " ").replace("'", "").replace("\"", "")));
 
 
             String commandsString = resultSet.getString("commands");
@@ -927,6 +940,7 @@ public class HyperDrive extends JavaPlugin {
         long startTime = System.currentTimeMillis();
         int loadedWarps = 0, failedToLoadWarps = 0;
 
+        boolean fixTables = false;
         try {
             Statement statement = getDatabaseConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from warps");
@@ -938,10 +952,15 @@ public class HyperDrive extends JavaPlugin {
                     try {
                         nameColor = resultSet.getString("name_color");
                         if (nameColor != null && !nameColor.isEmpty() && !nameColor.contains("§"))
-                            nameColor = ChatColor.valueOf(nameColor).toString();
+                            if (nameColor.contains("&"))
+                                nameColor = ChatColor.translateAlternateColorCodes('&', nameColor);
+                            else
+                                nameColor = ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")).toString();
+                        fixTables = true;
                     } catch (SQLException ignored) {}
 
-                    warpName = getManager().colorText(nameColor + warpName);
+                    warpName = (nameColor != null) ? (nameColor + getManager().colorText(warpName)) : getManager().colorText(warpName);
+                    System.out.println(warpName);
 
                     final String strippedName = ChatColor.stripColor(warpName);
                     if (strippedName.equalsIgnoreCase("") || strippedName.isEmpty()) continue;
@@ -983,6 +1002,23 @@ public class HyperDrive extends JavaPlugin {
         if (loadedWarps > 0 || failedToLoadWarps > 0)
             log(Level.INFO, loadedWarps + " " + ((loadedWarps == 1) ? "warp was" : "warps were") + " loaded and "
                     + failedToLoadWarps + " " + ((failedToLoadWarps == 1) ? "warp" : "warps") + " failed to load. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+
+        if (fixTables) {
+            try {
+                Statement statement = getDatabaseConnection().createStatement();
+                statement.executeUpdate("ALTER TABLE warps RENAME TO warps_old;");
+                statement.executeUpdate(tableName);
+
+                final String columnsSeperated = "name, location, status, creation_date, icon_theme, animation_set, description, "
+                        + "commands, owner, player_list, assistants, traffic, usage_price, enchanted_look, server_ip, likes, "
+                        + "dislikes, voters, white_list_mode, notify";
+
+                statement.executeUpdate("INSERT INTO warps(" + columnsSeperated + ") SELECT " + columnsSeperated + " FROM warps_old;");
+                statement.executeUpdate("DROP TABLE warps_old;");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void loadWarp(String warpName) {
