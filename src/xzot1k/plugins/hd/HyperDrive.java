@@ -947,7 +947,14 @@ public class HyperDrive extends JavaPlugin {
             while (resultSet.next()) {
                 try {
                     String warpName = resultSet.getString("name").replace("'", "").replace("\"", ""), nameColor = null;
-                    if (warpName == null || warpName.isEmpty()) continue;
+                    if (warpName.isEmpty()) {
+                        try {
+                            Statement deleteStatement = databaseConnection.createStatement();
+                            deleteStatement.executeUpdate("delete from warps where name = '" + warpName + "'");
+                            deleteStatement.close();
+                        } catch (SQLException ignored) {}
+                        continue;
+                    }
 
                     try {
                         nameColor = resultSet.getString("name_color");
@@ -957,11 +964,15 @@ public class HyperDrive extends JavaPlugin {
                             else
                                 nameColor = ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")).toString();
                         fixTables = true;
+
+                        if (nameColor != null && !nameColor.isEmpty()) {
+                            Statement deleteStatement = databaseConnection.createStatement();
+                            deleteStatement.executeUpdate("delete from warps where name = '" + warpName + "'");
+                            deleteStatement.close();
+                        }
                     } catch (SQLException ignored) {}
 
                     warpName = (nameColor != null) ? (nameColor + getManager().colorText(warpName)) : getManager().colorText(warpName);
-                    System.out.println(warpName);
-
                     final String strippedName = ChatColor.stripColor(warpName);
                     if (strippedName.equalsIgnoreCase("") || strippedName.isEmpty()) continue;
 
@@ -1009,12 +1020,13 @@ public class HyperDrive extends JavaPlugin {
                 statement.executeUpdate("ALTER TABLE warps RENAME TO warps_old;");
                 statement.executeUpdate(tableName);
 
-                final String columnsSeperated = "name, location, status, creation_date, icon_theme, animation_set, description, "
+                final String columnsSeparated = "name, location, status, creation_date, icon_theme, animation_set, description, "
                         + "commands, owner, player_list, assistants, traffic, usage_price, enchanted_look, server_ip, likes, "
                         + "dislikes, voters, white_list_mode, notify";
 
-                statement.executeUpdate("INSERT INTO warps(" + columnsSeperated + ") SELECT " + columnsSeperated + " FROM warps_old;");
+                statement.executeUpdate("INSERT INTO warps(" + columnsSeparated + ") SELECT " + columnsSeparated + " FROM warps_old;");
                 statement.executeUpdate("DROP TABLE warps_old;");
+                statement.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
