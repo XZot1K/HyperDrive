@@ -1140,9 +1140,6 @@ public class Listeners implements Listener {
                     }
 
                     final double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
-                    HashMap<Integer, List<Warp>> warpPageMap;
-                    int currentPage;
-                    List<Warp> pageWarpList;
                     switch (action) {
                         case "dispatch-command-console":
                             if (!value.equalsIgnoreCase("")) {
@@ -1190,41 +1187,40 @@ public class Listeners implements Listener {
                         case "refresh":
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
 
-                            getPluginInstance().getManager().getPaging().resetWarpPages(player);
-                            String currentStatus = getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", e.getInventory());
-                            warpPageMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", currentStatus);
-                            getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), warpPageMap);
-                            currentPage = getPluginInstance().getManager().getPaging().getCurrentPage(player);
-                            pageWarpList = new ArrayList<>();
-                            if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(currentPage))
-                                pageWarpList = new ArrayList<>(warpPageMap.get(currentPage));
+                            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                                getPluginInstance().getManager().getPaging().resetWarpPages(player);
+                                String currentStatus = getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", e.getInventory());
+                                HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", currentStatus);
+                                getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
+                                int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
+                                List<Warp> pageList = new ArrayList<>();
+                                if (wpMap != null && !wpMap.isEmpty() && wpMap.containsKey(page))
+                                    pageList = new ArrayList<>(wpMap.get(page));
 
-                            final List<Warp> finalPageWarpList1 = pageWarpList;
-                            if (!finalPageWarpList1.isEmpty())
-                                //getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-                                for (int i = -1; ++i < warpSlots.size(); ) {
-                                    int warpSlot = warpSlots.get(i);
-                                    e.getInventory().setItem(warpSlot, null);
+                                if (!pageList.isEmpty())
+                                    for (int i = -1; ++i < warpSlots.size(); ) {
+                                        int warpSlot = warpSlots.get(i);
+                                        e.getInventory().setItem(warpSlot, null);
 
-                                    if (finalPageWarpList1.size() >= 1) {
-                                        Warp warp = finalPageWarpList1.get(0);
-                                        final ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
-                                        if (warpIcon != null) e.getInventory().setItem(warpSlots.get(i), warpIcon);
-                                        finalPageWarpList1.remove(warp);
+                                        if (pageList.size() >= 1) {
+                                            Warp warp = pageList.get(0);
+                                            final ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
+                                            if (warpIcon != null) e.getInventory().setItem(warpSlots.get(i), warpIcon);
+                                            pageList.remove(warp);
+                                        }
                                     }
-                                }
-                                // });
-                            else getPluginInstance().getManager().sendCustomMessage("refresh-fail", player);
+                                else getPluginInstance().getManager().sendCustomMessage("refresh-fail", player);
+                            });
 
                             break;
                         case "next-page":
                             if (getPluginInstance().getManager().getPaging().hasNextWarpPage(player) && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                nextPage(player, e.getInventory(), "list-menu-section", warpSlots);
+                                nextPage(player, e.getInventory(), warpSlots);
                             else getPluginInstance().getManager().sendCustomMessage("no-next-page", player);
                             break;
                         case "previous-page":
                             if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player) && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                previousPage(player, e.getInventory(), "list-menu-section", warpSlots);
+                                previousPage(player, e.getInventory(), warpSlots);
                             else getPluginInstance().getManager().sendCustomMessage("no-previous-page", player);
                             break;
                         case "filter-switch":
@@ -2173,10 +2169,10 @@ public class Listeners implements Listener {
 
     // helper methods
 
-    private void nextPage(Player player, Inventory inventory, String menuPath, List<Integer> warpSlots) {
+    private void nextPage(Player player, Inventory inventory, List<Integer> warpSlots) {
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-            HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, menuPath,
-                    getPluginInstance().getManager().getCurrentFilterStatus(menuPath, inventory));
+            HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
+                    getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", inventory));
             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
             List<Warp> pageList = new ArrayList<>();
@@ -2199,10 +2195,10 @@ public class Listeners implements Listener {
         });
     }
 
-    private void previousPage(Player player, Inventory inventory, String menuPath, List<Integer> warpSlots) {
+    private void previousPage(Player player, Inventory inventory, List<Integer> warpSlots) {
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-            HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, menuPath,
-                    getPluginInstance().getManager().getCurrentFilterStatus(menuPath, inventory));
+            HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
+                    getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", inventory));
             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
             List<Warp> pageList = new ArrayList<>();
