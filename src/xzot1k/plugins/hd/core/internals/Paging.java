@@ -18,6 +18,7 @@ public class Paging {
     private HashMap<UUID, HashMap<Integer, List<Warp>>> warpPageMap;
     private HashMap<UUID, Integer> currentPageMap;
     private Random random;
+    final String ownedFormat, publicFormat, privateFormat, adminFormat, featuredFormat;
 
     public Paging(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
@@ -26,6 +27,12 @@ public class Paging {
         setPlayerSelectionPageMap(new HashMap<>());
         setPlayerSelectedMap(new HashMap<>());
         setRandom(new Random());
+
+        ownedFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format");
+        publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format");
+        privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format");
+        adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format");
+        featuredFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format");
     }
 
     public int getCurrentPage(OfflinePlayer player) {
@@ -204,12 +211,6 @@ public class Paging {
     }
 
     public HashMap<Integer, List<Warp>> getWarpPages(OfflinePlayer player, String menuPath, String status) {
-        String ownedFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format"),
-                publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
-                privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
-                adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format"),
-                featuredFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format");
-
         switch (status.toLowerCase()) {
             case "public":
                 status = publicFormat;
@@ -235,8 +236,7 @@ public class Paging {
         HashMap<Integer, List<Warp>> finalMap = new HashMap<>();
         int currentPage = 1, trafficThreshold = getPluginInstance().getMenusConfig().getInt("list-menu-section.traffic-threshold");
         List<Warp> currentWarpList = new ArrayList<>();
-        for (int i = -1; ++i < warpList.size(); ) {
-            Warp warp = warpList.get(i);
+        for (Warp warp : warpList) {
             if (warp != null && status != null) {
                 if (status.equalsIgnoreCase(featuredFormat)) {
                     if (warp.getTraffic() >= trafficThreshold)
