@@ -1199,13 +1199,12 @@ public class Listeners implements Listener {
 
                                 if (!pageList.isEmpty())
                                     for (int i = -1; ++i < warpSlots.size(); ) {
-                                        int warpSlot = warpSlots.get(i);
-                                        e.getInventory().setItem(warpSlot, null);
-
+                                        e.getInventory().setItem(warpSlots.get(i), null);
                                         if (pageList.size() >= 1) {
                                             Warp warp = pageList.get(0);
-                                            final ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
-                                            if (warpIcon != null) e.getInventory().setItem(warpSlots.get(i), warpIcon);
+                                            ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
+                                            if (warpIcon != null)
+                                                e.getInventory().setItem(warpSlots.get(i), warpIcon);
                                             pageList.remove(warp);
                                         }
                                     }
@@ -1257,18 +1256,17 @@ public class Listeners implements Listener {
                                 else
                                     nextStatus = EnumContainer.Status.PUBLIC.name();
 
-                                ItemStack filterItem = getPluginInstance().getManager().buildItemFromId(player,
-                                        Objects.requireNonNull(nextStatus), "list-menu-section", itemId);
-                                e.getInventory().setItem(e.getSlot(), filterItem);
-
-                                for (int i = -1; ++i < warpSlots.size(); ) {
-                                    int warpSlot = warpSlots.get(i);
-                                    e.getInventory().setItem(warpSlot, null);
-                                }
-
-                                getPluginInstance().getManager().getPaging().resetWarpPages(player);
-
                                 getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                                    ItemStack filterItem = getPluginInstance().getManager().buildItemFromId(player,
+                                            Objects.requireNonNull(nextStatus), "list-menu-section", itemId);
+                                    e.getInventory().setItem(e.getSlot(), filterItem);
+
+                                    for (int i = -1; ++i < warpSlots.size(); ) {
+                                        int warpSlot = warpSlots.get(i);
+                                        e.getInventory().setItem(warpSlot, null);
+                                    }
+
+                                    getPluginInstance().getManager().getPaging().resetWarpPages(player);
                                     HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", nextStatus);
                                     getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
                                     int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
@@ -1276,20 +1274,17 @@ public class Listeners implements Listener {
                                     if (wpMap != null && !wpMap.isEmpty() && wpMap.containsKey(page))
                                         wList = new ArrayList<>(wpMap.get(page));
 
-                                    if (!wList.isEmpty()) {
-                                        int increment = 0;
-                                        for (Warp warp : wList) {
-                                            if ((increment + 1) <= warpSlots.size()) {
-                                                final ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
+                                    if (!wList.isEmpty())
+                                        for (int i = -1; ++i < warpSlots.size(); ) {
+                                            e.getInventory().setItem(warpSlots.get(i), null);
+                                            if (wList.size() >= 1) {
+                                                Warp warp = wList.get(0);
+                                                ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
                                                 if (warpIcon != null)
-                                                    e.getInventory().setItem(warpSlots.get(increment), warpIcon);
-                                                increment++;
-                                                continue;
+                                                    e.getInventory().setItem(warpSlots.get(i), warpIcon);
+                                                wList.remove(warp);
                                             }
-
-                                            break;
                                         }
-                                    }
                                 });
                             }
 
@@ -2206,7 +2201,7 @@ public class Listeners implements Listener {
                 pageList = new ArrayList<>(wpMap.get(page - 1));
 
             if (!pageList.isEmpty()) {
-                getPluginInstance().getManager().getPaging().updateCurrentWarpPage(player, true);
+                getPluginInstance().getManager().getPaging().updateCurrentWarpPage(player, false);
                 for (int i = -1; ++i < warpSlots.size(); ) {
                     inventory.setItem(warpSlots.get(i), null);
                     if (pageList.size() >= 1) {
