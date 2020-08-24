@@ -12,6 +12,7 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -26,6 +27,7 @@ import xzot1k.plugins.hd.core.internals.Metrics;
 import xzot1k.plugins.hd.core.internals.cmds.MainCommands;
 import xzot1k.plugins.hd.core.internals.cmds.TeleportationCommands;
 import xzot1k.plugins.hd.core.internals.hooks.HookChecker;
+import xzot1k.plugins.hd.core.internals.hooks.PapiHook;
 import xzot1k.plugins.hd.core.internals.hooks.VaultHandler;
 import xzot1k.plugins.hd.core.internals.hooks.WorldGuardHandler;
 import xzot1k.plugins.hd.core.internals.tabs.WarpTabComplete;
@@ -60,6 +62,7 @@ public class HyperDrive extends JavaPlugin {
     private VaultHandler vaultHandler;
     private WorldGuardHandler worldGuardHandler;
     private HookChecker hookChecker;
+    private PapiHook papiHook;
 
     @Override
     public void onLoad() {
@@ -179,6 +182,12 @@ public class HyperDrive extends JavaPlugin {
         // enables metrics and does logging information including update checker.
         new Metrics(getPluginInstance());
         log(Level.INFO, "Everything is set and ready to go! (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+
+        Plugin papi = getServer().getPluginManager().getPlugin("PlaceholderAPI");
+        if (papi != null) {
+            setPapiHook(new PapiHook(this));
+            getPapiHook().register();
+        }
 
         if (isOutdated()) log(Level.INFO, "HEY YOU! There seems to be a new version out (" + getLatestVersion() + ")!");
         else log(Level.INFO, "Everything seems to be up to date!");
@@ -483,6 +492,18 @@ public class HyperDrive extends JavaPlugin {
     }
 
     // core methods
+
+    /**
+     * Replaces PlaceholderAPI values in the text and returns it if possible.
+     *
+     * @param player The player to use.
+     * @param text   The text to replace in.
+     * @return The final result.
+     */
+    public String replacePapi(Player player, String text) {
+        return (getPapiHook() != null) ? getPapiHook().replace(player, text) : text;
+    }
+
     private void setupDatabase(boolean useMySQL) {
         if (getDatabaseConnection() != null) return;
 
@@ -858,7 +879,7 @@ public class HyperDrive extends JavaPlugin {
                     Statement statement = getDatabaseConnection().createStatement();
                     ResultSet resultSet = statement.executeQuery("select * from warps");
                     while (resultSet.next()) {
-                        String warpName = resultSet.getString(1).toLowerCase();
+                        String warpName = resultSet.getString("name");
                         if (!getDatabaseWarps().contains(warpName)) getDatabaseWarps().add(warpName);
                     }
 
@@ -867,7 +888,7 @@ public class HyperDrive extends JavaPlugin {
 
                     List<Warp> warps = new ArrayList<>(getManager().getWarpMap().values());
                     for (Warp warp : warps)
-                        if (!getDatabaseWarps().contains(warp.getWarpName().toLowerCase()))
+                        if (!getDatabaseWarps().contains(warp.getWarpName()))
                             warp.unRegister();
 
                     for (String warpName : getDatabaseWarps())
@@ -1040,8 +1061,7 @@ public class HyperDrive extends JavaPlugin {
             Statement statement = getDatabaseConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from warps");
             while (resultSet.next()) {
-                String ipAddress = resultSet.getString(17).replace("localhost", "127.0.0.1"),
-                        locationString = resultSet.getString(2);
+                String ipAddress = resultSet.getString("server_ip"), locationString = resultSet.getString("location");
                 if (locationString.contains(",")) {
                     String[] locationStringArgs = locationString.split(",");
 
@@ -1074,7 +1094,7 @@ public class HyperDrive extends JavaPlugin {
     public boolean doesWarpExistInDatabase(String warpName) {
         if (!getDatabaseWarps().isEmpty())
             for (String name : getDatabaseWarps())
-                if (net.md_5.bungee.api.ChatColor.stripColor(name).equalsIgnoreCase(warpName))
+                if (net.md_5.bungee.api.ChatColor.stripColor(name).equalsIgnoreCase(net.md_5.bungee.api.ChatColor.stripColor(warpName)))
                     return true;
         return false;
     }
@@ -1314,5 +1334,13 @@ public class HyperDrive extends JavaPlugin {
 
     private void setHookChecker(HookChecker hookChecker) {
         this.hookChecker = hookChecker;
+    }
+
+    public PapiHook getPapiHook() {
+        return papiHook;
+    }
+
+    private void setPapiHook(PapiHook papiHook) {
+        this.papiHook = papiHook;
     }
 }

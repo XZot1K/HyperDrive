@@ -263,6 +263,7 @@ public class Manager {
     public void sendCustomMessage(String path, Player player, String... placeholders) {
         String message = getPluginInstance().getLangConfig().getString(path);
         if (message != null && !message.equalsIgnoreCase("")) {
+            message = getPluginInstance().replacePapi(player, message);
 
             for (String phLine : placeholders) {
                 if (!phLine.contains(":")) continue;

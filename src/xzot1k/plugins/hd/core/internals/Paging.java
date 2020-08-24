@@ -236,7 +236,7 @@ public class Paging {
         HashMap<Integer, List<Warp>> finalMap = new HashMap<>();
         int currentPage = 1, trafficThreshold = getPluginInstance().getMenusConfig().getInt("list-menu-section.traffic-threshold");
         List<Warp> currentWarpList = new ArrayList<>();
-        for (Warp warp : warpList) {
+        for (Warp warp : getPluginInstance().getManager().getWarpMap().values()) {
             if (warp != null && status != null) {
                 if (status.equalsIgnoreCase(featuredFormat)) {
                     if (warp.getTraffic() >= trafficThreshold)

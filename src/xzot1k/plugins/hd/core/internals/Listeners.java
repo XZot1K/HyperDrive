@@ -27,6 +27,8 @@ import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
+import xzot1k.plugins.hd.api.events.RandomTeleportEvent;
+import xzot1k.plugins.hd.api.events.WarpEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.objects.Destination;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
@@ -883,6 +885,16 @@ public class Listeners implements Listener {
         getPluginInstance().getTeleportationCommands().getToggledPlayers().remove(e.getPlayer().getUniqueId());
         getPluginInstance().getTeleportationCommands().getTpaHereSentPlayers().remove(e.getPlayer().getUniqueId());
         getPluginInstance().getMainCommands().clearConfirmation(e.getPlayer());
+    }
+
+    @EventHandler
+    public void onRandomTeleport(RandomTeleportEvent e) {
+        checkEssentials(e.getPlayer());
+    }
+
+    @EventHandler
+    public void onWarp(WarpEvent e) {
+        checkEssentials(e.getPlayer());
     }
 
     // methods
@@ -2163,6 +2175,12 @@ public class Listeners implements Listener {
     }
 
     // helper methods
+    private void checkEssentials(Player player) {
+        if (getPluginInstance().getHookChecker().getEssentialsPlugin() != null) {
+            com.earth2me.essentials.User user = ((com.earth2me.essentials.Essentials) getPluginInstance().getHookChecker().getEssentialsPlugin()).getUser(player);
+            if (user != null) user.setLastLocation();
+        }
+    }
 
     private void nextPage(Player player, Inventory inventory, List<Integer> warpSlots) {
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {

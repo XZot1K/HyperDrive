@@ -232,7 +232,7 @@ public class Warp implements Comparable<Warp> {
                         + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', '" + playerList.toString() + "', '" + assistants.toString() + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
-                        + ", '" + getServerIPAddress().replace("localhost", "127.0.0.1") + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString()
+                        + ", '" + getServerIPAddress() + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString()
                         + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ");";
             else
                 syntax = "INSERT INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, traffic, usage_price, "
@@ -240,13 +240,13 @@ public class Warp implements Comparable<Warp> {
                         + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', '" + playerList.toString() + "', '" + assistants.toString() + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
-                        + ", '" + getServerIPAddress().replace("localhost", "127.0.0.1") + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString()
+                        + ", '" + getServerIPAddress() + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString()
                         + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ") ON DUPLICATE KEY UPDATE name = '" + getWarpName() + "',"
                         + " location = '" + locationString + "', status = '" + getStatus().name() + "', creation_date = '" + getCreationDate() + "', "
                         + "icon_theme = '" + getIconTheme() + "', animation_set = '" + getAnimationSet() + "', description = '" + getDescription().replace("§", "").replace("'", "").replace("\"", "")
                         + "', commands = '" + commands.toString().replace("'", "").replace("\"", "") + "', owner = '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', player_list = '" + playerList.toString() + "', assistants = '" + assistants.toString() + "', traffic = '" + getTraffic() + "', usage_price = '" + getUsagePrice() + "',"
-                        + " enchanted_look = '" + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress().replace("localhost", "127.0.0.1") + "',"
+                        + " enchanted_look = '" + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress() + "',"
                         + " likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters.toString() + "', white_list_mode = '" + (isWhiteListMode() ? 1 : 0) + "', notify = '" + (canNotify() ? 1 : 0) + "';";
 
             PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement(syntax);

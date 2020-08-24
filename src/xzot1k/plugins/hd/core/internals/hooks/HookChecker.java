@@ -28,8 +28,8 @@ import xzot1k.plugins.hd.HyperDrive;
 public class HookChecker {
 
     private HyperDrive pluginInstance;
-    private boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, aSkyBlockInstalled, residenceInstalled,
-            prismaInstalled;
+    private boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, aSkyBlockInstalled, residenceInstalled, prismaInstalled;
+    private Plugin essentialsPlugin;
 
     public HookChecker(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
@@ -43,6 +43,10 @@ public class HookChecker {
         setTownyInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Towny") != null);
         setResidenceInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Residence") != null);
         setPrismaInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Prisma") != null);
+
+        setEssentialsPlugin(getPluginInstance().getServer().getPluginManager().getPlugin("Essentials"));
+        if (getEssentialsPlugin() == null)
+            setEssentialsPlugin(getPluginInstance().getServer().getPluginManager().getPlugin("EssentialsEx"));
     }
 
     /**
@@ -164,5 +168,13 @@ public class HookChecker {
 
     private void setPrismaInstalled(boolean prismaInstalled) {
         this.prismaInstalled = prismaInstalled;
+    }
+
+    public Plugin getEssentialsPlugin() {
+        return essentialsPlugin;
+    }
+
+    private void setEssentialsPlugin(Plugin essentialsPlugin) {
+        this.essentialsPlugin = essentialsPlugin;
     }
 }
