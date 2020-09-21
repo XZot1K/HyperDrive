@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2020. All rights reserved.
- */
-
 function show(type) {
     count = 0;
     for (var key in methods) {
