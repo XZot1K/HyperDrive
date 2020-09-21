@@ -73,10 +73,8 @@ public class MainCommands implements CommandExecutor {
                         if (args[0].equalsIgnoreCase("help")) {
                             if (commandSender.hasPermission("hyperdrive.admin.help"))
                                 sendAdminHelpPage(commandSender, !getPluginInstance().getManager().isNotNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
-                            else {
-                                commandSender.sendMessage(getPluginInstance().getManager().colorText(
-                                        getPluginInstance().getLangConfig().getString("no-permission")));
-                            }
+                            else
+                                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
                             return true;
                         }
 
@@ -740,7 +738,7 @@ public class MainCommands implements CommandExecutor {
             warpName = warpName.replace(filterString, "");
         }
 
-        warpName = getPluginInstance().getManager().colorText(warpName);
+        warpName = getPluginInstance().getManager().colorText(ChatColor.WHITE + warpName);
         final String strippedName = ChatColor.stripColor(warpName);
         if (strippedName.equalsIgnoreCase("") || strippedName.isEmpty()) {
             getPluginInstance().getManager().sendCustomMessage("invalid-warp-name", player);

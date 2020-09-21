@@ -70,8 +70,7 @@ public class HyperDrive extends JavaPlugin {
         try {
             Plugin worldGuard = getServer().getPluginManager().getPlugin("WorldGuard");
             if (worldGuard != null) setWorldGuardHandler(new WorldGuardHandler());
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -111,15 +110,15 @@ public class HyperDrive extends JavaPlugin {
         if (getConfig().getBoolean("general-section.use-vault")) setVaultHandler(new VaultHandler(getPluginInstance()));
         setHookChecker(new HookChecker(this));
 
-        File warpsFile = new File(getDataFolder(), "/warps.db"),
-                backupFile = new File(getDataFolder(), "/warps-backup.db");
-        if (warpsFile.exists() && !backupFile.exists()) {
+        File warpsFile = new File(getDataFolder(), "/warps.db"), backupFile = new File(getDataFolder(), "/warps-backup.db");
+        if (warpsFile.exists()) {
+            if (backupFile.exists()) backupFile.delete();
+
             try {
                 copy(warpsFile, backupFile);
             } catch (IOException e) {
                 e.printStackTrace();
-                log(Level.WARNING, "Unable to backup the warp file as it may not exist. (Took "
-                        + (System.currentTimeMillis() - startTime) + "ms)");
+                log(Level.WARNING, "Unable to backup the warp file as it may not exist. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
             }
         }
 
@@ -134,10 +133,10 @@ public class HyperDrive extends JavaPlugin {
             return;
         }
 
-        if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
-            getServer().getMessenger().registerOutgoingPluginChannel(getPluginInstance(), "BungeeCord");
-            setBungeeListener(new BungeeListener(getPluginInstance()));
-            getServer().getMessenger().registerIncomingPluginChannel(getPluginInstance(), "BungeeCord", getBungeeListener());
+        if (getConfig().getBoolean("mysql-connection.use-mysql")) {
+            getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+            setBungeeListener(new BungeeListener(this));
+            getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", getBungeeListener());
         }
 
         // sets up the manager class including all API methods.
@@ -157,9 +156,8 @@ public class HyperDrive extends JavaPlugin {
         }
 
         setTeleportationCommands(new TeleportationCommands(this));
-        String[] teleportCommandNames = {"teleport", "teleporthere", "teleportoverride", "teleportoverridehere",
-                "teleportposition", "teleportask", "teleportaccept", "teleportdeny", "teleporttoggle", "back",
-                "teleportaskhere", "crossserver", "spawn", "randomteleport", "randomteleportadmin", "grouprandomteleport"};
+        String[] teleportCommandNames = {"teleport", "teleporthere", "teleportoverride", "teleportoverridehere", "teleportposition", "teleportask", "teleportaccept",
+                "teleportdeny", "teleporttoggle", "back", "teleportaskhere", "crossserver", "spawn", "randomteleport", "randomteleportadmin", "grouprandomteleport"};
         for (String cmd : teleportCommandNames) {
             PluginCommand command = getCommand(cmd);
             if (command != null) {
@@ -176,11 +174,32 @@ public class HyperDrive extends JavaPlugin {
         loadWarps();
         startEssentialsConverter();
 
+        if (getConfig().getBoolean("general-section.warp-cleaner")) {
+            final List<Warp> warpList = new ArrayList<>(getManager().getWarpMap().values());
+            getServer().getScheduler().runTaskAsynchronously(this, () -> {
+                for (Warp warp : warpList) {
+                    if (getManager().getWarpMap().containsKey(warp.getWarpName()))
+                        try {
+                            if (warp.getOwner() == null) continue;
+                            OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(warp.getOwner());
+                            final long lastTimeSeen = (System.currentTimeMillis() - offlinePlayer.getLastPlayed()) * 1000;
+                            if (lastTimeSeen >= getConfig().getInt("general-section.warp-clean-time")) {
+                                warp.unRegister();
+                                warp.deleteSaved(false);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            log(Level.WARNING, "There was an issue deleting the warp '" + warp.getWarpName() + "' due to inactivity.");
+                        }
+                }
+            });
+        }
+
         // starts the runnables/tasks.
         startTasks();
 
         // enables metrics and does logging information including update checker.
-        new Metrics(getPluginInstance());
+        new Metrics(this);
         log(Level.INFO, "Everything is set and ready to go! (Took " + (System.currentTimeMillis() - startTime) + "ms)");
 
         Plugin papi = getServer().getPluginManager().getPlugin("PlaceholderAPI");
@@ -213,15 +232,11 @@ public class HyperDrive extends JavaPlugin {
     // update checker methods
     private boolean isOutdated() {
         try {
-            HttpURLConnection c = (HttpURLConnection) new URL(
-                    "https://api.spigotmc.org/legacy/update.php?resource=17184").openConnection();
+            HttpURLConnection c = (HttpURLConnection) new URL("https://api.spigotmc.org/legacy/update.php?resource=17184").openConnection();
             c.setRequestMethod("GET");
-            String oldVersion = getDescription().getVersion(),
-                    newVersion = new BufferedReader(new InputStreamReader(c.getInputStream())).readLine();
-            if (!newVersion.equalsIgnoreCase(oldVersion))
-                return true;
-        } catch (Exception ignored) {
-        }
+            String oldVersion = getDescription().getVersion(), newVersion = new BufferedReader(new InputStreamReader(c.getInputStream())).readLine();
+            if (!newVersion.equalsIgnoreCase(oldVersion)) return true;
+        } catch (Exception ignored) {}
         return false;
     }
 
@@ -341,7 +356,6 @@ public class HyperDrive extends JavaPlugin {
                 if (keyValue == null || keyValue.equalsIgnoreCase("")) {
                     yaml.set(key, "ARROW");
                     updateCount++;
-
                 }
 
                 if (keyValue != null)
@@ -530,18 +544,12 @@ public class HyperDrive extends JavaPlugin {
             }
 
             statement = getDatabaseConnection().createStatement();
-
             statement.executeUpdate(tableName);
 
             DatabaseMetaData md = getDatabaseConnection().getMetaData();
             ResultSet rs = md.getColumns(null, null, "warps", "notify");
             if (!rs.next()) statement.executeUpdate("alter table warps add column notify int");
             rs.close();
-
-            /*
-                    statement.executeUpdate("alter table warps drop column " + columnArgs[0] + "");
-                    statement.executeUpdate("alter table warps add column " + columnArgs[0] + " " + columnArgs[1]);
-             */
 
             if (useMySQL) {
                 statement.executeUpdate("create table if not exists transfer (player_uuid varchar(100),location varchar(255), server_ip varchar(255),primary key (player_uuid))");
@@ -996,6 +1004,7 @@ public class HyperDrive extends JavaPlugin {
                     warpName = (nameColor != null) ? (nameColor + getManager().colorText(warpName)) : getManager().colorText(warpName);
                     final String strippedName = ChatColor.stripColor(warpName);
                     if (strippedName.equalsIgnoreCase("") || strippedName.isEmpty()) continue;
+                    if (!warpName.contains("§")) warpName = ("§f" + warpName);
 
                     String ipAddress = resultSet.getString("server_ip").replace("localhost", "127.0.0.1"),
                             locationString = resultSet.getString("location");

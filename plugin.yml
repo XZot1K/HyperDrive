@@ -1,75 +1,75 @@
 name: HyperDrive
-version: 5.4.3
+version: 5.4.4
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
 description: A high class warp plugin allowing you and your players to warp through space and time with high control.
 load: POSTWORLD
-softdepend: [Vault, WorldGuard, Factions, ASkyBlock, Towny, GriefPrevention, Residence, MultiWorld, Multiverse-Core, Prisma, PlaceholderAPI]
+softdepend: [ Vault, WorldGuard, Factions, ASkyBlock, Towny, GriefPrevention, Residence, MultiWorld, Multiverse-Core, Prisma, PlaceholderAPI ]
 commands:
   hyperdrive:
     default: op
   warps:
     default: op
     description: Opens the warp list menu.
-    aliases: [warp]
+    aliases: [ warp ]
 
   # REMOVE THE COMMANDS BELOW TO DISABLE STANDALONE TELEPORTATION COMMANDS
   randomteleport:
     default: op
     description: The tradition random teleportation command.
-    aliases: [rtp, randomtp, rteleport]
+    aliases: [ rtp, randomtp, rteleport ]
   randomteleportadmin:
     default: op
     description: The tradition random teleportation command (bypasses limitations).
-    aliases: [rtpa, rtpadmin, randomtpadmin, rteleportadmin]
+    aliases: [ rtpa, rtpadmin, randomtpadmin, rteleportadmin ]
   grouprandomteleport:
     default: op
     description: Begins the group random teleportation process.
-    aliases: [grtp, grouprtp, grandomtp, grteleport, grouprandomtp, grouprteleport]
+    aliases: [ grtp, grouprtp, grandomtp, grteleport, grouprandomtp, grouprteleport ]
   spawn:
     default: op
     description: The traditional spawn command.
   teleport:
     default: op
     description: The basic teleportation command.
-    aliases: [tp]
+    aliases: [ tp ]
   teleporthere:
     default: op
     description: Teleport a player to the sender location.
-    aliases: [tphere]
+    aliases: [ tphere ]
   teleportoverride:
     default: op
     description: Teleport to a player unnoiticed, ignoring TP toggled players.
-    aliases: [tpo]
+    aliases: [ tpo ]
   teleportoverridehere:
     default: op
     description: Teleport a player to the sender location unoticed, ignoring TP toggled players.
-    aliases: [toh, tpohere]
+    aliases: [ toh, tpohere ]
   teleportposition:
     default: op
     description: Teleport the send or the defined player to the defined coordinates.
-    aliases: [tppos]
+    aliases: [ tppos ]
   teleportaskhere:
     default: op
     description: Request the player to teleport to the sender.
-    aliases: [tpahere]
+    aliases: [ tpahere ]
   teleportask:
     default: op
     description: Request to teleport to a player.
-    aliases: [tpa, tpask]
+    aliases: [ tpa, tpask ]
   teleportaccept:
     default: op
     description: Accept a teleport request from a player.
-    aliases: [tpaccept]
+    aliases: [ tpaccept ]
   teleportdeny:
     default: op
     description: Deny a teleport request from a player.
-    aliases: [tpdeny]
+    aliases: [ tpdeny ]
   teleporttoggle:
     default: op
     description: Disable standalone teleportation from effecting the sender, except override commands.
-    aliases: [tt, tptoggle]
+    aliases: [ tt, tptoggle ]
   back:
     description: Returns the sender to the last teleported location.
     default: op

@@ -23,6 +23,10 @@ general-section:
   auto-save-log: true
   # This is the interval of the warp auto-save in seconds.
   auto-save-interval: 900
+  # Whether or not warps will be cleaned based on inactivity.
+  warp-cleaner: false
+  # The time a player must have not logged in or been seen in seconds before their warp is removed.
+  warp-clean-time: 604800
   # If this is enabled, players will be forcefully sent to spawn on join (First join spawn will be skipped if invalid).
   force-spawn: true
   # If this is enabled, players will be forced back to spawn on death.

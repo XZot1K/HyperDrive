@@ -708,7 +708,7 @@ public class TeleportationCommands implements CommandExecutor {
             if (message != null && !message.isEmpty())
                 commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{player}", enteredPlayer.getName())));
         }
-        getPluginInstance().getManager().sendCustomMessage("teleport-last-location", enteredPlayer);
+        getPluginInstance().getManager().sendCustomMessage("teleport-last-location", enteredPlayer, "{duration}:0");
     }
 
     private void runBack(CommandSender commandSender) {
@@ -738,11 +738,8 @@ public class TeleportationCommands implements CommandExecutor {
 
         int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "tp", new SerializableLocation(lastLocation).toString(), duration);
-
-        player.setVelocity(new Vector(0, 0, 0));
-        player.teleport(lastLocation);
         getPluginInstance().getTeleportationCommands().updateLastLocation(player, lastLocation);
-        getPluginInstance().getManager().sendCustomMessage("teleport-last-location", player);
+        getPluginInstance().getManager().sendCustomMessage("teleport-last-location", player, "{duration}:" + duration);
     }
 
     private void runTeleportToggle(CommandSender commandSender) {
@@ -1140,8 +1137,8 @@ public class TeleportationCommands implements CommandExecutor {
 
         String message = getPluginInstance().getLangConfig().getString("teleported-pos");
         if (message != null && !message.isEmpty())
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}", player.getWorld().getName())
-                    .replace("{x}", xEntry).replace("{y}", yEntry).replace("{z}", zEntry)));
+            commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}:", player.getWorld().getName())
+                    .replace("{x}:", xEntry).replace("{y}:", yEntry).replace("{z}:", zEntry)));
     }
 
     private void runTeleportPosCommand(CommandSender commandSender, String xEntry, String yEntry, String zEntry, String worldName) {
@@ -1190,8 +1187,8 @@ public class TeleportationCommands implements CommandExecutor {
 
         String message = getPluginInstance().getLangConfig().getString("teleported-pos");
         if (message != null && !message.isEmpty())
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}", player.getWorld().getName())
-                    .replace("{x}", xEntry).replace("{y}", yEntry).replace("{z}", zEntry)));
+            commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}:", player.getWorld().getName())
+                    .replace("{x}:", xEntry).replace("{y}:", yEntry).replace("{z}:", zEntry)));
     }
 
     private void runTeleportPosCommand(CommandSender commandSender, String playerName, String xEntry, String yEntry, String zEntry, String worldName) {
@@ -1265,7 +1262,8 @@ public class TeleportationCommands implements CommandExecutor {
             if (message != null && !message.isEmpty())
                 commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{player}", enteredPlayer.getName())));
         }
-        getPluginInstance().getManager().sendCustomMessage("teleported-pos", enteredPlayer, "{world}" + world.getName(), "{x}" + xEntry, "{y}" + yEntry, "{z}" + zEntry);
+        getPluginInstance().getManager().sendCustomMessage("teleported-pos", enteredPlayer, "{world}:" + world.getName(),
+                "{x}:" + xEntry, "{y}:" + yEntry, "{z}:" + zEntry);
     }
 
     private void runTeleportOverrideHereCommand(CommandSender commandSender, String playerName) {

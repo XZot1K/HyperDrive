@@ -4,6 +4,7 @@
 
 package xzot1k.plugins.hd.core.internals;
 
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.OfflinePlayer;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
@@ -329,7 +330,7 @@ public class Paging {
         for (int i = border - 1; ++i <= high; ) {
             Warp warpAtHigh = warpList.get(i), warpAtLow = warpList.get(low);
 
-            final int comparedNames = warpAtHigh.getWarpName().compareTo(warpAtLow.getWarpName());
+            final int comparedNames = ChatColor.stripColor(warpAtHigh.getWarpName()).compareTo(ChatColor.stripColor(warpAtLow.getWarpName()));
             if (comparedNames > 0) continue;
             else if (comparedNames == 0)
                 if (sortAsFeatured) {

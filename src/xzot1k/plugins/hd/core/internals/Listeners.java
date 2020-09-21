@@ -1235,40 +1235,40 @@ public class Listeners implements Listener {
                             else getPluginInstance().getManager().sendCustomMessage("no-previous-page", player);
                             break;
                         case "filter-switch":
-                            String statusFromItem = getPluginInstance().getManager().getFilterStatusFromItem(e.getCurrentItem(), "list-menu-section", itemId);
-                            if (statusFromItem != null && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) {
-                                int index = -1;
-                                boolean isOwnFormat = statusFromItem.equalsIgnoreCase(ownFormat), isPublicFormat = statusFromItem.equalsIgnoreCase(publicFormat), isPrivateFormat = statusFromItem.equalsIgnoreCase(privateFormat),
-                                        isAdminFormat = statusFromItem.equalsIgnoreCase(adminFormat), isFeaturedFormat = statusFromItem.equalsIgnoreCase(adminFormat);
+                            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                                String statusFromItem = getPluginInstance().getManager().getFilterStatusFromItem(e.getCurrentItem(), "list-menu-section", itemId);
+                                if (statusFromItem != null && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) {
+                                    int index = -1;
+                                    boolean isOwnFormat = statusFromItem.equalsIgnoreCase(ownFormat), isPublicFormat = statusFromItem.equalsIgnoreCase(publicFormat), isPrivateFormat = statusFromItem.equalsIgnoreCase(privateFormat),
+                                            isAdminFormat = statusFromItem.equalsIgnoreCase(adminFormat), isFeaturedFormat = statusFromItem.equalsIgnoreCase(adminFormat);
 
-                                if (isPublicFormat || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PUBLIC.name()))
-                                    index = 0;
-                                else if (isPrivateFormat
-                                        || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PRIVATE.name()))
-                                    index = 1;
-                                else if (isAdminFormat
-                                        || statusFromItem.equalsIgnoreCase(EnumContainer.Status.ADMIN.name()))
-                                    index = 2;
-                                else if (isOwnFormat)
-                                    index = 3;
-                                else if (isFeaturedFormat)
-                                    index = 4;
+                                    if (isPublicFormat || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PUBLIC.name()))
+                                        index = 0;
+                                    else if (isPrivateFormat
+                                            || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PRIVATE.name()))
+                                        index = 1;
+                                    else if (isAdminFormat
+                                            || statusFromItem.equalsIgnoreCase(EnumContainer.Status.ADMIN.name()))
+                                        index = 2;
+                                    else if (isOwnFormat)
+                                        index = 3;
+                                    else if (isFeaturedFormat)
+                                        index = 4;
 
-                                int nextIndex = index + 1;
-                                String nextStatus;
+                                    int nextIndex = index + 1;
+                                    String nextStatus;
 
-                                if (nextIndex == 1)
-                                    nextStatus = EnumContainer.Status.PRIVATE.name();
-                                else if (nextIndex == 2)
-                                    nextStatus = EnumContainer.Status.ADMIN.name();
-                                else if (nextIndex == 3)
-                                    nextStatus = ownFormat;
-                                else if (nextIndex == 4)
-                                    nextStatus = featuredFormat;
-                                else
-                                    nextStatus = EnumContainer.Status.PUBLIC.name();
+                                    if (nextIndex == 1)
+                                        nextStatus = EnumContainer.Status.PRIVATE.name();
+                                    else if (nextIndex == 2)
+                                        nextStatus = EnumContainer.Status.ADMIN.name();
+                                    else if (nextIndex == 3)
+                                        nextStatus = ownFormat;
+                                    else if (nextIndex == 4)
+                                        nextStatus = featuredFormat;
+                                    else
+                                        nextStatus = EnumContainer.Status.PUBLIC.name();
 
-                                getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
                                     ItemStack filterItem = getPluginInstance().getManager().buildItemFromId(player,
                                             Objects.requireNonNull(nextStatus), "list-menu-section", itemId);
                                     e.getInventory().setItem(e.getSlot(), filterItem);
@@ -1297,8 +1297,8 @@ public class Listeners implements Listener {
                                                 wList.remove(warp);
                                             }
                                         }
-                                });
-                            }
+                                }
+                            });
 
                             break;
                         case "open-custom-menu":
