@@ -1,5 +1,5 @@
 name: HyperDrive
-version: 5.4.4
+version: 5.4.5 (Build 1)
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
@@ -134,6 +134,7 @@ permissions:
       hyperdrive.admin.list: true
       hyperdrive.admin.signs: true
       hyperdrive.admin.visits: true
+      hyperdrive.clear: true
 
   # INTENDED PLAYER PERMISSIONS
   hyperdrive.use:
@@ -264,3 +265,6 @@ permissions:
   hyperdrive.admin.visits:
     default: op
     description: This permission node is used to allow any player with the node to modify the traffic of a warp.
+  hyperdrive.clear:
+    default: op
+    description: This permission node is used to allow the sender to clear all warps from a defined world.

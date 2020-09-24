@@ -11,6 +11,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -73,6 +74,12 @@ public class MainCommands implements CommandExecutor {
                         if (args[0].equalsIgnoreCase("help")) {
                             if (commandSender.hasPermission("hyperdrive.admin.help"))
                                 sendAdminHelpPage(commandSender, !getPluginInstance().getManager().isNotNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
+                            else
+                                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                            return true;
+                        } else if (args[0].equalsIgnoreCase("clear")) {
+                            if (commandSender.hasPermission("hyperdrive.clear"))
+                                sendClear(commandSender, args[1]);
                             else
                                 commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
                             return true;
@@ -208,6 +215,48 @@ public class MainCommands implements CommandExecutor {
         }
 
         return false;
+    }
+
+    private void sendClear(CommandSender commandSender, String worldName) {
+        if (!commandSender.hasPermission("hyperdrive.clear")) {
+            if (commandSender instanceof Player)
+                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message));
+            }
+            return;
+        }
+
+        World world = getPluginInstance().getServer().getWorld(worldName);
+        if (world != null) {
+            if (commandSender instanceof Player)
+                getPluginInstance().getManager().sendCustomMessage("world-invalid", (Player) commandSender, "{world}:" + worldName);
+            else {
+                String message = getPluginInstance().getLangConfig().getString("no-permission");
+                if (message != null && !message.isEmpty())
+                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}", worldName)));
+            }
+            return;
+        }
+
+        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+            Set<Map.Entry<String, Warp>> warpEntries = getPluginInstance().getManager().getWarpMap().entrySet();
+            for (Map.Entry<String, Warp> entry : warpEntries) {
+                if (entry.getValue() == null || entry.getValue().getWarpLocation() == null || !entry.getValue().getWarpLocation().getWorldName().equalsIgnoreCase(worldName))
+                    continue;
+                entry.getValue().unRegister();
+                entry.getValue().deleteSaved(false);
+            }
+        });
+        if (commandSender instanceof Player)
+            getPluginInstance().getManager().sendCustomMessage("warps-cleared", (Player) commandSender, "{world}:" + worldName);
+        else {
+            String message = getPluginInstance().getLangConfig().getString("no-permission");
+            if (message != null && !message.isEmpty())
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}", worldName)));
+        }
     }
 
     private void initiateVisitsModify(CommandSender commandSender, String commandType, String warpName, String value) {
@@ -1049,6 +1098,7 @@ public class MainCommands implements CommandExecutor {
         page6.add("&7&l*&r &e/warps visits add <warp> <amount> &7- &aAdds the defined amount to the warp's total visit count.");
         page6.add("&7&l*&r &e/warps visits remove <warp> <amount> &7- &aRemoves the defined amount from the warp's total visit count.");
         page6.add("&7&l*&r &e/warps visits set <warp> <amount> &7- &aSets the defined amount as the warp's total visit count.");
+        page6.add("&7&l*&r &e/warps clear <world> &7- &aDeletes all warps from the defined world.");
         page6.add("");
         getAdminHelpPages().put(5, page6);
     }

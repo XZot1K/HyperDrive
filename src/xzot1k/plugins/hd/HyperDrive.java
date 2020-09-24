@@ -178,11 +178,13 @@ public class HyperDrive extends JavaPlugin {
             final List<Warp> warpList = new ArrayList<>(getManager().getWarpMap().values());
             getServer().getScheduler().runTaskAsynchronously(this, () -> {
                 for (Warp warp : warpList) {
-                    if (getManager().getWarpMap().containsKey(warp.getWarpName()))
+                    if (getManager().getWarpMap().containsKey(warp.getWarpName()) && warp.getStatus() != EnumContainer.Status.ADMIN)
                         try {
                             if (warp.getOwner() == null) continue;
                             OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(warp.getOwner());
-                            final long lastTimeSeen = (System.currentTimeMillis() - offlinePlayer.getLastPlayed()) * 1000;
+                            if (!offlinePlayer.hasPlayedBefore()) continue;
+
+                            final long lastTimeSeen = (System.currentTimeMillis() - offlinePlayer.getLastPlayed()) / 1000;
                             if (lastTimeSeen >= getConfig().getInt("general-section.warp-clean-time")) {
                                 warp.unRegister();
                                 warp.deleteSaved(false);
