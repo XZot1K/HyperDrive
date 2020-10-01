@@ -1,4 +1,3 @@
-![image](https://imgur.com/jqi1GY9.png)
 <img src="https://imgur.com/TThxhup.png" width="150px" height="150px">
 
 ## HyperDrive (High Class Warp/Teleportation Plugin)
@@ -39,3 +38,6 @@ Required Libraries when compiling:
 * Residence
 * MySQL Java Connector
 ```
+***
+I currently use DedicatedMC as the official ZotWare testing server. If you need something powerful in terms of hardware without digging a hole in your pocket give them a shot and let me know how you like them!
+[![image](https://imgur.com/oqEKWO3.png)](https://dedimc.promo/XZot1K)
