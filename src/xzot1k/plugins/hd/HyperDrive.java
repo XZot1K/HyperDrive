@@ -652,7 +652,7 @@ public class HyperDrive extends JavaPlugin {
             StringBuilder sb = new StringBuilder();
             List<String> description = yaml.getStringList(warpName + ".icon.description");
             for (String line : description)
-                sb.append(((descriptionColor == null || descriptionColor.isEmpty()) ? "" : descriptionColor) + (line + " "));
+                sb.append((descriptionColor == null || descriptionColor.isEmpty()) ? "" : descriptionColor).append(line).append(" ");
             warp.setDescription(getManager().colorText(sb.toString().trim().replaceAll("\\s+", " ").replace("'", "").replace("\"", "")));
 
             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
@@ -694,7 +694,7 @@ public class HyperDrive extends JavaPlugin {
             StringBuilder sb = new StringBuilder();
             String[] description = resultSet.getString("description").split(" ");
             for (String line : description)
-                sb.append(((colorToAppend == null || colorToAppend.isEmpty()) ? "" : colorToAppend) + (line + " "));
+                sb.append((colorToAppend == null || colorToAppend.isEmpty()) ? "" : colorToAppend).append(line).append(" ");
             warp.setDescription(getManager().colorText(sb.toString().trim().replaceAll("\\s+", " ").replace("'", "").replace("\"", "")));
 
 

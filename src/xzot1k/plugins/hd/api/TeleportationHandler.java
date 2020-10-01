@@ -245,48 +245,8 @@ public class TeleportationHandler implements Runnable {
                             }
                             break;
                         case "tp":
-                            if (teleportTemp.getTeleportValue() != null) {
-
-                                SerializableLocation serializableLocation = getPluginInstance().getManager().getLocationFromString(teleportTemp.getTeleportValue());
-                                if (serializableLocation == null) return;
-
-                                final Location toLocation = serializableLocation.asBukkitLocation();
-                                if (toLocation == null) return;
-
-                                BasicTeleportationEvent basicTeleportationEvent = new BasicTeleportationEvent(toLocation, player);
-                                getPluginInstance().getServer().getPluginManager().callEvent(basicTeleportationEvent);
-                                if (basicTeleportationEvent.isCancelled()) {
-                                    getAnimation().stopActiveAnimation(player);
-                                    getTeleportTempMap().remove(playerUniqueId);
-                                    return;
-                                }
-
-                                getTeleportTempMap().remove(playerUniqueId);
-                                teleportPlayer(player, toLocation);
-                                getPluginInstance().getManager().updateCooldown(player, "warp");
-
-                                String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
-                                        .toUpperCase().replace(" ", "_").replace("-", "_"),
-                                        animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-                                if (!teleportSound.equalsIgnoreCase(""))
-                                    player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-                                if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
-                                    String[] themeArgs = animationSet.split(":");
-                                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                                    .replace("-", "_")), 1);
-                                }
-
-                                if (getPluginInstance().getTeleportationCommands() != null && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null)
-                                    if (!getPluginInstance().getTeleportationCommands().getSpawnLocation().getWorldName().equals(serializableLocation.getWorldName())
-                                            && !(getPluginInstance().getTeleportationCommands().getSpawnLocation().getX() != serializableLocation.getX()
-                                            || getPluginInstance().getTeleportationCommands().getSpawnLocation().getY() != serializableLocation.getY())
-                                            || getPluginInstance().getTeleportationCommands().getSpawnLocation().getZ() != serializableLocation.getZ())
-                                        getPluginInstance().getManager().sendCustomMessage("basic-teleportation-engaged", player,
-                                                "{world}:" + toLocation.getWorld().getName(), "{x}:" + toLocation.getBlockX(), "{y}:" + toLocation.getBlockY(),
-                                                "{z}:" + toLocation.getBlockZ(), "{duration}:" + teleportTemp.getSeconds());
-                            }
+                            operateTeleportation(teleportTemp, teleportTemp.getTeleportTypeId().toLowerCase(), player, playerUniqueId);
+                            break;
                         default:
                             break;
                     }
@@ -304,6 +264,51 @@ public class TeleportationHandler implements Runnable {
      */
     public int getRandomInRange(int min, int max) {
         return getRandom().nextInt((max - min) + 1) + min;
+    }
+
+    private void operateTeleportation(TeleportTemp teleportTemp, String teleportId, Player player, UUID playerUniqueId) {
+        if (teleportTemp.getTeleportValue() != null) {
+
+            SerializableLocation serializableLocation = getPluginInstance().getManager().getLocationFromString(teleportTemp.getTeleportValue());
+            if (serializableLocation == null) return;
+
+            final Location toLocation = serializableLocation.asBukkitLocation();
+            if (toLocation == null) return;
+
+            BasicTeleportationEvent basicTeleportationEvent = new BasicTeleportationEvent(toLocation, player);
+            getPluginInstance().getServer().getPluginManager().callEvent(basicTeleportationEvent);
+            if (basicTeleportationEvent.isCancelled()) {
+                getAnimation().stopActiveAnimation(player);
+                getTeleportTempMap().remove(playerUniqueId);
+                return;
+            }
+
+            getTeleportTempMap().remove(playerUniqueId);
+            teleportPlayer(player, toLocation);
+            getPluginInstance().getManager().updateCooldown(player, teleportId);
+
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
+
+            if (getPluginInstance().getTeleportationCommands() != null && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null)
+                if (!getPluginInstance().getTeleportationCommands().getSpawnLocation().getWorldName().equals(serializableLocation.getWorldName())
+                        && !(getPluginInstance().getTeleportationCommands().getSpawnLocation().getX() != serializableLocation.getX()
+                        || getPluginInstance().getTeleportationCommands().getSpawnLocation().getY() != serializableLocation.getY())
+                        || getPluginInstance().getTeleportationCommands().getSpawnLocation().getZ() != serializableLocation.getZ())
+                    getPluginInstance().getManager().sendCustomMessage("basic-teleportation-engaged", player,
+                            "{world}:" + toLocation.getWorld().getName(), "{x}:" + toLocation.getBlockX(), "{y}:" + toLocation.getBlockY(),
+                            "{z}:" + toLocation.getBlockZ(), "{duration}:" + teleportTemp.getSeconds());
+        }
     }
 
     // teleportation temp stuff

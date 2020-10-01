@@ -78,10 +78,10 @@ filter-section:
 
 # Here is where everything related to teleportation can be customize.
 teleportation-section:
-  # This is the warp cooldown that a player must wait before warping again (In seconds).
-  cooldown-duration: 5
+  # This is the general teleportation cooldown that a player must wait before teleporting again (In seconds).
+  cooldown-duration: 15
   # This is the TPA cooldown that a player must wait before using the TPA command again (In seconds).
-  tpa-cooldown: 5
+  tpa-cooldown: 15
   # If the player teleports while in a vehicle should they be dismounted and teleported?
   # (Note: The mount will be teleported as well, but half a second after to prevent faulty chunk loading)
   teleport-vehicles: true

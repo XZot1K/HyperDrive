@@ -431,6 +431,13 @@ public class TeleportationCommands implements CommandExecutor {
                 return;
             }
 
+            int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
+            long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
+            if (currentCooldown > 0 && !player.hasPermission("hyperdrive.spawncdbypass")) {
+                getPluginInstance().getManager().sendCustomMessage("teleport-cooldown", player, "{duration}:" + currentCooldown);
+                return;
+            }
+
             int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
             getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "tp", getSpawnLocation().toString(), duration);
             getPluginInstance().getManager().sendCustomMessage("teleport-spawn", player, "{duration}:" + duration);
@@ -736,6 +743,13 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
+        int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
+        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "back", cooldown);
+        if (currentCooldown > 0 && !player.hasPermission("hyperdrive.backcdbypass")) {
+            getPluginInstance().getManager().sendCustomMessage("teleport-cooldown", player, "{duration}:" + currentCooldown);
+            return;
+        }
+
         int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "tp", new SerializableLocation(lastLocation).toString(), duration);
         getPluginInstance().getTeleportationCommands().updateLastLocation(player, lastLocation);
@@ -850,6 +864,13 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
+        int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.tpa-cooldown");
+        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "tpa", cooldown);
+        if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpacdbypass")) {
+            getPluginInstance().getManager().sendCustomMessage("tpa-cooldown", player, "{duration}:" + currentCooldown);
+            return;
+        }
+
         getTpaSentMap().remove(enteredPlayer.getUniqueId());
         if (getTpaHereSentPlayers().contains(enteredPlayer.getUniqueId())) {
             getTpaHereSentPlayers().remove(enteredPlayer.getUniqueId());
@@ -907,6 +928,13 @@ public class TeleportationCommands implements CommandExecutor {
                 UUID playerUniqueId = getTpaSentMap().get(foundPlayer.getUniqueId());
                 if (playerUniqueId == null) {
                     getPluginInstance().getManager().sendCustomMessage("player-tpa-empty", player, "{player}:" + foundPlayer.getName());
+                    return;
+                }
+
+                int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.tpa-cooldown");
+                long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "tpa", cooldown);
+                if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpacdbypass")) {
+                    getPluginInstance().getManager().sendCustomMessage("tpa-cooldown", player, "{duration}:" + currentCooldown);
                     return;
                 }
 
@@ -1006,7 +1034,7 @@ public class TeleportationCommands implements CommandExecutor {
 
         int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.tpa-cooldown");
         long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "tpa", cooldown);
-        if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
+        if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpacdbypass")) {
             getPluginInstance().getManager().sendCustomMessage("tpa-cooldown", player, "{duration}:" + currentCooldown);
             return;
         }
@@ -1062,7 +1090,7 @@ public class TeleportationCommands implements CommandExecutor {
 
         int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.tpa-cooldown");
         long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "tpa", cooldown);
-        if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
+        if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpacdbypass")) {
             getPluginInstance().getManager().sendCustomMessage("tpa-cooldown", player, "{duration}:" + currentCooldown);
             return;
         }
@@ -1135,10 +1163,8 @@ public class TeleportationCommands implements CommandExecutor {
                             .replace("-", "_")), 1);
         }
 
-        String message = getPluginInstance().getLangConfig().getString("teleported-pos");
-        if (message != null && !message.isEmpty())
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}:", player.getWorld().getName())
-                    .replace("{x}:", xEntry).replace("{y}:", yEntry).replace("{z}:", zEntry)));
+        getPluginInstance().getManager().sendCustomMessage("teleported-pos", player, "{world}:" + player.getWorld().getName(),
+                "{x}:" + xEntry, "{y}:" + yEntry, "{z}:" + zEntry);
     }
 
     private void runTeleportPosCommand(CommandSender commandSender, String xEntry, String yEntry, String zEntry, String worldName) {
@@ -1185,10 +1211,8 @@ public class TeleportationCommands implements CommandExecutor {
                             .replace("-", "_")), 1);
         }
 
-        String message = getPluginInstance().getLangConfig().getString("teleported-pos");
-        if (message != null && !message.isEmpty())
-            commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}:", player.getWorld().getName())
-                    .replace("{x}:", xEntry).replace("{y}:", yEntry).replace("{z}:", zEntry)));
+        getPluginInstance().getManager().sendCustomMessage("teleported-pos", player, "{world}:" + player.getWorld().getName(),
+                "{x}:" + xEntry, "{y}:" + yEntry, "{z}:" + zEntry);
     }
 
     private void runTeleportPosCommand(CommandSender commandSender, String playerName, String xEntry, String yEntry, String zEntry, String worldName) {
@@ -1262,7 +1286,8 @@ public class TeleportationCommands implements CommandExecutor {
             if (message != null && !message.isEmpty())
                 commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{player}", enteredPlayer.getName())));
         }
-        getPluginInstance().getManager().sendCustomMessage("teleported-pos", enteredPlayer, "{world}:" + world.getName(),
+
+        getPluginInstance().getManager().sendCustomMessage("teleported-pos", enteredPlayer, "{world}:" + enteredPlayer.getWorld().getName(),
                 "{x}:" + xEntry, "{y}:" + yEntry, "{z}:" + zEntry);
     }
 

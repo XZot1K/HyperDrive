@@ -250,6 +250,7 @@ public class MainCommands implements CommandExecutor {
                 entry.getValue().deleteSaved(false);
             }
         });
+
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage("warps-cleared", (Player) commandSender, "{world}:" + worldName);
         else {
