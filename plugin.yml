@@ -117,6 +117,8 @@ permissions:
       hyperdrive.spawncdbypass: true
       hyperdrive.tpacdbypass: true
       hyperdrive.tpdelaybypass: true
+      hyperdrive.spawndelaybypass: true
+      hyperdrive.backdelaybypass: true
       hyperdrive.rtpbypass: true
       hyperdrive.admin.help: true
       hyperdrive.admin.warp: true
@@ -247,6 +249,15 @@ permissions:
   hyperdrive.updateid:
     default: op
     description: This permission node is used to allow any sender with the node to update warps with the initially defined IP to a new IP.
+  hyperdrive.spawndelaybypass:
+    default: op
+    description: This permission node is used to bypass the spawn teleportation delay entirely.
+  hyperdrive.backdelaybypass:
+    default: op
+    description: This permission node is used to bypass the back teleportation delay entirely.
+  hyperdrive.tpdelaybypass:
+    default: op
+    description: This permission node is used to bypass the warp teleportation delay entirely.
   hyperdrive.backbypass:
     default: op
     description: This permission node is used to bypass the back teleportation cooldown.
@@ -256,9 +267,6 @@ permissions:
   hyperdrive.tpacdbypass:
     default: op
     description: This permission node is used to bypass the teleportation ask cooldowns.
-  hyperdrive.tpdelaybypass:
-    default: op
-    description: This permission node is used to bypass the warp teleportation delay entirely.
   hyperdrive.likebypass:
     default: op
     description: This permission node is used to bypass the cooldown on liking and disliking a warp.

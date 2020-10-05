@@ -438,7 +438,7 @@ public class TeleportationCommands implements CommandExecutor {
                 return;
             }
 
-            int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
+            int duration = !player.hasPermission("hyperdrive.spawndelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
             getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "tp", getSpawnLocation().toString(), duration);
             getPluginInstance().getManager().sendCustomMessage("teleport-spawn", player, "{duration}:" + duration);
             return;
@@ -750,7 +750,7 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
+        int duration = !player.hasPermission("hyperdrive.backdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "tp", new SerializableLocation(lastLocation).toString(), duration);
         getPluginInstance().getTeleportationCommands().updateLastLocation(player, lastLocation);
         getPluginInstance().getManager().sendCustomMessage("teleport-last-location", player, "{duration}:" + duration);

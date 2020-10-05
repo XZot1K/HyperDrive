@@ -517,7 +517,7 @@ public class Listeners implements Listener {
         if (e.getEntity() instanceof Player) {
             Player player = (Player) e.getEntity();
             boolean damageCancellation = getPluginInstance().getConfig().getBoolean("teleportation-section.damage-cancellation");
-            if (damageCancellation) {
+            if (damageCancellation && e.getCause() != EntityDamageEvent.DamageCause.SUFFOCATION && e.getCause() != EntityDamageEvent.DamageCause.DROWNING) {
                 getPluginInstance().getTeleportationCommands().getTpaSentMap().remove(player.getUniqueId());
                 getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
 
