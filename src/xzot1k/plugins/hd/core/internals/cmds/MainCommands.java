@@ -1,14 +1,10 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals.cmds;
 
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -21,6 +17,7 @@ import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
+import xzot1k.plugins.hd.api.objects.JSONMessage;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
 
@@ -147,8 +144,7 @@ public class MainCommands implements CommandExecutor {
                                 runWarpListCommand(commandSender);
                                 return true;
                             default:
-                                beginWarpCommand(commandSender, args[0]);
-                                return true;
+                                break;
                         }
 
                     case 2:
@@ -163,52 +159,111 @@ public class MainCommands implements CommandExecutor {
                             case "help":
                                 sendHelpPage(commandSender, !getPluginInstance().getManager().isNotNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
                                 return true;
-                            case "create":
-                                runWarpCreationCommand(commandSender, args[1]);
-                                return true;
-                            case "delete":
-                                runWarpDeleteCommand(commandSender, args[1]);
-                                return true;
-                            case "edit":
-                                runWarpEditCommand(commandSender, args[1]);
-                                return true;
-                            case "list":
-                                runListCommand(commandSender, args[1]);
-                                return true;
-                            case "assistants":
-                                runAssistantsCommand(commandSender, args[1]);
-                                return true;
                             default:
-                                if (runWarpAdminCommand(commandSender, args[0], args[1]))
-                                    return true;
-                                sendHelpPage(commandSender, 1);
-                                return true;
+                                break;
                         }
-
-                    case 3:
-                        if (args[0].equalsIgnoreCase("setstatus")) {
-                            beginStatusSetCommand(commandSender, args[1], args[2]);
+                    case 4:
+                        if (args[0].equalsIgnoreCase("visits")) {
+                            initiateVisitsModify(commandSender, args[1], args[2], args[3]);
                             return true;
                         }
-
-                        if (commandSender.hasPermission("hyperdrive.admin.help"))
-                            sendAdminHelpPage(commandSender, 1);
-                        else
-                            sendHelpPage(commandSender, 1);
-                        return true;
-
-                    case 4:
-                        if (args[0].equalsIgnoreCase("visits"))
-                            initiateVisitsModify(commandSender, args[1], args[2], args[3]);
-                        return true;
+                        break;
 
                     default:
                         break;
                 }
 
-                if (commandSender.hasPermission("hyperdrive.admin.help"))
-                    getPluginInstance().getMainCommands().sendAdminHelpPage(commandSender, 1);
-                else getPluginInstance().getMainCommands().sendHelpPage(commandSender, 1);
+                if (args.length >= 4 && args[0].equalsIgnoreCase("visits")) {
+                    StringBuilder warpNameBuilder = new StringBuilder();
+                    for (int i = -1; ++i < (args.length - 2); ) {
+                        warpNameBuilder.append(args[i]);
+                        if (i < (args.length - 1)) warpNameBuilder.append(" ");
+                    }
+
+                    initiateVisitsModify(commandSender, warpNameBuilder.toString().trim(), args[args.length - 2], args[args.length - 1]);
+                    return true;
+                }
+
+                if (args.length >= 3 && args[0].equalsIgnoreCase("setstatus")) {
+                    StringBuilder warpNameBuilder = new StringBuilder();
+                    for (int i = -1; ++i < (args.length - 1); ) {
+                        warpNameBuilder.append(args[i]);
+                        if (i < (args.length - 1)) warpNameBuilder.append(" ");
+                    }
+
+                    beginStatusSetCommand(commandSender, warpNameBuilder.toString().trim(), args[args.length - 1]);
+                    return true;
+                }
+
+                if (args.length >= 2) {
+
+                    if (args[0].equalsIgnoreCase("create")) {
+                        StringBuilder warpNameBuilder = new StringBuilder();
+                        for (int i = 0; ++i < args.length; ) {
+                            warpNameBuilder.append(args[i]);
+                            if (i < (args.length - 1)) warpNameBuilder.append(" ");
+                        }
+
+                        runWarpCreationCommand(commandSender, warpNameBuilder.toString().trim());
+                        return true;
+                    } else if (args[0].equalsIgnoreCase("delete")) {
+                        StringBuilder warpNameBuilder = new StringBuilder();
+                        for (int i = 0; ++i < args.length; ) {
+                            warpNameBuilder.append(args[i]);
+                            if (i < (args.length - 1)) warpNameBuilder.append(" ");
+                        }
+
+                        runWarpDeleteCommand(commandSender, warpNameBuilder.toString().trim());
+                        return true;
+                    } else if (args[0].equalsIgnoreCase("edit")) {
+                        StringBuilder warpNameBuilder = new StringBuilder();
+                        for (int i = 0; ++i < args.length; ) {
+                            warpNameBuilder.append(args[i]);
+                            if (i < (args.length - 1)) warpNameBuilder.append(" ");
+                        }
+
+                        runWarpEditCommand(commandSender, warpNameBuilder.toString());
+                        return true;
+                    } else if (args[0].equalsIgnoreCase("list")) {
+                        StringBuilder warpNameBuilder = new StringBuilder();
+                        for (int i = 0; ++i < args.length; ) {
+                            warpNameBuilder.append(args[i]);
+                            if (i < (args.length - 1)) warpNameBuilder.append(" ");
+                        }
+
+                        runListCommand(commandSender, warpNameBuilder.toString().trim());
+                        return true;
+                    } else if (args[0].equalsIgnoreCase("assistants")) {
+                        StringBuilder warpNameBuilder = new StringBuilder();
+                        for (int i = 0; ++i < args.length; ) {
+                            warpNameBuilder.append(args[i]);
+                            if (i < (args.length - 1)) warpNameBuilder.append(" ");
+                        }
+
+                        runAssistantsCommand(commandSender, warpNameBuilder.toString().trim());
+                        return true;
+                    }
+
+                    Player player = getPluginInstance().getServer().getPlayer(args[args.length - 1]);
+                    if (player != null) {
+                        StringBuilder warpNameBuilder = new StringBuilder();
+                        for (int i = -1; ++i < (args.length - 1); ) {
+                            warpNameBuilder.append(args[i]);
+                            if (warpNameBuilder.length() > 0) warpNameBuilder.append(" ");
+                        }
+
+                        runWarpAdminCommand(commandSender, warpNameBuilder.toString().trim(), player.getName());
+                        return true;
+                    }
+                }
+
+                StringBuilder warpNameBuilder = new StringBuilder();
+                for (int i = -1; ++i < args.length; ) {
+                    warpNameBuilder.append(args[i]);
+                    if (warpNameBuilder.length() > 0) warpNameBuilder.append(" ");
+                }
+
+                beginWarpCommand(commandSender, warpNameBuilder.toString().trim());
                 return true;
             default:
                 break;
@@ -273,7 +328,8 @@ public class MainCommands implements CommandExecutor {
         }
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-        boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+        boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage("warp-invalid", (Player) commandSender, "{warp}:" + warpName);
@@ -366,7 +422,8 @@ public class MainCommands implements CommandExecutor {
         }
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-        boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+        boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage("warp-invalid", (Player) commandSender, "{warp}:" + warp.getWarpName());
@@ -417,7 +474,8 @@ public class MainCommands implements CommandExecutor {
         }
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-        boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+        boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage("warp-invalid", (Player) commandSender, "{warp}:" + warpName);
@@ -429,19 +487,19 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        if (commandSender instanceof Player && !commandSender.hasPermission("hyperdrive.admin.list")) {
+        if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
-            if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())) || warp.getAssistants().contains(player.getUniqueId())) {
+            if (!commandSender.hasPermission("hyperdrive.admin.list") && (warp.getOwner() != null && !warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                    && !warp.getAssistants().contains(player.getUniqueId())) {
                 getPluginInstance().getManager().sendCustomMessage("warp-no-access", player, "{warp}:" + warp.getWarpName());
+                return;
             }
         }
 
-        List<String> playerNames = new ArrayList<>();
-        for (UUID playerUniqueId : warp.getPlayerList()) {
-            OfflinePlayer offlinePlayer = getPluginInstance().getServer().getPlayer(playerUniqueId);
-            if (offlinePlayer == null) continue;
-            playerNames.add(offlinePlayer.getName());
-        }
+        List<String> playerNames = new ArrayList<String>() {{
+            for (UUID playerUniqueId : warp.getPlayerList())
+                add(getPluginInstance().getServer().getOfflinePlayer(playerUniqueId).getName());
+        }};
 
         Collections.sort(playerNames);
         if (commandSender instanceof Player)
@@ -467,7 +525,8 @@ public class MainCommands implements CommandExecutor {
         }
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-        boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+        boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                 || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
@@ -658,7 +717,7 @@ public class MainCommands implements CommandExecutor {
         List<String> permittedWarpNames = getPluginInstance().getManager().getPermittedWarps(player);
         String warpList = permittedWarpNames.isEmpty() ? "[]" : permittedWarpNames.toString().replace("[", "").replace("]", "");
         getPluginInstance().getManager().sendCustomMessage("warp-list", player, "{list}:" + warpList,
-                "{count}:" + getPluginInstance().getManager().getWarpMap().keySet().size());
+                "{count}:" + permittedWarpNames.size());
     }
 
     private void runWarpEditCommand(CommandSender commandSender, String warpName) {
@@ -719,7 +778,8 @@ public class MainCommands implements CommandExecutor {
         }
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-        boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+        boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         if ((useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                 || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warpName))) {
             if (commandSender instanceof Player)
@@ -802,7 +862,8 @@ public class MainCommands implements CommandExecutor {
 
         warpName = warpName.replace("'", "").replace("\"", "");
         Warp warp = new Warp(warpName, player, player.getLocation());
-        boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+        boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warpName))) {
             getPluginInstance().getManager().sendCustomMessage("warp-exists", player, "{warp}:" + warp.getWarpName());
         } else {
@@ -826,30 +887,6 @@ public class MainCommands implements CommandExecutor {
             return false;
 
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
-
-        if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
-            String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
-                    serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                            ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
-                            : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
-
-            if (!warpIP.equalsIgnoreCase(serverIP)) {
-                String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
-                if (server == null) {
-                    if (commandSender instanceof Player)
-                        getPluginInstance().getManager().sendCustomMessage("ip-ping-fail", (Player) commandSender,
-                                "{warp}:" + warp.getWarpName(), "{ip}:" + warp.getServerIPAddress());
-                    else {
-                        String message = getPluginInstance().getLangConfig().getString("ip-ping-fail");
-                        if (message != null && !message.isEmpty())
-                            commandSender.sendMessage(getPluginInstance().getManager().colorText(message
-                                    .replace("{ip}", warp.getServerIPAddress()).replace("{warp}", warp.getWarpName())));
-                    }
-                    return true;
-                }
-            }
-        }
-
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(enteredPlayer, "warp", warp.getWarpName(), 0);
         return true;
     }
@@ -914,30 +951,15 @@ public class MainCommands implements CommandExecutor {
         }
 
         Player player = (Player) commandSender;
-        if (!getPluginInstance().getManager().doesWarpExist(warpName)) {
+        Warp warp = getPluginInstance().getManager().getWarp(warpName);
+        if (warp == null) {
             getPluginInstance().getManager().sendCustomMessage("warp-invalid", player, "{warp}:" + warpName);
             return;
         }
 
-        Warp warp = getPluginInstance().getManager().getWarp(warpName);
         if (!getPluginInstance().getManager().canUseWarp(player, warp)) {
             getPluginInstance().getManager().sendCustomMessage("no-permission", player);
             return;
-        }
-
-        if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
-            String warpIP = warp.getServerIPAddress().replace("localhost", "127.0.0.1"),
-                    serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                            ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
-                            : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
-
-            if (!warpIP.equalsIgnoreCase(serverIP)) {
-                String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
-                if (server == null) {
-                    getPluginInstance().getManager().sendCustomMessage("ip-ping-fail", (Player) commandSender, "{warp}:" + warp.getWarpName(), "{ip}:" + warp.getServerIPAddress());
-                    return;
-                }
-            }
         }
 
         long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration"));
@@ -983,7 +1005,8 @@ public class MainCommands implements CommandExecutor {
         }
 
         int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0;
-        if (warp.getAnimationSet().contains(":")) {
+        boolean isVanished = getPluginInstance().getManager().isVanished(player);
+        if (!isVanished && warp.getAnimationSet().contains(":")) {
             String[] themeArgs = warp.getAnimationSet().split(":");
             String delayTheme = themeArgs[1];
             if (delayTheme.contains("/")) {
@@ -1032,174 +1055,150 @@ public class MainCommands implements CommandExecutor {
 
     // page methods
     private void setupAdminPages() {
+        final String pageHeader = getPluginInstance().getLangConfig().getString("help-header"),
+                cmdPrefix = getPluginInstance().getLangConfig().getString("command-prefix"),
+                descriptionPrefix = getPluginInstance().getLangConfig().getString("command-description-prefix");
         ArrayList<String> page1 = new ArrayList<>(), page2 = new ArrayList<>(), page3 = new ArrayList<>(),
                 page4 = new ArrayList<>(), page5 = new ArrayList<>(), page6 = new ArrayList<>();
         page1.add("");
-        page1.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a1&e] &e)&m-----------&r&e>");
+        page1.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(1)));
         page1.add("");
-        page1.add("&7&l*&r &e/hyperdrive help <page> &7- &aOpens a help page or the main page, if the page is not defined.");
-        page1.add("&7&l*&r &e/hyperdrive reload &7- &aRe-loads all packets, tasks, warps, and configurations.");
-        page1.add("&7&l*&r &e/hyperdrive info &7- &aDisplays information about the current build of the plugin.");
-        page1.add("&7&l*&r &e/hyperdrive updateip <initial-ip> <new-ip> &7- &aSets all IP Addresses of warps with the initial server " +
+        page1.add(cmdPrefix + "/hyperdrive help <page> " + descriptionPrefix + "Opens a help page or the main page, if the page is not defined.");
+        page1.add(cmdPrefix + "/hyperdrive reload " + descriptionPrefix + "Re-loads all packets, tasks, warps, and configurations.");
+        page1.add(cmdPrefix + "/hyperdrive info " + descriptionPrefix + "Displays information about the current build of the plugin.");
+        page1.add(cmdPrefix + "/hyperdrive updateip <initial-ip> <new-ip> " + descriptionPrefix + "Sets all IP Addresses of warps with the initial server " +
                 "ip to the new IP Address, Use 'current' for current server IP.");
         page1.add("");
         getAdminHelpPages().put(1, page1);
 
         page2.add("");
-        page2.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a2&e] &e)&m-----------&r&e>");
+        page2.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(2)));
         page2.add("");
-        page2.add("&7&l*&r &e/warps &7- &aOpens the warp list menu.");
-        page2.add("&7&l*&r &e/warps <name> &7- &aAttempts to teleport to the entered warp.");
-        page2.add("&7&l*&r &e/warps <name> <player> &7- &aAttempts to teleport the entered player to the entered warp.");
-        page2.add("&7&l*&r &e/warps assistants <warp> &7- &aDisplays a list of all current assistants attached to the defined warp.");
-        page2.add("&7&l*&r &e/warps list <warp> &7- &aDisplays a list of all current whitelisted/blacklisted players attached to the defined warp.");
+        page2.add(cmdPrefix + "/warps " + descriptionPrefix + "Opens the warp list menu.");
+        page2.add(cmdPrefix + "/warps <name> " + descriptionPrefix + "Attempts to teleport to the entered warp.");
+        page2.add(cmdPrefix + "/warps <name> <player> " + descriptionPrefix + "Attempts to teleport the entered player to the entered warp.");
+        page2.add(cmdPrefix + "/warps assistants <warp> " + descriptionPrefix + "Displays a list of all current assistants attached to the defined warp.");
+        page2.add(cmdPrefix + "/warps list <warp> " + descriptionPrefix + "Displays a list of all current whitelisted/blacklisted players attached to the defined warp.");
         page2.add("");
         getAdminHelpPages().put(2, page2);
 
         page3.add("");
-        page3.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a3&e] &e)&m-----------&r&e>");
+        page3.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(3)));
         page3.add("");
-        page3.add("&7&l*&r &e/warps create <name> &7- &aAttempts to create a warp with the entered name.");
-        page3.add("&7&l*&r &e/warps delete <name> &7- &aAttempts to delete a warp with the entered name.");
-        page3.add("&7&l*&r &e/tp <player> &7- &aTeleports the sender to the entered player.");
-        page3.add("&7&l*&r &e/tp <player1> <player2> &7- &aTeleports player 1 to player 2.");
-        page3.add("&7&l*&r &e/tpo <player> &7- &aTeleports to the player unnoticed and overriding teleport toggle.");
+        page3.add(cmdPrefix + "/warps create <name> " + descriptionPrefix + "Attempts to create a warp with the entered name.");
+        page3.add(cmdPrefix + "/warps delete <name> " + descriptionPrefix + "Attempts to delete a warp with the entered name.");
+        page3.add(cmdPrefix + "/tp <player> " + descriptionPrefix + "Teleports the sender to the entered player.");
+        page3.add(cmdPrefix + "/tp <player1> <player2> " + descriptionPrefix + "Teleports player 1 to player 2.");
+        page3.add(cmdPrefix + "/tpo <player> " + descriptionPrefix + "Teleports to the player unnoticed and overriding teleport toggle.");
         page3.add("");
         getAdminHelpPages().put(3, page3);
 
         page4.add("");
-        page4.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a4&e] &e)&m-----------&r&e>");
+        page4.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(4)));
         page4.add("");
-        page4.add("&7&l*&r &e/tpohere <player> &7- &aTeleports the player to the sender's location unnoticed and overriding teleport toggle.");
-        page4.add("&7&l*&r &e/tphere <player> &7- &aTeleports the player to the sender's location.");
-        page4.add("&7&l*&r &e/tppos <x> <y> <z> <world> &7- &aTeleports the sender to the defined coordinates in the defined world.");
-        page4.add("&7&l*&r &e/tppos <player> <x> <y> <z> <world> &7- &aTeleports the entered player to the defined coordinates in the defined world.");
-        page4.add("&7&l*&r &e/tppos <x> <y> <z> &7- &aThe sender will be teleported to the defined coordinates in the current world.");
-        page4.add("&7&l*&r &e/back <player> &7- &aAttempts to teleport the entered player to their last teleport location.");
+        page4.add(cmdPrefix + "/tpohere <player> " + descriptionPrefix + "Teleports the player to the sender's location unnoticed and overriding teleport toggle.");
+        page4.add(cmdPrefix + "/tphere <player> " + descriptionPrefix + "Teleports the player to the sender's location.");
+        page4.add(cmdPrefix + "/tppos <x> <y> <z> <world> " + descriptionPrefix + "Teleports the sender to the defined coordinates in the defined world.");
+        page4.add(cmdPrefix + "/tppos <player> <x> <y> <z> <world> " + descriptionPrefix + "Teleports the entered player to the defined coordinates in the defined world.");
+        page4.add(cmdPrefix + "/tppos <x> <y> <z> " + descriptionPrefix + "The sender will be teleported to the defined coordinates in the current world.");
+        page4.add(cmdPrefix + "/back <player> " + descriptionPrefix + "Attempts to teleport the entered player to their last teleport location.");
         page4.add("");
         getAdminHelpPages().put(4, page4);
 
         page5.add("");
-        page5.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a5&e] &e)&m-----------&r&e>");
+        page5.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(5)));
         page5.add("");
-        page5.add("&7&l*&r &e/rtp &7- &abegins the random teleportation process on the sender.");
-        page5.add("&7&l*&r &e/rtp <player> <world> &7- &abegins the random teleportation process on the entered player to the entered world.");
-        page5.add("&7&l*&r &e/spawn &7- &ateleports the sender to the normal spawn, if it exists.");
-        page5.add("&7&l*&r &e/spawn <set/setfirstjoin/clear> &7- &asets the first join spawn, normal spawn, or clears both spawns based on the entered argument.");
-        page5.add("&7&l*&r &e/crossserver <player> <server> <world> <x> <y> <z> &7- &aattempts to teleport the defined player " +
+        page5.add(cmdPrefix + "/rtp " + descriptionPrefix + "begins the random teleportation process on the sender.");
+        page5.add(cmdPrefix + "/rtp <player> <world> " + descriptionPrefix + "begins the random teleportation process on the entered player to the entered world.");
+        page5.add(cmdPrefix + "/spawn " + descriptionPrefix + "teleports the sender to the normal spawn, if it exists.");
+        page5.add(cmdPrefix + "/spawn <set/setfirstjoin/clear> " + descriptionPrefix + "sets the first join spawn, normal spawn, or clears both spawns based on the entered argument.");
+        page5.add(cmdPrefix + "/crossserver <player> <server> <world> <x> <y> <z> " + descriptionPrefix + "attempts to teleport the defined player " +
                 "to the server at the defined coordinates.");
-        page5.add("&7&l*&r &e/crossserver <player> <server> <world> <x> <y> <z> <yaw> <pitch> &7- &aattempts to teleport the " +
+        page5.add(cmdPrefix + "/crossserver <player> <server> <world> <x> <y> <z> <yaw> <pitch> " + descriptionPrefix + "attempts to teleport the " +
                 "defined player to the server at the defined coordinates.");
         page5.add("");
         getAdminHelpPages().put(5, page5);
 
         page6.add("");
-        page6.add("&e<&m-----------&r&e( &d&lCommands &e[&dPage &a6&e] &e)&m-----------&r&e>");
+        page6.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(6)));
         page6.add("");
-        page6.add("&7&l*&r &e/warps visits add <warp> <amount> &7- &aAdds the defined amount to the warp's total visit count.");
-        page6.add("&7&l*&r &e/warps visits remove <warp> <amount> &7- &aRemoves the defined amount from the warp's total visit count.");
-        page6.add("&7&l*&r &e/warps visits set <warp> <amount> &7- &aSets the defined amount as the warp's total visit count.");
-        page6.add("&7&l*&r &e/warps clear <world> &7- &aDeletes all warps from the defined world.");
+        page6.add(cmdPrefix + "/warps visits add <warp> <amount> " + descriptionPrefix + "Adds the defined amount to the warp's total visit count.");
+        page6.add(cmdPrefix + "/warps visits remove <warp> <amount> " + descriptionPrefix + "Removes the defined amount from the warp's total visit count.");
+        page6.add(cmdPrefix + "/warps visits set <warp> <amount> " + descriptionPrefix + "Sets the defined amount as the warp's total visit count.");
+        page6.add(cmdPrefix + "/warps clear <world> " + descriptionPrefix + "Deletes all warps from the defined world.");
         page6.add("");
-        getAdminHelpPages().put(5, page6);
+        getAdminHelpPages().put(6, page6);
     }
 
     private void setupHelpPages() {
+        final String pageHeader = getPluginInstance().getLangConfig().getString("help-header"),
+                cmdPrefix = getPluginInstance().getLangConfig().getString("command-prefix"),
+                descriptionPrefix = getPluginInstance().getLangConfig().getString("command-description-prefix");
         ArrayList<String> page1 = new ArrayList<>(), page2 = new ArrayList<>(), page3 = new ArrayList<>(), page4 = new ArrayList<>();
         page1.add("");
-        page1.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a1&e] &e)&m-----------&r&e>");
+        page1.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(1)));
         page1.add("");
-        page1.add("&7&l*&r &e/warps help <page> &7- &aopens a help page or the main page, if the page is not defined.");
-        page1.add("&7&l*&r &e/warps &7- &aopens the warp list menu.");
-        page1.add("&7&l*&r &e/warps <name> &7- &aattempts to teleport to the entered warp.");
-        page1.add("&7&l*&r &e/warps create <name> &7- &aattempts to create a warp with the entered name.");
-        page1.add("&7&l*&r &e/warps delete <name> &7- &aattempts to delete a warp with the entered name.");
+        page1.add(cmdPrefix + "/warps help <page> " + descriptionPrefix + "opens a help page or the main page, if the page is not defined.");
+        page1.add(cmdPrefix + "/warps " + descriptionPrefix + "opens the warp list menu.");
+        page1.add(cmdPrefix + "/warps <name> " + descriptionPrefix + "attempts to teleport to the entered warp.");
+        page1.add(cmdPrefix + "/warps create <name> " + descriptionPrefix + "attempts to create a warp with the entered name.");
+        page1.add(cmdPrefix + "/warps delete <name> " + descriptionPrefix + "attempts to delete a warp with the entered name.");
         page1.add("");
         getHelpPages().put(1, page1);
 
         page2.add("");
-        page2.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a2&e] &e)&m-----------&r&e>");
+        page2.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(2)));
         page2.add("");
-        page2.add("&7&l*&r &e/warps assistants <warp> &7- &adisplays a list of all current assistants attached to the defined warp.");
-        page2.add("&7&l*&r &e/warps list <warp> &7- &adisplays a list of all current whitelisted/blacklisted players attached to the defined warp.");
-        page2.add("&7&l*&r &e/tpa <player> &7- &asends a request to teleport to the entered player.");
-        page2.add("&7&l*&r &e/tpaccept <player> &7- &aaccepts the found teleport request and teleports the requester to the acceptor.");
-        page2.add("&7&l*&r &e/tpdeny <player> &7- &adenies the found teleport request.");
+        page2.add(cmdPrefix + "/warps assistants <warp> " + descriptionPrefix + "displays a list of all current assistants attached to the defined warp.");
+        page2.add(cmdPrefix + "/warps list <warp> " + descriptionPrefix + "displays a list of all current whitelisted/blacklisted players attached to the defined warp.");
+        page2.add(cmdPrefix + "/tpa <player> " + descriptionPrefix + "sends a request to teleport to the entered player.");
+        page2.add(cmdPrefix + "/tpaccept <player> " + descriptionPrefix + "accepts the found teleport request and teleports the requester to the acceptor.");
+        page2.add(cmdPrefix + "/tpdeny <player> " + descriptionPrefix + "denies the found teleport request.");
         page2.add("");
         getHelpPages().put(2, page2);
 
         page3.add("");
-        page3.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a3&e] &e)&m-----------&r&e>");
+        page3.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(3)));
         page3.add("");
-        page2.add("&7&l*&r &e/tpaccept &7- &aaccepts the first found teleport request and teleports the requester to the acceptor.");
-        page2.add("&7&l*&r &e/tpdeny &7- &adenies the first found teleport request.");
-        page3.add("&7&l*&r &e/tptoggle &7- &atoggles teleportation such as TPA requests and forceful teleportation commands.");
-        page3.add("&7&l*&r &e/back &7- &aattempts to teleport to the last teleport location.");
-        page3.add("&7&l*&r &e/tpahere <player> &7- &asends a request for the player to teleport to you.");
+        page2.add(cmdPrefix + "/tpaccept " + descriptionPrefix + "accepts the first found teleport request and teleports the requester to the acceptor.");
+        page2.add(cmdPrefix + "/tpdeny " + descriptionPrefix + "denies the first found teleport request.");
+        page3.add(cmdPrefix + "/tptoggle " + descriptionPrefix + "toggles teleportation such as TPA requests and forceful teleportation commands.");
+        page3.add(cmdPrefix + "/back " + descriptionPrefix + "attempts to teleport to the last teleport location.");
+        page3.add(cmdPrefix + "/tpahere <player> " + descriptionPrefix + "sends a request for the player to teleport to you.");
         page3.add("");
         getHelpPages().put(3, page3);
 
         page4.add("");
-        page4.add("&e<&m------------&r&e( &d&lCommands &e[&dPage &a4&e] &e)&m-----------&r&e>");
+        page4.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(4)));
         page4.add("");
-        page3.add("&7&l*&r &e/rtp &7- &abegins the random teleportation process.");
-        page3.add("&7&l*&r &e/spawn &7- &ateleports to the normal spawn, if it exists.");
+        page3.add(cmdPrefix + "/rtp " + descriptionPrefix + "begins the random teleportation process.");
+        page3.add(cmdPrefix + "/spawn " + descriptionPrefix + "teleports to the normal spawn, if it exists.");
         page4.add("");
         getHelpPages().put(4, page4);
     }
 
     public void sendJSONLine(Player player, int page) {
-        HoverEvent previousHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{
-                new TextComponent(getPluginInstance().getManager().colorText("&aOpens the previous help page."))}),
-                nextHoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{
-                        new TextComponent(getPluginInstance().getManager().colorText("&aOpens the next help page."))});
+        final String previousCommand = ("/hyperdrive help " + (page - 1)), nextCommand = ("/hyperdrive help " + (page + 1));
+        JSONMessage footerLeft = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-left")),
+                footerRight = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-right")),
+                separator = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-separator"));
 
-        ClickEvent previousClickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, ("/hyperdrive help " + (page - 1))),
-                nextClickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, ("/hyperdrive help " + (page + 1)));
+        JSONMessage previousMessage = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-previous"));
+        previousMessage.setHoverEvent(JSONMessage.HoverAction.SHOW_TEXT, "&aOpens the previous help page.");
+        previousMessage.setClickEvent(JSONMessage.ClickAction.RUN_COMMAND, previousCommand);
 
-        if (getAdminHelpPages().containsKey(page + 1) && getAdminHelpPages().containsKey(page - 1)) {
-            BaseComponent message = new TextComponent(getPluginInstance().getManager().colorText("&e<&m------&r&e("));
+        JSONMessage nextMessage = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-next"));
+        nextMessage.setHoverEvent(JSONMessage.HoverAction.SHOW_TEXT, "&aOpens the next help page.");
+        nextMessage.setClickEvent(JSONMessage.ClickAction.RUN_COMMAND, nextCommand);
 
-            BaseComponent extraOne = new TextComponent(getPluginInstance().getManager().colorText(" &d[Previous Page] "));
-            extraOne.setClickEvent(previousClickEvent);
-            extraOne.setHoverEvent(previousHoverEvent);
-            message.addExtra(extraOne);
-
-            BaseComponent extraTwo = new TextComponent(getPluginInstance().getManager().colorText("&e|"));
-            message.addExtra(extraTwo);
-
-            BaseComponent extraThree = new TextComponent(getPluginInstance().getManager().colorText(" &d[Next Page] "));
-            extraThree.setClickEvent(nextClickEvent);
-            extraThree.setHoverEvent(nextHoverEvent);
-            message.addExtra(extraThree);
-
-            BaseComponent extraFour = new TextComponent(getPluginInstance().getManager().colorText("&e)&m-------&r&e>"));
-            message.addExtra(extraFour);
-            player.sendMessage(message);
-        } else if (getAdminHelpPages().containsKey(page + 1)) {
-            BaseComponent message = new TextComponent(getPluginInstance().getManager().colorText("&e<&m--------------&r&e("));
-
-            BaseComponent extraOne = new TextComponent(getPluginInstance().getManager().colorText(" &d[Next Page] "));
-            extraOne.setClickEvent(nextClickEvent);
-            extraOne.setHoverEvent(nextHoverEvent);
-            message.addExtra(extraOne);
-
-            BaseComponent extraTwo = new TextComponent(getPluginInstance().getManager().colorText("&e)&m---------------&r&e>"));
-            message.addExtra(extraTwo);
-            player.sendMessage(message);
-        } else if (getAdminHelpPages().containsKey(page - 1)) {
-            BaseComponent message = new TextComponent(getPluginInstance().getManager().colorText("&e<&m------------&r&e("));
-
-            BaseComponent extraOne = new TextComponent(getPluginInstance().getManager().colorText(" &d[Previous Page] "));
-            extraOne.setClickEvent(previousClickEvent);
-            extraOne.setHoverEvent(previousHoverEvent);
-            message.addExtra(extraOne);
-
-            BaseComponent extraTwo = new TextComponent(getPluginInstance().getManager().colorText("&e)&m-------------&r&e>"));
-            message.addExtra(extraTwo);
-            player.sendMessage(message);
-        } else
-            player.sendMessage(getPluginInstance().getManager().colorText("&e<&m-------------------------------------------------------&r&e>"));
+        if (getAdminHelpPages().containsKey(page + 1) && getAdminHelpPages().containsKey(page - 1))
+            footerLeft.extend(previousMessage).extend(separator).extend(nextMessage).extend(footerRight).send(player);
+        else if (getAdminHelpPages().containsKey(page + 1))
+            footerLeft.extend(nextMessage).extend(footerRight).send(player);
+        else if (getAdminHelpPages().containsKey(page - 1))
+            footerLeft.extend(previousMessage).extend(footerRight).send(player);
+        else
+            player.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-static")));
     }
 
     public void sendAdminHelpPage(CommandSender commandSender, int page) {

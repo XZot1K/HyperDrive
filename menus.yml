@@ -575,8 +575,6 @@ edit-menu-section:
       slot: 21
       use-player-head: false
       player-head-name: ""
-      material: "GRASS_BLOCK"
-      durability: 0
       amount: 1
     toggle-white-list:
       click-action: "toggle-white-list"

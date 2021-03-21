@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals;
@@ -85,6 +85,7 @@ public class BungeeListener implements PluginMessageListener {
         List<String> serverNames = new ArrayList<>(getServerAddressMap().keySet());
         for (int i = -1; ++i < serverNames.size(); ) {
             String serverName = serverNames.get(i), ip = getServerAddressMap().get(serverName);
+            System.out.println(serverName + " - " + ip);
             if (!ipAddress.equalsIgnoreCase(ip)) continue;
             return serverName;
         }

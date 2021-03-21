@@ -1,12 +1,14 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals.cmds;
 
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -353,6 +355,16 @@ public class TeleportationCommands implements CommandExecutor {
             String actionMessage = getPluginInstance().getConfig().getString("random-teleport-section.start-bar-message");
             if (actionMessage != null && !actionMessage.isEmpty())
                 getPluginInstance().getManager().sendActionBar(enteredPlayer, actionMessage.replace("{duration}", String.valueOf(duration)));
+
+            String animationLine = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-delay-animation");
+            if (animationLine != null && animationLine.contains(":")) {
+                String[] animationArgs = animationLine.split(":");
+                if (animationArgs.length >= 2) {
+                    EnumContainer.Animation animation = EnumContainer.Animation.valueOf(animationArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, animationArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"), animation, 1);
+                }
+            }
+
             getPluginInstance().getManager().sendCustomMessage("random-teleport-begin", enteredPlayer, "{duration}:" + duration);
         } else getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(enteredPlayer, world);
 
@@ -409,6 +421,15 @@ public class TeleportationCommands implements CommandExecutor {
             if (actionMessage != null && !actionMessage.isEmpty())
                 getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{duration}", String.valueOf(duration)));
 
+            String animationLine = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-delay-animation");
+            if (animationLine != null && animationLine.contains(":")) {
+                String[] animationArgs = animationLine.split(":");
+                if (animationArgs.length >= 2) {
+                    EnumContainer.Animation animation = EnumContainer.Animation.valueOf(animationArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, animationArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"), animation, 1);
+                }
+            }
+
             getPluginInstance().getManager().sendCustomMessage("random-teleport-begin", player, "{duration}:" + duration);
         } else getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(player, player.getWorld());
     }
@@ -454,6 +475,17 @@ public class TeleportationCommands implements CommandExecutor {
             setFirstJoinLocation(null);
             setSpawnLocation(null);
             getPluginInstance().getManager().sendCustomMessage("spawns-cleared", player);
+        } else {
+            Player foundPlayer = getPluginInstance().getServer().getPlayer(firstArg);
+            if (foundPlayer == null || !foundPlayer.isOnline()) {
+                getPluginInstance().getManager().sendCustomMessage("player-invalid", player, "{player}:" + firstArg);
+                return;
+            }
+
+            getPluginInstance().getTeleportationHandler().updateTeleportTemp(foundPlayer, "tp", getSpawnLocation().toString(), 0);
+            getPluginInstance().getManager().sendCustomMessage("teleport-spawn", player, "{duration}:" + 0);
+            if (!foundPlayer.getUniqueId().toString().equals(player.getUniqueId().toString()))
+                getPluginInstance().getManager().sendCustomMessage("teleport-spawn-admin", player, "{player}:" + foundPlayer.getName());
         }
     }
 
@@ -705,9 +737,10 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
+        lastLocation = lastLocation.clone();
+        getPluginInstance().getTeleportationCommands().updateLastLocation(enteredPlayer, lastLocation);
         enteredPlayer.setVelocity(new Vector(0, 0, 0));
         enteredPlayer.teleport(lastLocation);
-        getPluginInstance().getTeleportationCommands().updateLastLocation(enteredPlayer, lastLocation);
         if (commandSender instanceof Player && !((Player) commandSender).getUniqueId().toString().equals(enteredPlayer.getUniqueId().toString()))
             getPluginInstance().getManager().sendCustomMessage("teleported-last-location", (Player) commandSender, "{player}:" + enteredPlayer.getName());
         else {
@@ -750,6 +783,14 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
+        final Block down = lastLocation.clone().add(0, -1, 0).getBlock();
+        if (player.getGameMode() != GameMode.CREATIVE && player.getGameMode().name().contains("SPECTATOR") && (down.getType().name().contains("LAVA") || down.getType().name().contains("WATER"))) {
+            getPluginInstance().getManager().sendCustomMessage("unsafe-back", player);
+            return;
+        }
+
+        lastLocation = lastLocation.clone();
+        getPluginInstance().getTeleportationCommands().updateLastLocation(player, lastLocation);
         int duration = !player.hasPermission("hyperdrive.backdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "tp", new SerializableLocation(lastLocation).toString(), duration);
         getPluginInstance().getTeleportationCommands().updateLastLocation(player, lastLocation);
@@ -878,17 +919,19 @@ public class TeleportationCommands implements CommandExecutor {
         } else enteredPlayer.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
         getPluginInstance().getManager().updateCooldown(player, "tpa");
 
-        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-        if (!teleportSound.equalsIgnoreCase(""))
-            player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
-            String[] themeArgs = animationSet.split(":");
-            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                            .replace("-", "_")), 1);
+        if (!getPluginInstance().getManager().isVanished(player)) {
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
         }
 
         getPluginInstance().getManager().sendCustomMessage("player-tpa-accept", player, "{player}:" + enteredPlayer.getName());
@@ -948,17 +991,19 @@ public class TeleportationCommands implements CommandExecutor {
             }
         }
 
-        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-        if (!teleportSound.equalsIgnoreCase(""))
-            player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
-            String[] themeArgs = animationSet.split(":");
-            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                            .replace("-", "_")), 1);
+        if (!getPluginInstance().getManager().isVanished(player)) {
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
         }
 
         getPluginInstance().getManager().sendCustomMessage("player-tpa-accept", player, "{player}:" + (foundPlayer != null ? foundPlayer.getName() : ""));
@@ -1066,7 +1111,7 @@ public class TeleportationCommands implements CommandExecutor {
             public void run() {
                 getTpaSentMap().remove(player.getUniqueId());
             }
-        }.runTaskLaterAsynchronously(getPluginInstance(), 20 * getPluginInstance().getConfig().getInt("teleportation-section.teleport-ask-duration"));
+        }.runTaskLaterAsynchronously(getPluginInstance(), 20L * getPluginInstance().getConfig().getInt("teleportation-section.teleport-ask-duration"));
     }
 
     private void runTeleportAsk(CommandSender commandSender, String playerName) {
@@ -1120,7 +1165,7 @@ public class TeleportationCommands implements CommandExecutor {
             public void run() {
                 getTpaSentMap().remove(player.getUniqueId());
             }
-        }.runTaskLaterAsynchronously(getPluginInstance(), 20 * getPluginInstance().getConfig().getInt("teleportation-section.teleport-ask-duration"));
+        }.runTaskLaterAsynchronously(getPluginInstance(), 20L * getPluginInstance().getConfig().getInt("teleportation-section.teleport-ask-duration"));
     }
 
     private void runTeleportPosCommand(CommandSender commandSender, String xEntry, String yEntry, String zEntry) {
@@ -1142,6 +1187,10 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
+        xEntry = xEntry.replace("~", String.valueOf(player.getLocation().getX()));
+        yEntry = yEntry.replace("~", String.valueOf(player.getLocation().getY()));
+        zEntry = zEntry.replace("~", String.valueOf(player.getLocation().getZ()));
+
         if (getPluginInstance().getManager().isNotNumeric(xEntry) || getPluginInstance().getManager().isNotNumeric(yEntry) || getPluginInstance().getManager().isNotNumeric(zEntry)) {
             getPluginInstance().getManager().sendCustomMessage("coordinate-invalid", (Player) commandSender);
             return;
@@ -1150,17 +1199,19 @@ public class TeleportationCommands implements CommandExecutor {
         player.teleport(new Location(player.getWorld(), Double.parseDouble(xEntry), Double.parseDouble(yEntry), Double.parseDouble(zEntry),
                 player.getLocation().getYaw(), player.getLocation().getPitch()), PlayerTeleportEvent.TeleportCause.COMMAND);
 
-        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-        if (!teleportSound.equalsIgnoreCase(""))
-            player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
-            String[] themeArgs = animationSet.split(":");
-            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                            .replace("-", "_")), 1);
+        if (!getPluginInstance().getManager().isVanished(player)) {
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
         }
 
         getPluginInstance().getManager().sendCustomMessage("teleported-pos", player, "{world}:" + player.getWorld().getName(),
@@ -1184,6 +1235,10 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
+        xEntry = xEntry.replace("~", String.valueOf(player.getLocation().getX()));
+        yEntry = yEntry.replace("~", String.valueOf(player.getLocation().getY()));
+        zEntry = zEntry.replace("~", String.valueOf(player.getLocation().getZ()));
+
         if (getPluginInstance().getManager().isNotNumeric(xEntry) || getPluginInstance().getManager().isNotNumeric(yEntry) || getPluginInstance().getManager().isNotNumeric(zEntry)) {
             getPluginInstance().getManager().sendCustomMessage("coordinate-invalid", (Player) commandSender);
             return;
@@ -1198,17 +1253,19 @@ public class TeleportationCommands implements CommandExecutor {
         player.teleport(new Location(world, Double.parseDouble(xEntry), Double.parseDouble(yEntry), Double.parseDouble(zEntry),
                 player.getLocation().getYaw(), player.getLocation().getPitch()), PlayerTeleportEvent.TeleportCause.COMMAND);
 
-        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-        if (!teleportSound.equalsIgnoreCase(""))
-            player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
-            String[] themeArgs = animationSet.split(":");
-            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                            .replace("-", "_")), 1);
+        if (!getPluginInstance().getManager().isVanished(player)) {
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
         }
 
         getPluginInstance().getManager().sendCustomMessage("teleported-pos", player, "{world}:" + player.getWorld().getName(),
@@ -1239,6 +1296,10 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
+        xEntry = xEntry.replace("~", String.valueOf(enteredPlayer.getLocation().getX()));
+        yEntry = yEntry.replace("~", String.valueOf(enteredPlayer.getLocation().getY()));
+        zEntry = zEntry.replace("~", String.valueOf(enteredPlayer.getLocation().getZ()));
+
         if (getPluginInstance().getManager().isNotNumeric(xEntry) || getPluginInstance().getManager().isNotNumeric(yEntry) || getPluginInstance().getManager().isNotNumeric(zEntry)) {
             if (commandSender instanceof Player)
                 getPluginInstance().getManager().sendCustomMessage("coordinate-invalid", (Player) commandSender);
@@ -1266,17 +1327,19 @@ public class TeleportationCommands implements CommandExecutor {
         enteredPlayer.teleport(new Location(world, Double.parseDouble(xEntry), Double.parseDouble(yEntry), Double.parseDouble(zEntry),
                 enteredPlayer.getLocation().getYaw(), enteredPlayer.getLocation().getPitch()), PlayerTeleportEvent.TeleportCause.COMMAND);
 
-        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-        if (!teleportSound.equalsIgnoreCase(""))
-            enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
-            String[] themeArgs = animationSet.split(":");
-            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer);
-            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, themeArgs[1],
-                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                            .replace("-", "_")), 1);
+        if (!getPluginInstance().getManager().isVanished(enteredPlayer)) {
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
         }
 
         if (commandSender instanceof Player && !((Player) commandSender).getUniqueId().toString().equals(enteredPlayer.getUniqueId().toString()))
@@ -1384,22 +1447,25 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        enteredPlayer.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
+        enteredPlayer.teleport(player.getLocation());
 
-        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-        if (!teleportSound.equalsIgnoreCase(""))
-            enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
-            String[] themeArgs = animationSet.split(":");
-            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                            .replace("-", "_")), 1);
+        if (!getPluginInstance().getManager().isVanished(enteredPlayer)) {
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
+
+            getPluginInstance().getManager().sendCustomMessage("tp-receiver", player, "{player}:" + enteredPlayer.getName());
         }
 
-        getPluginInstance().getManager().sendCustomMessage("tp-receiver", player, "{player}:" + enteredPlayer.getName());
         getPluginInstance().getManager().sendCustomMessage("tp-victim", enteredPlayer, "{player}:" + player.getName());
     }
 
@@ -1446,20 +1512,23 @@ public class TeleportationCommands implements CommandExecutor {
 
         enteredPlayer1.teleport(enteredPlayer2, PlayerTeleportEvent.TeleportCause.COMMAND);
 
-        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-        if (!teleportSound.equalsIgnoreCase(""))
-            enteredPlayer1.getWorld().playSound(enteredPlayer1.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
-            String[] themeArgs = animationSet.split(":");
-            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer1);
-            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer1, themeArgs[1],
-                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                            .replace("-", "_")), 1);
+        if (!getPluginInstance().getManager().isVanished(enteredPlayer1)) {
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                enteredPlayer1.getWorld().playSound(enteredPlayer1.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer1);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer1, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
+
+            getPluginInstance().getManager().sendCustomMessage("tp-receiver", enteredPlayer2, "{player}:" + enteredPlayer1.getName());
         }
 
-        getPluginInstance().getManager().sendCustomMessage("tp-receiver", enteredPlayer2, "{player}:" + enteredPlayer1.getName());
         getPluginInstance().getManager().sendCustomMessage("tp-victim", enteredPlayer1, "{player}:" + enteredPlayer2.getName());
     }
 
@@ -1498,19 +1567,21 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        player.teleport(enteredPlayer.getLocation(), PlayerTeleportEvent.TeleportCause.COMMAND);
+        player.teleport(enteredPlayer.getLocation());
 
-        String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
-                .toUpperCase().replace(" ", "_").replace("-", "_"),
-                animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-        if (!teleportSound.equalsIgnoreCase(""))
-            player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-        if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
-            String[] themeArgs = animationSet.split(":");
-            getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                            .replace("-", "_")), 1);
+        if (!getPluginInstance().getManager().isVanished(player)) {
+            String teleportSound = Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.standalone-teleport"))
+                    .toUpperCase().replace(" ", "_").replace("-", "_"),
+                    animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+            if (!teleportSound.equalsIgnoreCase(""))
+                player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
+            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+                String[] themeArgs = animationSet.split(":");
+                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                .replace("-", "_")), 1);
+            }
         }
 
         getPluginInstance().getManager().sendCustomMessage("tp-victim", player, "{player}:" + enteredPlayer.getName());

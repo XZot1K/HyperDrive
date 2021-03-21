@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api;
@@ -15,6 +15,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.events.BasicTeleportationEvent;
+import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.events.WarpEvent;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
 import xzot1k.plugins.hd.api.objects.Warp;
@@ -101,33 +102,55 @@ public class TeleportationHandler implements Runnable {
                                 getPluginInstance().getManager().sendCustomMessage("random-teleport-delay", player, "{duration}:" + teleportTemp.getSeconds());
                             }
                         }
-                    } else switch (teleportTemp.getTeleportTypeId().toLowerCase()) {
-                        case "warp":
-                            if (teleportTemp.getTeleportValue() != null) {
-                                if (warp != null && warp.getWarpLocation() != null) {
-                                    final Location warpLocation = warp.getWarpLocation().asBukkitLocation();
-                                    WarpEvent warpEvent = new WarpEvent(warpLocation, player);
-                                    getPluginInstance().getServer().getPluginManager().callEvent(warpEvent);
-                                    if (warpEvent.isCancelled()) {
-                                        getAnimation().stopActiveAnimation(player);
-                                        getTeleportTempMap().remove(playerUniqueId);
-                                        return;
-                                    }
+                    } else {
+                        boolean isVanished = getPluginInstance().getManager().isVanished(player);
+                        switch (teleportTemp.getTeleportTypeId().toLowerCase()) {
+                            case "warp":
+                                if (teleportTemp.getTeleportValue() != null) {
+                                    if (warp != null && warp.getWarpLocation() != null) {
+                                        final Location warpLocation = warp.getWarpLocation().asBukkitLocation();
+                                        WarpEvent warpEvent = new WarpEvent(warpLocation, player);
+                                        getPluginInstance().getServer().getPluginManager().callEvent(warpEvent);
+                                        if (warpEvent.isCancelled()) {
+                                            getAnimation().stopActiveAnimation(player);
+                                            getTeleportTempMap().remove(playerUniqueId);
+                                            return;
+                                        }
 
-                                    if (warp.getOwner() != null)
-                                        if (!warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString())
-                                                && !warp.getAssistants().contains(player.getUniqueId()))
-                                            warp.setTraffic(warp.getTraffic() + 1);
+                                        if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
+                                                && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())) {
+                                            EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
+                                            getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
+                                            if (!economyChargeEvent.isCancelled()) {
+                                                if (!getPluginInstance().getVaultHandler().getEconomy().has(player, economyChargeEvent.getAmount())) {
+                                                    getAnimation().stopActiveAnimation(player);
+                                                    getTeleportTempMap().remove(playerUniqueId);
+                                                    getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + economyChargeEvent.getAmount());
+                                                    return;
+                                                }
 
-                                    boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-                                    if (useMySQL && getPluginInstance().getDatabaseConnection() != null) {
-                                        String serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                                                ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
-                                                : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
+                                                getPluginInstance().getVaultHandler().getEconomy().withdrawPlayer(player, warp.getUsagePrice());
+                                                if (warp.getOwner() != null) {
+                                                    OfflinePlayer owner = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+                                                    getPluginInstance().getVaultHandler().getEconomy().depositPlayer(owner, warp.getUsagePrice());
+                                                }
 
-                                        if (!warp.getServerIPAddress().equalsIgnoreCase(serverIP)) {
-                                            String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
-                                            if (server != null) {
+                                                getPluginInstance().getManager().sendCustomMessage("transaction-success", player, "{amount}:" + economyChargeEvent.getAmount());
+                                            }
+                                        }
+
+                                        if (warp.getOwner() != null)
+                                            if (!warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString())
+                                                    && !warp.getAssistants().contains(player.getUniqueId()))
+                                                warp.setTraffic(warp.getTraffic() + 1);
+
+                                        boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                                                && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
+                                        if (useMySQL && getPluginInstance().getDatabaseConnection() != null && getPluginInstance().getBungeeListener() != null) {
+                                            String serverIP = (warp.getServerIPAddress().contains(".") ? getPluginInstance().getBungeeListener().getServerAddressMap().get(
+                                                    getPluginInstance().getBungeeListener().getMyServer()) : getPluginInstance().getBungeeListener().getMyServer());
+
+                                            if (!warp.getServerIPAddress().equalsIgnoreCase(serverIP)) {
                                                 for (String command : warp.getCommands()) {
                                                     if (command.toUpperCase().endsWith(":PLAYER"))
                                                         getPluginInstance().getServer().dispatchCommand(player, command.replaceAll("(?i):PLAYER", "")
@@ -142,113 +165,112 @@ public class TeleportationHandler implements Runnable {
                                                 }
 
                                                 getTeleportTempMap().remove(playerUniqueId);
-                                                getPluginInstance().getManager().teleportCrossServer(player, server, warp.getWarpLocation());
+                                                getPluginInstance().getManager().teleportCrossServer(player, (warp.getServerIPAddress().contains(".")
+                                                        ? getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress()) : warp.getServerIPAddress()), warp.getWarpLocation());
                                                 getPluginInstance().getManager().updateCooldown(player, "warp");
+                                            }
+
+                                            if (warpLocation == null || warpLocation.getWorld() == null) {
+                                                getPluginInstance().getManager().sendActionBar(player, Objects.requireNonNull(getPluginInstance().getLangConfig()
+                                                        .getString("teleport-fail-message")).replace("{warp}", warp.getWarpName()));
+                                                getTeleportTempMap().remove(playerUniqueId);
                                                 return;
                                             }
+
+                                            for (String command : warp.getCommands()) {
+                                                if (command.toUpperCase().endsWith(":PLAYER"))
+                                                    getPluginInstance().getServer().dispatchCommand(player, command
+                                                            .replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
+                                                else if (command.toUpperCase().endsWith(":CONSOLE"))
+                                                    getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
+                                                            command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
+                                                else
+                                                    getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), command.replace("{player}", player.getName()));
+                                            }
+
+                                        } else {
+                                            for (String command : warp.getCommands()) {
+                                                if (command.toUpperCase().endsWith(":PLAYER"))
+                                                    getPluginInstance().getServer().dispatchCommand(player, command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
+                                                else if (command.toUpperCase().endsWith(":CONSOLE"))
+                                                    getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
+                                                            command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
+                                                else
+                                                    getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), command.replace("{player}", player.getName()));
+                                            }
+                                        }
+                                        getTeleportTempMap().remove(playerUniqueId);
+                                        teleportPlayer(player, warpLocation);
+                                        getPluginInstance().getManager().updateCooldown(player, "warp");
+
+                                        // Warp teleport animation
+                                        if (!isVanished) {
+                                            if (warp.getAnimationSet() != null && warp.getAnimationSet().contains(":")) {
+                                                String[] themeArgs = warp.getAnimationSet().split(":");
+                                                String teleportTheme = themeArgs[2];
+                                                if (teleportTheme.contains("/")) {
+                                                    String[] teleportThemeArgs = teleportTheme.split("/");
+                                                    getAnimation().stopActiveAnimation(player);
+                                                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[1], EnumContainer.Animation.valueOf(teleportThemeArgs[0]
+                                                            .toUpperCase().replace(" ", "_").replace("-", "_")), 1);
+                                                }
+                                            }
+
+                                            if (!teleportSound.equalsIgnoreCase("") && warpLocation.getWorld() != null)
+                                                warpLocation.getWorld().playSound(warpLocation, Sound.valueOf(teleportSound), 1, 1);
                                         }
 
-                                        if (warpLocation == null || warpLocation.getWorld() == null) {
-                                            getPluginInstance().getManager().sendActionBar(player, Objects.requireNonNull(getPluginInstance().getLangConfig()
-                                                    .getString("teleport-fail-message")).replace("{warp}", warp.getWarpName()));
-                                            getTeleportTempMap().remove(playerUniqueId);
-                                            return;
+                                        if (warp.canNotify() && warp.getOwner() != null && !isVanished) {
+                                            Player owner = getPluginInstance().getServer().getPlayer(warp.getOwner());
+                                            if (owner != null && owner.isOnline())
+                                                getPluginInstance().getManager().sendCustomMessage("warp-notify", owner, "{player}:" + player.getName(), "{warp}:" + warp.getWarpName());
                                         }
 
-                                        for (String command : warp.getCommands()) {
-                                            if (command.toUpperCase().endsWith(":PLAYER"))
-                                                getPluginInstance().getServer().dispatchCommand(player, command
-                                                        .replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
-                                            else if (command.toUpperCase().endsWith(":CONSOLE"))
-                                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
-                                                        command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
-                                            else
-                                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), command.replace("{player}", player.getName()));
-                                        }
+                                        if (warp.canNotify() && !warp.getAssistants().isEmpty() && !isVanished)
+                                            for (UUID id : warp.getAssistants()) {
+                                                Player assistant = getPluginInstance().getServer().getPlayer(id);
+                                                if (assistant != null && assistant.isOnline())
+                                                    getPluginInstance().getManager().sendCustomMessage("warp-notify", assistant, "{player}:" + player.getName(), "{warp}:" + warp.getWarpName());
+                                            }
 
-                                    } else {
-                                        for (String command : warp.getCommands()) {
-                                            if (command.toUpperCase().endsWith(":PLAYER"))
-                                                getPluginInstance().getServer().dispatchCommand(player, command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
-                                            else if (command.toUpperCase().endsWith(":CONSOLE"))
-                                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
-                                                        command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
-                                            else
-                                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), command.replace("{player}", player.getName()));
-                                        }
+                                        if (teleportTitle != null && teleportSubTitle != null)
+                                            getPluginInstance().getManager().sendTitle(player,
+                                                    teleportTitle.replace("{warp}", warp.getWarpName()),
+                                                    teleportSubTitle.replace("{warp}", warp.getWarpName()), 0, 5, 0);
+
+                                        String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.teleport-bar-message");
+                                        if (actionMessage != null && !actionMessage.isEmpty())
+                                            getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{warp}", warp.getWarpName()));
+
+                                        getPluginInstance().getManager().sendCustomMessage("teleportation-engaged", player, "{warp}:" + warp.getWarpName(), "{duration}:" + teleportTemp.getSeconds());
                                     }
+                                }
+                                break;
+                            case "rtp":
+                                if (teleportTemp.getTeleportValue() != null) {
                                     getTeleportTempMap().remove(playerUniqueId);
-                                    teleportPlayer(player, warpLocation);
-                                    getPluginInstance().getManager().updateCooldown(player, "warp");
+                                    World world = getPluginInstance().getServer().getWorld(teleportTemp.getTeleportValue());
+                                    randomlyTeleportPlayer(player, (world == null || world.getName().equalsIgnoreCase("")) ? player.getWorld() : world);
 
-                                    // Warp teleport animation
-                                    if (warp.getAnimationSet() != null && warp.getAnimationSet().contains(":")) {
-                                        String[] themeArgs = warp.getAnimationSet().split(":");
-                                        String teleportTheme = themeArgs[2];
+                                    String randomTeleportDelayAnimation = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-delay-animation");
+                                    if (!isVanished && randomTeleportDelayAnimation != null && randomTeleportDelayAnimation.contains(":")) {
+                                        String[] themeArgs = randomTeleportDelayAnimation.split(":");
+                                        String teleportTheme = themeArgs[1];
                                         if (teleportTheme.contains("/")) {
                                             String[] teleportThemeArgs = teleportTheme.split("/");
                                             getAnimation().stopActiveAnimation(player);
-                                            getPluginInstance().getTeleportationHandler().getAnimation()
-                                                    .playAnimation(player, teleportThemeArgs[1],
-                                                            EnumContainer.Animation.valueOf(teleportThemeArgs[0]
-                                                                    .toUpperCase().replace(" ", "_").replace("-", "_")),
-                                                            1);
+                                            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[0],
+                                                    EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_")), 1);
                                         }
                                     }
-
-                                    if (!teleportSound.equalsIgnoreCase("") && warpLocation.getWorld() != null)
-                                        warpLocation.getWorld().playSound(warpLocation, Sound.valueOf(teleportSound), 1, 1);
-
-                                    if (warp.canNotify() && warp.getOwner() != null) {
-                                        Player owner = getPluginInstance().getServer().getPlayer(warp.getOwner());
-                                        if (owner != null && owner.isOnline())
-                                            getPluginInstance().getManager().sendCustomMessage("warp-notify", owner, "{player}:" + player.getName(), "{warp}:" + warp.getWarpName());
-                                    }
-
-                                    if (warp.canNotify() && !warp.getAssistants().isEmpty())
-                                        for (UUID id : warp.getAssistants()) {
-                                            Player assistant = getPluginInstance().getServer().getPlayer(id);
-                                            if (assistant != null && assistant.isOnline())
-                                                getPluginInstance().getManager().sendCustomMessage("warp-notify", assistant, "{player}:" + player.getName(), "{warp}:" + warp.getWarpName());
-                                        }
-
-                                    if (teleportTitle != null && teleportSubTitle != null)
-                                        getPluginInstance().getManager().sendTitle(player,
-                                                teleportTitle.replace("{warp}", warp.getWarpName()),
-                                                teleportSubTitle.replace("{warp}", warp.getWarpName()), 0, 5, 0);
-
-                                    String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.teleport-bar-message");
-                                    if (actionMessage != null && !actionMessage.isEmpty())
-                                        getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{warp}", warp.getWarpName()));
-
-                                    getPluginInstance().getManager().sendCustomMessage("teleportation-engaged", player, "{warp}:" + warp.getWarpName(), "{duration}:" + teleportTemp.getSeconds());
                                 }
-                            }
-                            break;
-                        case "rtp":
-                            if (teleportTemp.getTeleportValue() != null) {
-                                getTeleportTempMap().remove(playerUniqueId);
-                                World world = getPluginInstance().getServer().getWorld(teleportTemp.getTeleportValue());
-                                randomlyTeleportPlayer(player, (world == null || world.getName().equalsIgnoreCase("")) ? player.getWorld() : world);
-
-                                String randomTeleportDelayAnimation = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-delay-animation");
-                                if (randomTeleportDelayAnimation != null && randomTeleportDelayAnimation.contains(":")) {
-                                    String[] themeArgs = randomTeleportDelayAnimation.split(":");
-                                    String teleportTheme = themeArgs[1];
-                                    if (teleportTheme.contains("/")) {
-                                        String[] teleportThemeArgs = teleportTheme.split("/");
-                                        getAnimation().stopActiveAnimation(player);
-                                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[0],
-                                                EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_")), 1);
-                                    }
-                                }
-                            }
-                            break;
-                        case "tp":
-                            operateTeleportation(teleportTemp, teleportTemp.getTeleportTypeId().toLowerCase(), player, playerUniqueId);
-                            break;
-                        default:
-                            break;
+                                break;
+                            case "tp":
+                                operateTeleportation(teleportTemp, teleportTemp.getTeleportTypeId().toLowerCase(), player, playerUniqueId);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
             } else getTeleportTempMap().remove(playerUniqueId);
@@ -292,7 +314,9 @@ public class TeleportationHandler implements Runnable {
                     animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
             if (!teleportSound.equalsIgnoreCase(""))
                 player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
-            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+
+            boolean isVanished = getPluginInstance().getManager().isVanished(player);
+            if (!isVanished && animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
                 getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
                 getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
@@ -353,6 +377,11 @@ public class TeleportationHandler implements Runnable {
             return;
 
         player.setVelocity(new Vector(0, 0, 0));
+        getPluginInstance().getTeleportationCommands().updateLastLocation(player, player.getLocation());
+
+        int invulnerabilityDuration = getPluginInstance().getConfig().getInt("teleportation-section.invulnerability-duration");
+        if (invulnerabilityDuration > 0)
+            getPluginInstance().getManager().updateCooldown(player, "invulnerability");
 
         boolean teleportVehicle = getPluginInstance().getConfig().getBoolean("teleportation-section.teleport-vehicles");
         if (player.getVehicle() != null && teleportVehicle) {

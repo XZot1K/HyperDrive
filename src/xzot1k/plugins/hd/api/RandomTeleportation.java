@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api;
@@ -24,7 +24,7 @@ import java.util.logging.Level;
 public class RandomTeleportation implements Runnable {
 
     private HyperDrive pluginInstance;
-    private List<String> forbiddenMaterialList, biomeBlackList;
+    private List<String> biomeBlackList;
     private int attempts, maxAttempts, boundsRadius, smartLimit;
     private boolean onlyUpdateDestination;
     private String teleportSound;
@@ -39,7 +39,6 @@ public class RandomTeleportation implements Runnable {
         setAttempts(0);
         setSmartLimit(0);
         setOnlyUpdateDestination(onlyUpdateDestination);
-        setForbiddenMaterialList(getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-materials"));
         setBiomeBlackList(getPluginInstance().getConfig().getStringList("random-teleport-section.biome-blacklist"));
         setMaxAttempts(getPluginInstance().getConfig().getInt("random-teleport-section.max-tries"));
         setTeleportSound(Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.global-sounds.teleport"))
@@ -92,7 +91,8 @@ public class RandomTeleportation implements Runnable {
                     break;
                 }
 
-            if (isBlockedBiome || !getPluginInstance().getHookChecker().isLocationHookSafe(getPlayer(), foundBlock.getLocation()) || isForbidden(foundBlock))
+            if (isBlockedBiome || !getPluginInstance().getHookChecker().isLocationHookSafe(getPlayer(), foundBlock.getLocation())
+                    || getPluginInstance().getManager().isForbiddenMaterial(foundBlock.getType(), foundBlock.getData()))
                 continue;
 
             Block relativeUp = foundBlock.getRelative(BlockFace.UP);
@@ -167,41 +167,12 @@ public class RandomTeleportation implements Runnable {
         return world.getHighestBlockYAt((int) x, (int) z);
     }
 
-    private boolean isForbidden(Block foundBlock) {
-        for (String materialLine : getForbiddenMaterialList()) {
-            if (materialLine == null || materialLine.isEmpty()) continue;
-
-            if (materialLine.contains(":")) {
-                String[] materialArgs = materialLine.split(":");
-                int durability = 0;
-
-                if (!getPluginInstance().getManager().isNotNumeric(materialArgs[1]))
-                    durability = Integer.parseInt(materialArgs[1]);
-
-                if (foundBlock.getType().name().contains(materialArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"))
-                        && (durability == -1 || foundBlock.getData() == durability))
-                    return true;
-            } else if (foundBlock.getType().name().contains(materialLine.toUpperCase().replace(" ", "_").replace("-", "_")))
-                return true;
-        }
-
-        return false;
-    }
-
     private HyperDrive getPluginInstance() {
         return pluginInstance;
     }
 
     private void setPluginInstance(HyperDrive pluginInstance) {
         this.pluginInstance = pluginInstance;
-    }
-
-    public List<String> getForbiddenMaterialList() {
-        return forbiddenMaterialList;
-    }
-
-    private void setForbiddenMaterialList(List<String> forbiddenMaterialList) {
-        this.forbiddenMaterialList = forbiddenMaterialList;
     }
 
     public List<String> getBiomeBlackList() {

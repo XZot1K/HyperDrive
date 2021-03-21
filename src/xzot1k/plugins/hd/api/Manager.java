@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api;
@@ -19,6 +19,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import us.eunoians.prisma.ColorProvider;
 import xzot1k.plugins.hd.HyperDrive;
@@ -67,7 +68,6 @@ public class Manager {
         setWarpMap(new HashMap<>());
         setChatInteractionMap(new HashMap<>());
         setGroupMap(new HashMap<>());
-
         setupPackets();
     }
 
@@ -186,7 +186,7 @@ public class Manager {
                         word.substring(0, Math.min(word.length(), longWordCount));
 
                     sb.append(word).append(" ");
-                    wordCounter++;
+                    if (net.md_5.bungee.api.ChatColor.stripColor(word).length() > 1) wordCounter++;
                     continue;
                 }
 
@@ -407,8 +407,7 @@ public class Manager {
     // cooldown stuff
     public void updateCooldown(OfflinePlayer player, String cooldownId) {
         HashMap<String, Long> cooldownMap;
-
-        if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId())) {
+        if (getCooldownMap().containsKey(player.getUniqueId())) {
             cooldownMap = getCooldownMap().get(player.getUniqueId());
             if (cooldownMap != null) {
                 cooldownMap.put(cooldownId, System.currentTimeMillis());
@@ -422,11 +421,17 @@ public class Manager {
     }
 
     public long getCooldownDuration(OfflinePlayer player, String cooldownId, int cooldownDuration) {
+        if (cooldownDuration <= 0) return 0;
+
         if (!getCooldownMap().isEmpty() && getCooldownMap().containsKey(player.getUniqueId())) {
             HashMap<String, Long> playerCooldownMap = getCooldownMap().get(player.getUniqueId());
-            if (playerCooldownMap != null && !playerCooldownMap.isEmpty() && playerCooldownMap.containsKey(cooldownId))
-                return ((playerCooldownMap.get(cooldownId) / 1000) + cooldownDuration)
-                        - (System.currentTimeMillis() / 1000);
+            if (playerCooldownMap != null && playerCooldownMap.containsKey(cooldownId)) {
+                long calculation = ((playerCooldownMap.get(cooldownId) / 1000) + cooldownDuration) - (System.currentTimeMillis() / 1000);
+                if (calculation <= 0) {
+                    playerCooldownMap.remove(cooldownId);
+                    return 0;
+                } else return calculation;
+            }
         }
 
         return 0;
@@ -632,7 +637,8 @@ public class Manager {
         return EnumContainer.Status.PUBLIC.name();
     }
 
-    public ItemStack buildWarpIcon(OfflinePlayer player, Warp warp) {
+    public ItemStack buildWarpIcon(Player player, Warp warp) {
+        if (player == null || !player.isOnline()) return null;
         String publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
                 privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
                 adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format"), statusName;
@@ -683,32 +689,34 @@ public class Manager {
                     .replace("{status}", statusName != null ? statusName : "")
                     .replace("{theme}", (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) ? warp.getIconTheme().split(",")[0] : "")
                     .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
-                    .replace("{player}", player != null ? Objects.requireNonNull(player.getName()) : "")
+                    .replace("{player}", player.getName())
                     .replace("{traffic}", String.valueOf(warp.getTraffic())).replace("{owner}", offlinePlayer != null ? (offlinePlayer.getName() != null ? offlinePlayer.getName() : invalidRetrieval) : invalidRetrieval)
                     .replace("{likes}", String.valueOf(warp.getLikes())).replace("{dislikes}", String.valueOf(warp.getDislikes()))
                     .replace("{like-bar}", warp.getLikeBar());
 
-            if (foundEventPlaceholder != null && player != null) {
+            if (foundEventPlaceholder != null) {
                 switch (foundEventPlaceholder) {
                     case "{is-owner}":
                         if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
                             newLore.add(colorText(furtherFormattedLine));
                         break;
                     case "{can-edit}":
-                        if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())
-                                || warp.getAssistants().contains(player.getUniqueId()))
+                        if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()) || warp.getAssistants().contains(player.getUniqueId()))
                             newLore.add(colorText(furtherFormattedLine));
                         break;
                     case "{has-access}":
-                        if (warp.getStatus() == EnumContainer.Status.PUBLIC || ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
-                                || warp.getAssistants().contains(player.getUniqueId()) || (warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()))
-                                || (Objects.requireNonNull(player.getPlayer()).hasPermission("hyperdrive.warps." + warp.getWarpName()) || player.getPlayer().hasPermission("hyperdrive.warps.*")))
+                        if (warp.getStatus() == EnumContainer.Status.PUBLIC || (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                                || warp.getAssistants().contains(player.getUniqueId()) || (warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
+                                || (!warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
+                                || player.hasPermission("hyperdrive.warps." + net.md_5.bungee.api.ChatColor.stripColor(warp.getWarpName())) || player.hasPermission("hyperdrive.warps.*"))
                             newLore.add(colorText(furtherFormattedLine));
                         break;
                     case "{no-access}":
                         if (warp.getStatus() != EnumContainer.Status.PUBLIC && (warp.getOwner() != null && !warp.getOwner().toString().equals(player.getUniqueId().toString()))
-                                && !warp.getAssistants().contains(player.getUniqueId()) && (!warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode())
-                                && (!Objects.requireNonNull(player.getPlayer()).hasPermission("hyperdrive.warps." + warp.getWarpName()) && !player.getPlayer().hasPermission("hyperdrive.warps.*")))
+                                && !warp.getAssistants().contains(player.getUniqueId()) && (warp.isWhiteListMode() && !warp.getPlayerList().contains(player.getUniqueId()))
+                                && (!warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
+                                && !player.hasPermission("hyperdrive.warps." + net.md_5.bungee.api.ChatColor.stripColor(warp.getWarpName()))
+                                && !player.hasPermission("hyperdrive.warps.*"))
                             newLore.add(colorText(furtherFormattedLine));
                         break;
                     case "{is-private}":
@@ -735,6 +743,24 @@ public class Manager {
 
             if (themeArgs.length <= 3) {
                 String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
+                if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                    final String[] materialNameArgs = materialName.split(":");
+                    ItemStack itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
+                    ItemMeta itemMeta = itemStack.getItemMeta();
+                    if (itemMeta != null) {
+                        itemMeta.setDisplayName(warp.getWarpName());
+                        itemMeta.setLore(newLore);
+
+                        if (warp.hasIconEnchantedLook()) {
+                            itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                            itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        }
+
+                        itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                        itemStack.setItemMeta(itemMeta);
+                    }
+                    return itemStack;
+                }
 
                 int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
                 if ((materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) && warp.getOwner() != null) {
@@ -805,14 +831,11 @@ public class Manager {
         return item;
     }
 
-    public ItemStack buildItemFromId(OfflinePlayer player, String currentFilterStatus, String menuPath, String itemId) {
+    public ItemStack buildItemFromId(Player player, String currentFilterStatus, String menuPath, String itemId) {
         boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player),
                 hasNextPage = getPaging().hasNextWarpPage(player);
         int currentPage = getPaging().getCurrentPage(player);
-        List<String> itemIds = new ArrayList<>(
-                Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection(menuPath + ".items"))
-                        .getKeys(false));
-
+        List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection(menuPath + ".items")).getKeys(false));
         String ownFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format"),
                 publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
                 privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
@@ -883,7 +906,7 @@ public class Manager {
         return null;
     }
 
-    public Inventory buildListMenu(OfflinePlayer player) {
+    public Inventory buildListMenu(Player player) {
         final Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getMenusConfig().getInt("list-menu-section.size"),
                 colorText(getPluginInstance().getMenusConfig().getString("list-menu-section.title")));
 
@@ -951,8 +974,24 @@ public class Manager {
                             for (int j = -1; ++j < lore.size(); )
                                 newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement)
                                         .replace("{next-page}", replacement1).replace("{current-status}", currentStatus)));
-                            Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".material"))
-                                    .toUpperCase().replace(" ", "_").replace("-", "_"));
+
+                            final String materialName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".material"))
+                                    .toUpperCase().replace(" ", "_").replace("-", "_");
+                            if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                                final String[] materialNameArgs = materialName.split(":");
+                                ItemStack itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
+                                itemStack.setAmount(getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
+                                ItemMeta itemMeta = itemStack.getItemMeta();
+                                if (itemMeta != null) {
+                                    itemMeta.setDisplayName(colorText(displayName));
+                                    itemMeta.setLore(newLore);
+                                    itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                                    itemStack.setItemMeta(itemMeta);
+                                }
+                                return;
+                            }
+
+                            Material material = Material.getMaterial(materialName);
                             ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".durability"),
                                     colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("list-menu-section.items." + itemId + ".amount"));
                             inventory.setItem(slot, itemStack);
@@ -970,7 +1009,7 @@ public class Manager {
                     }
                 }
 
-                HashMap<Integer, List<Warp>> warpPageMap = getPaging().getWarpPages(player, "list-menu-section", Objects.requireNonNull(currentStatus));
+                Map<Integer, List<Warp>> warpPageMap = getPaging().getWarpPages(player, "list-menu-section", Objects.requireNonNull(currentStatus));
                 getPaging().getWarpPageMap().put(player.getUniqueId(), warpPageMap);
                 if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(1)) {
                     List<Warp> pageOneWarpList = new ArrayList<>(warpPageMap.get(1));
@@ -1003,7 +1042,7 @@ public class Manager {
             List<Integer> playerSlots = getPluginInstance().getMenusConfig().getIntegerList("ps-menu-section.player-slots");
             ItemStack emptySlotFiller = null;
 
-            HashMap<Integer, List<UUID>> playerSelectionMap = getPaging().getPlayerSelectionPages(player);
+            Map<Integer, List<UUID>> playerSelectionMap = getPaging().getPlayerSelectionPages(player);
             getPaging().getPlayerSelectionPageMap().put(player.getUniqueId(), playerSelectionMap);
             List<UUID> pageOnePlayerList = new ArrayList<>();
             if (playerSelectionMap != null && !playerSelectionMap.isEmpty() && playerSelectionMap.containsKey(1))
@@ -1058,9 +1097,24 @@ public class Manager {
                     for (int j = -1; ++j < lore.size(); )
                         newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement)
                                 .replace("{next-page}", replacement1)));
-                    Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".material"))
-                            .toUpperCase().replace(" ", "_").replace("-", "_"));
 
+                    final String materialName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".material"))
+                            .toUpperCase().replace(" ", "_").replace("-", "_");
+                    if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                        final String[] materialNameArgs = materialName.split(":");
+                        ItemStack itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
+                        itemStack.setAmount(getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
+                        ItemMeta itemMeta = itemStack.getItemMeta();
+                        if (itemMeta != null) {
+                            itemMeta.setDisplayName(colorText(displayName));
+                            itemMeta.setLore(newLore);
+                            itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                            itemStack.setItemMeta(itemMeta);
+                        }
+                        return;
+                    }
+
+                    Material material = Material.getMaterial(materialName);
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".durability"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
                     inventory.setItem(slot, itemStack);
@@ -1146,6 +1200,8 @@ public class Manager {
                                         ? toggleFormat.split(":")[0] : toggleFormat.split(":")[1] : "")
                                 .replace("{current-status}", Objects.requireNonNull(currentStatusName))
                                 .replace("{next-status}", Objects.requireNonNull(nextStatusName))
+                                .replace("{list-count}", String.valueOf(warp.getPlayerList().size()))
+                                .replace("{assistants-count}", String.valueOf(warp.getAssistants().size()))
                                 .replace("{next-list-type}", warp.isWhiteListMode() ? "Blacklist" : "Whitelist")
                                 .replace("{animation-set}", nextAnimationSet != null && nextAnimationSet.contains(":") ? nextAnimationSet.split(":")[0] : "")
                                 .replace("{usage-price}", String.valueOf(getPluginInstance().getMenusConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
@@ -1167,14 +1223,81 @@ public class Manager {
                                 .replace("{current-status}", Objects.requireNonNull(currentStatusName))
                                 .replace("{next-status}", Objects.requireNonNull(nextStatusName))
                                 .replace("{next-list-type}", warp.isWhiteListMode() ? "Blacklist" : "Whitelist")
+                                .replace("{list-count}", String.valueOf(warp.getPlayerList().size()))
+                                .replace("{assistants-count}", String.valueOf(warp.getAssistants().size()))
                                 .replace("{animation-set}", nextAnimationSet != null && nextAnimationSet.contains(":") ? nextAnimationSet.split(":")[0] : "")
                                 .replace("{usage-price}", String.valueOf(getPluginInstance().getMenusConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
-                    Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".material"))
-                            .toUpperCase().replace(" ", "_").replace("-", "_"));
 
-                    ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".durability"),
-                            colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
-                    inventory.setItem(slot, itemStack);
+                    ItemStack itemStack = null;
+                    if (itemId.equalsIgnoreCase("change-icon") && warp.getIconTheme() != null && warp.getIconTheme().contains(",")) {
+                        String[] themeArgs = warp.getIconTheme().split(",");
+                        if (themeArgs.length <= 3) {
+                            String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
+                            if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                                final String[] materialNameArgs = materialName.split(":");
+                                itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
+                                ItemMeta itemMeta = itemStack.getItemMeta();
+                                if (itemMeta != null) {
+                                    itemMeta.setDisplayName(warp.getWarpName());
+                                    itemMeta.setLore(newLore);
+
+                                    if (warp.hasIconEnchantedLook()) {
+                                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                                    }
+
+                                    itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                                    itemStack.setItemMeta(itemMeta);
+                                }
+                            } else {
+                                int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
+                                if ((materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) && warp.getOwner() != null) {
+                                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+                                    itemStack = getPlayerHead(offlinePlayer.getName(), colorText(warp.getWarpName()), newLore, amount);
+                                    ItemMeta itemMeta = itemStack.getItemMeta();
+                                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
+                                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                                        itemStack.setItemMeta(itemMeta);
+                                    }
+                                } else {
+                                    Material material;
+                                    try {
+                                        material = Material.getMaterial(materialName);
+                                    } catch (Exception ignored) {
+                                        material = Material.ARROW;
+                                    }
+
+                                    itemStack = buildItem(material, durability, colorText(warp.getWarpName()), newLore, amount);
+                                    ItemMeta itemMeta = itemStack.getItemMeta();
+                                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
+                                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                                        itemStack.setItemMeta(itemMeta);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        final String materialName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".material"))
+                                .toUpperCase().replace(" ", "_").replace("-", "_");
+                        if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                            final String[] materialNameArgs = materialName.split(":");
+                            itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
+                            itemStack.setAmount(getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
+                            ItemMeta itemMeta = itemStack.getItemMeta();
+                            if (itemMeta != null) {
+                                itemMeta.setDisplayName(colorText(displayName));
+                                itemMeta.setLore(newLore);
+                                itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                                itemStack.setItemMeta(itemMeta);
+                            }
+                        } else
+                            itemStack = buildItem(Material.getMaterial(materialName), getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".durability"),
+                                    colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
+                    }
+
+                    if (itemStack != null) inventory.setItem(slot, itemStack);
                     if (fillEmptySlots) emptySlotFiller = itemStack;
                 }
             }
@@ -1221,9 +1344,24 @@ public class Manager {
                     for (int j = -1; ++j < lore.size(); )
                         newLore.add(colorText(lore.get(j).replace("{warp-name}", warp.getWarpName()).replace("{warp}", warp.getWarpName())
                                 .replace("{usage-price}", String.valueOf(getPluginInstance().getMenusConfig().getDouble("like-menu-section.items." + itemId + ".usage-cost")))));
-                    Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".material"))
-                            .toUpperCase().replace(" ", "_").replace("-", "_"));
 
+                    final String materialName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".material"))
+                            .toUpperCase().replace(" ", "_").replace("-", "_");
+                    if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                        final String[] materialNameArgs = materialName.split(":");
+                        ItemStack itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
+                        itemStack.setAmount(getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".amount"));
+                        ItemMeta itemMeta = itemStack.getItemMeta();
+                        if (itemMeta != null) {
+                            itemMeta.setDisplayName(colorText(displayName));
+                            itemMeta.setLore(newLore);
+                            itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                            itemStack.setItemMeta(itemMeta);
+                        }
+                        return;
+                    }
+
+                    Material material = Material.getMaterial(materialName);
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".durability"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("like-menu-section.items." + itemId + ".amount"));
                     inventory.setItem(slot, itemStack);
@@ -1243,7 +1381,7 @@ public class Manager {
         return inventory;
     }
 
-    public Inventory buildCustomMenu(OfflinePlayer player, String menuId) {
+    public Inventory buildCustomMenu(Player player, String menuId) {
         final Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".size"),
                 colorText(getPluginInstance().getMenusConfig().getString("custom-menus-section." + menuId + ".title")));
         if (player == null || !player.isOnline()) return inventory;
@@ -1287,9 +1425,24 @@ public class Manager {
                         newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage))
                                 .replace("{previous-page}", replacement).replace("{next-page}", replacement1)
                                 .replace("{current-status}", WordUtils.capitalize(currentFilterStatus))));
-                    Material material = Material.getMaterial(Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("custom-menus-section." + menuId + ".items." + itemId + ".material"))
-                            .toUpperCase().replace(" ", "_").replace("-", "_"));
 
+                    final String materialName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("custom-menus-section." + menuId + ".items." + itemId + ".material"))
+                            .toUpperCase().replace(" ", "_").replace("-", "_");
+                    if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                        final String[] materialNameArgs = materialName.split(":");
+                        ItemStack itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
+                        itemStack.setAmount(getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".amount"));
+                        ItemMeta itemMeta = itemStack.getItemMeta();
+                        if (itemMeta != null) {
+                            itemMeta.setDisplayName(colorText(displayName));
+                            itemMeta.setLore(newLore);
+                            itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                            itemStack.setItemMeta(itemMeta);
+                        }
+                        return;
+                    }
+
+                    Material material = Material.getMaterial(materialName);
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".durability"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("custom-menus-section." + menuId + ".items." + itemId + ".amount"));
                     inventory.setItem(slot, itemStack);
@@ -1306,7 +1459,7 @@ public class Manager {
                 }
             }
 
-            HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "custom-menus-section." + menuId, currentFilterStatus);
+            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "custom-menus-section." + menuId, currentFilterStatus);
             getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
             List<Warp> wList = new ArrayList<>();
@@ -1352,6 +1505,49 @@ public class Manager {
     }
 
     // warp stuff
+    public boolean isVanished(Player player) {
+        if (getPluginInstance().getHookChecker().isCMIInstalled())
+            return com.Zrips.CMI.CMI.getInstance().getPlayerManager().getUser(player).isVanished();
+
+        for (MetadataValue meta : player.getMetadata("vanished"))
+            if (meta.asBoolean()) return true;
+
+        try {
+            return getPluginInstance().getHookChecker().getEssentialsPlugin() != null
+                    && ((com.earth2me.essentials.Essentials) getPluginInstance().getHookChecker().getEssentialsPlugin()).getUser(player.getUniqueId()).isVanished();
+        } catch (NoClassDefFoundError ignored) {
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if the passed material is forbidden or not.
+     *
+     * @param material The material to check for.
+     * @return The resultant factor.
+     */
+    public boolean isForbiddenMaterial(Material material, short durability) {
+        List<String> materialList = getPluginInstance().getConfig().getStringList("filter-section.forbidden-materials");
+        for (int i = -1; ++i < materialList.size(); ) {
+            final String line = materialList.get(i);
+            if (line == null || line.isEmpty()) continue;
+
+            if (line.contains(":")) {
+                final String[] args = line.split(":");
+
+                short dur = -1;
+                if (!getPluginInstance().getManager().isNotNumeric(args[1]))
+                    dur = Short.parseShort(args[1]);
+
+                if (material.name().contains(args[0].toUpperCase().replace(" ", "_").replace("-", "_"))
+                        && (durability <= -1 || durability == dur)) return true;
+            } else if (material.name().contains(line.toUpperCase().replace(" ", "_").replace("-", "_")))
+                return true;
+        }
+
+        return false;
+    }
 
     /**
      * Checks if the passed player can edit the passed warp.
@@ -1430,15 +1626,25 @@ public class Manager {
         return (warpCount >= warpLimit);
     }
 
+    /**
+     * Checks if the warp limit would be met based on the passed warp count.
+     *
+     * @param player    The player whom to check.
+     * @param warpCount The warp count to use for calculations.
+     * @return Whether the warp limit was passed.
+     */
+    public boolean wouldMeetWarpLimit(OfflinePlayer player, int warpCount) {
+        int warpLimit = getWarpLimit(player);
+        return (warpCount >= warpLimit && warpLimit >= 0);
+    }
+
     public int getWarpLimit(OfflinePlayer player) {
         int currentFoundAmount = getPluginInstance().getConfig().getInt("general-section.default-warp-limit");
 
         if (player.isOnline()) {
             Player p = player.getPlayer();
-            if (p == null)
-                return 0;
-            if (p.hasPermission("hyperdrive.warplimit.*"))
-                return -1;
+            if (p == null) return 0;
+            if (p.hasPermission("hyperdrive.warplimit.*")) return -1;
 
             List<PermissionAttachmentInfo> lists = new ArrayList<>(p.getEffectivePermissions());
             for (int i = -1; ++i < lists.size(); ) {
@@ -1485,6 +1691,24 @@ public class Manager {
         }
 
         return permittedWarpNames;
+    }
+
+    /**
+     * Gets a list of all owned warps (Not assistants).
+     *
+     * @param player The player to get the information for.
+     * @return The list of warp names.
+     */
+    public List<String> getOwnedWarps(OfflinePlayer player) {
+        List<String> warpNames = new ArrayList<>();
+        for (Map.Entry<String, Warp> entry : getWarpMap().entrySet()) {
+            final String warpName = net.md_5.bungee.api.ChatColor.stripColor(entry.getKey());
+            final Warp warp = entry.getValue();
+            if (warp != null && (warp.getOwner().toString().equals(player.getUniqueId().toString())))
+                if (!warpNames.contains(warpName)) warpNames.add(warpName);
+        }
+
+        return warpNames;
     }
 
     public boolean isBlockedWorld(World world) {

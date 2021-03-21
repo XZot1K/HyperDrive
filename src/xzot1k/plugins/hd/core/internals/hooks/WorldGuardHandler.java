@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals.hooks;
@@ -23,7 +23,7 @@ import java.util.Set;
 public class WorldGuardHandler {
 
     private static StateFlag HD_ALLOW;
-    private WorldGuardPlugin worldGuardPlugin;
+    private final WorldGuardPlugin worldGuardPlugin;
 
     public WorldGuardHandler() {
         FlagRegistry registry = null;
@@ -75,8 +75,8 @@ public class WorldGuardHandler {
         if (regions.isEmpty()) return true;
 
         for (ProtectedRegion protectedRegion : regions)
-            if (protectedRegion.getFlags().containsKey(HD_ALLOW) && (protectedRegion.getFlags().get(HD_ALLOW) instanceof Boolean
-                    && ((boolean) protectedRegion.getFlags().get(HD_ALLOW)))) return true;
-        return false;
+            if (!protectedRegion.getFlags().containsKey(HD_ALLOW) && (protectedRegion.getFlags().get(HD_ALLOW) instanceof Boolean
+                    && !((boolean) protectedRegion.getFlags().get(HD_ALLOW)))) return false;
+        return true;
     }
 }

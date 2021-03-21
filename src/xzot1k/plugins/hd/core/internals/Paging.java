@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals;
 
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.OfflinePlayer;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
@@ -14,10 +13,10 @@ import java.util.*;
 
 public class Paging {
     private HyperDrive pluginInstance;
-    private HashMap<UUID, HashMap<Integer, List<UUID>>> playerSelectionPageMap;
-    private HashMap<UUID, List<UUID>> playerSelectedMap;
-    private HashMap<UUID, HashMap<Integer, List<Warp>>> warpPageMap;
-    private HashMap<UUID, Integer> currentPageMap;
+    private Map<UUID, Map<Integer, List<UUID>>> playerSelectionPageMap;
+    private Map<UUID, List<UUID>> playerSelectedMap;
+    private Map<UUID, Map<Integer, List<Warp>>> warpPageMap;
+    private Map<UUID, Integer> currentPageMap;
     private Random random;
     final String ownedFormat, publicFormat, privateFormat, adminFormat, featuredFormat;
 
@@ -43,7 +42,7 @@ public class Paging {
     }
 
     // player selection pages
-    public HashMap<Integer, List<UUID>> getCurrentPlayerSelectionPages(OfflinePlayer player) {
+    public Map<Integer, List<UUID>> getCurrentPlayerSelectionPages(OfflinePlayer player) {
         if (!getPlayerSelectionPageMap().isEmpty() && getPlayerSelectionPageMap().containsKey(player.getUniqueId()))
             return getPlayerSelectionPageMap().get(player.getUniqueId());
         return null;
@@ -68,13 +67,13 @@ public class Paging {
         return false;
     }
 
-    public HashMap<Integer, List<UUID>> getPlayerSelectionPages(OfflinePlayer player) {
+    public Map<Integer, List<UUID>> getPlayerSelectionPages(OfflinePlayer player) {
         int slotCount = getPluginInstance().getMenusConfig().getIntegerList("ps-menu-section.player-slots").size();
         List<UUID> playerList = getPluginInstance().getManager().getPlayerUUIDs();
         playerList.remove(player.getUniqueId());
         playerSelectionSort(playerList);
 
-        HashMap<Integer, List<UUID>> finalMap = new HashMap<>();
+        Map<Integer, List<UUID>> finalMap = new HashMap<>();
         int currentPage = 1;
         List<UUID> currentPlayerList = new ArrayList<>();
         for (int i = -1; ++i < playerList.size(); ) {
@@ -147,7 +146,7 @@ public class Paging {
         if (!getPlayerSelectedMap().isEmpty() && getPlayerSelectedMap().containsKey(player.getUniqueId()))
             return getPlayerSelectedMap().get(player.getUniqueId());
         else
-            return null;
+            return Collections.emptyList();
     }
 
     public void updateSelectedPlayers(OfflinePlayer player, UUID playerUniqueId, boolean isRemoval) {
@@ -169,7 +168,7 @@ public class Paging {
 
     public void updateCurrentPlayerSelectionPage(OfflinePlayer player, boolean isNext) {
         int currentPage = getCurrentPage(player);
-        HashMap<Integer, List<UUID>> currentPages = getCurrentPlayerSelectionPages(player);
+        Map<Integer, List<UUID>> currentPages = getCurrentPlayerSelectionPages(player);
         if (currentPages != null)
             if (!currentPages.isEmpty() && currentPages.containsKey(isNext ? currentPage + 1 : currentPage - 1))
                 getCurrentPageMap().put(player.getUniqueId(), isNext ? currentPage + 1 : currentPage - 1);
@@ -185,7 +184,7 @@ public class Paging {
 
     public void updateCurrentWarpPage(OfflinePlayer player, boolean isNext) {
         int currentPage = getCurrentPage(player);
-        HashMap<Integer, List<Warp>> currentPages = getCurrentWarpPages(player);
+        Map<Integer, List<Warp>> currentPages = getCurrentWarpPages(player);
         if (currentPages != null)
             if (!currentPages.isEmpty() && currentPages.containsKey(isNext ? currentPage + 1 : currentPage - 1))
                 getCurrentPageMap().put(player.getUniqueId(), isNext ? currentPage + 1 : currentPage - 1);
@@ -193,7 +192,7 @@ public class Paging {
                 getCurrentPageMap().put(player.getUniqueId(), 1);
     }
 
-    public HashMap<Integer, List<Warp>> getCurrentWarpPages(OfflinePlayer player) {
+    public Map<Integer, List<Warp>> getCurrentWarpPages(OfflinePlayer player) {
         if (!getWarpPageMap().isEmpty() && getWarpPageMap().containsKey(player.getUniqueId()))
             return getWarpPageMap().get(player.getUniqueId());
         return null;
@@ -211,7 +210,7 @@ public class Paging {
         return false;
     }
 
-    public HashMap<Integer, List<Warp>> getWarpPages(OfflinePlayer player, String menuPath, String status) {
+    public Map<Integer, List<Warp>> getWarpPages(OfflinePlayer player, String menuPath, String status) {
         switch (status.toLowerCase()) {
             case "public":
                 status = publicFormat;
@@ -228,87 +227,102 @@ public class Paging {
             default:
                 break;
         }
+        if (status == null || getPluginInstance().getManager().getWarpMap().isEmpty()) return new HashMap<>();
 
         final int slotCount = getPluginInstance().getMenusConfig().getIntegerList(menuPath + ".warp-slots").size();
-        final Collection<Warp> warpCollection = getPluginInstance().getManager().getWarpMap().values();
-        List<Warp> warpList = !getPluginInstance().getManager().getWarpMap().isEmpty() ? new ArrayList<>(warpCollection) : new ArrayList<>();
-        if (status != null) warpSort(warpList, status.equals(featuredFormat));
+        List<Warp> warpList = new ArrayList<>(getPluginInstance().getManager().getWarpMap().values());
+        warpSort(warpList, status.equals(featuredFormat));
 
-        HashMap<Integer, List<Warp>> finalMap = new HashMap<>();
+        Map<Integer, List<Warp>> finalMap = new HashMap<>();
         int currentPage = 1, trafficThreshold = getPluginInstance().getMenusConfig().getInt("list-menu-section.traffic-threshold");
         List<Warp> currentWarpList = new ArrayList<>();
-        for (Warp warp : getPluginInstance().getManager().getWarpMap().values()) {
-            if (warp != null && status != null) {
-                if (status.equalsIgnoreCase(featuredFormat)) {
-                    if (warp.getTraffic() >= trafficThreshold)
-                        if (currentWarpList.size() < slotCount)
-                            currentWarpList.add(warp);
-                        else {
-                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
-                            currentWarpList.clear();
-                            currentPage += 1;
-                        }
+        for (int i = -1; ++i < warpList.size(); ) {
+            final Warp warp = warpList.get(i);
+            if (warp == null) continue;
 
-                    continue;
-                } else if (status.equalsIgnoreCase(ownedFormat)) {
-                    if (warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString())
-                            || warp.getAssistants().contains(player.getUniqueId()))
-                        if (currentWarpList.size() < slotCount)
-                            currentWarpList.add(warp);
-                        else {
-                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
-                            currentWarpList.clear();
-                            currentPage += 1;
-                        }
+            if (status.equalsIgnoreCase(featuredFormat)) {
+                if (warp.getTraffic() >= trafficThreshold)
+                    if (currentWarpList.size() < slotCount)
+                        currentWarpList.add(warp);
+                    else {
+                        finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                        currentWarpList.clear();
+                        currentWarpList.add(warp);
+                        currentPage += 1;
+                    }
 
-                    continue;
-                } else if (status.equalsIgnoreCase(publicFormat)) {
-                    if (warp.getStatus() == EnumContainer.Status.PUBLIC)
-                        if (currentWarpList.size() < slotCount)
-                            currentWarpList.add(warp);
-                        else {
-                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
-                            currentWarpList.clear();
-                            currentPage += 1;
-                        }
+                continue;
+            } else if (status.equalsIgnoreCase(ownedFormat)) {
+                if (warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString())
+                        || warp.getAssistants().contains(player.getUniqueId()))
+                    if (currentWarpList.size() < slotCount)
+                        currentWarpList.add(warp);
+                    else {
+                        finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                        currentWarpList.clear();
+                        currentWarpList.add(warp);
+                        currentPage += 1;
+                    }
 
-                    continue;
-                } else if (status.equalsIgnoreCase(privateFormat)) {
-                    if (warp.getStatus() == EnumContainer.Status.PRIVATE)
-                        if (currentWarpList.size() < slotCount)
-                            currentWarpList.add(warp);
-                        else {
-                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
-                            currentWarpList.clear();
-                            currentPage += 1;
-                        }
+                continue;
+            } else if (status.equalsIgnoreCase(publicFormat)) {
+                if (warp.getStatus() == EnumContainer.Status.PUBLIC)
+                    if (currentWarpList.size() < slotCount)
+                        currentWarpList.add(warp);
+                    else {
+                        finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                        currentWarpList.clear();
+                        currentWarpList.add(warp);
+                        currentPage += 1;
+                    }
 
-                    continue;
-                } else if (status.equalsIgnoreCase(adminFormat)) {
-                    if (warp.getStatus() == EnumContainer.Status.ADMIN)
-                        if (currentWarpList.size() < slotCount)
-                            currentWarpList.add(warp);
-                        else {
-                            finalMap.put(currentPage, new ArrayList<>(currentWarpList));
-                            currentWarpList.clear();
-                            currentPage += 1;
-                        }
+                continue;
+            } else if (status.equalsIgnoreCase(privateFormat)) {
+                if (warp.getStatus() == EnumContainer.Status.PRIVATE)
+                    if (currentWarpList.size() < slotCount)
+                        currentWarpList.add(warp);
+                    else {
+                        finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                        currentWarpList.clear();
+                        currentWarpList.add(warp);
+                        currentPage += 1;
+                    }
 
-                    continue;
-                }
+                continue;
+            } else if (status.equalsIgnoreCase(adminFormat)) {
+                if (warp.getStatus() == EnumContainer.Status.ADMIN)
+                    if (currentWarpList.size() < slotCount)
+                        currentWarpList.add(warp);
+                    else {
+                        finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                        currentWarpList.clear();
+                        currentWarpList.add(warp);
+                        currentPage += 1;
+                    }
 
-                if (currentWarpList.size() < slotCount)
-                    currentWarpList.add(warp);
-                else {
-                    finalMap.put(currentPage, new ArrayList<>(currentWarpList));
-                    currentWarpList.clear();
-                    currentPage += 1;
-                }
+                continue;
+            }
+
+            if (currentWarpList.size() < slotCount)
+                currentWarpList.add(warp);
+            else {
+                finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                currentWarpList.clear();
+                currentWarpList.add(warp);
+                currentPage += 1;
             }
         }
 
-        if (currentWarpList.size() > 0)
+        if (currentWarpList.size() > 0) {
+            if (currentWarpList.size() > slotCount) {
+                finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                currentWarpList.clear();
+                currentPage += 1;
+            }
+
             finalMap.put(currentPage, currentWarpList);
+        }
+
         return finalMap;
     }
 
@@ -329,22 +343,8 @@ public class Paging {
         int border = (low + 1);
         for (int i = border - 1; ++i <= high; ) {
             Warp warpAtHigh = warpList.get(i), warpAtLow = warpList.get(low);
-
-            final int comparedNames = ChatColor.stripColor(warpAtHigh.getWarpName()).compareTo(ChatColor.stripColor(warpAtLow.getWarpName()));
-            if (comparedNames > 0) continue;
-            else if (comparedNames == 0)
-                if (sortAsFeatured) {
-                    if (!((warpAtHigh.getTraffic() > warpAtLow.getTraffic())))
-                        continue;
-                } else {
-                    double maxRatioMax = Math.max(warpAtHigh.getLikes(), warpAtHigh.getDislikes()), maxRatioMin = Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes()),
-                            minRatioMax = Math.max(warpAtLow.getLikes(), warpAtLow.getDislikes()), minRatioMin = Math.min(warpAtHigh.getLikes(), warpAtHigh.getDislikes());
-                    if ((maxRatioMax == 0 && maxRatioMin == 0) || (minRatioMax == 0 && minRatioMin == 0)) continue;
-
-                    double maxRatio = (maxRatioMin / maxRatioMax), minRatio = (minRatioMin / minRatioMax);
-                    if (!(maxRatio > minRatio)) continue;
-                }
-
+            final int compareResult = warpAtLow.compareTo(warpAtHigh);
+            if (compareResult >= 0 || (sortAsFeatured && warpAtLow.getTraffic() >= warpAtHigh.getTraffic())) continue;
             warpSwapIndex(warpList, i, border++);
         }
 
@@ -359,19 +359,19 @@ public class Paging {
     }
 
     // getters & setters
-    public HashMap<UUID, HashMap<Integer, List<Warp>>> getWarpPageMap() {
+    public Map<UUID, Map<Integer, List<Warp>>> getWarpPageMap() {
         return warpPageMap;
     }
 
-    private void setWarpPageMap(HashMap<UUID, HashMap<Integer, List<Warp>>> warpPageMap) {
+    private void setWarpPageMap(Map<UUID, Map<Integer, List<Warp>>> warpPageMap) {
         this.warpPageMap = warpPageMap;
     }
 
-    public HashMap<UUID, Integer> getCurrentPageMap() {
+    public Map<UUID, Integer> getCurrentPageMap() {
         return currentPageMap;
     }
 
-    private void setCurrentPageMap(HashMap<UUID, Integer> currentPageMap) {
+    private void setCurrentPageMap(Map<UUID, Integer> currentPageMap) {
         this.currentPageMap = currentPageMap;
     }
 
@@ -391,19 +391,19 @@ public class Paging {
         this.random = random;
     }
 
-    public HashMap<UUID, HashMap<Integer, List<UUID>>> getPlayerSelectionPageMap() {
+    public Map<UUID, Map<Integer, List<UUID>>> getPlayerSelectionPageMap() {
         return playerSelectionPageMap;
     }
 
-    private void setPlayerSelectionPageMap(HashMap<UUID, HashMap<Integer, List<UUID>>> playerSelectionPageMap) {
+    private void setPlayerSelectionPageMap(Map<UUID, Map<Integer, List<UUID>>> playerSelectionPageMap) {
         this.playerSelectionPageMap = playerSelectionPageMap;
     }
 
-    public HashMap<UUID, List<UUID>> getPlayerSelectedMap() {
+    public Map<UUID, List<UUID>> getPlayerSelectedMap() {
         return playerSelectedMap;
     }
 
-    private void setPlayerSelectedMap(HashMap<UUID, List<UUID>> playerSelectedMap) {
+    private void setPlayerSelectedMap(Map<UUID, List<UUID>> playerSelectedMap) {
         this.playerSelectedMap = playerSelectedMap;
     }
 }

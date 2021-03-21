@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals.hooks;
@@ -14,6 +14,8 @@ import com.massivecraft.factions.entity.BoardColl;
 import com.massivecraft.factions.entity.FactionColl;
 import com.massivecraft.factions.entity.MPlayer;
 import com.massivecraft.massivecore.ps.PS;
+import com.palmergames.bukkit.towny.TownyAPI;
+import com.palmergames.bukkit.towny.object.Resident;
 import com.palmergames.bukkit.towny.object.Town;
 import com.palmergames.bukkit.towny.object.WorldCoord;
 import com.wasteofplastic.askyblock.ASkyBlockAPI;
@@ -28,7 +30,7 @@ import xzot1k.plugins.hd.HyperDrive;
 public class HookChecker {
 
     private HyperDrive pluginInstance;
-    private boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, aSkyBlockInstalled, residenceInstalled, prismaInstalled;
+    private boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, aSkyBlockInstalled, residenceInstalled, prismaInstalled, cmiInstalled;
     private Plugin essentialsPlugin;
 
     public HookChecker(HyperDrive pluginInstance) {
@@ -43,6 +45,7 @@ public class HookChecker {
         setTownyInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Towny") != null);
         setResidenceInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Residence") != null);
         setPrismaInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Prisma") != null);
+        cmiInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("CMI") != null);
 
         setEssentialsPlugin(getPluginInstance().getServer().getPluginManager().getPlugin("Essentials"));
         if (getEssentialsPlugin() == null)
@@ -86,20 +89,25 @@ public class HookChecker {
 
         if (isGriefPreventionInstalled()) {
             Claim claimAtLocation = GriefPrevention.instance.dataStore.getClaimAt(location, false, null);
-            if (claimAtLocation != null)
+            if (claimAtLocation != null && !claimAtLocation.getOwnerName().equalsIgnoreCase(player.getName()))
                 isSafeLocation = false;
         }
 
         if (isTownyInstalled()) {
             try {
                 Town town = WorldCoord.parseWorldCoord(location).getTownBlock().getTown();
-                if (town != null) isSafeLocation = false;
+                if (town != null) {
+                    Resident resident = TownyAPI.getInstance().getDataSource().getResident(player.getName());
+                    if (resident == null || !town.getResidents().contains(resident) || town.getMayor() != resident)
+                        isSafeLocation = false;
+                }
             } catch (Exception ignored) {}
         }
 
         if (isResidenceInstalled()) {
             ClaimedResidence res = Residence.getInstance().getResidenceManager().getByLoc(location);
-            if (res != null) isSafeLocation = false;
+            if (res != null && !res.getOwnerUUID().toString().equals(player.getUniqueId().toString()))
+                isSafeLocation = false;
         }
 
         return isSafeLocation;
@@ -176,5 +184,9 @@ public class HookChecker {
 
     private void setEssentialsPlugin(Plugin essentialsPlugin) {
         this.essentialsPlugin = essentialsPlugin;
+    }
+
+    public boolean isCMIInstalled() {
+        return cmiInstalled;
     }
 }

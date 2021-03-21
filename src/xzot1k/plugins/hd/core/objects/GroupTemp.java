@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.objects;
@@ -109,7 +109,7 @@ public class GroupTemp {
                                                     .getServerName(getDestination().getWarp().getServerIPAddress());
                                             if (server != null) {
                                                 getPluginInstance().getManager().teleportCrossServer(offlinePlayer.getPlayer(), server, getDestination().getWarp().getWarpLocation());
-                                                getPluginInstance().getManager().updateCooldown(offlinePlayer.getPlayer(), "warp");
+                                                getPluginInstance().getManager().updateCooldown(Objects.requireNonNull(offlinePlayer.getPlayer()), "warp");
                                                 return;
                                             }
                                         }

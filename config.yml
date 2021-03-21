@@ -3,7 +3,11 @@
 mysql-connection:
   # If this option is enabled, HyperDrive will enable cross-server teleportation and MySQL warp saving/loading.
   use-mysql: false
-  # If a warp's IP is found blank or null, its IP will be replaced with this IP similar to a backup.
+  # Determines whether the connection should utilize SSL.
+  use-ssl: false
+  # Make sure this option is disabled if you plan to only use MySQL without cross-server features.
+  cross-server: true
+  # If a warp's IP is found blank or null, its IP will be replaced with this IP similar to a backup. This IP should be your EXACT server's IP WITHOUT THE PORT.
   default-ip: "127.0.0.1"
   # Below, define your MySQL information. THE DEFINED DATABASE MUST ALREADY EXIST.
   database-name: "hyperdrive"
@@ -11,9 +15,6 @@ mysql-connection:
   port: 3306
   username: "root"
   password: ""
-  # These are the connection properties, you can add/remove from this list as long as it follows an identical format.
-  # (NOTE: This is for advanced users this feature just extends upon the SQL syntax connection line.)
-  sql-properties: ""
 
 # Here is where everything that is general can be configured
 general-section:
@@ -48,7 +49,7 @@ general-section:
   # (Note: If the format is incorrect the plugin will use the values "Enabled" and "Disabled" by default).
   option-toggle-format: "Enabled:Disabled"
   # This is the format that is used for date display and storage within the plugin (Please only change this if you know what you are doing).
-  date-format: "MM/dd/yyyy HH:mm:ss"
+  date-format: "MM/dd/yyyy"
   # This is the default amount of warps a user can own.
   default-warp-limit: 3
   # These are the sounds used throughout the plugin. These will need to be adjusted based on the server's Minecraft version.
@@ -62,6 +63,9 @@ general-section:
   # This is the color that will be placed in front of the header of newly created HyperDrive signs.
   # (Note: ONLY use color codes)
   sign-header-color: "&d"
+  # This is a list of all commands that will be ran anytime a warp is used by any means.
+  # Avoid using slashes (/) and always end a command with either :PLAYER or :CONSOLE to determine how it is sent.
+  global-warp-commands: []
   # Here you can implement unlimited custom aliases that run commands. Use the format <alias:command:sender>.
   # You can use the placeholder {player}. (Note: Set the sender to PLAYER for the command to be re-sent as a
   # player and CONSOLE to send as console. Don't use the initial command / if it is set to CONSOLE)
@@ -75,9 +79,21 @@ filter-section:
   # (Note: Phrases can be implemented into this list as well. The list can also be changed to a vertical format like
   # other lists in the configuration.)
   global-filter: ["fuck", "shit", "cunt", "fag", "faggot", "bitch", "dick", "damn", "www.", ".com", ".net"]
+  # Materials in this list will be avoided while a player is undergoing teleportation. If any of these material are encountered, the teleportation will return NOT SAFE.
+  # (NOTE: The material name can be generalized, for example, the value "leaves" will detect all materials that have that value in their name)
+  # This format is what needs to be followed to coordinate specific data values: <material>:<durability>
+  forbidden-materials:
+    - "WATER"
+    - "LAVA"
+    - "LILY"
+    - "AIR"
+    - "LEAVES"
 
 # Here is where everything related to teleportation can be customize.
 teleportation-section:
+  # This is how long after any teleportation done by HyperDrive will grant the player invulnerability to ALL damage.
+  # (Note: Set this value to -1 to disable.)
+  invulnerability-duration: 5
   # This is the general teleportation cooldown that a player must wait before teleporting again (In seconds).
   cooldown-duration: 15
   # This is the TPA cooldown that a player must wait before using the TPA command again (In seconds).
@@ -153,15 +169,6 @@ random-teleport-section:
   # (NOTE: Biome names can be generalized, for example, if the value "OCEAN" is entered all biomes containing the name "OCEAN" will be blacklisted.)
   biome-blacklist:
     - "OCEAN"
-  # Materials in this list will be avoided while a player is undergoing random teleportation.
-  # (NOTE: The material name can be generalized, for example, the value "leaves" will detect all materials that have that value in their name)
-  # This format is what needs to be followed to coordinate specific data values: <material>:<durability>
-  forbidden-materials:
-    - "WATER"
-    - "LAVA"
-    - "LILY"
-    - "AIR"
-    - "LEAVES"
 
 warp-icon-section:
   # This is the sound that is played when a warp icon is selected. This option can be set to "" to disable.

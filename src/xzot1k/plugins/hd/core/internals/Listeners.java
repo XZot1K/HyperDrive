@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.core.internals;
@@ -18,14 +18,12 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
-import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
 import xzot1k.plugins.hd.api.events.RandomTeleportEvent;
 import xzot1k.plugins.hd.api.events.WarpEvent;
@@ -52,7 +50,6 @@ public class Listeners implements Listener {
             if (player.isSleeping()) return;
 
             String inventoryName;
-
             try {
                 if (!(getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_12")
                         || getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_10")
@@ -66,17 +63,16 @@ public class Listeners implements Listener {
                 return;
             }
 
-            if (ChatColor.stripColor(inventoryName).equalsIgnoreCase(ChatColor.stripColor(getPluginInstance()
-                    .getManager().colorText(getPluginInstance().getMenusConfig().getString("list-menu-section.title")))))
+            if (inventoryName.equalsIgnoreCase(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("list-menu-section.title"))))
                 runListMenuClick(player, e);
-            else if (ChatColor.stripColor(inventoryName).contains(ChatColor.stripColor(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title")))))
+            else if (inventoryName.contains(getPluginInstance().getManager()
+                    .colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title"))))
                 runEditMenuClick(player, inventoryName, e);
-            else if (ChatColor.stripColor(inventoryName).contains(ChatColor.stripColor(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title")))))
+            else if (inventoryName.contains(getPluginInstance().getManager()
+                    .colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title"))))
                 runLikeMenuClick(player, inventoryName, e);
-            else if (ChatColor.stripColor(inventoryName).equalsIgnoreCase(ChatColor.stripColor(getPluginInstance()
-                    .getManager().colorText(getPluginInstance().getMenusConfig().getString("ps-menu-section.title")))))
+            else if (inventoryName.equalsIgnoreCase(getPluginInstance()
+                    .getManager().colorText(getPluginInstance().getMenusConfig().getString("ps-menu-section.title"))))
                 runPlayerSelectionClick(player, e);
             else {
                 String menuId = getPluginInstance().getManager().getMenuId(inventoryName);
@@ -113,7 +109,8 @@ public class Listeners implements Listener {
         }
 
         final String strippedName = net.md_5.bungee.api.ChatColor.stripColor(textEntry);
-        boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
+        boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         switch (interactionModule.getInteractionId().toLowerCase()) {
             case "create-warp":
                 if (getPluginInstance().getManager().hasMetWarpLimit(e.getPlayer())) {
@@ -140,7 +137,7 @@ public class Listeners implements Listener {
                 }
 
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                warp = new Warp(ChatColor.WHITE + textEntry, e.getPlayer(), e.getPlayer().getLocation());
+                warp = new Warp(net.md_5.bungee.api.ChatColor.WHITE + textEntry, e.getPlayer(), e.getPlayer().getLocation());
                 warp.save(true);
                 warp.register();
                 getPluginInstance().getManager().sendCustomMessage("warp-created", e.getPlayer(), "{warp}:" + warp.getWarpName());
@@ -197,6 +194,12 @@ public class Listeners implements Listener {
                     return;
                 }
 
+                if (getPluginInstance().getManager().wouldMeetWarpLimit(offlinePlayer, getPluginInstance().getManager().getOwnedWarps(offlinePlayer).size())) {
+                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage("warp-limit-met-other", e.getPlayer(), "{player}:" + offlinePlayer.getName());
+                    return;
+                }
+
                 if (!getPluginInstance().getManager().initiateEconomyCharge(e.getPlayer(), interactionModule.getPassedChargeAmount())) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     return;
@@ -204,8 +207,6 @@ public class Listeners implements Listener {
 
                 warp.setOwner(offlinePlayer.getUniqueId());
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-
-
                 getPluginInstance().getManager().sendCustomMessage("ownership-given", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{player}:" + offlinePlayer.getName());
 
                 final Player player = offlinePlayer.getPlayer();
@@ -231,7 +232,7 @@ public class Listeners implements Listener {
                     getPluginInstance().getManager().sendCustomMessage("description-cleared", e.getPlayer(), "{warp}:" + warp.getWarpName());
                 } else {
                     warp.setDescription(textEntry);
-                    getPluginInstance().getManager().sendCustomMessage("description-set", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{description}:" + textEntry);
+                    getPluginInstance().getManager().sendCustomMessage("description-set", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{description}:" + net.md_5.bungee.api.ChatColor.stripColor(textEntry));
                 }
 
                 break;
@@ -515,9 +516,20 @@ public class Listeners implements Listener {
     @EventHandler
     public void onDamage(EntityDamageEvent e) {
         if (e.getEntity() instanceof Player) {
-            Player player = (Player) e.getEntity();
+            final Player player = (Player) e.getEntity();
+
+            int invulnerabilityDuration = getPluginInstance().getConfig().getInt("teleportation-section.invulnerability-duration");
+            if (invulnerabilityDuration > 0) {
+                long timeRemaining = getPluginInstance().getManager().getCooldownDuration(player, "invulnerability", invulnerabilityDuration);
+                if (timeRemaining > 0) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+
             boolean damageCancellation = getPluginInstance().getConfig().getBoolean("teleportation-section.damage-cancellation");
-            if (damageCancellation && e.getCause() != EntityDamageEvent.DamageCause.SUFFOCATION && e.getCause() != EntityDamageEvent.DamageCause.DROWNING) {
+            if (damageCancellation && e.getCause() != EntityDamageEvent.DamageCause.SUFFOCATION && e.getCause() != EntityDamageEvent.DamageCause.VOID
+                    && e.getCause() != EntityDamageEvent.DamageCause.LAVA && e.getCause() != EntityDamageEvent.DamageCause.DROWNING) {
                 getPluginInstance().getTeleportationCommands().getTpaSentMap().remove(player.getUniqueId());
                 getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
 
@@ -578,7 +590,7 @@ public class Listeners implements Listener {
     }
 
     @EventHandler
-    public void onTeleport(PlayerJoinEvent e) {
+    public void onJoin(PlayerJoinEvent e) {
         if (getPluginInstance().getConfig().getBoolean("general-section.force-spawn"))
             if (!e.getPlayer().hasPlayedBefore() && getPluginInstance().getTeleportationCommands().getFirstJoinLocation() != null) {
                 e.getPlayer().setVelocity(new Vector(0, 0, 0));
@@ -589,7 +601,9 @@ public class Listeners implements Listener {
                         animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
                 if (!teleportSound.equalsIgnoreCase(""))
                     e.getPlayer().getWorld().playSound(e.getPlayer().getLocation(), Sound.valueOf(teleportSound), 1, 1);
-                if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+
+                boolean isVanished = getPluginInstance().getManager().isVanished(e.getPlayer());
+                if (!isVanished && animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
                     String[] themeArgs = animationSet.split(":");
                     getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
                     getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
@@ -622,7 +636,7 @@ public class Listeners implements Listener {
             }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onTeleport(PlayerTeleportEvent e) {
         getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
     }
@@ -640,7 +654,9 @@ public class Listeners implements Listener {
                     animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
             if (!teleportSound.equalsIgnoreCase(""))
                 e.getPlayer().getWorld().playSound(e.getPlayer().getLocation(), Sound.valueOf(teleportSound), 1, 1);
-            if (animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
+
+            boolean isVanished = getPluginInstance().getManager().isVanished(e.getPlayer());
+            if (!isVanished && animationSet != null && !animationSet.equalsIgnoreCase("") && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
                 getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
                 getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
@@ -735,7 +751,8 @@ public class Listeners implements Listener {
                                 getPluginInstance().getManager().sendCustomMessage("transaction-success", player, "{amount}:" + warp.getUsagePrice());
                         }
 
-                        if (warp.getAnimationSet().contains(":")) {
+                        boolean isVanished = getPluginInstance().getManager().isVanished(player);
+                        if (!isVanished && warp.getAnimationSet().contains(":")) {
                             String[] themeArgs = warp.getAnimationSet().split(":");
                             String delayTheme = themeArgs[1];
                             if (delayTheme.contains("/")) {
@@ -895,414 +912,890 @@ public class Listeners implements Listener {
     @EventHandler
     public void onWarp(WarpEvent e) {
         checkEssentials(e.getPlayer());
+
+        List<String> globalCommands = getPluginInstance().getConfig().getStringList("general-section.global-warp-commands");
+        for (String commandLine : globalCommands) {
+            if (commandLine.toLowerCase().endsWith(":player"))
+                getPluginInstance().getServer().dispatchCommand(e.getPlayer(), commandLine.replace("{player}", e.getPlayer().getName())
+                        .replaceAll("(?i):PLAYER", "").replace("(?i):CONSOLE", ""));
+            else getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
+                    commandLine.replace("{player}", e.getPlayer().getName()).replaceAll("(?i):PLAYER", "")
+                            .replace("(?i):CONSOLE", ""));
+        }
     }
 
     // methods
     private void runListMenuClick(Player player, InventoryClickEvent e) {
-        if (e.getCurrentItem() != null && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
-            e.setCancelled(true);
-            if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
+        if (e.getCurrentItem() == null) return;
+        e.setCancelled(true);
+        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
 
-            List<Integer> warpSlots = getPluginInstance().getMenusConfig().getIntegerList("list-menu-section.warp-slots");
-            if (warpSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta() && e.getCurrentItem().getItemMeta().hasDisplayName()) {
-                final ClickType clickType = e.getClick();
-                final String warpName = Objects.requireNonNull(e.getCurrentItem()).getItemMeta().getDisplayName();
-                Warp warp = getPluginInstance().getManager().getWarp(warpName);
+        List<Integer> warpSlots = getPluginInstance().getMenusConfig().getIntegerList("list-menu-section.warp-slots");
+        if (warpSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta() && e.getCurrentItem().getItemMeta().hasDisplayName()) {
+            final ClickType clickType = e.getClick();
+            final String warpName = Objects.requireNonNull(e.getCurrentItem()).getItemMeta().getDisplayName();
+            Warp warp = getPluginInstance().getManager().getWarp(warpName);
 
-                if (warp != null) {
-                    String soundName = getPluginInstance().getConfig().getString("warp-icon-section.click-sound");
-                    if (soundName != null && !soundName.equalsIgnoreCase(""))
-                        player.getWorld().playSound(player.getLocation(),
-                                Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+            if (warp != null) {
+                String soundName = getPluginInstance().getConfig().getString("warp-icon-section.click-sound");
+                if (soundName != null && !soundName.equalsIgnoreCase(""))
+                    player.getWorld().playSound(player.getLocation(),
+                            Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
 
-                    switch (clickType) {
-                        case LEFT:
+                switch (clickType) {
+                    case LEFT:
 
-                            if (getPluginInstance().getManager().canUseWarp(player, warp)) {
-                                player.closeInventory();
+                        if (getPluginInstance().getManager().canUseWarp(player, warp)) {
+                            player.closeInventory();
+                            int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0,
+                                    cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
 
-                                if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
-                                    String serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                                            ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
-                                            : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
-
-                                    if (!warp.getServerIPAddress().equalsIgnoreCase(serverIP)) {
-                                        String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
-                                        if (server == null) {
-                                            getPluginInstance().getManager().sendCustomMessage("ip-ping-fail", player, "{warp}:" + warp.getWarpName(), "{ip}:" + warp.getServerIPAddress());
-                                            return;
-                                        }
-                                    }
-                                }
-
-                                int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0,
-                                        cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
-
-                                long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
-                                if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
-                                    getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
-                                    return;
-                                }
-
-                                if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
-                                    player.closeInventory();
-                                    getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
-                                    return;
-                                }
-
-                                if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
-                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())) {
-                                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
-                                    getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
-                                    if (!economyChargeEvent.isCancelled()) {
-                                        if (!getPluginInstance().getVaultHandler().getEconomy().has(player, economyChargeEvent.getAmount())) {
-                                            getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + economyChargeEvent.getAmount());
-                                            return;
-                                        }
-
-                                        getPluginInstance().getVaultHandler().getEconomy().withdrawPlayer(player, warp.getUsagePrice());
-                                        if (warp.getOwner() != null) {
-                                            OfflinePlayer owner = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                                            getPluginInstance().getVaultHandler().getEconomy().depositPlayer(owner, warp.getUsagePrice());
-                                        }
-
-                                        getPluginInstance().getManager().sendCustomMessage("transaction-success", player, "{amount}:" + economyChargeEvent.getAmount());
-                                    }
-                                }
-
-                                if (warp.getAnimationSet().contains(":")) {
-                                    String[] themeArgs = warp.getAnimationSet().split(":");
-                                    String delayTheme = themeArgs[1];
-                                    if (delayTheme.contains("/")) {
-                                        String[] delayThemeArgs = delayTheme.split("/");
-                                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0]
-                                                .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
-                                    }
-                                }
-
-                                String title = getPluginInstance().getConfig().getString("teleportation-section.start-title"),
-                                        subTitle = getPluginInstance().getConfig().getString("teleportation-section.start-sub-title");
-                                if (title != null && subTitle != null)
-                                    getPluginInstance().getManager().sendTitle(player, title.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()),
-                                            subTitle.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()), 0, 5, 0);
-
-                                String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.start-bar-message");
-                                if (actionMessage != null && !actionMessage.isEmpty())
-                                    getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
-                                getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(), duration);
-                                getPluginInstance().getManager().sendCustomMessage("teleportation-start", player, "{warp}:" + warp.getWarpName(), "{duration}:" + duration);
+                            long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
+                            if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
+                                getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
                                 return;
                             }
 
-                            break;
-
-                        case RIGHT:
-
-                            if (getPluginInstance().getManager().canUseWarp(player, warp) && player.hasPermission("hyperdrive.groups.use")) {
+                            if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
                                 player.closeInventory();
-                                if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
-                                    String serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                                            ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
-                                            : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
+                                getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
+                                return;
+                            }
 
-                                    if (!warp.getServerIPAddress().equalsIgnoreCase(serverIP)) {
-                                        String server = getPluginInstance().getBungeeListener().getServerName(warp.getServerIPAddress());
-                                        if (server == null) {
-                                            getPluginInstance().getManager().sendCustomMessage("ip-ping-fail", player, "{warp}:" + warp.getWarpName(), "{ip}:" + warp.getServerIPAddress());
-                                            return;
-                                        }
+                            if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
+                                    && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
+                                    && !getPluginInstance().getVaultHandler().getEconomy().has(player, warp.getUsagePrice())) {
+                                getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + warp.getUsagePrice());
+                                return;
+                            }
+
+                            boolean isVanished = getPluginInstance().getManager().isVanished(player);
+                            if (!isVanished && warp.getAnimationSet().contains(":")) {
+                                String[] themeArgs = warp.getAnimationSet().split(":");
+                                String delayTheme = themeArgs[1];
+                                if (delayTheme.contains("/")) {
+                                    String[] delayThemeArgs = delayTheme.split("/");
+                                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0]
+                                            .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                                }
+                            }
+
+                            String title = getPluginInstance().getConfig().getString("teleportation-section.start-title"),
+                                    subTitle = getPluginInstance().getConfig().getString("teleportation-section.start-sub-title");
+                            if (title != null && subTitle != null)
+                                getPluginInstance().getManager().sendTitle(player, title.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()),
+                                        subTitle.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()), 0, 5, 0);
+
+                            String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.start-bar-message");
+                            if (actionMessage != null && !actionMessage.isEmpty())
+                                getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
+                            getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(), duration);
+                            getPluginInstance().getManager().sendCustomMessage("teleportation-start", player, "{warp}:" + warp.getWarpName(), "{duration}:" + duration);
+                            return;
+                        }
+
+                        break;
+
+                    case RIGHT:
+
+                        if (getPluginInstance().getManager().canUseWarp(player, warp) && player.hasPermission("hyperdrive.groups.use")) {
+
+                            player.closeInventory();
+                            final int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
+                            long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
+                            if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
+                                getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
+                                return;
+                            }
+
+                            if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
+                                player.closeInventory();
+                                getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
+                                return;
+                            }
+
+                            if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
+                                    && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
+                                    && !getPluginInstance().getVaultHandler().getEconomy().has(player, warp.getUsagePrice())) {
+                                getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + warp.getUsagePrice());
+                                return;
+                            }
+
+                            Destination destination = new Destination(warp.getWarpLocation());
+                            destination.setWarp(warp);
+                            getPluginInstance().getTeleportationHandler().updateDestination(player, destination);
+                            List<UUID> playerList = getPluginInstance().getManager().getPlayerUUIDs();
+                            playerList.remove(player.getUniqueId());
+                            if (playerList.size() <= 0) {
+                                getPluginInstance().getManager().sendCustomMessage("no-players-found", player);
+                                return;
+                            }
+
+                            Inventory inventory = getPluginInstance().getManager().buildPlayerSelectionMenu(player);
+
+                            MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(),
+                                    EnumContainer.MenuType.PLAYER_SELECTION, inventory, player.getPlayer());
+                            getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                            if (menuOpenEvent.isCancelled())
+                                return;
+
+                            player.openInventory(inventory);
+                            getPluginInstance().getManager().sendCustomMessage("group-selection-start", player);
+                            return;
+                        }
+
+                        break;
+
+                    case SHIFT_LEFT:
+
+                        if (player.hasPermission("hyperdrive.like")) {
+                            if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())) && !warp.getAssistants().contains(player.getUniqueId())) {
+                                getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("like-own")), player);
+                                return;
+                            }
+
+                            if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql") && getPluginInstance().getDatabaseConnection() != null && getPluginInstance().getBungeeListener() != null) {
+                                String serverIP = (warp.getServerIPAddress().contains(".") ? getPluginInstance().getBungeeListener().getServerAddressMap().get(
+                                        getPluginInstance().getBungeeListener().getMyServer()) : getPluginInstance().getBungeeListener().getMyServer());
+
+                                if (!warp.getServerIPAddress().equalsIgnoreCase(serverIP)) {
+                                    getPluginInstance().getManager().sendCustomMessage("like-incorrect-server", player, "{warp}:" + warp.getWarpName());
+                                    return;
+                                }
+                            }
+
+                            Inventory inventory = getPluginInstance().getManager().buildLikeMenu(warp);
+                            MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIKE, inventory, player.getPlayer());
+                            getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                            if (menuOpenEvent.isCancelled()) return;
+
+                            player.openInventory(inventory);
+                            return;
+                        }
+
+                        break;
+                    case SHIFT_RIGHT:
+
+                        if (getPluginInstance().getManager().canEditWarp(player, warp)) {
+                            Inventory inventory = getPluginInstance().getManager().buildEditMenu(player, warp);
+
+                            MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.EDIT, inventory, player.getPlayer());
+                            getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                            if (menuOpenEvent.isCancelled()) return;
+
+                            player.openInventory(inventory);
+                            return;
+                        }
+
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            return;
+        }
+
+        String itemId = getPluginInstance().getManager().getIdFromSlot("list-menu-section", e.getSlot());
+        if (itemId != null) {
+            if (getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".click-sound")) {
+                String soundName = getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".sound-name");
+                if (soundName != null && !soundName.equalsIgnoreCase(""))
+                    player.playSound(player.getLocation(),
+                            Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+            }
+
+            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section.items." + itemId);
+            if (cs != null && cs.getKeys(false).contains("permission")) {
+                String permission = getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".permission");
+                if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
+                    getPluginInstance().getManager().sendCustomMessage("no-permission", player);
+                    return;
+                }
+            }
+
+            String ownFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format"), publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
+                    privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"), adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format"),
+                    featuredFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format"), clickAction = getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".click-action");
+            getPluginInstance().getManager().sendCustomMessage("list-menu-section.items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+
+            if (clickAction != null) {
+                String action = clickAction, value = "";
+                if (clickAction.contains(":")) {
+                    String[] actionArgs = clickAction.toLowerCase().split(":");
+                    action = actionArgs[0].replace(" ", "-").replace("_", "-");
+                    value = actionArgs[1].replace("{player}", player.getName());
+                }
+
+                final double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
+                switch (action) {
+                    case "dispatch-command-console":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
+                        }
+
+                        break;
+                    case "dispatch-command-player":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            getPluginInstance().getServer().dispatchCommand(player, value);
+                        }
+
+                        break;
+                    case "create-warp":
+                        player.closeInventory();
+
+                        if (getPluginInstance().getManager().isBlockedWorld(player.getWorld())) {
+                            getPluginInstance().getManager().sendCustomMessage("blocked-world", player);
+                            return;
+                        }
+
+                        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation())) {
+                            getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player);
+                            break;
+                        }
+
+                        if (getPluginInstance().getManager().hasMetWarpLimit(player)) {
+                            getPluginInstance().getManager().sendCustomMessage("warp-limit-met", player);
+                            return;
+                        }
+
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "create-warp", "", itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("create-warp-interaction", player, "{player}:" + player.getName(),
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"));
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+                        break;
+                    case "refresh":
+                        if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
+
+                        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                            getPluginInstance().getManager().getPaging().resetWarpPages(player);
+                            String currentStatus = getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", e.getInventory());
+                            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", currentStatus);
+                            getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
+                            int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
+                            List<Warp> pageList = new ArrayList<>();
+                            if (wpMap != null && !wpMap.isEmpty() && wpMap.containsKey(page))
+                                pageList = new ArrayList<>(wpMap.get(page));
+
+                            if (!pageList.isEmpty())
+                                for (int i = -1; ++i < warpSlots.size(); ) {
+                                    e.getInventory().setItem(warpSlots.get(i), null);
+                                    if (pageList.size() >= 1) {
+                                        Warp warp = pageList.get(0);
+                                        ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
+                                        if (warpIcon != null)
+                                            e.getInventory().setItem(warpSlots.get(i), warpIcon);
+                                        pageList.remove(warp);
                                     }
                                 }
+                            else getPluginInstance().getManager().sendCustomMessage("refresh-fail", player);
+                        });
 
-                                final int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
-                                long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
-                                if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
-                                    getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
-                                    return;
+                        break;
+                    case "next-page":
+                        if (getPluginInstance().getManager().getPaging().hasNextWarpPage(player) && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                            nextPage(player, e.getInventory(), warpSlots);
+                        else getPluginInstance().getManager().sendCustomMessage("no-next-page", player);
+                        break;
+                    case "previous-page":
+                        if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player) && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                            previousPage(player, e.getInventory(), warpSlots);
+                        else getPluginInstance().getManager().sendCustomMessage("no-previous-page", player);
+                        break;
+                    case "filter-switch":
+                        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+                            String statusFromItem = getPluginInstance().getManager().getFilterStatusFromItem(e.getCurrentItem(), "list-menu-section", itemId);
+                            if (statusFromItem != null && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) {
+                                int index = -1;
+                                boolean isOwnFormat = statusFromItem.equalsIgnoreCase(ownFormat), isPublicFormat = statusFromItem.equalsIgnoreCase(publicFormat), isPrivateFormat = statusFromItem.equalsIgnoreCase(privateFormat),
+                                        isAdminFormat = statusFromItem.equalsIgnoreCase(adminFormat), isFeaturedFormat = statusFromItem.equalsIgnoreCase(adminFormat);
+
+                                if (isPublicFormat || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PUBLIC.name()))
+                                    index = 0;
+                                else if (isPrivateFormat
+                                        || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PRIVATE.name()))
+                                    index = 1;
+                                else if (isAdminFormat
+                                        || statusFromItem.equalsIgnoreCase(EnumContainer.Status.ADMIN.name()))
+                                    index = 2;
+                                else if (isOwnFormat)
+                                    index = 3;
+                                else if (isFeaturedFormat)
+                                    index = 4;
+
+                                int nextIndex = index + 1;
+                                String nextStatus;
+
+                                if (nextIndex == 1)
+                                    nextStatus = EnumContainer.Status.PRIVATE.name();
+                                else if (nextIndex == 2)
+                                    nextStatus = EnumContainer.Status.ADMIN.name();
+                                else if (nextIndex == 3)
+                                    nextStatus = ownFormat;
+                                else if (nextIndex == 4)
+                                    nextStatus = featuredFormat;
+                                else
+                                    nextStatus = EnumContainer.Status.PUBLIC.name();
+
+                                ItemStack filterItem = getPluginInstance().getManager().buildItemFromId(player,
+                                        Objects.requireNonNull(nextStatus), "list-menu-section", itemId);
+                                e.getInventory().setItem(e.getSlot(), filterItem);
+
+                                for (int i = -1; ++i < warpSlots.size(); ) {
+                                    int warpSlot = warpSlots.get(i);
+                                    e.getInventory().setItem(warpSlot, null);
                                 }
 
-                                if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
-                                    player.closeInventory();
-                                    getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
-                                    return;
-                                }
+                                getPluginInstance().getManager().getPaging().resetWarpPages(player);
+                                Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", nextStatus);
+                                getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
+                                int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
+                                List<Warp> wList = new ArrayList<>();
+                                if (wpMap != null && !wpMap.isEmpty() && wpMap.containsKey(page))
+                                    wList = new ArrayList<>(wpMap.get(page));
 
-                                if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
-                                        && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())) {
-                                    EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
-                                    getPluginInstance().getServer().getPluginManager().callEvent(economyChargeEvent);
-                                    if (!economyChargeEvent.isCancelled()) {
-                                        if (!getPluginInstance().getVaultHandler().getEconomy().has(player, economyChargeEvent.getAmount())) {
-                                            getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + economyChargeEvent.getAmount());
-                                            return;
+                                if (!wList.isEmpty())
+                                    for (int i = -1; ++i < warpSlots.size(); ) {
+                                        e.getInventory().setItem(warpSlots.get(i), null);
+                                        if (wList.size() >= 1) {
+                                            Warp warp = wList.get(0);
+                                            ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
+                                            if (warpIcon != null)
+                                                e.getInventory().setItem(warpSlots.get(i), warpIcon);
+                                            wList.remove(warp);
                                         }
-
-                                        getPluginInstance().getVaultHandler().getEconomy().withdrawPlayer(player, economyChargeEvent.getAmount());
-                                        getPluginInstance().getManager().sendCustomMessage("transaction-success", player, "{amount}:" + economyChargeEvent.getAmount());
                                     }
-                                }
+                            }
+                        });
 
-                                Destination destination = new Destination(warp.getWarpLocation());
-                                destination.setWarp(warp);
-                                getPluginInstance().getTeleportationHandler().updateDestination(player, destination);
-                                List<UUID> playerList = getPluginInstance().getManager().getPlayerUUIDs();
-                                playerList.remove(player.getUniqueId());
-                                if (playerList.size() <= 0) {
-                                    getPluginInstance().getManager().sendCustomMessage("no-players-found", player);
+                        break;
+                    case "open-custom-menu":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+
+                            Inventory inventory = getPluginInstance().getManager().buildCustomMenu(player, value);
+                            MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.CUSTOM, inventory, player.getPlayer());
+                            menuOpenEvent.setCustomMenuId(value);
+                            getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                            if (menuOpenEvent.isCancelled()) return;
+
+                            player.openInventory(inventory);
+                        }
+
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
+    private void runEditMenuClick(Player player, String inventoryName, InventoryClickEvent e) {
+        if (e.getCurrentItem() == null) return;
+        e.setCancelled(true);
+        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
+
+        String itemId = getPluginInstance().getManager().getIdFromSlot("edit-menu-section", e.getSlot());
+        if (itemId != null) {
+            if (getPluginInstance().getMenusConfig().getBoolean("edit-menu-section.items." + itemId + ".click-sound")) {
+                String soundName = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".sound-name");
+                if (soundName != null && !soundName.equalsIgnoreCase(""))
+                    player.playSound(player.getLocation(),
+                            Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+            }
+
+            getPluginInstance().getManager().sendCustomMessage("edit-menu-section.items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+
+            String clickAction = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".click-action"),
+                    toggleFormat = getPluginInstance().getConfig().getString("general-section.option-toggle-format"),
+                    warpName = inventoryName.replace(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title")), "");
+            Warp warp = getPluginInstance().getManager().getWarp(warpName);
+
+            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("edit-menu-section.items." + itemId);
+            if (cs != null && cs.getKeys(false).contains("permission")) {
+                String permission = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".permission");
+                if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
+                    getPluginInstance().getManager().sendCustomMessage("no-permission", player);
+                    return;
+                }
+            }
+
+            if (clickAction != null) {
+
+                double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost");
+
+                String value = "";
+                if (clickAction.contains(":")) {
+                    String[] actionArgs = clickAction.toLowerCase().split(":");
+                    clickAction = actionArgs[0].replace(" ", "-").replace("_", "-");
+                    value = actionArgs[1].replace("{player}", player.getName());
+                }
+
+                String publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
+                        privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
+                        adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format");
+                boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                        && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
+
+                switch (clickAction) {
+                    case "dispatch-command-console":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
+                        }
+
+                        break;
+
+                    case "dispatch-command-player":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            getPluginInstance().getServer().dispatchCommand(player, value);
+                        }
+                        break;
+
+                    case "open-custom-menu":
+
+                        if (!value.equalsIgnoreCase("")) {
+                            if (value.equalsIgnoreCase("List Menu") || value.equalsIgnoreCase("List-Menu")) {
+                                player.closeInventory();
+                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                     return;
-                                }
 
-                                Inventory inventory = getPluginInstance().getManager().buildPlayerSelectionMenu(player);
-
-                                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(),
-                                        EnumContainer.MenuType.PLAYER_SELECTION, inventory, player.getPlayer());
+                                Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
+                                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player.getPlayer());
                                 getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
                                 if (menuOpenEvent.isCancelled())
                                     return;
 
                                 player.openInventory(inventory);
-                                getPluginInstance().getManager().sendCustomMessage("group-selection-start", player);
                                 return;
-                            }
-
-                            break;
-
-                        case SHIFT_LEFT:
-
-                            if (player.hasPermission("hyperdrive.like")) {
-                                if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())) && !warp.getAssistants().contains(player.getUniqueId())) {
-                                    getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("like-own")), player);
+                            } else {
+                                player.closeInventory();
+                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                     return;
-                                }
 
-                                if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")) {
-                                    String serverIP = (getPluginInstance().getServer().getIp().equalsIgnoreCase("") || getPluginInstance().getServer().getIp().equalsIgnoreCase("0.0.0.0"))
-                                            ? getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort()
-                                            : (getPluginInstance().getServer().getIp().replace("localhost", "127.0.0.1") + ":" + getPluginInstance().getServer().getPort());
-
-                                    if (!warp.getServerIPAddress().equalsIgnoreCase(serverIP)) {
-                                        getPluginInstance().getManager().sendCustomMessage("like-incorrect-server", player, "{warp}:" + warp.getWarpName());
-                                        return;
-                                    }
-                                }
-
-                                Inventory inventory = getPluginInstance().getManager().buildLikeMenu(warp);
-                                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIKE, inventory, player.getPlayer());
+                                Inventory inventory = getPluginInstance().getManager().buildCustomMenu(player, value);
+                                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.CUSTOM, inventory, player.getPlayer());
+                                menuOpenEvent.setCustomMenuId(value);
                                 getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                                if (menuOpenEvent.isCancelled()) return;
+                                if (menuOpenEvent.isCancelled())
+                                    return;
 
                                 player.openInventory(inventory);
                                 return;
                             }
+                        }
 
-                            break;
-                        case SHIFT_RIGHT:
+                        break;
+                    case "rename":
 
-                            if (getPluginInstance().getManager().canEditWarp(player, warp)) {
-                                Inventory inventory = getPluginInstance().getManager().buildEditMenu(player, warp);
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "rename", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("rename-warp-interaction", player, "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                    "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
 
-                                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.EDIT, inventory, player.getPlayer());
-                                getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                                if (menuOpenEvent.isCancelled()) return;
+                        break;
 
-                                player.openInventory(inventory);
+                    case "delete":
+
+                        player.closeInventory();
+                        if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+
+                            warp.unRegister();
+                            warp.deleteSaved(true);
+                            getPluginInstance().getManager().sendCustomMessage("warp-deleted", player, "{warp}:" + warp.getWarpName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
+
+                        break;
+
+                    case "relocate":
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isBlockedWorld(player.getWorld())) {
+                            getPluginInstance().getManager().sendCustomMessage("blocked-world", player);
+                            return;
+                        }
+
+                        if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+
+                            warp.setWarpLocation(player.getLocation());
+                            getPluginInstance().getManager().sendCustomMessage("warp-relocated", player, "{warp}:" + warp.getWarpName(), "{x}:" + warp.getWarpLocation().getX(),
+                                    "{y}:" + warp.getWarpLocation().getY(), "{z}:" + warp.getWarpLocation().getZ(), "{world}:" + warp.getWarpLocation().getWorldName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("warp-invalid", player, "{warp}:" + warp.getWarpName());
+
+                        player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
+                        break;
+
+                    case "change-status":
+
+                        player.closeInventory();
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+
+                            EnumContainer.Status[] statusList = EnumContainer.Status.values();
+                            EnumContainer.Status nextStatus = EnumContainer.Status.PUBLIC, previousStatus = warp.getStatus();
+                            for (int i = -1; ++i < statusList.length; ) {
+                                EnumContainer.Status status = statusList[i];
+                                if (status == previousStatus) {
+                                    int nextIndex = (i + 1);
+                                    nextStatus = statusList[nextIndex >= statusList.length ? 0 : nextIndex];
+                                    if (!player.hasPermission("hyperdrive.admin.status") && nextStatus == EnumContainer.Status.ADMIN)
+                                        nextStatus = statusList[0];
+                                    break;
+                                }
+                            }
+
+                            warp.setStatus(nextStatus);
+                            String nextStatusName, previousStatusName;
+
+                            switch (nextStatus) {
+                                case PRIVATE:
+                                    nextStatusName = privateFormat;
+                                    break;
+                                case ADMIN:
+                                    nextStatusName = adminFormat;
+                                    break;
+                                default:
+                                    nextStatusName = publicFormat;
+                                    break;
+                            }
+
+                            switch (previousStatus) {
+                                case PRIVATE:
+                                    previousStatusName = privateFormat;
+                                    break;
+                                case ADMIN:
+                                    previousStatusName = adminFormat;
+                                    break;
+                                default:
+                                    previousStatusName = publicFormat;
+                                    break;
+                            }
+
+                            getPluginInstance().getManager().sendCustomMessage("warp-status-changed", player, "{warp}:" + warp.getWarpName(),
+                                    "{next-status}:" + nextStatusName, "{previous-status}:" + previousStatusName);
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
+
+                        player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
+                        break;
+
+                    case "give-ownership":
+
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "give-ownership", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("give-ownership-interaction", player, "{warp}:" + (warp != null ? warp.getWarpName() : ""),
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"), "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+
+                        break;
+
+                    case "edit-description":
+
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "edit-description", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("edit-description-interaction", player,
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                    "{clear}:" + getPluginInstance().getConfig().getString("warp-icon-section.description-clear-symbol"), "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+
+                        break;
+
+                    case "change-usage-price":
+
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "change-usage-price", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("change-usage-price-interaction", player,
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                    "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+
+                        break;
+
+                    case "give-assistant":
+
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "give-assistant", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("give-assistant-interaction", player,
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                    "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+
+                        break;
+
+                    case "remove-assistant":
+
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "remove-assistant", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("remove-assistant-interaction", player,
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                    "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+
+                        break;
+
+                    case "add-to-list":
+
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "add-to-list", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("add-list-interaction", player,
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                    "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+
+                        break;
+
+                    case "remove-from-list":
+
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "remove-from-list", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("remove-list-interaction", player,
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                    "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+
+                        break;
+
+                    case "toggle-white-list":
+
+                        player.closeInventory();
+                        if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
+
+                        warp.setWhiteListMode(!warp.isWhiteListMode());
+                        getPluginInstance().getManager().sendCustomMessage(warp.isWhiteListMode() ? "white-list" : "black-list", player,
+                                "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                "{player}:" + player.getName());
+
+                        player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
+                        break;
+
+                    case "add-command":
+
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "add-command", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("add-command-interaction", player,
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                    "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+
+                        break;
+
+                    case "remove-command":
+
+                        player.closeInventory();
+                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                            getPluginInstance().getManager().updateChatInteraction(player, "remove-command", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
+                            getPluginInstance().getManager().sendCustomMessage("remove-command-interaction", player,
+                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                    "{player}:" + player.getName());
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+
+                        break;
+
+                    case "toggle-enchant-look":
+
+                        player.closeInventory();
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+
+                            warp.setIconEnchantedLook(!warp.hasIconEnchantedLook());
+                            if (toggleFormat != null && toggleFormat.contains(":")) {
+                                String[] toggleFormatArgs = toggleFormat.split(":");
+                                getPluginInstance().getManager().sendCustomMessage("enchanted-look-toggle", player,
+                                        "{warp}:" + warp.getWarpName(), "{status}:"
+                                                + (warp.hasIconEnchantedLook() ? "&a" + toggleFormatArgs[0] : "&c" + toggleFormatArgs[1]));
+                            } else
+                                getPluginInstance().getManager().sendCustomMessage("enchanted-look-toggle", player,
+                                        "{warp}:" + warp.getWarpName(), "{status}:" + (warp.hasIconEnchantedLook() ? "&aEnabled" : "&cDisabled"));
+                        } else {
+                            getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
+                        }
+
+                        player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
+                        break;
+
+                    case "notify":
+                        player.closeInventory();
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+
+                            warp.setNotify(!warp.canNotify());
+                            if (toggleFormat != null && toggleFormat.contains(":")) {
+                                String[] toggleFormatArgs = toggleFormat.split(":");
+                                getPluginInstance().getManager().sendCustomMessage("notify-toggle", player, "{warp}:" + warp.getWarpName(),
+                                        "{status}:" + (warp.canNotify() ? "&a" + toggleFormatArgs[0] : "&c" + toggleFormatArgs[1]));
+                            } else
+                                getPluginInstance().getManager().sendCustomMessage("notify-toggle", player, "{warp}:" + warp.getWarpName(),
+                                        "{status}:" + (warp.canNotify() ? "&aEnabled" : "&cDisabled"));
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
+
+                        player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
+                        break;
+
+                    case "change-icon":
+
+                        player.closeInventory();
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                            ItemStack handItem = getPluginInstance().getManager().getHandItem(player);
+
+                            if (handItem == null || handItem.getType() == Material.AIR) {
+                                getPluginInstance().getManager().sendCustomMessage("invalid-item", player, "{warp}:" + warp.getWarpName());
                                 return;
                             }
 
-                            break;
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            warp.setIconTheme(handItem.getType().name() + "," + handItem.getDurability() + "," + handItem.getAmount());
+                            getPluginInstance().getManager().sendCustomMessage("icon-changed", player, "{warp}:" + warp.getWarpName());
+                        }
 
-                        default:
-                            break;
-                    }
+                        player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
+                        break;
+
+                    case "change-animation-set":
+
+                        player.closeInventory();
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+
+                            String nextAnimationSet = getPluginInstance().getManager().getNextAnimationSet(warp);
+                            if (nextAnimationSet != null) {
+                                warp.setAnimationSet(nextAnimationSet);
+                                getPluginInstance().getManager().sendCustomMessage("animation-set-changed", player, "{warp}:" + warp.getWarpName(),
+                                        "{animation-set}:" + nextAnimationSet.split(":")[0]);
+                            } else
+                                getPluginInstance().getManager().sendCustomMessage("animation-set-invalid", player, "{warp}:" + warp.getWarpName());
+                        } else {
+                            getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
+                        }
+
+                        player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
+                        break;
+
+                    default:
+                        break;
                 }
+            }
+        }
+    }
 
-                return;
+    private void runLikeMenuClick(Player player, String inventoryName, InventoryClickEvent e) {
+        if (e.getCurrentItem() == null) return;
+        e.setCancelled(true);
+        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
+
+        String itemId = getPluginInstance().getManager().getIdFromSlot("like-menu-section", e.getSlot());
+        if (itemId != null) {
+            if (getPluginInstance().getConfig().getBoolean("like-menu-section.items." + itemId + ".click-sound")) {
+                String soundName = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".sound-name");
+                if (soundName != null && !soundName.equalsIgnoreCase(""))
+                    player.playSound(player.getLocation(),
+                            Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
             }
 
-            String itemId = getPluginInstance().getManager().getIdFromSlot("list-menu-section", e.getSlot());
-            if (itemId != null) {
-                if (getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".click-sound")) {
-                    String soundName = getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".sound-name");
-                    if (soundName != null && !soundName.equalsIgnoreCase(""))
-                        player.playSound(player.getLocation(),
-                                Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+            getPluginInstance().getManager().sendCustomMessage("like-menu-section.items." + itemId + ".click-message", player,
+                    "{player}:" + player.getName(), "{item-id}:" + itemId);
+
+            String clickAction = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".click-action"),
+                    warpName = inventoryName.replace(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title")), "");
+            Warp warp = getPluginInstance().getManager().getWarp(warpName);
+
+            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("like-menu-section.items." + itemId);
+            if (cs != null && cs.getKeys(false).contains("permission")) {
+                String permission = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".permission");
+                if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
+                    getPluginInstance().getManager().sendCustomMessage("no-permission", player);
+                    return;
+                }
+            }
+
+            if (clickAction != null) {
+                double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("like-menu-section.items." + itemId + ".usage-cost");
+                String value = "";
+                if (clickAction.contains(":")) {
+                    String[] actionArgs = clickAction.toLowerCase().split(":");
+                    clickAction = actionArgs[0].replace(" ", "-").replace("_", "-");
+                    value = actionArgs[1].replace("{player}", player.getName());
                 }
 
-                ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section.items." + itemId);
-                if (cs != null && cs.getKeys(false).contains("permission")) {
-                    String permission = getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".permission");
-                    if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
-                        getPluginInstance().getManager().sendCustomMessage("no-permission", player);
-                        return;
-                    }
-                }
-
-                String ownFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format"), publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
-                        privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"), adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format"),
-                        featuredFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format"), clickAction = getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".click-action");
-                getPluginInstance().getManager().sendCustomMessage("list-menu-section.items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
-
-                if (clickAction != null) {
-                    String action = clickAction, value = "";
-                    if (clickAction.contains(":")) {
-                        String[] actionArgs = clickAction.toLowerCase().split(":");
-                        action = actionArgs[0].replace(" ", "-").replace("_", "-");
-                        value = actionArgs[1].replace("{player}", player.getName());
-                    }
-
-                    final double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
-                    switch (action) {
-                        case "dispatch-command-console":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
-                            }
-
-                            break;
-                        case "dispatch-command-player":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(player, value);
-                            }
-
-                            break;
-                        case "create-warp":
+                switch (clickAction) {
+                    case "dispatch-command-console":
+                        if (!value.equalsIgnoreCase("")) {
                             player.closeInventory();
-
-                            if (getPluginInstance().getManager().isBlockedWorld(player.getWorld())) {
-                                getPluginInstance().getManager().sendCustomMessage("blocked-world", player);
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
-                            }
-
-                            if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation())) {
-                                getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player);
-                                break;
-                            }
-
-                            if (getPluginInstance().getManager().hasMetWarpLimit(player)) {
-                                getPluginInstance().getManager().sendCustomMessage("warp-limit-met", player);
+                            getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
+                        }
+                        break;
+                    case "dispatch-command-player":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
-                            }
+                            getPluginInstance().getServer().dispatchCommand(player, value);
+                        }
+                        break;
+                    case "open-custom-menu":
+                        if (!value.equalsIgnoreCase(""))
+                            if (value.equalsIgnoreCase("List Menu") || value.equalsIgnoreCase("List-Menu")) {
+                                player.closeInventory();
+                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                    return;
 
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "create-warp", "", itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("create-warp-interaction", player, "{player}:" + player.getName(),
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"));
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-                            break;
-                        case "refresh":
-                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
+                                Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
+                                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player.getPlayer());
+                                getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                                if (menuOpenEvent.isCancelled())
+                                    return;
 
-                            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-                                getPluginInstance().getManager().getPaging().resetWarpPages(player);
-                                String currentStatus = getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", e.getInventory());
-                                HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", currentStatus);
-                                getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
-                                int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
-                                List<Warp> pageList = new ArrayList<>();
-                                if (wpMap != null && !wpMap.isEmpty() && wpMap.containsKey(page))
-                                    pageList = new ArrayList<>(wpMap.get(page));
-
-                                if (!pageList.isEmpty())
-                                    for (int i = -1; ++i < warpSlots.size(); ) {
-                                        e.getInventory().setItem(warpSlots.get(i), null);
-                                        if (pageList.size() >= 1) {
-                                            Warp warp = pageList.get(0);
-                                            ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
-                                            if (warpIcon != null)
-                                                e.getInventory().setItem(warpSlots.get(i), warpIcon);
-                                            pageList.remove(warp);
-                                        }
-                                    }
-                                else getPluginInstance().getManager().sendCustomMessage("refresh-fail", player);
-                            });
-
-                            break;
-                        case "next-page":
-                            if (getPluginInstance().getManager().getPaging().hasNextWarpPage(player) && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                nextPage(player, e.getInventory(), warpSlots);
-                            else getPluginInstance().getManager().sendCustomMessage("no-next-page", player);
-                            break;
-                        case "previous-page":
-                            if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player) && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                previousPage(player, e.getInventory(), warpSlots);
-                            else getPluginInstance().getManager().sendCustomMessage("no-previous-page", player);
-                            break;
-                        case "filter-switch":
-                            getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-                                String statusFromItem = getPluginInstance().getManager().getFilterStatusFromItem(e.getCurrentItem(), "list-menu-section", itemId);
-                                if (statusFromItem != null && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) {
-                                    int index = -1;
-                                    boolean isOwnFormat = statusFromItem.equalsIgnoreCase(ownFormat), isPublicFormat = statusFromItem.equalsIgnoreCase(publicFormat), isPrivateFormat = statusFromItem.equalsIgnoreCase(privateFormat),
-                                            isAdminFormat = statusFromItem.equalsIgnoreCase(adminFormat), isFeaturedFormat = statusFromItem.equalsIgnoreCase(adminFormat);
-
-                                    if (isPublicFormat || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PUBLIC.name()))
-                                        index = 0;
-                                    else if (isPrivateFormat
-                                            || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PRIVATE.name()))
-                                        index = 1;
-                                    else if (isAdminFormat
-                                            || statusFromItem.equalsIgnoreCase(EnumContainer.Status.ADMIN.name()))
-                                        index = 2;
-                                    else if (isOwnFormat)
-                                        index = 3;
-                                    else if (isFeaturedFormat)
-                                        index = 4;
-
-                                    int nextIndex = index + 1;
-                                    String nextStatus;
-
-                                    if (nextIndex == 1)
-                                        nextStatus = EnumContainer.Status.PRIVATE.name();
-                                    else if (nextIndex == 2)
-                                        nextStatus = EnumContainer.Status.ADMIN.name();
-                                    else if (nextIndex == 3)
-                                        nextStatus = ownFormat;
-                                    else if (nextIndex == 4)
-                                        nextStatus = featuredFormat;
-                                    else
-                                        nextStatus = EnumContainer.Status.PUBLIC.name();
-
-                                    ItemStack filterItem = getPluginInstance().getManager().buildItemFromId(player,
-                                            Objects.requireNonNull(nextStatus), "list-menu-section", itemId);
-                                    e.getInventory().setItem(e.getSlot(), filterItem);
-
-                                    for (int i = -1; ++i < warpSlots.size(); ) {
-                                        int warpSlot = warpSlots.get(i);
-                                        e.getInventory().setItem(warpSlot, null);
-                                    }
-
-                                    getPluginInstance().getManager().getPaging().resetWarpPages(player);
-                                    HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", nextStatus);
-                                    getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
-                                    int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
-                                    List<Warp> wList = new ArrayList<>();
-                                    if (wpMap != null && !wpMap.isEmpty() && wpMap.containsKey(page))
-                                        wList = new ArrayList<>(wpMap.get(page));
-
-                                    if (!wList.isEmpty())
-                                        for (int i = -1; ++i < warpSlots.size(); ) {
-                                            e.getInventory().setItem(warpSlots.get(i), null);
-                                            if (wList.size() >= 1) {
-                                                Warp warp = wList.get(0);
-                                                ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
-                                                if (warpIcon != null)
-                                                    e.getInventory().setItem(warpSlots.get(i), warpIcon);
-                                                wList.remove(warp);
-                                            }
-                                        }
-                                }
-                            });
-
-                            break;
-                        case "open-custom-menu":
-                            if (!value.equalsIgnoreCase("")) {
+                                player.openInventory(inventory);
+                                return;
+                            } else {
                                 player.closeInventory();
                                 if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                     return;
@@ -1314,686 +1807,199 @@ public class Listeners implements Listener {
                                 if (menuOpenEvent.isCancelled()) return;
 
                                 player.openInventory(inventory);
-                            }
-
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-        }
-    }
-
-    private void runEditMenuClick(Player player, String inventoryName, InventoryClickEvent e) {
-        if (e.getCurrentItem() != null && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
-            e.setCancelled(true);
-            if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
-
-            String itemId = getPluginInstance().getManager().getIdFromSlot("edit-menu-section", e.getSlot());
-            if (itemId != null) {
-                if (getPluginInstance().getMenusConfig().getBoolean("edit-menu-section.items." + itemId + ".click-sound")) {
-                    String soundName = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".sound-name");
-                    if (soundName != null && !soundName.equalsIgnoreCase(""))
-                        player.playSound(player.getLocation(),
-                                Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
-                }
-
-                getPluginInstance().getManager().sendCustomMessage("edit-menu-section.items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
-
-                String clickAction = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".click-action"),
-                        toggleFormat = getPluginInstance().getConfig().getString("general-section.option-toggle-format"),
-                        warpName = inventoryName.replace(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title")), "");
-                Warp warp = getPluginInstance().getManager().getWarp(warpName);
-
-                ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("edit-menu-section.items." + itemId);
-                if (cs != null && cs.getKeys(false).contains("permission")) {
-                    String permission = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".permission");
-                    if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
-                        getPluginInstance().getManager().sendCustomMessage("no-permission", player);
-                        return;
-                    }
-                }
-
-                if (clickAction != null) {
-
-                    double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost");
-
-                    String value = "";
-                    if (clickAction.contains(":")) {
-                        String[] actionArgs = clickAction.toLowerCase().split(":");
-                        clickAction = actionArgs[0].replace(" ", "-").replace("_", "-");
-                        value = actionArgs[1].replace("{player}", player.getName());
-                    }
-
-                    String publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
-                            privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
-                            adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format");
-                    boolean useMySQL = getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql");
-
-                    switch (clickAction) {
-                        case "dispatch-command-console":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
-                            }
-
-                            break;
-
-                        case "dispatch-command-player":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(player, value);
-                            }
-                            break;
-
-                        case "open-custom-menu":
-
-                            if (!value.equalsIgnoreCase("")) {
-                                if (value.equalsIgnoreCase("List Menu") || value.equalsIgnoreCase("List-Menu")) {
-                                    player.closeInventory();
-                                    if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                        return;
-
-                                    Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
-                                    MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player.getPlayer());
-                                    getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                                    if (menuOpenEvent.isCancelled())
-                                        return;
-
-                                    player.openInventory(inventory);
-                                    return;
-                                } else {
-                                    player.closeInventory();
-                                    if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                        return;
-
-                                    Inventory inventory = getPluginInstance().getManager().buildCustomMenu(player, value);
-                                    MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.CUSTOM, inventory, player.getPlayer());
-                                    menuOpenEvent.setCustomMenuId(value);
-                                    getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                                    if (menuOpenEvent.isCancelled())
-                                        return;
-
-                                    player.openInventory(inventory);
-                                    return;
-                                }
-                            }
-
-                            break;
-                        case "rename":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "rename", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("rename-warp-interaction", player, "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "delete":
-
-                            player.closeInventory();
-                            if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-
-                                warp.unRegister();
-                                warp.deleteSaved(true);
-                                getPluginInstance().getManager().sendCustomMessage("warp-deleted", player, "{warp}:" + warp.getWarpName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
-
-                            break;
-
-                        case "relocate":
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isBlockedWorld(player.getWorld())) {
-                                getPluginInstance().getManager().sendCustomMessage("blocked-world", player);
                                 return;
                             }
-
-                            if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-
-                                warp.setWarpLocation(player.getLocation());
-                                getPluginInstance().getManager().sendCustomMessage("warp-relocated", player, "{warp}:" + warp.getWarpName(), "{x}:" + warp.getWarpLocation().getX(),
-                                        "{y}:" + warp.getWarpLocation().getY(), "{z}:" + warp.getWarpLocation().getZ(), "{world}:" + warp.getWarpLocation().getWorldName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("warp-invalid", player, "{warp}:" + warp.getWarpName());
-
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
-                            break;
-
-                        case "change-status":
-
-                            player.closeInventory();
-                            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-
-                                EnumContainer.Status[] statusList = EnumContainer.Status.values();
-                                EnumContainer.Status nextStatus = EnumContainer.Status.PUBLIC, previousStatus = warp.getStatus();
-                                for (int i = -1; ++i < statusList.length; ) {
-                                    EnumContainer.Status status = statusList[i];
-                                    if (status == previousStatus) {
-                                        int nextIndex = (i + 1);
-                                        nextStatus = statusList[nextIndex >= statusList.length ? 0 : nextIndex];
-                                        if (!player.hasPermission("hyperdrive.admin.status") && nextStatus == EnumContainer.Status.ADMIN)
-                                            nextStatus = statusList[0];
-                                        break;
-                                    }
-                                }
-
-                                warp.setStatus(nextStatus);
-                                String nextStatusName, previousStatusName;
-
-                                switch (nextStatus) {
-                                    case PRIVATE:
-                                        nextStatusName = privateFormat;
-                                        break;
-                                    case ADMIN:
-                                        nextStatusName = adminFormat;
-                                        break;
-                                    default:
-                                        nextStatusName = publicFormat;
-                                        break;
-                                }
-
-                                switch (previousStatus) {
-                                    case PRIVATE:
-                                        previousStatusName = privateFormat;
-                                        break;
-                                    case ADMIN:
-                                        previousStatusName = adminFormat;
-                                        break;
-                                    default:
-                                        previousStatusName = publicFormat;
-                                        break;
-                                }
-
-                                getPluginInstance().getManager().sendCustomMessage("warp-status-changed", player, "{warp}:" + warp.getWarpName(),
-                                        "{next-status}:" + nextStatusName, "{previous-status}:" + previousStatusName);
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
-
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
-                            break;
-
-                        case "give-ownership":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "give-ownership", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("give-ownership-interaction", player, "{warp}:" + (warp != null ? warp.getWarpName() : ""),
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"), "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "edit-description":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "edit-description", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("edit-description-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{clear}:" + getPluginInstance().getConfig().getString("warp-icon-section.description-clear-symbol"), "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "change-usage-price":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "change-usage-price", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("change-usage-price-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "give-assistant":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "give-assistant", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("give-assistant-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "remove-assistant":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "remove-assistant", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("remove-assistant-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "add-to-list":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "add-to-list", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("add-list-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "remove-from-list":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "remove-from-list", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("remove-list-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "toggle-white-list":
-
-                            player.closeInventory();
-                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
-
-                            warp.setWhiteListMode(!warp.isWhiteListMode());
-                            getPluginInstance().getManager().sendCustomMessage(warp.isWhiteListMode() ? "white-list" : "black-list", player,
-                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                    "{player}:" + player.getName());
-
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
-                            break;
-
-                        case "add-command":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "add-command", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("add-command-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "remove-command":
-
-                            player.closeInventory();
-                            if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
-                                getPluginInstance().getManager().updateChatInteraction(player, "remove-command", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                                getPluginInstance().getManager().sendCustomMessage("remove-command-interaction", player,
-                                        "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
-                                        "{player}:" + player.getName());
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
-
-                            break;
-
-                        case "toggle-enchant-look":
-
-                            player.closeInventory();
-                            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-
-                                warp.setIconEnchantedLook(!warp.hasIconEnchantedLook());
-                                if (toggleFormat != null && toggleFormat.contains(":")) {
-                                    String[] toggleFormatArgs = toggleFormat.split(":");
-                                    getPluginInstance().getManager().sendCustomMessage("enchanted-look-toggle", player,
-                                            "{warp}:" + warp.getWarpName(), "{status}:"
-                                                    + (warp.hasIconEnchantedLook() ? "&a" + toggleFormatArgs[0] : "&c" + toggleFormatArgs[1]));
-                                } else
-                                    getPluginInstance().getManager().sendCustomMessage("enchanted-look-toggle", player,
-                                            "{warp}:" + warp.getWarpName(), "{status}:" + (warp.hasIconEnchantedLook() ? "&aEnabled" : "&cDisabled"));
-                            } else {
-                                getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
-                            }
-
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
-                            break;
-
-                        case "notify":
-                            player.closeInventory();
-                            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-
-                                warp.setNotify(!warp.canNotify());
-                                if (toggleFormat != null && toggleFormat.contains(":")) {
-                                    String[] toggleFormatArgs = toggleFormat.split(":");
-                                    getPluginInstance().getManager().sendCustomMessage("notify-toggle", player, "{warp}:" + warp.getWarpName(),
-                                            "{status}:" + (warp.canNotify() ? "&a" + toggleFormatArgs[0] : "&c" + toggleFormatArgs[1]));
-                                } else
-                                    getPluginInstance().getManager().sendCustomMessage("notify-toggle", player, "{warp}:" + warp.getWarpName(),
-                                            "{status}:" + (warp.canNotify() ? "&aEnabled" : "&cDisabled"));
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
-
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
-                            break;
-
-                        case "change-icon":
-
-                            player.closeInventory();
-                            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
-                                ItemStack handItem = getPluginInstance().getManager().getHandItem(player);
-
-                                if (handItem == null || handItem.getType() == Material.AIR) {
-                                    getPluginInstance().getManager().sendCustomMessage("invalid-item", player, "{warp}:" + warp.getWarpName());
-                                    return;
-                                }
-
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                warp.setIconTheme(handItem.getType().name() + "," + handItem.getDurability() + "," + handItem.getAmount());
-                                getPluginInstance().getManager().sendCustomMessage("icon-changed", player, "{warp}:" + warp.getWarpName());
-                            }
-
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
-                            break;
-
-                        case "change-animation-set":
-
-                            player.closeInventory();
-                            if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-
-                                String nextAnimationSet = getPluginInstance().getManager().getNextAnimationSet(warp);
-                                if (nextAnimationSet != null) {
-                                    warp.setAnimationSet(nextAnimationSet);
-                                    getPluginInstance().getManager().sendCustomMessage("animation-set-changed", player, "{warp}:" + warp.getWarpName(),
-                                            "{animation-set}:" + nextAnimationSet.split(":")[0]);
-                                } else
-                                    getPluginInstance().getManager().sendCustomMessage("animation-set-invalid", player, "{warp}:" + warp.getWarpName());
-                            } else {
-                                getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
-                            }
-
-                            player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-            }
-        }
-    }
-
-    private void runLikeMenuClick(Player player, String inventoryName, InventoryClickEvent e) {
-        if (e.getCurrentItem() != null && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
-            e.setCancelled(true);
-            if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
-
-            String itemId = getPluginInstance().getManager().getIdFromSlot("like-menu-section", e.getSlot());
-            if (itemId != null) {
-                if (getPluginInstance().getConfig().getBoolean("like-menu-section.items." + itemId + ".click-sound")) {
-                    String soundName = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".sound-name");
-                    if (soundName != null && !soundName.equalsIgnoreCase(""))
-                        player.playSound(player.getLocation(),
-                                Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
-                }
-
-                getPluginInstance().getManager().sendCustomMessage("like-menu-section.items." + itemId + ".click-message", player,
-                        "{player}:" + player.getName(), "{item-id}:" + itemId);
-
-                String clickAction = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".click-action"),
-                        warpName = inventoryName.replace(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title")), "");
-                Warp warp = getPluginInstance().getManager().getWarp(warpName);
-
-                ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("like-menu-section.items." + itemId);
-                if (cs != null && cs.getKeys(false).contains("permission")) {
-                    String permission = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".permission");
-                    if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
-                        getPluginInstance().getManager().sendCustomMessage("no-permission", player);
-                        return;
-                    }
-                }
-
-                if (clickAction != null) {
-                    double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("like-menu-section.items." + itemId + ".usage-cost");
-                    String value = "";
-                    if (clickAction.contains(":")) {
-                        String[] actionArgs = clickAction.toLowerCase().split(":");
-                        clickAction = actionArgs[0].replace(" ", "-").replace("_", "-");
-                        value = actionArgs[1].replace("{player}", player.getName());
-                    }
-
-                    switch (clickAction) {
-                        case "dispatch-command-console":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
-                            }
-                            break;
-                        case "dispatch-command-player":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(player, value);
-                            }
-                            break;
-                        case "open-custom-menu":
-                            if (!value.equalsIgnoreCase(""))
-                                if (value.equalsIgnoreCase("List Menu") || value.equalsIgnoreCase("List-Menu")) {
-                                    player.closeInventory();
-                                    if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                        return;
-
-                                    Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
-                                    MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player.getPlayer());
-                                    getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                                    if (menuOpenEvent.isCancelled())
-                                        return;
-
-                                    player.openInventory(inventory);
-                                    return;
-                                } else {
-                                    player.closeInventory();
-                                    if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                        return;
-
-                                    Inventory inventory = getPluginInstance().getManager().buildCustomMenu(player, value);
-                                    MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.CUSTOM, inventory, player.getPlayer());
-                                    menuOpenEvent.setCustomMenuId(value);
-                                    getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                                    if (menuOpenEvent.isCancelled()) return;
-
-                                    player.openInventory(inventory);
-                                    return;
-                                }
-                            break;
-                        case "like":
-                            player.closeInventory();
-                            if (!player.hasPermission("hyperdrive.likebypass") && warp.getVoters().contains(player.getUniqueId())) {
-                                getPluginInstance().getManager().sendCustomMessage("already-liked", player);
-                                return;
-                            }
-
-                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
-                            warp.setLikes(warp.getLikes() + 1);
-                            warp.getVoters().add(player.getUniqueId());
-                            getPluginInstance().getManager().sendCustomMessage("liked-message", player, "{warp}:" + warp.getWarpName());
-                            break;
-                        case "dislike":
-                            player.closeInventory();
-                            if (!player.hasPermission("hyperdrive.likebypass") && warp.getVoters().contains(player.getUniqueId())) {
-                                getPluginInstance().getManager().sendCustomMessage("already-liked", player, "{warp}:" + warp.getWarpName());
-                                return;
-                            }
-
-                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
-                            warp.setDislikes(warp.getDislikes() + 1);
-                            warp.getVoters().add(player.getUniqueId());
-                            getPluginInstance().getManager().sendCustomMessage("disliked-message", player, "{warp}:" + warp.getWarpName());
-                            break;
-                        default:
-                            break;
-                    }
+                        break;
+                    case "like":
+                        player.closeInventory();
+                        if (!player.hasPermission("hyperdrive.likebypass") && warp.getVoters().contains(player.getUniqueId())) {
+                            getPluginInstance().getManager().sendCustomMessage("already-liked", player);
+                            return;
+                        }
+
+                        if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
+                        warp.setLikes(warp.getLikes() + 1);
+                        warp.getVoters().add(player.getUniqueId());
+                        getPluginInstance().getManager().sendCustomMessage("liked-message", player, "{warp}:" + warp.getWarpName());
+                        break;
+                    case "dislike":
+                        player.closeInventory();
+                        if (!player.hasPermission("hyperdrive.likebypass") && warp.getVoters().contains(player.getUniqueId())) {
+                            getPluginInstance().getManager().sendCustomMessage("already-liked", player, "{warp}:" + warp.getWarpName());
+                            return;
+                        }
+
+                        if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
+                        warp.setDislikes(warp.getDislikes() + 1);
+                        warp.getVoters().add(player.getUniqueId());
+                        getPluginInstance().getManager().sendCustomMessage("disliked-message", player, "{warp}:" + warp.getWarpName());
+                        break;
+                    default:
+                        break;
                 }
             }
         }
     }
 
     private void runPlayerSelectionClick(Player player, InventoryClickEvent e) {
-        if (e.getCurrentItem() != null && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
-            e.setCancelled(true);
-            if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE)
+        if (e.getCurrentItem() == null) return;
+        e.setCancelled(true);
+        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE)
+            return;
+
+        List<Integer> playerSlots = getPluginInstance().getMenusConfig().getIntegerList("ps-menu-section.player-slots");
+        if (playerSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta()) {
+            String soundName = getPluginInstance().getMenusConfig().getString("ps-menu-section.player-click-sound");
+            if (soundName != null && !soundName.equalsIgnoreCase(""))
+                player.getWorld().playSound(player.getLocation(),
+                        Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+
+            String playerName = ChatColor
+                    .stripColor(Objects.requireNonNull(e.getCurrentItem().getItemMeta()).getDisplayName());
+            if (playerName.equalsIgnoreCase(""))
                 return;
 
-            List<Integer> playerSlots = getPluginInstance().getMenusConfig().getIntegerList("ps-menu-section.player-slots");
-            if (playerSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta()) {
-                String soundName = getPluginInstance().getMenusConfig().getString("ps-menu-section.player-click-sound");
+            @SuppressWarnings("deprecation")
+            OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerName);
+            if (!offlinePlayer.isOnline())
+                return;
+
+            List<UUID> selectedPlayers = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
+            boolean isSelected = selectedPlayers != null && selectedPlayers.contains(offlinePlayer.getUniqueId());
+
+            e.getClickedInventory().setItem(e.getSlot(),
+                    getPluginInstance().getManager().getPlayerSelectionHead(offlinePlayer, !isSelected));
+            getPluginInstance().getManager().getPaging().updateSelectedPlayers(player, offlinePlayer.getUniqueId(),
+                    isSelected);
+            return;
+        }
+
+        String itemId = getPluginInstance().getManager().getIdFromSlot("ps-menu-section", e.getSlot());
+        if (itemId != null) {
+            if (getPluginInstance().getMenusConfig().getBoolean("ps-menu-section.items." + itemId + ".click-sound")) {
+                String soundName = getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".sound-name");
                 if (soundName != null && !soundName.equalsIgnoreCase(""))
-                    player.getWorld().playSound(player.getLocation(),
+                    player.playSound(player.getLocation(),
                             Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
-
-                String playerName = ChatColor
-                        .stripColor(Objects.requireNonNull(e.getCurrentItem().getItemMeta()).getDisplayName());
-                if (playerName.equalsIgnoreCase(""))
-                    return;
-
-                @SuppressWarnings("deprecation")
-                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerName);
-                if (!offlinePlayer.isOnline())
-                    return;
-
-                List<UUID> selectedPlayers = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
-                boolean isSelected = selectedPlayers != null && selectedPlayers.contains(offlinePlayer.getUniqueId());
-
-                e.getClickedInventory().setItem(e.getSlot(),
-                        getPluginInstance().getManager().getPlayerSelectionHead(offlinePlayer, !isSelected));
-                getPluginInstance().getManager().getPaging().updateSelectedPlayers(player, offlinePlayer.getUniqueId(),
-                        isSelected);
-                return;
             }
 
-            String itemId = getPluginInstance().getManager().getIdFromSlot("ps-menu-section", e.getSlot());
-            if (itemId != null) {
-                if (getPluginInstance().getMenusConfig().getBoolean("ps-menu-section.items." + itemId + ".click-sound")) {
-                    String soundName = getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".sound-name");
-                    if (soundName != null && !soundName.equalsIgnoreCase(""))
-                        player.playSound(player.getLocation(),
-                                Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("ps-menu-section.items." + itemId);
+            if (cs != null && cs.getKeys(false).contains("permission")) {
+                String permission = getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".permission");
+                if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
+                    getPluginInstance().getManager().sendCustomMessage("no-permission", player);
+                    return;
+                }
+            }
+
+            double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("ps-menu-section.items." + itemId + ".usage-cost");
+            getPluginInstance().getManager().sendCustomMessage("ps-menu-section.items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+
+            String clickAction = getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".click-action");
+            if (clickAction != null) {
+                String action = clickAction, value = "";
+                if (clickAction.contains(":")) {
+                    String[] actionArgs = clickAction.toLowerCase().split(":");
+                    action = actionArgs[0].replace(" ", "-").replace("_", "-");
+                    value = actionArgs[1].replace("{player}", player.getName());
                 }
 
-                ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("ps-menu-section.items." + itemId);
-                if (cs != null && cs.getKeys(false).contains("permission")) {
-                    String permission = getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".permission");
-                    if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
-                        getPluginInstance().getManager().sendCustomMessage("no-permission", player);
-                        return;
-                    }
-                }
-
-                double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("ps-menu-section.items." + itemId + ".usage-cost");
-                getPluginInstance().getManager().sendCustomMessage("ps-menu-section.items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
-
-                String clickAction = getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".click-action");
-                if (clickAction != null) {
-                    String action = clickAction, value = "";
-                    if (clickAction.contains(":")) {
-                        String[] actionArgs = clickAction.toLowerCase().split(":");
-                        action = actionArgs[0].replace(" ", "-").replace("_", "-");
-                        value = actionArgs[1].replace("{player}", player.getName());
-                    }
-
-                    HashMap<Integer, List<UUID>> playerSelectionPageMap;
-                    int currentPage;
-                    List<UUID> playerSelectionPageList;
-                    switch (action) {
-                        case "dispatch-command-console":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
-                            }
-
-                            break;
-                        case "dispatch-command-player":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(player, value);
-                            }
-
-                            break;
-                        case "confirm":
-
+                Map<Integer, List<UUID>> playerSelectionPageMap;
+                int currentPage;
+                List<UUID> playerSelectionPageList;
+                switch (action) {
+                    case "dispatch-command-console":
+                        if (!value.equalsIgnoreCase("")) {
                             player.closeInventory();
-                            final List<UUID> selectedPlayers = new ArrayList<>(getPluginInstance().getManager().getPaging().getSelectedPlayers(player));
-                            if (selectedPlayers.size() >= 1) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                for (int i = -1; ++i < selectedPlayers.size(); ) {
-                                    UUID selectedPlayerId = selectedPlayers.get(i);
-                                    if (selectedPlayerId == null) continue;
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
+                        }
 
-                                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(selectedPlayerId);
-                                    if (!offlinePlayer.isOnline()) continue;
+                        break;
+                    case "dispatch-command-player":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            getPluginInstance().getServer().dispatchCommand(player, value);
+                        }
 
-                                    if (getPluginInstance().getTeleportationHandler().isTeleporting(offlinePlayer.getPlayer()))
+                        break;
+                    case "confirm":
+
+                        player.closeInventory();
+                        final List<UUID> selectedPlayers = new ArrayList<>(getPluginInstance().getManager().getPaging().getSelectedPlayers(player));
+                        if (selectedPlayers.size() >= 1) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            for (int i = -1; ++i < selectedPlayers.size(); ) {
+                                UUID selectedPlayerId = selectedPlayers.get(i);
+                                if (selectedPlayerId == null) continue;
+
+                                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(selectedPlayerId);
+                                if (!offlinePlayer.isOnline()) continue;
+
+                                if (getPluginInstance().getTeleportationHandler().isTeleporting(offlinePlayer.getPlayer()))
+                                    continue;
+
+                                getPluginInstance().getManager().sendCustomMessage("player-selected-teleport", offlinePlayer.getPlayer(), "{player}:" + player.getName());
+                            }
+
+                            getPluginInstance().getTeleportationHandler().createGroupTemp(player, selectedPlayers, getPluginInstance().getTeleportationHandler().getDestination(player));
+                            getPluginInstance().getManager().sendCustomMessage("group-teleport-sent", player);
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("player-selection-fail", player);
+
+                        getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
+                        break;
+                    case "refresh":
+                        getPluginInstance().getManager().getPaging().resetPlayerSelectionPages(player);
+                        playerSelectionPageMap = getPluginInstance().getManager().getPaging().getPlayerSelectionPages(player);
+                        getPluginInstance().getManager().getPaging().getPlayerSelectionPageMap().put(player.getUniqueId(), playerSelectionPageMap);
+                        currentPage = getPluginInstance().getManager().getPaging().getCurrentPage(player);
+                        playerSelectionPageList = new ArrayList<>();
+                        if (playerSelectionPageMap != null && !playerSelectionPageMap.isEmpty() && playerSelectionPageMap.containsKey(currentPage))
+                            playerSelectionPageList = new ArrayList<>(playerSelectionPageMap.get(currentPage));
+
+                        if (!playerSelectionPageList.isEmpty()) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            for (int i = -1; ++i < playerSlots.size(); ) {
+                                int playerSlot = playerSlots.get(i);
+                                e.getInventory().setItem(playerSlot, null);
+
+                                if (playerSelectionPageList.size() >= 1) {
+                                    UUID playerUniqueId = playerSelectionPageList.get(0);
+                                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
+                                    if (!offlinePlayer.isOnline())
                                         continue;
 
-                                    getPluginInstance().getManager().sendCustomMessage("player-selected-teleport", offlinePlayer.getPlayer(), "{player}:" + player.getName());
+                                    List<UUID> sps = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
+                                    e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player,
+                                            sps != null && sps.contains(offlinePlayer.getUniqueId())));
+                                    playerSelectionPageList.remove(playerUniqueId);
                                 }
+                            }
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("refresh-fail", player);
 
-                                getPluginInstance().getTeleportationHandler().createGroupTemp(player, selectedPlayers, getPluginInstance().getTeleportationHandler().getDestination(player));
-                                getPluginInstance().getManager().sendCustomMessage("group-teleport-sent", player);
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("player-selection-fail", player);
-
-                            getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
-                            break;
-                        case "refresh":
-                            getPluginInstance().getManager().getPaging().resetPlayerSelectionPages(player);
+                        break;
+                    case "next-page":
+                        if (getPluginInstance().getManager().getPaging().hasNextPlayerSelectionPage(player)) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
                             playerSelectionPageMap = getPluginInstance().getManager().getPaging().getPlayerSelectionPages(player);
                             getPluginInstance().getManager().getPaging().getPlayerSelectionPageMap().put(player.getUniqueId(), playerSelectionPageMap);
                             currentPage = getPluginInstance().getManager().getPaging().getCurrentPage(player);
                             playerSelectionPageList = new ArrayList<>();
-                            if (playerSelectionPageMap != null && !playerSelectionPageMap.isEmpty() && playerSelectionPageMap.containsKey(currentPage))
-                                playerSelectionPageList = new ArrayList<>(playerSelectionPageMap.get(currentPage));
+                            if (playerSelectionPageMap != null && !playerSelectionPageMap.isEmpty() && playerSelectionPageMap.containsKey(currentPage + 1))
+                                playerSelectionPageList = new ArrayList<>(playerSelectionPageMap.get(currentPage + 1));
 
                             if (!playerSelectionPageList.isEmpty()) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
+                                getPluginInstance().getManager().getPaging().updateCurrentPlayerSelectionPage(player, true);
                                 for (int i = -1; ++i < playerSlots.size(); ) {
-                                    int playerSlot = playerSlots.get(i);
-                                    e.getInventory().setItem(playerSlot, null);
-
+                                    e.getInventory().setItem(playerSlots.get(i), null);
                                     if (playerSelectionPageList.size() >= 1) {
                                         UUID playerUniqueId = playerSelectionPageList.get(0);
                                         OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
@@ -2001,174 +2007,141 @@ public class Listeners implements Listener {
                                             continue;
 
                                         List<UUID> sps = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
-                                        e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player,
-                                                sps != null && sps.contains(offlinePlayer.getUniqueId())));
+                                        e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player, sps != null && sps.contains(offlinePlayer.getUniqueId())));
                                         playerSelectionPageList.remove(playerUniqueId);
                                     }
                                 }
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("refresh-fail", player);
-
-                            break;
-                        case "next-page":
-                            if (getPluginInstance().getManager().getPaging().hasNextPlayerSelectionPage(player)) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                playerSelectionPageMap = getPluginInstance().getManager().getPaging().getPlayerSelectionPages(player);
-                                getPluginInstance().getManager().getPaging().getPlayerSelectionPageMap().put(player.getUniqueId(), playerSelectionPageMap);
-                                currentPage = getPluginInstance().getManager().getPaging().getCurrentPage(player);
-                                playerSelectionPageList = new ArrayList<>();
-                                if (playerSelectionPageMap != null && !playerSelectionPageMap.isEmpty() && playerSelectionPageMap.containsKey(currentPage + 1))
-                                    playerSelectionPageList = new ArrayList<>(playerSelectionPageMap.get(currentPage + 1));
-
-                                if (!playerSelectionPageList.isEmpty()) {
-                                    getPluginInstance().getManager().getPaging().updateCurrentPlayerSelectionPage(player, true);
-                                    for (int i = -1; ++i < playerSlots.size(); ) {
-                                        e.getInventory().setItem(playerSlots.get(i), null);
-                                        if (playerSelectionPageList.size() >= 1) {
-                                            UUID playerUniqueId = playerSelectionPageList.get(0);
-                                            OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
-                                            if (!offlinePlayer.isOnline())
-                                                continue;
-
-                                            List<UUID> sps = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
-                                            e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player, sps != null && sps.contains(offlinePlayer.getUniqueId())));
-                                            playerSelectionPageList.remove(playerUniqueId);
-                                        }
-                                    }
-                                }
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("no-next-page", player);
-
-                            break;
-                        case "previous-page":
-                            if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player)) {
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                playerSelectionPageMap = getPluginInstance().getManager().getPaging().getCurrentPlayerSelectionPages(player) == null ? getPluginInstance().getManager().getPaging().getPlayerSelectionPages(player)
-                                        : getPluginInstance().getManager().getPaging().getCurrentPlayerSelectionPages(player);
-                                getPluginInstance().getManager().getPaging().getPlayerSelectionPageMap().put(player.getUniqueId(), playerSelectionPageMap);
-
-                                currentPage = getPluginInstance().getManager().getPaging().getCurrentPage(player);
-                                playerSelectionPageList = new ArrayList<>();
-                                if (playerSelectionPageMap != null && !playerSelectionPageMap.isEmpty() && playerSelectionPageMap.containsKey(currentPage - 1))
-                                    playerSelectionPageList = new ArrayList<>(playerSelectionPageMap.get(currentPage - 1));
-
-                                if (!playerSelectionPageList.isEmpty()) {
-                                    getPluginInstance().getManager().getPaging().updateCurrentPlayerSelectionPage(player, false);
-                                    for (int i = -1; ++i < playerSlots.size(); ) {
-                                        e.getInventory().setItem(playerSlots.get(i), null);
-                                        if (playerSelectionPageList.size() >= 1) {
-                                            UUID playerUniqueId = playerSelectionPageList.get(0);
-                                            OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
-                                            if (!offlinePlayer.isOnline()) continue;
-
-                                            List<UUID> sps = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
-                                            e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player, sps != null && sps.contains(offlinePlayer.getUniqueId())));
-                                            playerSelectionPageList.remove(playerUniqueId);
-                                        }
-                                    }
-                                }
-                            } else
-                                getPluginInstance().getManager().sendCustomMessage("no-previous-page", player);
-
-                            break;
-                        case "open-custom-menu":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-
-                                Inventory inventory = getPluginInstance().getManager().buildCustomMenu(player, value);
-                                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.CUSTOM, inventory, player.getPlayer());
-                                menuOpenEvent.setCustomMenuId(value);
-                                getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                                if (menuOpenEvent.isCancelled())
-                                    return;
-
-                                player.openInventory(inventory);
                             }
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("no-next-page", player);
 
-                            break;
-                        default:
-                            break;
-                    }
+                        break;
+                    case "previous-page":
+                        if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player)) {
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            playerSelectionPageMap = getPluginInstance().getManager().getPaging().getCurrentPlayerSelectionPages(player) == null ? getPluginInstance().getManager().getPaging().getPlayerSelectionPages(player)
+                                    : getPluginInstance().getManager().getPaging().getCurrentPlayerSelectionPages(player);
+                            getPluginInstance().getManager().getPaging().getPlayerSelectionPageMap().put(player.getUniqueId(), playerSelectionPageMap);
+
+                            currentPage = getPluginInstance().getManager().getPaging().getCurrentPage(player);
+                            playerSelectionPageList = new ArrayList<>();
+                            if (playerSelectionPageMap != null && !playerSelectionPageMap.isEmpty() && playerSelectionPageMap.containsKey(currentPage - 1))
+                                playerSelectionPageList = new ArrayList<>(playerSelectionPageMap.get(currentPage - 1));
+
+                            if (!playerSelectionPageList.isEmpty()) {
+                                getPluginInstance().getManager().getPaging().updateCurrentPlayerSelectionPage(player, false);
+                                for (int i = -1; ++i < playerSlots.size(); ) {
+                                    e.getInventory().setItem(playerSlots.get(i), null);
+                                    if (playerSelectionPageList.size() >= 1) {
+                                        UUID playerUniqueId = playerSelectionPageList.get(0);
+                                        OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
+                                        if (!offlinePlayer.isOnline()) continue;
+
+                                        List<UUID> sps = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
+                                        e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player, sps != null && sps.contains(offlinePlayer.getUniqueId())));
+                                        playerSelectionPageList.remove(playerUniqueId);
+                                    }
+                                }
+                            }
+                        } else
+                            getPluginInstance().getManager().sendCustomMessage("no-previous-page", player);
+
+                        break;
+                    case "open-custom-menu":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+
+                            Inventory inventory = getPluginInstance().getManager().buildCustomMenu(player, value);
+                            MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.CUSTOM, inventory, player.getPlayer());
+                            menuOpenEvent.setCustomMenuId(value);
+                            getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                            if (menuOpenEvent.isCancelled())
+                                return;
+
+                            player.openInventory(inventory);
+                        }
+
+                        break;
+                    default:
+                        break;
                 }
             }
         }
     }
 
     private void runCustomMenuClick(Player player, String menuId, InventoryClickEvent e) {
-        if (e.getCurrentItem() != null && Objects.requireNonNull(e.getClickedInventory()).getType() != InventoryType.PLAYER) {
-            e.setCancelled(true);
-            if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE)
-                return;
+        if (e.getCurrentItem() == null) return;
+        e.setCancelled(true);
+        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE)
+            return;
 
-            String itemId = getPluginInstance().getManager().getIdFromSlot("custom-menu-section." + menuId, e.getSlot());
-            if (itemId != null) {
-                if (getPluginInstance().getMenusConfig().getBoolean("custom-menu-section." + menuId + "." + itemId + ".click-sound")) {
-                    String soundName = getPluginInstance().getMenusConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".sound-name");
-                    if (soundName != null && !soundName.equalsIgnoreCase(""))
-                        player.playSound(player.getLocation(), Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+        String itemId = getPluginInstance().getManager().getIdFromSlot("custom-menu-section." + menuId, e.getSlot());
+        if (itemId != null) {
+            if (getPluginInstance().getMenusConfig().getBoolean("custom-menu-section." + menuId + "." + itemId + ".click-sound")) {
+                String soundName = getPluginInstance().getMenusConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".sound-name");
+                if (soundName != null && !soundName.equalsIgnoreCase(""))
+                    player.playSound(player.getLocation(), Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+            }
+
+            getPluginInstance().getManager().sendCustomMessage("custom-menu-section." + menuId + ".items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+
+            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("custom-menu-section." + menuId + ".items." + itemId);
+            if (cs != null && cs.getKeys(false).contains("permission")) {
+                String permission = getPluginInstance().getMenusConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".permission");
+                if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
+                    getPluginInstance().getManager().sendCustomMessage("no-permission", player);
+                    return;
+                }
+            }
+
+            double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("custom-menu-section." + menuId + ".items." + itemId + ".usage-cost");
+            String clickAction = getPluginInstance().getMenusConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".click-action");
+            if (clickAction != null) {
+                String action = clickAction, value = "";
+                if (clickAction.contains(":")) {
+                    String[] actionArgs = clickAction.toLowerCase().split(":");
+                    action = actionArgs[0].replace(" ", "-").replace("_", "-");
+                    value = actionArgs[1].replace("{player}", player.getName());
                 }
 
-                getPluginInstance().getManager().sendCustomMessage("custom-menu-section." + menuId + ".items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+                switch (action) {
+                    case "dispatch-command-console":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
+                        }
+                        break;
+                    case "dispatch-command-player":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
+                            getPluginInstance().getServer().dispatchCommand(player, value);
+                        }
+                        break;
+                    case "open-custom-menu":
+                        if (!value.equalsIgnoreCase("")) {
+                            player.closeInventory();
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                return;
 
-                ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("custom-menu-section." + menuId + ".items." + itemId);
-                if (cs != null && cs.getKeys(false).contains("permission")) {
-                    String permission = getPluginInstance().getMenusConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".permission");
-                    if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
-                        getPluginInstance().getManager().sendCustomMessage("no-permission", player);
-                        return;
-                    }
-                }
+                            Inventory inventory = getPluginInstance().getManager().buildCustomMenu(player, value);
+                            MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.CUSTOM, inventory, player.getPlayer());
+                            menuOpenEvent.setCustomMenuId(value);
+                            getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                            if (menuOpenEvent.isCancelled()) return;
 
-                double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("custom-menu-section." + menuId + ".items." + itemId + ".usage-cost");
-                String clickAction = getPluginInstance().getMenusConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".click-action");
-                if (clickAction != null) {
-                    String action = clickAction, value = "";
-                    if (clickAction.contains(":")) {
-                        String[] actionArgs = clickAction.toLowerCase().split(":");
-                        action = actionArgs[0].replace(" ", "-").replace("_", "-");
-                        value = actionArgs[1].replace("{player}", player.getName());
-                    }
+                            player.openInventory(inventory);
+                        }
 
-                    switch (action) {
-                        case "dispatch-command-console":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
-                            }
-                            break;
-                        case "dispatch-command-player":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-                                getPluginInstance().getServer().dispatchCommand(player, value);
-                            }
-                            break;
-                        case "open-custom-menu":
-                            if (!value.equalsIgnoreCase("")) {
-                                player.closeInventory();
-                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                    return;
-
-                                Inventory inventory = getPluginInstance().getManager().buildCustomMenu(player, value);
-                                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.CUSTOM, inventory, player.getPlayer());
-                                menuOpenEvent.setCustomMenuId(value);
-                                getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                                if (menuOpenEvent.isCancelled()) return;
-
-                                player.openInventory(inventory);
-                            }
-
-                            break;
-                        default:
-                            break;
-                    }
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -2184,7 +2157,7 @@ public class Listeners implements Listener {
 
     private void nextPage(Player player, Inventory inventory, List<Integer> warpSlots) {
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-            HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
+            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
                     getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", inventory));
             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
@@ -2210,7 +2183,7 @@ public class Listeners implements Listener {
 
     private void previousPage(Player player, Inventory inventory, List<Integer> warpSlots) {
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
-            HashMap<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
+            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
                     getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", inventory));
             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);

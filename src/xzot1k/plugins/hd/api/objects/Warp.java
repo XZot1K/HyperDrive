@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api.objects;
 
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import xzot1k.plugins.hd.HyperDrive;
@@ -11,6 +12,8 @@ import xzot1k.plugins.hd.api.EnumContainer;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -29,14 +32,15 @@ public class Warp implements Comparable<Warp> {
     public Warp(String warpName, OfflinePlayer player, Location location) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
-        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
+        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant())));
         setOwner(player.getUniqueId());
         setWarpLocation(location);
-        if (!getPluginInstance().getServer().getIp().equalsIgnoreCase(""))
-            setServerIPAddress((getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp())
-                    + ":" + getPluginInstance().getServer().getPort());
-        else
-            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
+
+        final boolean noServerFound = (getPluginInstance().getBungeeListener() == null || getPluginInstance().getBungeeListener().getMyServer() == null
+                || getPluginInstance().getBungeeListener().getMyServer().isEmpty());
+        if (noServerFound)
+            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip"));
+        else setServerIPAddress(getPluginInstance().getBungeeListener().getMyServer());
 
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
@@ -61,13 +65,14 @@ public class Warp implements Comparable<Warp> {
     public Warp(String warpName, Location location) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
-        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
+        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant())));
         setWarpLocation(location);
-        if (!getPluginInstance().getServer().getIp().equalsIgnoreCase(""))
-            setServerIPAddress((getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp())
-                    + ":" + getPluginInstance().getServer().getPort());
-        else
-            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
+
+        final boolean noServerFound = (getPluginInstance().getBungeeListener() == null || getPluginInstance().getBungeeListener().getMyServer() == null
+                || getPluginInstance().getBungeeListener().getMyServer().isEmpty());
+        if (noServerFound)
+            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip"));
+        else setServerIPAddress(getPluginInstance().getBungeeListener().getMyServer());
 
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
@@ -92,14 +97,15 @@ public class Warp implements Comparable<Warp> {
     public Warp(String warpName, OfflinePlayer player, SerializableLocation serializableLocation) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
-        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
+        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant())));
         setOwner(player.getUniqueId());
         setWarpLocation(serializableLocation);
-        if (!getPluginInstance().getServer().getIp().equalsIgnoreCase(""))
-            setServerIPAddress((getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp())
-                    + ":" + getPluginInstance().getServer().getPort());
-        else
-            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
+
+        final boolean noServerFound = (getPluginInstance().getBungeeListener() == null || getPluginInstance().getBungeeListener().getMyServer() == null
+                || getPluginInstance().getBungeeListener().getMyServer().isEmpty());
+        if (noServerFound)
+            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip"));
+        else setServerIPAddress(getPluginInstance().getBungeeListener().getMyServer());
 
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
@@ -124,13 +130,14 @@ public class Warp implements Comparable<Warp> {
     public Warp(String warpName, SerializableLocation serializableLocation) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
-        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
+        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant())));
         setWarpLocation(serializableLocation);
-        if (!getPluginInstance().getServer().getIp().equalsIgnoreCase(""))
-            setServerIPAddress((getPluginInstance().getServer().getIp().contains("localhost") ? "127.0.0.1" : getPluginInstance().getServer().getIp())
-                    + ":" + getPluginInstance().getServer().getPort());
-        else
-            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip") + ":" + getPluginInstance().getServer().getPort());
+
+        final boolean noServerFound = (getPluginInstance().getBungeeListener() == null || getPluginInstance().getBungeeListener().getMyServer() == null
+                || getPluginInstance().getBungeeListener().getMyServer().isEmpty());
+        if (noServerFound)
+            setServerIPAddress(getPluginInstance().getConfig().getString("mysql-connection.default-ip"));
+        else setServerIPAddress(getPluginInstance().getBungeeListener().getMyServer());
 
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
@@ -152,11 +159,11 @@ public class Warp implements Comparable<Warp> {
         setNotify(true);
     }
 
-    public void register() {
+    public synchronized void register() {
         getPluginInstance().getManager().getWarpMap().put(getWarpName().toLowerCase(), this);
     }
 
-    public void unRegister() {
+    public synchronized void unRegister() {
         if (!getPluginInstance().getManager().getWarpMap().isEmpty())
             getPluginInstance().getManager().getWarpMap().remove(getWarpName().toLowerCase());
     }
@@ -185,13 +192,13 @@ public class Warp implements Comparable<Warp> {
         return bar.toString();
     }
 
-    public void deleteSaved(boolean async) {
+    public synchronized void deleteSaved(boolean async) {
         if (!async) delete(getWarpName());
         else
             getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> delete(getWarpName()));
     }
 
-    private void delete(String warpName) {
+    private synchronized void delete(String warpName) {
         try {
             PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement("delete from warps where name = '" + warpName + "'");
             preparedStatement.executeUpdate();
@@ -202,13 +209,13 @@ public class Warp implements Comparable<Warp> {
         }
     }
 
-    public void save(boolean async) {
+    public synchronized void save(boolean async) {
         if (async)
             getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), (Runnable) this::save);
         else save();
     }
 
-    private void save() {
+    private synchronized void save() {
         try {
             setWarpName(getWarpName().replace("'", "").replace("\"", ""));
 
@@ -382,15 +389,7 @@ public class Warp implements Comparable<Warp> {
     }
 
     public String getServerIPAddress() {
-        String ipAddress = serverIPAddress;
-
-        if (serverIPAddress != null) {
-            final String defaultIp = getPluginInstance().getConfig().getString("mysql-connection.default-ip");
-            if (defaultIp != null) ipAddress = ipAddress.replace("localhost", "127.0.0.1")
-                    .replace("0.0.0.0", defaultIp);
-        }
-
-        return ipAddress;
+        return serverIPAddress;
     }
 
     public void setServerIPAddress(String serverIPAddress) {
@@ -447,7 +446,18 @@ public class Warp implements Comparable<Warp> {
 
     @Override
     public int compareTo(Warp warp) {
-        return warp.getWarpName().compareToIgnoreCase(getWarpName());
+        final int comparedNamesResult = ChatColor.stripColor(warp.getWarpName()).compareToIgnoreCase(ChatColor.stripColor(getWarpName()));
+        if (comparedNamesResult != 0) return comparedNamesResult;
+
+        final double maxRatioMax = Math.max(warp.getLikes(), getDislikes()), maxRatioMin = Math.min(warp.getLikes(), getDislikes()),
+                minRatioMax = Math.max(warp.getLikes(), getDislikes()), minRatioMin = Math.min(warp.getLikes(), getDislikes());
+        if (!(maxRatioMax == 0 && maxRatioMin == 0) && !(minRatioMax == 0 && minRatioMin == 0)) {
+            final double maxRatio = (maxRatioMin / maxRatioMax), minRatio = (minRatioMin / minRatioMax),
+                    ratioDifference = (maxRatio - minRatio);
+            if (ratioDifference != 0) return (int) ratioDifference;
+        }
+
+        return 0;
     }
 
     public boolean canNotify() {
