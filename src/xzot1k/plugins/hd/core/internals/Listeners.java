@@ -1143,7 +1143,7 @@ public class Listeners implements Listener {
                         if (action.equals("create-warp")) priceExpression = priceExpression.replace("n", getPluginInstance().getManager().getWarpCount(player) + "");
                         Expression exp = new Expression(priceExpression);
                         BigDecimal result = exp.eval();
-                        itemUsageCost = result.floatValue();
+                        itemUsageCost = result.doubleValue();
                     } else {
                         itemUsageCost = getPluginInstance().getMenusConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
                     }
