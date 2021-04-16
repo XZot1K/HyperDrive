@@ -1612,18 +1612,9 @@ public class Manager {
     }
 
     public boolean hasMetWarpLimit(OfflinePlayer player) {
-        int warpCount = 0, warpLimit = getWarpLimit(player);
-        if (warpLimit < 0)
-            return false;
-
-        List<Warp> warpList = new ArrayList<>(getWarpMap().values());
-        for (int i = -1; ++i < warpList.size(); ) {
-            Warp warp = warpList.get(i);
-            if (warp.getOwner() != null && warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString()))
-                warpCount += 1;
-        }
-
-        return (warpCount >= warpLimit);
+        int warpLimit = getWarpLimit(player);
+        if (warpLimit < 0) return false;
+        return (getWarpCount(player) >= warpLimit);
     }
 
     /**
@@ -1636,6 +1627,17 @@ public class Manager {
     public boolean wouldMeetWarpLimit(OfflinePlayer player, int warpCount) {
         int warpLimit = getWarpLimit(player);
         return (warpCount >= warpLimit && warpLimit >= 0);
+    }
+
+    public int getWarpCount(OfflinePlayer player) {
+        int warpCount = 0;
+        List<Warp> warpList = new ArrayList<>(getWarpMap().values());
+        for (int i = -1; ++i < warpList.size(); ) {
+            Warp warp = warpList.get(i);
+            if (warp.getOwner() != null && warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString()))
+                warpCount += 1;
+        }
+        return warpCount;
     }
 
     public int getWarpLimit(OfflinePlayer player) {
