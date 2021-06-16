@@ -386,10 +386,6 @@ public class HyperDrive extends JavaPlugin {
                             } else if (getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "ROSE_RED");
                                 updateCount++;
-                            } else if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
-                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
-                                yaml.set(key, "INK_SAC");
-                                updateCount++;
                             } else {
                                 yaml.set(key, "RED_DYE");
                                 updateCount++;
@@ -414,9 +410,6 @@ public class HyperDrive extends JavaPlugin {
                                 updateCount++;
                             } else if (getServerVersion().startsWith("v1_8")) {
                                 yaml.set(key, "INK_SAC");
-                                updateCount++;
-                            } else {
-                                yaml.set(key, "RED_DYE");
                                 updateCount++;
                             }
                             break;
