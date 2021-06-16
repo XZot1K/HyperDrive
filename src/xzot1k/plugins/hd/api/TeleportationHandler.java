@@ -117,6 +117,13 @@ public class TeleportationHandler implements Runnable {
                                             return;
                                         }
 
+                                        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warpLocation, false)) {
+                                            getAnimation().stopActiveAnimation(player);
+                                            getTeleportTempMap().remove(playerUniqueId);
+                                            getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
+                                            return;
+                                        }
+
                                         if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
                                                 && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())) {
                                             EconomyChargeEvent economyChargeEvent = new EconomyChargeEvent(player, warp.getUsagePrice());
@@ -346,6 +353,10 @@ public class TeleportationHandler implements Runnable {
                 || getRandomTeleportingPlayers().contains(player.getUniqueId());
     }
 
+    public boolean isRandomTeleporting(Player player) {
+        return getRandomTeleportingPlayers().contains(player.getUniqueId());
+    }
+
     public int getRemainingTime(Player player) {
         if (!getTeleportTempMap().isEmpty() && getTeleportTempMap().containsKey(player.getUniqueId())) {
             TeleportTemp teleportTemp = getTeleportTempMap().get(player.getUniqueId());
@@ -407,45 +418,17 @@ public class TeleportationHandler implements Runnable {
 
     public void randomlyTeleportPlayer(Player player, World world) {
         if (player == null || world == null) return;
-
         getPluginInstance().getManager().sendCustomMessage("random-teleport-start", player);
         getRandomTeleportingPlayers().add(player.getUniqueId());
-
-        Location basedLocation = player.getWorld().getName().equalsIgnoreCase(world.getName()) ? player.getLocation() : world.getSpawnLocation();
-        for (String line : getPluginInstance().getConfig().getStringList("random-teleport-section.forced-location-list"))
-            if (line.contains(":")) {
-                String[] lineArgs = line.split(":");
-                if ((lineArgs.length >= 2 && world.getName().equalsIgnoreCase(lineArgs[0]) && lineArgs[1].contains(","))) {
-                    String[] coordinateArgs = lineArgs[1].split(",");
-                    if (!getPluginInstance().getManager().isNotNumeric(coordinateArgs[0]) && !getPluginInstance().getManager().isNotNumeric(coordinateArgs[1])
-                            && !getPluginInstance().getManager().isNotNumeric(coordinateArgs[2]))
-                        basedLocation = new Location(world, Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
-                                Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(), player.getLocation().getPitch());
-                    break;
-                }
-            }
-
-        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), new RandomTeleportation(getPluginInstance(), basedLocation.clone(), player, false));
+        world.getWorldBorder();
+        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(),
+                new RandomTeleportation(getPluginInstance(), world, player, false));
     }
 
-    public void updateDestinationWithRandomLocation(Player player, Location baseLocation, World world) {
+    public void updateDestinationWithRandomLocation(Player player, World world) {
         getRandomTeleportingPlayers().add(player.getUniqueId());
-
-        Location basedLocation = baseLocation.clone();
-        for (String line : getPluginInstance().getConfig().getStringList("random-teleport-section.forced-location-list"))
-            if (line.contains(":")) {
-                String[] lineArgs = line.split(":");
-                if ((lineArgs.length >= 2 && world.getName().equalsIgnoreCase(lineArgs[0]) && lineArgs[1].contains(","))) {
-                    String[] coordinateArgs = lineArgs[1].split(",");
-                    if (!getPluginInstance().getManager().isNotNumeric(coordinateArgs[0]) && !getPluginInstance().getManager().isNotNumeric(coordinateArgs[1])
-                            && !getPluginInstance().getManager().isNotNumeric(coordinateArgs[2]))
-                        basedLocation = new Location(world, Double.parseDouble(coordinateArgs[0]), Double.parseDouble(coordinateArgs[1]),
-                                Double.parseDouble(coordinateArgs[2]), player.getLocation().getYaw(), player.getLocation().getPitch());
-                    break;
-                }
-            }
-
-        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), new RandomTeleportation(getPluginInstance(), basedLocation.clone(), player, true));
+        getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(),
+                new RandomTeleportation(getPluginInstance(), world, player, true));
     }
 
     // group stuff

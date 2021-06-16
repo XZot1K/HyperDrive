@@ -12,8 +12,7 @@ import xzot1k.plugins.hd.api.EnumContainer;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.sql.Statement;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -32,7 +31,7 @@ public class Warp implements Comparable<Warp> {
     public Warp(String warpName, OfflinePlayer player, Location location) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
-        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant())));
+        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setOwner(player.getUniqueId());
         setWarpLocation(location);
 
@@ -65,7 +64,7 @@ public class Warp implements Comparable<Warp> {
     public Warp(String warpName, Location location) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
-        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant())));
+        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setWarpLocation(location);
 
         final boolean noServerFound = (getPluginInstance().getBungeeListener() == null || getPluginInstance().getBungeeListener().getMyServer() == null
@@ -97,7 +96,7 @@ public class Warp implements Comparable<Warp> {
     public Warp(String warpName, OfflinePlayer player, SerializableLocation serializableLocation) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
-        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant())));
+        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setOwner(player.getUniqueId());
         setWarpLocation(serializableLocation);
 
@@ -130,7 +129,7 @@ public class Warp implements Comparable<Warp> {
     public Warp(String warpName, SerializableLocation serializableLocation) {
         setPluginInstance(HyperDrive.getPluginInstance());
         setWarpName(warpName);
-        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant())));
+        setCreationDate(getPluginInstance().getManager().getSimpleDateFormat().format(new Date()));
         setWarpLocation(serializableLocation);
 
         final boolean noServerFound = (getPluginInstance().getBungeeListener() == null || getPluginInstance().getBungeeListener().getMyServer() == null
@@ -159,11 +158,11 @@ public class Warp implements Comparable<Warp> {
         setNotify(true);
     }
 
-    public synchronized void register() {
+    public void register() {
         getPluginInstance().getManager().getWarpMap().put(getWarpName().toLowerCase(), this);
     }
 
-    public synchronized void unRegister() {
+    public void unRegister() {
         if (!getPluginInstance().getManager().getWarpMap().isEmpty())
             getPluginInstance().getManager().getWarpMap().remove(getWarpName().toLowerCase());
     }
@@ -192,7 +191,7 @@ public class Warp implements Comparable<Warp> {
         return bar.toString();
     }
 
-    public synchronized void deleteSaved(boolean async) {
+    public void deleteSaved(boolean async) {
         if (!async) delete(getWarpName());
         else
             getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> delete(getWarpName()));
@@ -200,16 +199,16 @@ public class Warp implements Comparable<Warp> {
 
     private synchronized void delete(String warpName) {
         try {
-            PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement("delete from warps where name = '" + warpName + "'");
-            preparedStatement.executeUpdate();
-            preparedStatement.close();
+            Statement statement = getPluginInstance().getDatabaseConnection().createStatement();
+            statement.executeUpdate("DELETE FROM warps WHERE name = '" + warpName + "';");
+            statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
             getPluginInstance().log(Level.WARNING, "There was an issue deleting the warp " + getWarpName() + " from the database (" + e.getMessage() + ").");
         }
     }
 
-    public synchronized void save(boolean async) {
+    public void save(boolean async) {
         if (async)
             getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), (Runnable) this::save);
         else save();
@@ -238,23 +237,23 @@ public class Warp implements Comparable<Warp> {
                         + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
                         + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
-                        + "', '" + playerList.toString() + "', '" + assistants.toString() + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
-                        + ", '" + getServerIPAddress() + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString()
+                        + "', '" + playerList + "', '" + assistants + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
+                        + ", '" + getServerIPAddress() + "', " + getLikes() + ", " + getDislikes() + ", '" + voters
                         + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ");";
             else
                 syntax = "INSERT INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, traffic, usage_price, "
                         + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
                         + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
-                        + "', '" + playerList.toString() + "', '" + assistants.toString() + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
-                        + ", '" + getServerIPAddress() + "', " + getLikes() + ", " + getDislikes() + ", '" + voters.toString()
+                        + "', '" + playerList + "', '" + assistants + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
+                        + ", '" + getServerIPAddress() + "', " + getLikes() + ", " + getDislikes() + ", '" + voters
                         + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ") ON DUPLICATE KEY UPDATE name = '" + getWarpName() + "',"
                         + " location = '" + locationString + "', status = '" + getStatus().name() + "', creation_date = '" + getCreationDate() + "', "
                         + "icon_theme = '" + getIconTheme() + "', animation_set = '" + getAnimationSet() + "', description = '" + getDescription().replace("§", "").replace("'", "").replace("\"", "")
                         + "', commands = '" + commands.toString().replace("'", "").replace("\"", "") + "', owner = '" + (getOwner() != null ? getOwner().toString() : "")
-                        + "', player_list = '" + playerList.toString() + "', assistants = '" + assistants.toString() + "', traffic = '" + getTraffic() + "', usage_price = '" + getUsagePrice() + "',"
+                        + "', player_list = '" + playerList + "', assistants = '" + assistants + "', traffic = '" + getTraffic() + "', usage_price = '" + getUsagePrice() + "',"
                         + " enchanted_look = '" + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress() + "',"
-                        + " likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters.toString() + "', white_list_mode = '" + (isWhiteListMode() ? 1 : 0) + "', notify = '" + (canNotify() ? 1 : 0) + "';";
+                        + " likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters + "', white_list_mode = '" + (isWhiteListMode() ? 1 : 0) + "', notify = '" + (canNotify() ? 1 : 0) + "';";
 
             PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement(syntax);
             preparedStatement.execute();

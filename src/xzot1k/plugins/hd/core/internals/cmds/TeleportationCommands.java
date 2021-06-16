@@ -275,7 +275,7 @@ public class TeleportationCommands implements CommandExecutor {
 
         getPluginInstance().getManager().sendCustomMessage("random-teleport-start", player);
         getPluginInstance().getTeleportationHandler().getDestinationMap().remove(player.getUniqueId());
-        getPluginInstance().getTeleportationHandler().updateDestinationWithRandomLocation(player, player.getLocation(), player.getWorld());
+        getPluginInstance().getTeleportationHandler().updateDestinationWithRandomLocation(player, player.getWorld());
 
         Inventory inventory = getPluginInstance().getManager().buildPlayerSelectionMenu(player);
         MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.PLAYER_SELECTION, inventory, player);
@@ -521,17 +521,6 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         String serverName = args[1];
-        World world = getPluginInstance().getServer().getWorld(args[2]);
-        if (world == null) {
-            if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage("world-invalid", (Player) commandSender, "{world}:" + args[1]);
-            else {
-                String message = getPluginInstance().getLangConfig().getString("world-invalid");
-                if (message != null && !message.isEmpty())
-                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}", args[1])));
-            }
-            return;
-        }
 
         // X coordinate
         if (getPluginInstance().getManager().isNotNumeric(args[3])) {
@@ -569,10 +558,8 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        Location location = new Location(world, Double.parseDouble(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), enteredPlayer.getLocation().getYaw(),
-                enteredPlayer.getLocation().getPitch());
-
-        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, serverName, new SerializableLocation(location));
+        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, serverName, new SerializableLocation(args[2], Double.parseDouble(args[3]),
+                Double.parseDouble(args[4]), Double.parseDouble(args[5]), enteredPlayer.getLocation().getYaw(), enteredPlayer.getLocation().getPitch()));
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage("cross-server", (Player) commandSender, "{player}:" + enteredPlayer.getName(), "{server}:" + serverName);
         else {
@@ -618,17 +605,6 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         String serverName = args[1];
-        World world = getPluginInstance().getServer().getWorld(args[2]);
-        if (world == null) {
-            if (commandSender instanceof Player)
-                getPluginInstance().getManager().sendCustomMessage("world-invalid", (Player) commandSender, "{world}:" + args[1]);
-            else {
-                String message = getPluginInstance().getLangConfig().getString("world-invalid");
-                if (message != null && !message.isEmpty())
-                    commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{world}", args[1])));
-            }
-            return;
-        }
 
         // X coordinate
         if (getPluginInstance().getManager().isNotNumeric(args[3])) {
@@ -690,8 +666,8 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
-        Location location = new Location(world, Double.parseDouble(args[3]), Double.parseDouble(args[4]), Double.parseDouble(args[5]), Float.parseFloat(args[6]), Float.parseFloat(args[7]));
-        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, serverName, new SerializableLocation(location));
+        getPluginInstance().getManager().teleportCrossServer(enteredPlayer, serverName, new SerializableLocation(args[2], Double.parseDouble(args[3]),
+                Double.parseDouble(args[4]), Double.parseDouble(args[5]), Float.parseFloat(args[6]), Float.parseFloat(args[7])));
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage("cross-server", (Player) commandSender, "{player}:" + enteredPlayer.getName(), "{server}:" + serverName);
         else {

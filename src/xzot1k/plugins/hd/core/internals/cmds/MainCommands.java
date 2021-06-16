@@ -5,6 +5,8 @@
 package xzot1k.plugins.hd.core.internals.cmds;
 
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -17,7 +19,6 @@ import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
-import xzot1k.plugins.hd.api.objects.JSONMessage;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
 
@@ -162,12 +163,6 @@ public class MainCommands implements CommandExecutor {
                             default:
                                 break;
                         }
-                    case 4:
-                        if (args[0].equalsIgnoreCase("visits")) {
-                            initiateVisitsModify(commandSender, args[1], args[2], args[3]);
-                            return true;
-                        }
-                        break;
 
                     default:
                         break;
@@ -831,7 +826,7 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation())) {
+        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation(), false)) {
             getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player);
             return;
         }
@@ -970,6 +965,11 @@ public class MainCommands implements CommandExecutor {
 
         if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
             getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
+            return;
+        }
+
+        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warp.getWarpLocation().asBukkitLocation(), false)) {
+            getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
             return;
         }
 
@@ -1179,25 +1179,29 @@ public class MainCommands implements CommandExecutor {
 
     public void sendJSONLine(Player player, int page) {
         final String previousCommand = ("/hyperdrive help " + (page - 1)), nextCommand = ("/hyperdrive help " + (page + 1));
-        JSONMessage footerLeft = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-left")),
-                footerRight = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-right")),
-                separator = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-separator"));
 
-        JSONMessage previousMessage = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-previous"));
-        previousMessage.setHoverEvent(JSONMessage.HoverAction.SHOW_TEXT, "&aOpens the previous help page.");
-        previousMessage.setClickEvent(JSONMessage.ClickAction.RUN_COMMAND, previousCommand);
+        TextComponent footerLeft = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-left")))),
+                footerRight = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-right")))),
+                separator = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-separator")))),
+                previousMessage = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-previous")))),
+                nextMessage = new TextComponent(TextComponent.fromLegacyText((getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-next")))));
+        previousMessage.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, previousCommand));
+        nextMessage.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, nextCommand));
 
-        JSONMessage nextMessage = new JSONMessage(getPluginInstance().getLangConfig().getString("help-footer-next"));
-        nextMessage.setHoverEvent(JSONMessage.HoverAction.SHOW_TEXT, "&aOpens the next help page.");
-        nextMessage.setClickEvent(JSONMessage.ClickAction.RUN_COMMAND, nextCommand);
-
-        if (getAdminHelpPages().containsKey(page + 1) && getAdminHelpPages().containsKey(page - 1))
-            footerLeft.extend(previousMessage).extend(separator).extend(nextMessage).extend(footerRight).send(player);
-        else if (getAdminHelpPages().containsKey(page + 1))
-            footerLeft.extend(nextMessage).extend(footerRight).send(player);
-        else if (getAdminHelpPages().containsKey(page - 1))
-            footerLeft.extend(previousMessage).extend(footerRight).send(player);
-        else
+        if (getAdminHelpPages().containsKey(page + 1) && getAdminHelpPages().containsKey(page - 1)) {
+            footerLeft.addExtra(previousMessage);
+            footerLeft.addExtra(separator);
+            footerLeft.addExtra(footerRight);
+            player.spigot().sendMessage(footerLeft);
+        } else if (getAdminHelpPages().containsKey(page + 1)) {
+            footerLeft.addExtra(nextMessage);
+            footerLeft.addExtra(footerRight);
+            player.spigot().sendMessage(footerLeft);
+        } else if (getAdminHelpPages().containsKey(page - 1)) {
+            footerLeft.addExtra(previousMessage);
+            footerLeft.addExtra(footerRight);
+            player.spigot().sendMessage(footerLeft);
+        } else
             player.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-static")));
     }
 

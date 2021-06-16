@@ -86,23 +86,6 @@ public class HyperDrive extends JavaPlugin {
     }
 
     @Override
-    public void onDisable() {
-        getServer().getScheduler().cancelTasks(this);
-
-        saveWarps(false);
-        saveData();
-
-        if (getDatabaseConnection() != null)
-            try {
-                getDatabaseConnection().close();
-                log(Level.WARNING, "The SQL connection has been completely closed.");
-            } catch (SQLException e) {
-                e.printStackTrace();
-                log(Level.WARNING, "The MySQL connection was unable to be closed.");
-            }
-    }
-
-    @Override
     public void onEnable() {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
@@ -243,6 +226,23 @@ public class HyperDrive extends JavaPlugin {
         else log(Level.INFO, "Everything seems to be up to date!");
     }
 
+    @Override
+    public void onDisable() {
+        getServer().getScheduler().cancelTasks(this);
+
+        saveWarps(false);
+        saveData();
+
+        if (getDatabaseConnection() != null)
+            try {
+                getDatabaseConnection().close();
+                log(Level.WARNING, "The SQL connection has been completely closed.");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                log(Level.WARNING, "The MySQL connection was unable to be closed.");
+            }
+    }
+
     private String getLatestVersion() {
         try {
             HttpURLConnection c = (HttpURLConnection) new URL("https://api.spigotmc.org/legacy/update.php?resource=17184").openConnection();
@@ -258,86 +258,89 @@ public class HyperDrive extends JavaPlugin {
         long startTime = System.currentTimeMillis();
         int totalUpdates = 0;
 
-        boolean isOffhandVersion = !getPluginInstance().getServerVersion().startsWith("v1_8");
+        boolean isOffhandVersion = !getServerVersion().startsWith("v1_8");
         String[] configNames = {"config", "lang", "menus"};
         for (int i = -1; ++i < configNames.length; ) {
             String name = configNames[i];
 
             InputStream inputStream = getClass().getResourceAsStream("/" + name + ".yml");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            FileConfiguration yaml = YamlConfiguration.loadConfiguration(reader);
-            int updateCount = updateKeys(yaml, name.equalsIgnoreCase("config") ? getConfig() : name.equalsIgnoreCase("lang") ? getLangConfig() : getMenusConfig());
-            if (name.equalsIgnoreCase("config")) {
-                String teleporationSound = getConfig().getString("general-section.global-sounds.teleport"), standaloneTeleporationSound = getConfig().getString("general-section.global-sounds.teleport");
-                if (isOffhandVersion) {
-                    if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
+            if (inputStream != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                FileConfiguration yaml = YamlConfiguration.loadConfiguration(reader);
+                int updateCount = updateKeys(yaml, name.equalsIgnoreCase("config") ? getConfig() : name.equalsIgnoreCase("lang") ? getLangConfig() : getMenusConfig());
+                if (name.equalsIgnoreCase("config")) {
+                    String teleporationSound = getConfig().getString("general-section.global-sounds.teleport"), standaloneTeleporationSound = getConfig().getString("general-section.global-sounds.teleport");
+                    if (isOffhandVersion) {
+                        if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
+                            if (getServerVersion().toLowerCase().startsWith("v1_12") || getServerVersion().toLowerCase().startsWith("v1_11")
+                                    || getServerVersion().toLowerCase().startsWith("v1_10") || getServerVersion().toLowerCase().startsWith("v1_9"))
+                                getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMEN_TELEPORT");
+                            else getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
+                            updateCount++;
+                        }
 
-                        if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"))
-                            getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMEN_TELEPORT");
-                        else getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
-                        updateCount++;
-                    }
+                        if (standaloneTeleporationSound == null || standaloneTeleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
+                            if (getServerVersion().toLowerCase().startsWith("v1_12") || getServerVersion().toLowerCase().startsWith("v1_11")
+                                    || getServerVersion().toLowerCase().startsWith("v1_10") || getServerVersion().toLowerCase().startsWith("v1_9"))
+                                getConfig().set("general-section.global-sounds.standalone-teleport", "ENTITY_ENDERMEN_TELEPORT");
+                            else
+                                getConfig().set("general-section.global-sounds.standalone-teleport", "ENTITY_ENDERMAN_TELEPORT");
+                            updateCount++;
+                        }
 
-                    if (standaloneTeleporationSound == null || standaloneTeleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
+                        String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
+                        if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("CLICK")) {
+                            getConfig().set("warp-icon-section.click-sound", "UI_BUTTON_CLICK");
+                            updateCount++;
+                        }
+                    } else {
+                        if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
+                            getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
+                            updateCount++;
+                        }
 
-                        if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10") || getServerVersion().startsWith("v1_9"))
-                            getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMEN_TELEPORT");
-                        else getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
-                        updateCount++;
-                    }
+                        if (standaloneTeleporationSound == null || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
+                            getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
+                            updateCount++;
+                        }
 
-                    String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
-                    if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("CLICK")) {
-                        getConfig().set("warp-icon-section.click-sound", "UI_BUTTON_CLICK");
-                        updateCount++;
-                    }
-                } else {
-                    if (teleporationSound == null || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || teleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
-                        getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
-                        updateCount++;
-                    }
-
-                    if (standaloneTeleporationSound == null || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
-                        getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
-                        updateCount++;
-                    }
-
-                    String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
-                    if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("UI_BUTTON_CLICK")) {
-                        getConfig().set("warp-icon-section.click-sound", "CLICK");
-                        updateCount++;
+                        String warpIconClickSound = getConfig().getString("warp-icon-section.click-sound");
+                        if (warpIconClickSound == null || warpIconClickSound.equalsIgnoreCase("UI_BUTTON_CLICK")) {
+                            getConfig().set("warp-icon-section.click-sound", "CLICK");
+                            updateCount++;
+                        }
                     }
                 }
-            }
 
-            try {
-                inputStream.close();
-                reader.close();
-            } catch (IOException e) {
-                log(Level.WARNING, e.getMessage());
-            }
-
-            updateCount = fixItems(name.equalsIgnoreCase("config") ? getConfig() : name.equalsIgnoreCase("lang")
-                    ? getLangConfig() : getMenusConfig(), updateCount, isOffhandVersion);
-
-            if (updateCount > 0)
-                switch (name) {
-                    case "config":
-                        saveConfig();
-                        break;
-                    case "menus":
-                        saveMenusConfig();
-                        break;
-                    case "lang":
-                        saveLangConfig();
-                        break;
-                    default:
-                        break;
+                try {
+                    inputStream.close();
+                    reader.close();
+                } catch (IOException e) {
+                    log(Level.WARNING, e.getMessage());
                 }
 
-            if (updateCount > 0) {
-                totalUpdates += updateCount;
-                log(Level.INFO, updateCount + " things were fixed, updated, or removed in the '" + name + ".yml' configuration file. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+                updateCount = fixItems(name.equalsIgnoreCase("config") ? getConfig() : name.equalsIgnoreCase("lang")
+                        ? getLangConfig() : getMenusConfig(), updateCount, isOffhandVersion);
+
+                if (updateCount > 0)
+                    switch (name) {
+                        case "config":
+                            saveConfig();
+                            break;
+                        case "menus":
+                            saveMenusConfig();
+                            break;
+                        case "lang":
+                            saveLangConfig();
+                            break;
+                        default:
+                            break;
+                    }
+
+                if (updateCount > 0) {
+                    totalUpdates += updateCount;
+                    log(Level.INFO, updateCount + " things were fixed, updated, or removed in the '" + name + ".yml' configuration file. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+                }
             }
         }
 
@@ -364,84 +367,98 @@ public class HyperDrive extends JavaPlugin {
                 if (keyValue != null)
                     switch (keyValue.toUpperCase().replace(" ", "_").replace("-", "_")) {
                         case "INK_SAC":
-                            if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_16")) {
-                                yaml.set(key, "RED_DYE");
-                                updateCount++;
-
-                            } else if (getServerVersion().startsWith("v1_13")) {
+                            if (getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "ROSE_RED");
                                 updateCount++;
-
                             } else if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
                                     || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
                                 yaml.set(key, "INK_SACK");
                                 updateCount++;
-
+                            } else {
+                                yaml.set(key, "RED_DYE");
+                                updateCount++;
                             }
                             break;
                         case "INK_SACK":
-                            if (!getServerVersion().startsWith("v1_12") && !getServerVersion().startsWith("v1_9") && !getServerVersion().startsWith("v1_11") && !getServerVersion().startsWith("v1_10")
-                                    && !getServerVersion().startsWith("v1_13") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_16")) {
+                            if (getServerVersion().startsWith("v1_8")) {
                                 yaml.set(key, "INK_SAC");
+                                updateCount++;
+                            } else if (getServerVersion().startsWith("v1_13")) {
+                                yaml.set(key, "ROSE_RED");
+                                updateCount++;
+                            } else if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
+                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
+                                yaml.set(key, "INK_SAC");
+                                updateCount++;
+                            } else {
+                                yaml.set(key, "RED_DYE");
                                 updateCount++;
                             }
                             break;
                         case "ROSE_RED":
-                            if (getServerVersion().startsWith("v1_14") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_16")) {
-                                yaml.set(key, "RED_DYE");
-                                updateCount++;
-                            } else if (!getServerVersion().startsWith("v1_13")) {
+                            if (!getServerVersion().startsWith("v1_13") && (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
+                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")))
                                 yaml.set(key, "INK_SACK");
-                                updateCount++;
-                            }
+                            else if (getServerVersion().startsWith("v1_8"))
+                                yaml.set(key, "INK_SAC");
+                            else yaml.set(key, "RED_DYE");
+                            updateCount++;
                             break;
                         case "RED_DYE":
                             if (getServerVersion().startsWith("v1_13")) {
                                 yaml.set(key, "ROSE_RED");
                                 updateCount++;
-                            } else if (!getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_16")) {
+                            } else if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
+                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
                                 yaml.set(key, "INK_SACK");
                                 updateCount++;
+                            } else if (getServerVersion().startsWith("v1_8")) {
+                                yaml.set(key, "INK_SAC");
+                                updateCount++;
+                            } else {
+                                yaml.set(key, "RED_DYE");
+                                updateCount++;
                             }
-
                             break;
                         case "CLOCK":
-                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14")
-                                    && !getServerVersion().startsWith("v1_13")) {
+                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
                                 yaml.set(key, "WATCH");
                                 updateCount++;
                             }
                             break;
                         case "WATCH":
-                            if (getServerVersion().startsWith("v1_16") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14")
-                                    || getServerVersion().startsWith("v1_13")) {
+                            if (!(getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"))) {
                                 yaml.set(key, "CLOCK");
                                 updateCount++;
                             }
                             break;
                         case "BLACK_STAINED_GLASS_PANE":
-                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14")
-                                    && !getServerVersion().startsWith("v1_13")) {
+                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
                                 yaml.set(key, "STAINED_GLASS_PANE");
                                 yaml.set(key.replace(".material", ".durability"), 15);
                                 updateCount++;
                             }
                             break;
                         case "STAINED_GLASS_PANE":
-                            if (getServerVersion().startsWith("v1_16") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14")
-                                    || getServerVersion().startsWith("v1_13")) {
+                            if (!(getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"))) {
                                 yaml.set(key, "BLACK_STAINED_GLASS_PANE");
                                 updateCount++;
                             }
                             break;
                         case "OAK_SIGN":
-                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14")) {
+                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
                                 yaml.set(key, "SIGN");
                                 updateCount++;
                             }
                             break;
                         case "SIGN":
-                            if (getServerVersion().startsWith("v1_16") || getServerVersion().startsWith("v1_15") || getServerVersion().startsWith("v1_14")) {
+                            if (!(getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"))) {
                                 yaml.set(key, "OAK_SIGN");
                                 updateCount++;
                             }
@@ -449,13 +466,15 @@ public class HyperDrive extends JavaPlugin {
                         case "GREEN_WOOL":
                         case "LIME_WOOL":
                         case "RED_WOOL":
-                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
                                 yaml.set(key, "WOOL");
                                 updateCount++;
                             }
                             break;
                         case "GRASS_BLOCK":
-                            if (!getServerVersion().startsWith("v1_16") && !getServerVersion().startsWith("v1_15") && !getServerVersion().startsWith("v1_14") && !getServerVersion().startsWith("v1_13")) {
+                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
+                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
                                 yaml.set(key, "GRASS");
                                 updateCount++;
                             }
@@ -570,6 +589,13 @@ public class HyperDrive extends JavaPlugin {
         }
     }
 
+    public boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int columns = rsmd.getColumnCount();
+        for (int x = 0; ++x <= columns; ) if (rsmd.getColumnName(x).equalsIgnoreCase(columnName)) return true;
+        return false;
+    }
+
     private synchronized void runConverter() {
         int convertedWarpCount = 0, failedToConvertWarps = 0;
         long startTime = System.currentTimeMillis();
@@ -611,7 +637,7 @@ public class HyperDrive extends JavaPlugin {
         }
     }
 
-    private synchronized void converterWarpSpecifics(FileConfiguration yaml, String warpName, Warp warp) {
+    private void converterWarpSpecifics(FileConfiguration yaml, String warpName, Warp warp) {
         try {
             List<UUID> assistantList = new ArrayList<>(), playerList = new ArrayList<>(), voters = new ArrayList<>();
             List<String> assistants = yaml.getStringList(warpName + ".assistants"), playerListData = yaml.getStringList(warpName + ".player-list");
@@ -643,7 +669,7 @@ public class HyperDrive extends JavaPlugin {
             warp.setPlayerList(playerList);
 
             String creationDate = yaml.getString(warpName + ".creation-date");
-            LocalDate date = getManager().getSimpleDateFormat().parse(creationDate).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate date = getManager().getSimpleDateFormat().parse(creationDate).toInstant().atZone(ZoneId.systemDefault()).toLocalDate().atStartOfDay().toLocalDate();
             if (date.getYear() > LocalDate.now().getYear()) date = date.withYear(LocalDate.now().getYear());
             creationDate = getManager().getSimpleDateFormat().format(Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()));
 
@@ -682,7 +708,7 @@ public class HyperDrive extends JavaPlugin {
         }
     }
 
-    private synchronized void converterWarpSpecifics(ResultSet resultSet, String ipAddress, Warp warp) {
+    private void converterWarpSpecifics(ResultSet resultSet, String ipAddress, Warp warp) {
         try {
             String statusString = resultSet.getString("status");
             if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
@@ -691,7 +717,8 @@ public class HyperDrive extends JavaPlugin {
             warp.setStatus(status);
 
             String creationDate = resultSet.getString("creation_date");
-            LocalDate date = getManager().getSimpleDateFormat().parse(creationDate).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            if (creationDate.contains(" ")) creationDate = creationDate.split(" ")[0];
+            LocalDate date = getManager().getSimpleDateFormat().parse(creationDate).toInstant().atZone(ZoneId.systemDefault()).toLocalDate().atStartOfDay().toLocalDate();
             if (date.getYear() > LocalDate.now().getYear()) date = date.withYear(LocalDate.now().getYear());
             creationDate = getManager().getSimpleDateFormat().format(Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()));
 
@@ -985,7 +1012,7 @@ public class HyperDrive extends JavaPlugin {
         }
     }
 
-    public synchronized void saveWarps(boolean async) {
+    public void saveWarps(boolean async) {
         long startTime = System.currentTimeMillis();
         for (Warp warp : getManager().getWarpMap().values()) warp.save(async);
         if (getConfig().getBoolean("general-section.auto-save-log"))
@@ -1003,27 +1030,15 @@ public class HyperDrive extends JavaPlugin {
             while (resultSet.next()) {
                 try {
                     String warpName = resultSet.getString("name").replace("'", "").replace("\"", ""), nameColor = null;
-                    if (warpName.isEmpty()) {
-                        try {
-                            Statement deleteStatement = databaseConnection.createStatement();
-                            deleteStatement.executeUpdate("delete from warps where name = '" + warpName + "'");
-                            deleteStatement.close();
-                        } catch (SQLException ignored) {
-                        }
-                        continue;
-                    }
+                    if (warpName.isEmpty()) continue;
 
-                    try {
+                    if (hasColumn(resultSet, "name_color")) {
                         nameColor = resultSet.getString("name_color");
                         if (nameColor != null && !nameColor.isEmpty() && !nameColor.contains("§"))
                             if (nameColor.contains("&"))
                                 nameColor = ChatColor.translateAlternateColorCodes('&', nameColor);
                             else
                                 nameColor = ChatColor.valueOf(nameColor.toUpperCase().replace(" ", "_").replace("-", "_")).toString();
-                    } catch (SQLException ignored) {
-                        Statement deleteStatement = databaseConnection.createStatement();
-                        deleteStatement.executeUpdate("delete from warps where name = '" + warpName + "'");
-                        deleteStatement.close();
                         fixTables = true;
                     }
 
@@ -1037,9 +1052,8 @@ public class HyperDrive extends JavaPlugin {
                     if (locationString.contains(",")) {
                         String[] locationStringArgs = locationString.split(",");
 
-                        SerializableLocation serializableLocation = new SerializableLocation(locationStringArgs[0],
-                                Double.parseDouble(locationStringArgs[1]), Double.parseDouble(locationStringArgs[2]),
-                                Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]),
+                        SerializableLocation serializableLocation = new SerializableLocation(locationStringArgs[0], Double.parseDouble(locationStringArgs[1]),
+                                Double.parseDouble(locationStringArgs[2]), Double.parseDouble(locationStringArgs[3]), Float.parseFloat(locationStringArgs[4]),
                                 Float.parseFloat(locationStringArgs[5]));
                         UUID uuid = null;
                         String ownerId = resultSet.getString("owner");

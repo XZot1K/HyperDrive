@@ -43,13 +43,13 @@ general-section:
   essentials-converter: false
   # If using the essentials converter, set this to the name of your installed essentials plugin.
   essentials-name: "Essentials"
+  # If this is disabled, all plugin hooks will only be checked to see if a claim exists at that location rather than ownership.
+  claim-ownership-checks: true
   # This is what the user must type to forcefully cancel a chat interaction.
   chat-interaction-cancel: "cancel"
   # This is the format that is used for toggle based options. These will be the two values used when a option is either enabled or disabled (Please use the format <enable>:<disable>).
   # (Note: If the format is incorrect the plugin will use the values "Enabled" and "Disabled" by default).
   option-toggle-format: "Enabled:Disabled"
-  # This is the format that is used for date display and storage within the plugin (Please only change this if you know what you are doing).
-  date-format: "MM/dd/yyyy"
   # This is the default amount of warps a user can own.
   default-warp-limit: 3
   # These are the sounds used throughout the plugin. These will need to be adjusted based on the server's Minecraft version.
@@ -145,22 +145,9 @@ random-teleport-section:
   delay-bar-message: "&eRandom teleportation will engage in: &r{progress} &e- &a{duration-left} &eSeconds"
   # This is the message display on the player's action bar when a random teleportation process has begun (Set to "" to disable).
   start-bar-message: "&eRandom teleportation will engage in &a{duration} &eseconds."
-  # This is the forced location list which is used to force the random teleportation to generate off of the defined location
-  # instead of using the player's base location. This will only work if the world name is found in the list for where the player
-  # is being teleported. (Format: <world name>:<x>,<y>,<z>)
-  forced-location-list:
-    - "world:0,0,0"
-    - "world_the_nether:0,0,0"
-    - "world_the_end:0,0,0"
   # These are the worlds where RTP will not be allowed to take a player.
   forbidden-worlds:
     - "world_the_end"
-  # This is the bound radius that a player can be teleported within per world. You can think of this as like a world border.
-  # (Note: It is recommended to set this value to the size of your world's world border) (Format: <world name>:<bounds size>>)
-  bounds-radius-list:
-    - "world:5000"
-  # If for any reason bounds are unable to be found for a specific world this bound size will be used.
-  default-bounds: 5000
   # This is how many times the random teleportation feature can attempt to teleport the player before aborting the task.
   # (Note: The higher the slower, recommended value is below 30 if "can-load-chunks" is enabled, set to -1 for unlimited)
   max-tries: 300

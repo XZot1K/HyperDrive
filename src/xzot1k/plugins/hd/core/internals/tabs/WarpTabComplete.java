@@ -30,7 +30,9 @@ public class WarpTabComplete implements TabCompleter {
     public List<String> onTabComplete(CommandSender commandSender, Command command, String label, String[] args) {
 
         if (command.getName().equalsIgnoreCase("teleportposition") && args.length >= 3)
-            return new ArrayList<String>() {{add("~");}};
+            return new ArrayList<String>() {{
+                add("~");
+            }};
 
         if (command.getName().equalsIgnoreCase("warps") && args.length == 1) {
             boolean hasAllAccess = (commandSender.isOp() || commandSender.hasPermission("hyperdrive.admin.tab"));
@@ -101,7 +103,7 @@ public class WarpTabComplete implements TabCompleter {
         if (args.length >= 1) {
             List<String> playerNames = new ArrayList<>();
             for (Player player : getPluginInstance().getServer().getOnlinePlayers())
-                playerNames.add(player.getName());
+                if (!getPluginInstance().getManager().isVanished(player)) playerNames.add(player.getName());
             Collections.sort(playerNames);
             return playerNames;
         }

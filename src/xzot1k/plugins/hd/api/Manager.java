@@ -58,11 +58,14 @@ public class Manager {
     private HashMap<UUID, InteractionModule> chatInteractionMap;
     private HashMap<UUID, List<UUID>> groupMap;
     private final String[] eventPlaceholders;
+    final Pattern hexPatternOne, hexPatternTwo;
 
     public Manager(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
+        hexPatternOne = Pattern.compile("#[a-fA-F0-9]{6}");
+        hexPatternTwo = Pattern.compile("\\{#[a-fA-F0-9]{6}}");
         eventPlaceholders = new String[]{"{is-owner}", "{has-access}", "{no-access}", "{can-edit}", "{is-private}", "{is-public}", "{is-admin}"};
-        setSimpleDateFormat(new SimpleDateFormat(Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
+        setSimpleDateFormat(new SimpleDateFormat("MM/dd/yyyy"));
         setPaging(new Paging(getPluginInstance()));
         setCooldownMap(new HashMap<>());
         setWarpMap(new HashMap<>());
@@ -208,31 +211,31 @@ public class Manager {
      * @return The colored text.
      */
     public String colorText(String message) {
-        String messageCopy = message;
         if ((!getPluginInstance().getServerVersion().startsWith("v1_15") && !getPluginInstance().getServerVersion().startsWith("v1_14")
                 && !getPluginInstance().getServerVersion().startsWith("v1_13") && !getPluginInstance().getServerVersion().startsWith("v1_12")
                 && !getPluginInstance().getServerVersion().startsWith("v1_11") && !getPluginInstance().getServerVersion().startsWith("v1_10")
-                && !getPluginInstance().getServerVersion().startsWith("v1_9") && !getPluginInstance().getServerVersion().startsWith("v1_8"))
-                && messageCopy.contains("{#")) {
-            if (getPluginInstance().getHookChecker().isPrismaInstalled())
-                messageCopy = ColorProvider.translatePrisma(messageCopy);
+                && !getPluginInstance().getServerVersion().startsWith("v1_9") && !getPluginInstance().getServerVersion().startsWith("v1_8"))) {
+            if (getPluginInstance().getHookChecker().prismaInstalled)
+                return ColorProvider.translatePrisma(message);
             else {
-
-                final Pattern hexPattern = Pattern.compile("\\{#([A-Fa-f0-9]){6}}");
-                Matcher matcher = hexPattern.matcher(message);
-                while (matcher.find()) {
-                    final net.md_5.bungee.api.ChatColor hex = net.md_5.bungee.api.ChatColor.of(matcher.group().substring(1, matcher.group().length() - 1));
-                    if (hex != null) {
-                        final String pre = message.substring(0, matcher.start()), post = message.substring(matcher.end());
-                        matcher = hexPattern.matcher(message = (pre + hex + post));
+                try {
+                    Matcher matcher = hexPatternOne.matcher(message);
+                    while (matcher.find()) {
+                        String colorText = message.substring(matcher.start(), matcher.end());
+                        matcher = hexPatternOne.matcher(message = message.replace(colorText, (net.md_5.bungee.api.ChatColor.of(colorText) + "")));
                     }
-                }
 
-                return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', message);
+                    matcher = hexPatternTwo.matcher(message);
+                    while (matcher.find()) {
+                        String colorText = message.substring(matcher.start(), matcher.end());
+                        matcher = hexPatternOne.matcher(message = message.replace(colorText, (net.md_5.bungee.api.ChatColor.of(colorText) + "")));
+                    }
+                } catch (IllegalArgumentException ignored) {
+                }
             }
         }
 
-        return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', messageCopy);
+        return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', message);
     }
 
     public void sendCustomMessage(String path, Player player, String... placeholders) {
@@ -335,19 +338,6 @@ public class Manager {
         return bar.toString();
     }
 
-    public int getBounds(World world) {
-        List<String> boundsList = getPluginInstance().getConfig().getStringList("random-teleport-section.bounds-radius-list");
-        for (int i = -1; ++i < boundsList.size(); ) {
-            String boundsLine = boundsList.get(i);
-            if (boundsLine != null && !boundsLine.equalsIgnoreCase("") && boundsLine.contains(":")) {
-                String[] boundsArgs = boundsLine.split(":");
-                if (boundsArgs[0].equalsIgnoreCase(world.getName())) return Integer.parseInt(boundsArgs[1]);
-            }
-        }
-
-        return getPluginInstance().getConfig().getInt("random-teleport-section.default-bounds");
-    }
-
     /**
      * Gets a chunk using paper methods and other checks.
      *
@@ -357,17 +347,25 @@ public class Manager {
      * @return The found chunk after it is found.
      */
     public CompletableFuture<Chunk> getChunk(World world, int x, int z) {
+        CompletableFuture<Chunk> chunkFuture;
         boolean useAsync = getPluginInstance().asyncChunkMethodExists();
-        if (useAsync && !getPluginInstance().getServerVersion().startsWith("v1_8"))
-            return world.getChunkAtAsync(x >> 4, z >> 4, true);
+        if (useAsync) {
+            try {
+                return world.getChunkAtAsync(x >> 4, z >> 4, true);
+            } catch (NoSuchMethodError ignored) {
+                try {
+                    chunkFuture = new CompletableFuture<>();
+                    world.getChunkAtAsync(x >> 4, z >> 4, chunkFuture::complete);
+                    return chunkFuture;
+                } catch (NoSuchMethodError ignored1) {
+                }
+            }
+        }
 
-        CompletableFuture<Chunk> chunkFuture = new CompletableFuture<>();
-        getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> {
-            if (!useAsync) chunkFuture.complete(world.getChunkAt(x >> 4, z >> 4));
-            else
-                world.getChunkAtAsync(x >> 4, z >> 4, chunk1 -> chunkFuture.complete(world.getChunkAt(x >> 4, z >> 4)));
-        });
-
+        chunkFuture = new CompletableFuture<>();
+        CompletableFuture<Chunk> finalChunkFuture = chunkFuture;
+        getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () ->
+                finalChunkFuture.complete(world.getChunkAt(x >> 4, z >> 4)));
         return chunkFuture;
     }
 
@@ -1506,7 +1504,7 @@ public class Manager {
 
     // warp stuff
     public boolean isVanished(Player player) {
-        if (getPluginInstance().getHookChecker().isCMIInstalled())
+        if (getPluginInstance().getHookChecker().cmiInstalled)
             return com.Zrips.CMI.CMI.getInstance().getPlayerManager().getUser(player).isVanished();
 
         for (MetadataValue meta : player.getMetadata("vanished"))
@@ -1683,7 +1681,7 @@ public class Manager {
     public List<String> getPermittedWarps(OfflinePlayer player) {
         List<String> permittedWarpNames = new ArrayList<>();
         for (Map.Entry<String, Warp> entry : getWarpMap().entrySet()) {
-            final String warpName = net.md_5.bungee.api.ChatColor.stripColor(entry.getKey());
+            final String warpName = net.md_5.bungee.api.ChatColor.stripColor(entry.getKey().toLowerCase());
             final Warp warp = entry.getValue();
             if (warp != null && (warp.getOwner().toString().equals(player.getUniqueId().toString())
                     || warp.getAssistants().contains(player.getUniqueId())))
@@ -1702,7 +1700,7 @@ public class Manager {
     public List<String> getOwnedWarps(OfflinePlayer player) {
         List<String> warpNames = new ArrayList<>();
         for (Map.Entry<String, Warp> entry : getWarpMap().entrySet()) {
-            final String warpName = net.md_5.bungee.api.ChatColor.stripColor(entry.getKey());
+            final String warpName = net.md_5.bungee.api.ChatColor.stripColor(entry.getKey().toLowerCase());
             final Warp warp = entry.getValue();
             if (warp != null && (warp.getOwner().toString().equals(player.getUniqueId().toString())))
                 if (!warpNames.contains(warpName)) warpNames.add(warpName);

@@ -9,6 +9,7 @@ import org.bukkit.*;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -17,10 +18,13 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.Vector;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
@@ -45,39 +49,43 @@ public class Listeners implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onClick(InventoryClickEvent e) {
-        if (e.getWhoClicked() instanceof Player) {
-            Player player = (Player) e.getWhoClicked();
-            if (player.isSleeping()) return;
+        if (!(e.getWhoClicked() instanceof Player)) return;
+        Player player = (Player) e.getWhoClicked();
 
-            String inventoryName;
-            try {
-                if (!(getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_12")
-                        || getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_10")
-                        || getPluginInstance().getServerVersion().startsWith("v1_9") || getPluginInstance().getServerVersion().startsWith("v1_8")))
-                    inventoryName = e.getView().getTitle();
-                else {
-                    Method method = e.getInventory().getClass().getMethod("getName");
-                    inventoryName = (String) method.invoke(e.getInventory());
-                }
-            } catch (NoSuchMethodException | IllegalStateException | IllegalAccessException | InvocationTargetException ex) {
-                return;
-            }
-
-            if (inventoryName.equalsIgnoreCase(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("list-menu-section.title"))))
-                runListMenuClick(player, e);
-            else if (inventoryName.contains(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title"))))
-                runEditMenuClick(player, inventoryName, e);
-            else if (inventoryName.contains(getPluginInstance().getManager()
-                    .colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title"))))
-                runLikeMenuClick(player, inventoryName, e);
-            else if (inventoryName.equalsIgnoreCase(getPluginInstance()
-                    .getManager().colorText(getPluginInstance().getMenusConfig().getString("ps-menu-section.title"))))
-                runPlayerSelectionClick(player, e);
+        String inventoryName;
+        try {
+            if (!(getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_12")
+                    || getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_10")
+                    || getPluginInstance().getServerVersion().startsWith("v1_9") || getPluginInstance().getServerVersion().startsWith("v1_8")))
+                inventoryName = e.getView().getTitle();
             else {
-                String menuId = getPluginInstance().getManager().getMenuId(inventoryName);
-                if (menuId != null)
-                    runCustomMenuClick(player, menuId, e);
+                Method method = e.getInventory().getClass().getMethod("getName");
+                inventoryName = (String) method.invoke(e.getInventory());
+            }
+        } catch (NoSuchMethodException | IllegalStateException | IllegalAccessException | InvocationTargetException ex) {
+            return;
+        }
+
+        if (inventoryName.equalsIgnoreCase(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("list-menu-section.title")))) {
+            e.setCancelled(true);
+            runListMenuClick(player, e);
+        } else if (inventoryName.contains(getPluginInstance().getManager()
+                .colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title")))) {
+            e.setCancelled(true);
+            runEditMenuClick(player, inventoryName, e);
+        } else if (inventoryName.contains(getPluginInstance().getManager()
+                .colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title")))) {
+            e.setCancelled(true);
+            runLikeMenuClick(player, inventoryName, e);
+        } else if (inventoryName.equalsIgnoreCase(getPluginInstance()
+                .getManager().colorText(getPluginInstance().getMenusConfig().getString("ps-menu-section.title")))) {
+            e.setCancelled(true);
+            runPlayerSelectionClick(player, e);
+        } else {
+            String menuId = getPluginInstance().getManager().getMenuId(inventoryName);
+            if (menuId != null) {
+                e.setCancelled(true);
+                runCustomMenuClick(player, menuId, e);
             }
         }
     }
@@ -113,6 +121,11 @@ public class Listeners implements Listener {
                 && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         switch (interactionModule.getInteractionId().toLowerCase()) {
             case "create-warp":
+                if (!getPluginInstance().getHookChecker().isLocationHookSafe(e.getPlayer(), e.getPlayer().getLocation(), false)) {
+                    getPluginInstance().getManager().sendCustomMessage("not-hook-safe", e.getPlayer());
+                    break;
+                }
+
                 if (getPluginInstance().getManager().hasMetWarpLimit(e.getPlayer())) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-limit-met", e.getPlayer());
@@ -866,7 +879,7 @@ public class Listeners implements Listener {
 
                     getPluginInstance().getManager().sendCustomMessage("random-teleport-start", player);
                     getPluginInstance().getTeleportationHandler().getDestinationMap().remove(player.getUniqueId());
-                    getPluginInstance().getTeleportationHandler().updateDestinationWithRandomLocation(player, player.getLocation(), player.getWorld());
+                    getPluginInstance().getTeleportationHandler().updateDestinationWithRandomLocation(player, player.getWorld());
                     player.openInventory(getPluginInstance().getManager().buildPlayerSelectionMenu(player));
                     getPluginInstance().getManager().sendCustomMessage("player-selection-group", player);
                     break;
@@ -925,10 +938,39 @@ public class Listeners implements Listener {
     }
 
     // methods
+    private boolean cancelClick(InventoryClickEvent e, Player player) {
+        if (e.getClickedInventory() != null && e.getClickedInventory().getType() == InventoryType.PLAYER || e.getClickedInventory() instanceof PlayerInventory) {
+            e.setCancelled(true);
+            e.setResult(Event.Result.DENY);
+            return true;
+        }
+
+        if (e.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD || e.getAction() == InventoryAction.HOTBAR_SWAP
+                || e.getAction() == InventoryAction.CLONE_STACK || e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY
+                || player.getGameMode() == GameMode.CREATIVE) {
+            e.setCancelled(true);
+            e.setResult(Event.Result.DENY);
+            player.updateInventory();
+        }
+
+        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) {
+            e.setCancelled(true);
+            e.setResult(Event.Result.DENY);
+            return true;
+        } else {
+            e.setCancelled(true);
+            e.setResult(Event.Result.DENY);
+        }
+
+        return false;
+    }
+
     private void runListMenuClick(Player player, InventoryClickEvent e) {
-        if (e.getCurrentItem() == null) return;
-        e.setCancelled(true);
-        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
+        if (e.getCurrentItem() == null || cancelClick(e, player)) {
+            e.setResult(Event.Result.DENY);
+            e.setCancelled(true);
+            return;
+        }
 
         List<Integer> warpSlots = getPluginInstance().getMenusConfig().getIntegerList("list-menu-section.warp-slots");
         if (warpSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta() && e.getCurrentItem().getItemMeta().hasDisplayName()) {
@@ -959,6 +1001,11 @@ public class Listeners implements Listener {
                             if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
                                 player.closeInventory();
                                 getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
+                                return;
+                            }
+
+                            if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warp.getWarpLocation().asBukkitLocation(), false)) {
+                                getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
                                 return;
                             }
 
@@ -1012,6 +1059,11 @@ public class Listeners implements Listener {
                             if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
                                 player.closeInventory();
                                 getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
+                                return;
+                            }
+
+                            if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warp.getWarpLocation().asBukkitLocation(), false)) {
+                                getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
                                 return;
                             }
 
@@ -1156,7 +1208,7 @@ public class Listeners implements Listener {
                             return;
                         }
 
-                        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation())) {
+                        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation(), false)) {
                             getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player);
                             break;
                         }
@@ -1302,9 +1354,7 @@ public class Listeners implements Listener {
     }
 
     private void runEditMenuClick(Player player, String inventoryName, InventoryClickEvent e) {
-        if (e.getCurrentItem() == null) return;
-        e.setCancelled(true);
-        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
+        if (e.getCurrentItem() == null || cancelClick(e, player)) return;
 
         String itemId = getPluginInstance().getManager().getIdFromSlot("edit-menu-section", e.getSlot());
         if (itemId != null) {
@@ -1725,9 +1775,15 @@ public class Listeners implements Listener {
     }
 
     private void runLikeMenuClick(Player player, String inventoryName, InventoryClickEvent e) {
-        if (e.getCurrentItem() == null) return;
-        e.setCancelled(true);
-        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) return;
+        if (e.getCurrentItem() == null || cancelClick(e, player)) {
+            e.setResult(Event.Result.DENY);
+            e.setCancelled(true);
+            return;
+        }
+
+        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE || e.getClickedInventory() == null
+                || e.getClickedInventory().getType() == InventoryType.PLAYER)
+            return;
 
         String itemId = getPluginInstance().getManager().getIdFromSlot("like-menu-section", e.getSlot());
         if (itemId != null) {
@@ -1842,10 +1898,11 @@ public class Listeners implements Listener {
     }
 
     private void runPlayerSelectionClick(Player player, InventoryClickEvent e) {
-        if (e.getCurrentItem() == null) return;
-        e.setCancelled(true);
-        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE)
+        if (e.getCurrentItem() == null || cancelClick(e, player) || e.getClickedInventory() == null) {
+            e.setResult(Event.Result.DENY);
+            e.setCancelled(true);
             return;
+        }
 
         List<Integer> playerSlots = getPluginInstance().getMenusConfig().getIntegerList("ps-menu-section.player-slots");
         if (playerSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta()) {
@@ -2073,9 +2130,14 @@ public class Listeners implements Listener {
     }
 
     private void runCustomMenuClick(Player player, String menuId, InventoryClickEvent e) {
-        if (e.getCurrentItem() == null) return;
-        e.setCancelled(true);
-        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE)
+        if (e.getCurrentItem() == null || cancelClick(e, player)) {
+            e.setResult(Event.Result.DENY);
+            e.setCancelled(true);
+            return;
+        }
+
+        if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE || e.getClickedInventory() == null
+                || e.getClickedInventory().getType() == InventoryType.PLAYER)
             return;
 
         String itemId = getPluginInstance().getManager().getIdFromSlot("custom-menu-section." + menuId, e.getSlot());

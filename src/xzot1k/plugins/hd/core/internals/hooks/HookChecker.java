@@ -6,6 +6,7 @@ package xzot1k.plugins.hd.core.internals.hooks;
 
 import com.bekvon.bukkit.residence.Residence;
 import com.bekvon.bukkit.residence.protection.ClaimedResidence;
+import com.griefdefender.api.GriefDefender;
 import com.massivecraft.factions.Board;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.FPlayer;
@@ -27,133 +28,110 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import xzot1k.plugins.hd.HyperDrive;
 
+import java.util.Objects;
+
 public class HookChecker {
 
     private HyperDrive pluginInstance;
-    private boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, aSkyBlockInstalled, residenceInstalled, prismaInstalled, cmiInstalled;
+    public final boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, griefDefenderInstalled,
+            aSkyBlockInstalled, residenceInstalled, prismaInstalled, cmiInstalled;
     private Plugin essentialsPlugin;
 
     public HookChecker(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
 
         Plugin factionsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("Factions");
-        setFactionsInstalled(factionsPlugin != null);
-        setFactionsUUID(factionsPlugin != null && factionsPlugin.getDescription().getDepend().contains("MassiveCore"));
+        factionsInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("Factions") != null);
+        factionsUUID = (factionsPlugin != null && factionsPlugin.getDescription().getDepend().contains("MassiveCore"));
 
-        setASkyBlockInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("ASkyBlock") != null);
-        setGriefPreventionInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("GriefPrevention") != null);
-        setTownyInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Towny") != null);
-        setResidenceInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Residence") != null);
-        setPrismaInstalled(getPluginInstance().getServer().getPluginManager().getPlugin("Prisma") != null);
+        aSkyBlockInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("ASkyBlock") != null);
+        griefPreventionInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("GriefPrevention") != null);
+        griefDefenderInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("GriefDefender") != null);
+        townyInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("Towny") != null);
+        residenceInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("Residence") != null);
+        prismaInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("Prisma") != null);
         cmiInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("CMI") != null);
 
-        setEssentialsPlugin(getPluginInstance().getServer().getPluginManager().getPlugin("Essentials"));
-        if (getEssentialsPlugin() == null)
-            setEssentialsPlugin(getPluginInstance().getServer().getPluginManager().getPlugin("EssentialsEx"));
+        essentialsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("Essentials");
+        if (essentialsPlugin == null)
+            essentialsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("EssentialsEx");
     }
 
     /**
      * Checks to see if the location is safe and doesn't collide with supported plugin's hook systems.
      *
-     * @param player   The player to check.
-     * @param location The location to check safety for.
+     * @param player          The player to check.
+     * @param location        The location to check safety for.
+     * @param checkWorldGuard Checks if the location is in a region.
      * @return Whether it is safe.
      */
-    public boolean isLocationHookSafe(Player player, Location location) {
+    public boolean isLocationHookSafe(Player player, Location location, boolean checkWorldGuard) {
         if (player.hasPermission("hyperdrive.admin.bypass")) return true;
 
-        boolean isSafeLocation = true;
-        if (getPluginInstance().getWorldGuardHandler() != null && !getPluginInstance().getWorldGuardHandler().passedWorldGuardHook(location))
-            isSafeLocation = false;
+        if (checkWorldGuard && getPluginInstance().getWorldGuardHandler() != null
+                && !getPluginInstance().getWorldGuardHandler().passedWorldGuardHook(location))
+            return false;
 
-        if (isFactionsInstalled()) {
-            if (!isFactionsUUID()) {
+        final boolean ownershipCheck = getPluginInstance().getConfig().getBoolean("claim-ownership-checks");
+        if (factionsInstalled) {
+            if (!factionsUUID) {
                 com.massivecraft.factions.entity.Faction factionAtLocation = BoardColl.get().getFactionAt(PS.valueOf(location));
                 MPlayer mPlayer = MPlayer.get(player);
-                if (!factionAtLocation.getId().equalsIgnoreCase(FactionColl.get().getNone().getId()) && !factionAtLocation.getId().equalsIgnoreCase(mPlayer.getFaction().getId()))
-                    isSafeLocation = false;
+                if (factionAtLocation != null && (!ownershipCheck || (!factionAtLocation.getId().equalsIgnoreCase(FactionColl.get().getNone().getId())
+                        && !factionAtLocation.getId().equalsIgnoreCase(mPlayer.getFaction().getId())))) {
+                    return false;
+                }
             } else {
                 FLocation fLocation = new FLocation(location);
                 com.massivecraft.factions.Faction factionAtLocation = Board.getInstance().getFactionAt(fLocation);
                 FPlayer fPlayer = FPlayers.getInstance().getByPlayer(player);
-                if (!factionAtLocation.isWilderness() && !fPlayer.getFaction().getComparisonTag().equalsIgnoreCase(factionAtLocation.getComparisonTag()))
-                    isSafeLocation = false;
+                if (factionAtLocation != null && (!ownershipCheck || (!factionAtLocation.isWilderness()
+                        && !fPlayer.getFaction().getComparisonTag().equalsIgnoreCase(factionAtLocation.getComparisonTag())))) {
+                    return false;
+                }
             }
         }
 
-        if (isASkyBlockInstalled()) {
+        if (aSkyBlockInstalled) {
             Island island = ASkyBlockAPI.getInstance().getIslandAt(location);
-            if (island != null && !island.getOwner().toString().equals(player.getUniqueId().toString()) && !island.getMembers().contains(player.getUniqueId()))
-                isSafeLocation = false;
+            if (island != null && (!ownershipCheck || (!island.getOwner().toString().equals(player.getUniqueId().toString()) && !island.getMembers().contains(player.getUniqueId()))))
+                return false;
         }
 
-        if (isGriefPreventionInstalled()) {
-            Claim claimAtLocation = GriefPrevention.instance.dataStore.getClaimAt(location, false, null);
-            if (claimAtLocation != null && !claimAtLocation.getOwnerName().equalsIgnoreCase(player.getName()))
-                isSafeLocation = false;
+        if (griefPreventionInstalled) {
+            Claim claimAtLocation = GriefPrevention.instance.dataStore.getClaimAt(location, true, null);
+            if (claimAtLocation != null && (!ownershipCheck || !claimAtLocation.getOwnerName().equalsIgnoreCase(player.getName())))
+                return false;
         }
 
-        if (isTownyInstalled()) {
+        if (griefDefenderInstalled) {
+            com.griefdefender.api.claim.Claim claimAtLocation = GriefDefender.getCore().getClaimManager(Objects.requireNonNull(location.getWorld()).getUID())
+                    .getClaimAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+            if (claimAtLocation != null && (!ownershipCheck || (!claimAtLocation.getOwnerUniqueId().equals(player.getUniqueId())
+                    && !claimAtLocation.getOwnerUniqueId().equals(player.getUniqueId())))) return false;
+        }
+
+        if (townyInstalled) {
             try {
                 Town town = WorldCoord.parseWorldCoord(location).getTownBlock().getTown();
                 if (town != null) {
                     Resident resident = TownyAPI.getInstance().getDataSource().getResident(player.getName());
-                    if (resident == null || !town.getResidents().contains(resident) || town.getMayor() != resident)
-                        isSafeLocation = false;
+                    if (resident != null && (!ownershipCheck || (!town.getResidents().contains(resident) && town.getMayor() != resident)))
+                        return false;
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
-        if (isResidenceInstalled()) {
+        if (residenceInstalled) {
             ClaimedResidence res = Residence.getInstance().getResidenceManager().getByLoc(location);
-            if (res != null && !res.getOwnerUUID().toString().equals(player.getUniqueId().toString()))
-                isSafeLocation = false;
+            return (res == null || (ownershipCheck && res.isOwner(player)));
         }
 
-        return isSafeLocation;
+        return true;
     }
 
     // getters & setters
-    public boolean isFactionsInstalled() {
-        return factionsInstalled;
-    }
-
-    private void setFactionsInstalled(boolean factionsInstalled) {
-        this.factionsInstalled = factionsInstalled;
-    }
-
-    public boolean isTownyInstalled() {
-        return townyInstalled;
-    }
-
-    private void setTownyInstalled(boolean townyInstalled) {
-        this.townyInstalled = townyInstalled;
-    }
-
-    public boolean isGriefPreventionInstalled() {
-        return griefPreventionInstalled;
-    }
-
-    private void setGriefPreventionInstalled(boolean griefPreventionInstalled) {
-        this.griefPreventionInstalled = griefPreventionInstalled;
-    }
-
-    public boolean isASkyBlockInstalled() {
-        return aSkyBlockInstalled;
-    }
-
-    private void setASkyBlockInstalled(boolean aSkyBlockInstalled) {
-        this.aSkyBlockInstalled = aSkyBlockInstalled;
-    }
-
-    public boolean isResidenceInstalled() {
-        return residenceInstalled;
-    }
-
-    private void setResidenceInstalled(boolean residenceInstalled) {
-        this.residenceInstalled = residenceInstalled;
-    }
-
     public HyperDrive getPluginInstance() {
         return pluginInstance;
     }
@@ -162,31 +140,8 @@ public class HookChecker {
         this.pluginInstance = pluginInstance;
     }
 
-    public boolean isFactionsUUID() {
-        return factionsUUID;
-    }
-
-    private void setFactionsUUID(boolean factionsUUID) {
-        this.factionsUUID = factionsUUID;
-    }
-
-    public boolean isPrismaInstalled() {
-        return prismaInstalled;
-    }
-
-    private void setPrismaInstalled(boolean prismaInstalled) {
-        this.prismaInstalled = prismaInstalled;
-    }
-
     public Plugin getEssentialsPlugin() {
         return essentialsPlugin;
     }
 
-    private void setEssentialsPlugin(Plugin essentialsPlugin) {
-        this.essentialsPlugin = essentialsPlugin;
-    }
-
-    public boolean isCMIInstalled() {
-        return cmiInstalled;
-    }
 }

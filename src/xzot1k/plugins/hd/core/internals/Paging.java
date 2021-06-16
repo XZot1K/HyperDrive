@@ -238,7 +238,8 @@ public class Paging {
         List<Warp> currentWarpList = new ArrayList<>();
         for (int i = -1; ++i < warpList.size(); ) {
             final Warp warp = warpList.get(i);
-            if (warp == null) continue;
+            if (warp == null || !getPluginInstance().getManager().getWarpMap().containsKey(warp.getWarpName().toLowerCase()))
+                continue;
 
             if (status.equalsIgnoreCase(featuredFormat)) {
                 if (warp.getTraffic() >= trafficThreshold)
