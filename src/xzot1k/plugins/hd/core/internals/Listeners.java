@@ -4,6 +4,7 @@
 
 package xzot1k.plugins.hd.core.internals;
 
+import com.udojava.evalex.Expression;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.*;
 import org.bukkit.block.Sign;
@@ -26,6 +27,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.util.Vector;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
@@ -38,6 +40,7 @@ import xzot1k.plugins.hd.core.objects.InteractionModule;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.*;
 
 public class Listeners implements Listener {
@@ -1180,7 +1183,26 @@ public class Listeners implements Listener {
                     value = actionArgs[1].replace("{player}", player.getName());
                 }
 
-                final double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
+                double itemUsageCost;
+                if (getPluginInstance().getConfig().getBoolean("general-section.use-permission-based-cost")) {
+                    String priceExpression = "0";
+                    for (PermissionAttachmentInfo perm : player.getEffectivePermissions()) {
+                        if (perm.getPermission().startsWith("hyperdrive." + itemId + ".")) {
+                            priceExpression = perm.getPermission().substring(perm.getPermission().lastIndexOf(".") + 1);
+                        }
+                    }
+                    if (!priceExpression.equals("0")) {
+                        if (action.equals("create-warp")) priceExpression = priceExpression.replace("n", getPluginInstance().getManager().getWarpCount(player) + "");
+                        Expression exp = new Expression(priceExpression);
+                        BigDecimal result = exp.eval();
+                        itemUsageCost = result.doubleValue();
+                    } else {
+                        itemUsageCost = getPluginInstance().getMenusConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
+                    }
+                } else {
+                    itemUsageCost = getPluginInstance().getMenusConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
+                }
+
                 switch (action) {
                     case "dispatch-command-console":
                         if (!value.equalsIgnoreCase("")) {
