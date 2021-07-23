@@ -7,6 +7,9 @@ package xzot1k.plugins.hd.core.internals.hooks;
 import com.bekvon.bukkit.residence.Residence;
 import com.bekvon.bukkit.residence.protection.ClaimedResidence;
 import com.griefdefender.api.GriefDefender;
+import com.griefdefender.api.Subject;
+import com.griefdefender.api.Tristate;
+import com.griefdefender.api.permission.flag.Flag;
 import com.massivecraft.factions.Board;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.FPlayer;
@@ -24,6 +27,7 @@ import com.wasteofplastic.askyblock.Island;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import xzot1k.plugins.hd.HyperDrive;
@@ -32,10 +36,12 @@ import java.util.Objects;
 
 public class HookChecker {
 
+
     private HyperDrive pluginInstance;
     public final boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, griefDefenderInstalled,
             aSkyBlockInstalled, residenceInstalled, prismaInstalled, cmiInstalled;
     private Plugin essentialsPlugin;
+    private Flag HYPERDRIVE_PROTECTION;
 
     public HookChecker(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
@@ -55,6 +61,17 @@ public class HookChecker {
         essentialsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("Essentials");
         if (essentialsPlugin == null)
             essentialsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("EssentialsEx");
+
+
+        if (griefDefenderInstalled) {
+            HYPERDRIVE_PROTECTION = Flag.builder()
+                    .id("hyperdrive:protection")
+                    .name("hdprotect")
+                    .permission("griefdefender.flag.hyperdrive.hdprotect")
+                    .build();
+
+            GriefDefender.getRegistry().getRegistryModuleFor(Flag.class).get().registerCustomType(HYPERDRIVE_PROTECTION);
+        }
     }
 
     /**
@@ -105,10 +122,17 @@ public class HookChecker {
         }
 
         if (griefDefenderInstalled) {
+            final World world = player.getWorld();
+            if (GriefDefender.getCore().isEnabled(world.getUID())) {
+                return true;
+            }
             com.griefdefender.api.claim.Claim claimAtLocation = GriefDefender.getCore().getClaimManager(Objects.requireNonNull(location.getWorld()).getUID())
                     .getClaimAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-            if (claimAtLocation != null && (!ownershipCheck || (!claimAtLocation.getOwnerUniqueId().equals(player.getUniqueId())
-                    && !claimAtLocation.getOwnerUniqueId().equals(player.getUniqueId())))) return false;
+            final Subject subject = GriefDefender.getCore().getSubject(player.getUniqueId().toString());
+            final Tristate result = claimAtLocation.getActiveFlagPermissionValue(HYPERDRIVE_PROTECTION, subject, null, true);
+
+            if (!claimAtLocation.isWilderness() && !(result == Tristate.FALSE) && ((!ownershipCheck) || (!claimAtLocation.getUserTrusts().contains(player.getUniqueId()))))
+                return false;
         }
 
         if (townyInstalled) {
