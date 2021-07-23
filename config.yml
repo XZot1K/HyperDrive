@@ -21,7 +21,7 @@ general-section:
   # If this option is enabled, Vault will be hooked into and be used for item which require a fee.
   use-vault: false
   # If this option is enabled, plugin will use an permission-based fee system like "hyperdrive.[itemId].[fee Expression]"
-  # An Example: "hyperdrive.create-warps.100*n" means when a player create warp it will cost warpcount*100
+  # An Example: "hyperdrive.create-warp.100*n" means when a player create warp it will cost warpcount*100
   use-permission-based-cost: false
   # If this option is enabled, the console will be notified every time the warps are automatically saved.
   auto-save-log: true
