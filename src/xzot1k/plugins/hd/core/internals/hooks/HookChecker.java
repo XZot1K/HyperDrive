@@ -27,7 +27,6 @@ import com.wasteofplastic.askyblock.Island;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import xzot1k.plugins.hd.HyperDrive;
@@ -66,8 +65,8 @@ public class HookChecker {
         if (griefDefenderInstalled) {
             HYPERDRIVE_PROTECTION = Flag.builder()
                     .id("hyperdrive:protection")
-                    .name("hdprotect")
-                    .permission("griefdefender.flag.hyperdrive.hdprotect")
+                    .name("hd-protect")
+                    .permission("griefdefender.flag.hyperdrive.hd-protect")
                     .build();
 
             GriefDefender.getRegistry().getRegistryModuleFor(Flag.class).get().registerCustomType(HYPERDRIVE_PROTECTION);
@@ -121,11 +120,7 @@ public class HookChecker {
                 return false;
         }
 
-        if (griefDefenderInstalled) {
-            final World world = player.getWorld();
-            if (!GriefDefender.getCore().isEnabled(world.getUID())) {
-                return true;
-            }
+        if (griefDefenderInstalled && GriefDefender.getCore().isEnabled(player.getWorld().getUID())) {
             com.griefdefender.api.claim.Claim claimAtLocation = GriefDefender.getCore().getClaimManager(Objects.requireNonNull(location.getWorld()).getUID())
                     .getClaimAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
             final Subject subject = GriefDefender.getCore().getSubject(player.getUniqueId().toString());
