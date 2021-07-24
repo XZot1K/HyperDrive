@@ -123,7 +123,7 @@ public class HookChecker {
 
         if (griefDefenderInstalled) {
             final World world = player.getWorld();
-            if (GriefDefender.getCore().isEnabled(world.getUID())) {
+            if (!GriefDefender.getCore().isEnabled(world.getUID())) {
                 return true;
             }
             com.griefdefender.api.claim.Claim claimAtLocation = GriefDefender.getCore().getClaimManager(Objects.requireNonNull(location.getWorld()).getUID())
