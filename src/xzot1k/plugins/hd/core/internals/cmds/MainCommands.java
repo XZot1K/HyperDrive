@@ -20,9 +20,9 @@ import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.events.EconomyChargeEvent;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
+import xzot1k.plugins.hd.core.internals.hooks.HookChecker;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class MainCommands implements CommandExecutor {
@@ -448,7 +448,7 @@ public class MainCommands implements CommandExecutor {
 
         Collections.sort(playerNames);
         if (commandSender instanceof Player)
-            getPluginInstance().getManager().sendCustomMessage("assistants-list", (Player) commandSender, "{warp}:" + warp.getWarpName(), "{list}:" + playerNames.toString());
+            getPluginInstance().getManager().sendCustomMessage("assistants-list", (Player) commandSender, "{warp}:" + warp.getWarpName(), "{list}:" + playerNames);
         else {
             String message = getPluginInstance().getLangConfig().getString("assistants-list");
             if (message != null && !message.isEmpty())
@@ -499,7 +499,7 @@ public class MainCommands implements CommandExecutor {
         Collections.sort(playerNames);
         if (commandSender instanceof Player)
             getPluginInstance().getManager().sendCustomMessage("listed-list", (Player) commandSender,
-                    "{warp}:" + warp.getWarpName(), "{list}:" + playerNames.toString());
+                    "{warp}:" + warp.getWarpName(), "{list}:" + playerNames);
         else {
             String message = getPluginInstance().getLangConfig().getString("listed-list");
             if (message != null && !message.isEmpty())
@@ -826,7 +826,7 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation(), false)) {
+        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation(), HookChecker.CheckType.CREATION)) {
             getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player);
             return;
         }
@@ -922,7 +922,6 @@ public class MainCommands implements CommandExecutor {
 
         getPluginInstance().stopTasks(getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"));
         getPluginInstance().reloadConfigs();
-        getPluginInstance().getManager().setSimpleDateFormat(new SimpleDateFormat(Objects.requireNonNull(getPluginInstance().getConfig().getString("general-section.date-format"))));
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
             getPluginInstance().saveWarps(false);
             getPluginInstance().getManager().getWarpMap().clear();
@@ -968,7 +967,7 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warp.getWarpLocation().asBukkitLocation(), false)) {
+        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warp.getWarpLocation().asBukkitLocation(), HookChecker.CheckType.WARP)) {
             getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
             return;
         }

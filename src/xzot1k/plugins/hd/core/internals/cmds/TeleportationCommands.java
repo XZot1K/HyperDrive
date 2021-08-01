@@ -13,8 +13,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
@@ -25,7 +23,6 @@ import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
 
-import java.io.File;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -43,25 +40,20 @@ public class TeleportationCommands implements CommandExecutor {
         setTpaHereSentPlayers(new ArrayList<>());
         setTpaSentMap(new HashMap<>());
 
-        File file = new File(getPluginInstance().getDataFolder(), "/data.yml");
-        if (!file.exists()) {
-            getPluginInstance().log(Level.INFO, "The 'data.yml' file does not exist. Skipping extra data values.");
-            return;
-        }
-
-        FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-        ConfigurationSection cs = yaml.getConfigurationSection("");
+        ConfigurationSection cs = getPluginInstance().getDataConfig().getConfigurationSection("");
         if (cs == null) return;
 
         Collection<String> keys = cs.getKeys(false);
         if (keys.isEmpty()) return;
 
-        if (keys.contains("spawn"))
-            setSpawnLocation(new SerializableLocation(yaml.getString("spawn.world"), yaml.getDouble("spawn.x"), yaml.getDouble("spawn.y"),
-                    yaml.getDouble("spawn.z"), (float) yaml.getDouble("spawn.yaw"), (float) yaml.getDouble("spawn.pitch")));
-        if (keys.contains("first-join-spawn"))
-            setFirstJoinLocation(new SerializableLocation(yaml.getString("first-join-spawn.world"), yaml.getDouble("first-join-spawn.x"), yaml.getDouble("first-join-spawn.y"),
-                    yaml.getDouble("first-join-spawn.z"), (float) yaml.getDouble("first-join-spawn.yaw"), (float) yaml.getDouble("first-join-spawn.pitch")));
+        try {
+            if (keys.contains("spawn")) setSpawnLocation(new SerializableLocation(cs.getString("spawn")));
+            if (keys.contains("first-join-spawn"))
+                setFirstJoinLocation(new SerializableLocation(cs.getString("first-join-spawn")));
+        } catch (Exception e) {
+            e.printStackTrace();
+            getPluginInstance().log(Level.WARNING, "There was an issue loading one of the spawn locations (" + e.getMessage() + ").");
+        }
     }
 
     @Override
@@ -467,13 +459,20 @@ public class TeleportationCommands implements CommandExecutor {
 
         if (firstArg.equalsIgnoreCase("set")) {
             setSpawnLocation(new SerializableLocation(player.getLocation()));
+            getPluginInstance().getDataConfig().set("spawn", getSpawnLocation().toString());
+            getPluginInstance().saveDataConfig();
             getPluginInstance().getManager().sendCustomMessage("spawn-set", player);
         } else if (firstArg.equalsIgnoreCase("setfirstjoin") || firstArg.equalsIgnoreCase("sfj")) {
             setFirstJoinLocation(new SerializableLocation(player.getLocation()));
+            getPluginInstance().getDataConfig().set("first-join-spawn", getFirstJoinLocation().toString());
+            getPluginInstance().saveDataConfig();
             getPluginInstance().getManager().sendCustomMessage("spawn-set-first-join", player);
         } else if (firstArg.equalsIgnoreCase("clear")) {
             setFirstJoinLocation(null);
             setSpawnLocation(null);
+            getPluginInstance().getDataConfig().set("spawn", null);
+            getPluginInstance().getDataConfig().set("first-join-spawn", null);
+            getPluginInstance().saveDataConfig();
             getPluginInstance().getManager().sendCustomMessage("spawns-cleared", player);
         } else {
             Player foundPlayer = getPluginInstance().getServer().getPlayer(firstArg);

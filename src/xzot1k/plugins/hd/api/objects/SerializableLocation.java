@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020. All rights reserved.
+ * Copyright (c) 2021. All rights reserved.
  */
 
 package xzot1k.plugins.hd.api.objects;
@@ -7,35 +7,43 @@ package xzot1k.plugins.hd.api.objects;
 import org.bukkit.Location;
 import xzot1k.plugins.hd.HyperDrive;
 
-import java.util.Objects;
-
 public class SerializableLocation {
-    private HyperDrive pluginInstance;
     private double x, y, z, yaw, pitch;
     private String worldName;
 
-    public SerializableLocation(Location location) {
-        setPluginInstance(HyperDrive.getPluginInstance());
-        setWorldName(Objects.requireNonNull(location.getWorld()).getName());
-        setX(location.getX());
-        setY(location.getY());
-        setZ(location.getZ());
-        setYaw(location.getYaw());
-        setPitch(location.getPitch());
+    public SerializableLocation(org.bukkit.Location location) {
+        this.worldName = location.getWorld().getName();
+        this.x = location.getX();
+        this.y = location.getY();
+        this.z = location.getZ();
+        this.yaw = location.getYaw();
+        this.pitch = location.getPitch();
+    }
+
+    public SerializableLocation(String locationString) {
+        load(locationString);
     }
 
     public SerializableLocation(String worldName, double x, double y, double z, float yaw, float pitch) {
-        setPluginInstance(HyperDrive.getPluginInstance());
-        setWorldName(worldName);
-        setX(x);
-        setY(y);
-        setZ(z);
-        setYaw(yaw);
-        setPitch(pitch);
+        this.worldName = worldName;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.yaw = yaw;
+        this.pitch = pitch;
+    }
+
+    public SerializableLocation(String worldName, double x, double y, double z) {
+        this.worldName = worldName;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.yaw = 0;
+        this.pitch = 0;
     }
 
     public Location asBukkitLocation() {
-        return new Location(getPluginInstance().getServer().getWorld(getWorldName()), getX(), getY(), getZ(), (float) getYaw(), (float) getPitch());
+        return new Location(HyperDrive.getPluginInstance().getServer().getWorld(getWorldName()), getX(), getY(), getZ(), (float) getYaw(), (float) getPitch());
     }
 
     public double distance(double x, double y, double z) {
@@ -56,12 +64,45 @@ public class SerializableLocation {
         return Math.sqrt(Math.pow(differenceInX, 2) + Math.pow(differenceInY, 2) + Math.pow(differenceInZ, 2));
     }
 
-    private HyperDrive getPluginInstance() {
-        return pluginInstance;
+    /**
+     * Checks if location is equal to another (Exact).
+     *
+     * @param locationClone The other location.
+     * @return Whether the locations are equal.
+     */
+    public boolean equals(SerializableLocation locationClone) {
+        return (locationClone.getWorldName().equalsIgnoreCase(getWorldName()) && getX() == locationClone.getX()
+                && getY() == locationClone.getY() && getZ() == locationClone.getZ() && getYaw() == locationClone.getYaw()
+                && getPitch() == locationClone.getPitch());
     }
 
-    private void setPluginInstance(HyperDrive pluginInstance) {
-        this.pluginInstance = pluginInstance;
+    /**
+     * Checks if location is equal to another (Exact).
+     *
+     * @param location       The other location.
+     * @param ignoreRotation Whether to ignore Yaw and Pitch.
+     * @return Whether the locations are equal.
+     */
+    public boolean equals(org.bukkit.Location location, boolean ignoreRotation) {
+        return (location.getWorld().getName().equalsIgnoreCase(getWorldName()) && getX() == location.getX()
+                && getY() == location.getY() && getZ() == location.getZ()
+                && (ignoreRotation || (getYaw() == location.getYaw() && getPitch() == location.getPitch())));
+    }
+
+    /**
+     * Loads a location from the passed string.
+     *
+     * @param locationString The string to read.
+     */
+    public void load(String locationString) {
+        if (locationString == null || locationString.isEmpty() || !locationString.contains(",")) return;
+        String[] args = locationString.split(",");
+        setWorldName(args[0]);
+        setX(Double.parseDouble(args[1]));
+        setY(Double.parseDouble(args[2]));
+        setZ(Double.parseDouble(args[3]));
+        setYaw(Float.parseFloat(args[4]));
+        setPitch(Float.parseFloat(args[5]));
     }
 
     public String getWorldName() {
@@ -112,13 +153,9 @@ public class SerializableLocation {
         this.pitch = pitch;
     }
 
-    /**
-     * Gets the location in a string format.
-     *
-     * @return The converted string format
-     */
     @Override
     public String toString() {
-        return getWorldName() + ":" + getX() + "," + getY() + "," + getZ() + "," + getYaw() + "," + getPitch();
+        return (getWorldName() + "," + getX() + "," + getY() + "," + getZ() + "," + getYaw() + "," + getPitch());
     }
+
 }

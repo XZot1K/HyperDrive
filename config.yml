@@ -21,7 +21,7 @@ general-section:
   # If this option is enabled, Vault will be hooked into and be used for item which require a fee.
   use-vault: false
   # If this option is enabled, plugin will use an permission-based fee system like "hyperdrive.[itemId].[fee Expression]"
-  # An Example: "hyperdrive.create-warps.100*n" means when a player create warp it will cost warpcount*100
+  # An Example: "hyperdrive.create-warp.100*n" means when a player create warp it will cost warpcount*100
   use-permission-based-cost: false
   # If this option is enabled, the console will be notified every time the warps are automatically saved.
   auto-save-log: true
@@ -148,6 +148,11 @@ random-teleport-section:
   delay-bar-message: "&eRandom teleportation will engage in: &r{progress} &e- &a{duration-left} &eSeconds"
   # This is the message display on the player's action bar when a random teleportation process has begun (Set to "" to disable).
   start-bar-message: "&eRandom teleportation will engage in &a{duration} &eseconds."
+  # Custom borders can be set here for specific worlds, other worlds not found in the list will use the vanilla border.
+  # Format: "<world>:<border-size>:<center-x>,<center-z>"
+  # (Note: The border-size will be divided by 2 to obtain the radius)
+  custom-borders:
+    - "example_world:15000:0,0"
   # These are the worlds where RTP will not be allowed to take a player.
   forbidden-worlds:
     - "world_the_end"

@@ -20,6 +20,7 @@ import xzot1k.plugins.hd.api.events.WarpEvent;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
 import xzot1k.plugins.hd.api.objects.Warp;
 import xzot1k.plugins.hd.core.internals.Animation;
+import xzot1k.plugins.hd.core.internals.hooks.HookChecker;
 import xzot1k.plugins.hd.core.objects.Destination;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
 import xzot1k.plugins.hd.core.objects.TeleportTemp;
@@ -64,27 +65,27 @@ public class TeleportationHandler implements Runnable {
                 final TeleportTemp teleportTemp = getTeleportTempMap().get(playerUniqueId);
                 if (teleportTemp != null) {
                     Warp warp = null;
-                    if (teleportTemp.getTeleportValue() != null)
-                        warp = getPluginInstance().getManager().getWarp(teleportTemp.getTeleportValue());
-
                     if (teleportTemp.getSeconds() > 0) {
                         teleportTemp.setSeconds(teleportTemp.getSeconds() - 1);
                         if (teleportTemp.getSeconds() <= 5 && teleportTemp.getSeconds() > 0) {
-                            if (warp != null && teleportTemp.getTeleportTypeId().equalsIgnoreCase("warp")) {
-                                if (delayTitle != null && delaySubTitle != null)
-                                    getPluginInstance().getManager().sendTitle(player, delayTitle.replace("{warp}", warp.getWarpName()).replace("{duration}", String.valueOf(teleportTemp.getSeconds())),
-                                            delaySubTitle.replace("{warp}", warp.getWarpName()).replace("{duration}", String.valueOf(teleportTemp.getSeconds())), 0, 5, 0);
+                            if (teleportTemp.getTeleportValue() != null && teleportTemp.getTeleportTypeId().equalsIgnoreCase("warp")) {
+                                warp = getPluginInstance().getManager().getWarp(teleportTemp.getTeleportValue());
+                                if (warp != null) {
+                                    if (delayTitle != null && delaySubTitle != null)
+                                        getPluginInstance().getManager().sendTitle(player, delayTitle.replace("{warp}", warp.getWarpName()).replace("{duration}", String.valueOf(teleportTemp.getSeconds())),
+                                                delaySubTitle.replace("{warp}", warp.getWarpName()).replace("{duration}", String.valueOf(teleportTemp.getSeconds())), 0, 5, 0);
 
-                                int delayDuration = getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration");
+                                    int delayDuration = getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration");
 
-                                String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.delay-bar-message");
-                                if (actionMessage != null && !actionMessage.isEmpty())
-                                    getPluginInstance().getManager().sendActionBar(player, actionMessage
-                                            .replace("{progress}", getPluginInstance().getManager().getProgressionBar(teleportTemp.getSeconds(), delayDuration, 10))
-                                            .replace("{duration}", String.valueOf(delayDuration)).replace("{duration-left}", String.valueOf(teleportTemp.getSeconds()))
-                                            .replace("{warp}", warp.getWarpName()));
+                                    String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.delay-bar-message");
+                                    if (actionMessage != null && !actionMessage.isEmpty())
+                                        getPluginInstance().getManager().sendActionBar(player, actionMessage
+                                                .replace("{progress}", getPluginInstance().getManager().getProgressionBar(teleportTemp.getSeconds(), delayDuration, 10))
+                                                .replace("{duration}", String.valueOf(delayDuration)).replace("{duration-left}", String.valueOf(teleportTemp.getSeconds()))
+                                                .replace("{warp}", warp.getWarpName()));
 
-                                getPluginInstance().getManager().sendCustomMessage("teleportation-delay", player, "{warp}:" + warp.getWarpName(), "{duration}:" + teleportTemp.getSeconds());
+                                    getPluginInstance().getManager().sendCustomMessage("teleportation-delay", player, "{warp}:" + warp.getWarpName(), "{duration}:" + teleportTemp.getSeconds());
+                                }
                             } else if (teleportTemp.getTeleportTypeId().equalsIgnoreCase("rtp")) {
                                 if (randomTeleportDelayTitle != null && randomTeleportSubDelayTitle != null)
                                     getPluginInstance().getManager().sendTitle(player, randomTeleportDelayTitle.replace("{duration}", String.valueOf(teleportTemp.getSeconds())),
@@ -107,6 +108,7 @@ public class TeleportationHandler implements Runnable {
                         switch (teleportTemp.getTeleportTypeId().toLowerCase()) {
                             case "warp":
                                 if (teleportTemp.getTeleportValue() != null) {
+                                    warp = getPluginInstance().getManager().getWarp(teleportTemp.getTeleportValue());
                                     if (warp != null && warp.getWarpLocation() != null) {
                                         final Location warpLocation = warp.getWarpLocation().asBukkitLocation();
                                         WarpEvent warpEvent = new WarpEvent(warpLocation, player);
@@ -117,7 +119,7 @@ public class TeleportationHandler implements Runnable {
                                             return;
                                         }
 
-                                        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warpLocation, false)) {
+                                        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warpLocation, HookChecker.CheckType.WARP)) {
                                             getAnimation().stopActiveAnimation(player);
                                             getTeleportTempMap().remove(playerUniqueId);
                                             getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
@@ -297,11 +299,7 @@ public class TeleportationHandler implements Runnable {
 
     private void operateTeleportation(TeleportTemp teleportTemp, String teleportId, Player player, UUID playerUniqueId) {
         if (teleportTemp.getTeleportValue() != null) {
-
-            SerializableLocation serializableLocation = getPluginInstance().getManager().getLocationFromString(teleportTemp.getTeleportValue());
-            if (serializableLocation == null) return;
-
-            final Location toLocation = serializableLocation.asBukkitLocation();
+            final Location toLocation = new SerializableLocation(teleportTemp.getTeleportValue()).asBukkitLocation();
             if (toLocation == null) return;
 
             BasicTeleportationEvent basicTeleportationEvent = new BasicTeleportationEvent(toLocation, player);
@@ -332,10 +330,10 @@ public class TeleportationHandler implements Runnable {
             }
 
             if (getPluginInstance().getTeleportationCommands() != null && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null)
-                if (!getPluginInstance().getTeleportationCommands().getSpawnLocation().getWorldName().equals(serializableLocation.getWorldName())
-                        && !(getPluginInstance().getTeleportationCommands().getSpawnLocation().getX() != serializableLocation.getX()
-                        || getPluginInstance().getTeleportationCommands().getSpawnLocation().getY() != serializableLocation.getY())
-                        || getPluginInstance().getTeleportationCommands().getSpawnLocation().getZ() != serializableLocation.getZ())
+                if (!getPluginInstance().getTeleportationCommands().getSpawnLocation().getWorldName().equals(toLocation.getWorld().getName())
+                        && !(getPluginInstance().getTeleportationCommands().getSpawnLocation().getX() != toLocation.getX()
+                        || getPluginInstance().getTeleportationCommands().getSpawnLocation().getY() != toLocation.getY()
+                        || getPluginInstance().getTeleportationCommands().getSpawnLocation().getZ() != toLocation.getZ()))
                     getPluginInstance().getManager().sendCustomMessage("basic-teleportation-engaged", player,
                             "{world}:" + toLocation.getWorld().getName(), "{x}:" + toLocation.getBlockX(), "{y}:" + toLocation.getBlockY(),
                             "{z}:" + toLocation.getBlockZ(), "{duration}:" + teleportTemp.getSeconds());

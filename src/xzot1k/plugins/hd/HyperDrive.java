@@ -56,8 +56,8 @@ public class HyperDrive extends JavaPlugin {
     private boolean asyncChunkMethodExists;
     private int teleportationHandlerTaskId, autoSaveTaskId, crossServerTaskId;
 
-    private FileConfiguration langConfig, menusConfig;
-    private File langFile, menusFile;
+    private FileConfiguration langConfig, menusConfig, dataConfig;
+    private File langFile, menusFile, dataFile;
 
     private VaultHandler vaultHandler;
     private WorldGuardHandler worldGuardHandler;
@@ -229,9 +229,7 @@ public class HyperDrive extends JavaPlugin {
     @Override
     public void onDisable() {
         getServer().getScheduler().cancelTasks(this);
-
         saveWarps(false);
-        saveData();
 
         if (getDatabaseConnection() != null)
             try {
@@ -978,33 +976,6 @@ public class HyperDrive extends JavaPlugin {
         }
     }
 
-    private synchronized void saveData() {
-        File file = new File(getDataFolder(), "/data.yml");
-        FileConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-        try {
-            if (getTeleportationCommands().getSpawnLocation() != null) {
-                yaml.set("spawn.world", getTeleportationCommands().getSpawnLocation().getWorldName());
-                yaml.set("spawn.x", getTeleportationCommands().getSpawnLocation().getX());
-                yaml.set("spawn.y", getTeleportationCommands().getSpawnLocation().getY());
-                yaml.set("spawn.z", getTeleportationCommands().getSpawnLocation().getZ());
-                yaml.set("spawn.yaw", getTeleportationCommands().getSpawnLocation().getYaw());
-                yaml.set("spawn.pitch", getTeleportationCommands().getSpawnLocation().getPitch());
-            } else yaml.set("spawn", null);
-
-            if (getTeleportationCommands().getFirstJoinLocation() != null) {
-                yaml.set("first-join-spawn.world", getTeleportationCommands().getFirstJoinLocation().getWorldName());
-                yaml.set("first-join-spawn.x", getTeleportationCommands().getFirstJoinLocation().getX());
-                yaml.set("first-join-spawn.y", getTeleportationCommands().getFirstJoinLocation().getY());
-                yaml.set("first-join-spawn.z", getTeleportationCommands().getFirstJoinLocation().getZ());
-                yaml.set("first-join-spawn.yaw", getTeleportationCommands().getFirstJoinLocation().getYaw());
-                yaml.set("first-join-spawn.pitch", getTeleportationCommands().getFirstJoinLocation().getPitch());
-            } else yaml.set("first-join-spawn", null);
-
-            yaml.save(file);
-        } catch (IOException ignored) {
-        }
-    }
-
     public void saveWarps(boolean async) {
         long startTime = System.currentTimeMillis();
         for (Warp warp : getManager().getWarpMap().values()) warp.save(async);
@@ -1175,6 +1146,9 @@ public class HyperDrive extends JavaPlugin {
                 log(Level.WARNING, e.getMessage());
             }
         }
+
+        if (dataFile == null) dataFile = new File(getDataFolder(), "data.yml");
+        dataConfig = YamlConfiguration.loadConfiguration(dataFile);
     }
 
     /**
@@ -1195,6 +1169,16 @@ public class HyperDrive extends JavaPlugin {
     public FileConfiguration getMenusConfig() {
         if (menusConfig == null) reloadConfigs();
         return menusConfig;
+    }
+
+    /**
+     * Gets the data file configuration.
+     *
+     * @return The FileConfiguration found.
+     */
+    public FileConfiguration getDataConfig() {
+        if (dataConfig == null) reloadConfigs();
+        return dataConfig;
     }
 
     /**
@@ -1223,6 +1207,15 @@ public class HyperDrive extends JavaPlugin {
         if (menusConfig == null || menusFile == null) return;
         try {
             getMenusConfig().save(menusFile);
+        } catch (IOException e) {
+            log(Level.WARNING, e.getMessage());
+        }
+    }
+
+    public void saveDataConfig() {
+        if (dataConfig == null || dataFile == null) return;
+        try {
+            getDataConfig().save(dataFile);
         } catch (IOException e) {
             log(Level.WARNING, e.getMessage());
         }

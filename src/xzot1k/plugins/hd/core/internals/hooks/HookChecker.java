@@ -7,6 +7,10 @@ package xzot1k.plugins.hd.core.internals.hooks;
 import com.bekvon.bukkit.residence.Residence;
 import com.bekvon.bukkit.residence.protection.ClaimedResidence;
 import com.griefdefender.api.GriefDefender;
+import com.griefdefender.api.Subject;
+import com.griefdefender.api.Tristate;
+import com.griefdefender.api.permission.flag.Flag;
+import com.griefdefender.api.registry.CatalogRegistryModule;
 import com.massivecraft.factions.Board;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.FPlayer;
@@ -24,11 +28,15 @@ import com.wasteofplastic.askyblock.Island;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.dynmap.DynmapAPI;
+import org.dynmap.markers.MarkerSet;
 import xzot1k.plugins.hd.HyperDrive;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class HookChecker {
 
@@ -36,9 +44,19 @@ public class HookChecker {
     public final boolean factionsInstalled, factionsUUID, townyInstalled, griefPreventionInstalled, griefDefenderInstalled,
             aSkyBlockInstalled, residenceInstalled, prismaInstalled, cmiInstalled;
     private Plugin essentialsPlugin;
+    public DynmapAPI dynmapAPI;
+    public MarkerSet markerset;
+    private Flag HYPERDRIVE_PROTECTION;
 
     public HookChecker(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
+
+        /*Plugin dmAPI = getPluginInstance().getServer().getPluginManager().getPlugin("dynmap");
+        if (dmAPI != null) {
+            dynmapAPI = (DynmapAPI) dmAPI;
+            markerset = dynmapAPI.getMarkerAPI().createMarkerSet("xzot1k.plugins.hd.HyperDrive", "Warps",
+                    dynmapAPI.getMarkerAPI().getMarkerIcons(), true);
+        }*/
 
         Plugin factionsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("Factions");
         factionsInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("Factions") != null);
@@ -55,25 +73,32 @@ public class HookChecker {
         essentialsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("Essentials");
         if (essentialsPlugin == null)
             essentialsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("EssentialsEx");
+
+        if (griefDefenderInstalled) {
+            HYPERDRIVE_PROTECTION = Flag.builder().id("hyperdrive:protection").name("hd-protect")
+                    .permission("griefdefender.flag.hyperdrive.hd-protect").build();
+            Optional<CatalogRegistryModule<Flag>> catalogRegistryModule = GriefDefender.getRegistry().getRegistryModuleFor(Flag.class);
+            catalogRegistryModule.ifPresent(flagCatalogRegistryModule -> flagCatalogRegistryModule.registerCustomType(HYPERDRIVE_PROTECTION));
+        }
     }
 
     /**
      * Checks to see if the location is safe and doesn't collide with supported plugin's hook systems.
      *
-     * @param player          The player to check.
-     * @param location        The location to check safety for.
-     * @param checkWorldGuard Checks if the location is in a region.
+     * @param player    The player to check.
+     * @param location  The location to check safety for.
+     * @param checkType Tells he function what to handle checks for.
      * @return Whether it is safe.
      */
-    public boolean isLocationHookSafe(Player player, Location location, boolean checkWorldGuard) {
+    public boolean isLocationHookSafe(Player player, Location location, CheckType checkType) {
         if (player.hasPermission("hyperdrive.admin.bypass")) return true;
 
-        if (checkWorldGuard && getPluginInstance().getWorldGuardHandler() != null
+        if (checkType != CheckType.WARP && getPluginInstance().getWorldGuardHandler() != null
                 && !getPluginInstance().getWorldGuardHandler().passedWorldGuardHook(location))
             return false;
 
         final boolean ownershipCheck = getPluginInstance().getConfig().getBoolean("claim-ownership-checks");
-        if (factionsInstalled) {
+        if (factionsInstalled && checkType != CheckType.WARP) {
             if (!factionsUUID) {
                 com.massivecraft.factions.entity.Faction factionAtLocation = BoardColl.get().getFactionAt(PS.valueOf(location));
                 MPlayer mPlayer = MPlayer.get(player);
@@ -92,26 +117,32 @@ public class HookChecker {
             }
         }
 
-        if (aSkyBlockInstalled) {
+        if (aSkyBlockInstalled && checkType != CheckType.WARP) {
             Island island = ASkyBlockAPI.getInstance().getIslandAt(location);
             if (island != null && (!ownershipCheck || (!island.getOwner().toString().equals(player.getUniqueId().toString()) && !island.getMembers().contains(player.getUniqueId()))))
                 return false;
         }
 
-        if (griefPreventionInstalled) {
+        if (griefPreventionInstalled && checkType != CheckType.WARP) {
             Claim claimAtLocation = GriefPrevention.instance.dataStore.getClaimAt(location, true, null);
             if (claimAtLocation != null && (!ownershipCheck || !claimAtLocation.getOwnerName().equalsIgnoreCase(player.getName())))
                 return false;
         }
 
-        if (griefDefenderInstalled) {
+        final World world = player.getWorld();
+        if (griefDefenderInstalled && checkType != CheckType.WARP && GriefDefender.getCore().isEnabled(world.getUID())) {
             com.griefdefender.api.claim.Claim claimAtLocation = GriefDefender.getCore().getClaimManager(Objects.requireNonNull(location.getWorld()).getUID())
                     .getClaimAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
             if (claimAtLocation != null && (!ownershipCheck || (!claimAtLocation.getOwnerUniqueId().equals(player.getUniqueId())
                     && !claimAtLocation.getOwnerUniqueId().equals(player.getUniqueId())))) return false;
+            final Subject subject = GriefDefender.getCore().getSubject(player.getUniqueId().toString());
+            final Tristate result = Objects.requireNonNull(claimAtLocation).getActiveFlagPermissionValue(HYPERDRIVE_PROTECTION, subject, null, true);
+
+            if (!claimAtLocation.isWilderness() && !(result == Tristate.FALSE) && !claimAtLocation.getUserTrusts().contains(player.getUniqueId()))
+                return false;
         }
 
-        if (townyInstalled) {
+        if (townyInstalled && checkType != CheckType.WARP) {
             try {
                 Town town = WorldCoord.parseWorldCoord(location).getTownBlock().getTown();
                 if (town != null) {
@@ -123,9 +154,9 @@ public class HookChecker {
             }
         }
 
-        if (residenceInstalled) {
+        if (residenceInstalled && checkType != CheckType.WARP) {
             ClaimedResidence res = Residence.getInstance().getResidenceManager().getByLoc(location);
-            return (res == null || (ownershipCheck && res.isOwner(player)));
+            return (res == null || (ownershipCheck && res.isOwner(player))); // If false is returned, the hook failed and teleportation is blocked.
         }
 
         return true;
@@ -142,6 +173,22 @@ public class HookChecker {
 
     public Plugin getEssentialsPlugin() {
         return essentialsPlugin;
+    }
+
+    public DynmapAPI getDynmapAPI() {
+        return dynmapAPI;
+    }
+
+    public MarkerSet getMarkerSet() {
+        return markerset;
+    }
+
+    public void setMarkerSet(MarkerSet markerset) {
+        this.markerset = markerset;
+    }
+
+    public enum CheckType {
+        CREATION, WARP, RTP
     }
 
 }

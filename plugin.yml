@@ -1,12 +1,12 @@
 name: HyperDrive
-version: 5.4.9
+version: 5.5.1 (Build 1)
 api-version: 1.13
 author: XZot1K
 main: xzot1k.plugins.hd.HyperDrive
 description: A high class warp plugin allowing you and your players to warp through space and time with high control.
 load: POSTWORLD
 softdepend: [ Essentials, Vault, WorldGuard, Factions, ASkyBlock, Towny, GriefPrevention, Residence, MultiWorld, Multiverse-Core,
-              Prisma, PlaceholderAPI, CMI, HeadDatabase, PlayerWorldsPro ]
+              Prisma, PlaceholderAPI, CMI, HeadDatabase, PlayerWorldsPro, GriefDefender ]
 
 commands:
   hyperdrive:

@@ -459,18 +459,34 @@ public class Manager {
     }
 
     @SuppressWarnings("deprecation")
-    private ItemStack getPlayerHead(String playerName, String displayName, List<String> lore, int amount) {
-        boolean isNew = !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
+    private ItemStack getPlayerHead(String headId, String displayName, List<String> lore, int amount) {
+        final boolean isNew = !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
                 || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9")
-                || getPluginInstance().getServerVersion().startsWith("v1_8"));
+                || getPluginInstance().getServerVersion().startsWith("v1_8")), nameInvalid = (headId != null && !headId.equalsIgnoreCase(""));
         ItemStack itemStack;
+
+        if (headId != null && !headId.isEmpty()) {
+            String materialName = headId.toUpperCase().replace(" ", "_").replace("-", "_");
+            if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                final String[] materialNameArgs = materialName.split(":");
+                itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
+                ItemMeta itemMeta = itemStack.getItemMeta();
+                if (itemMeta != null) {
+                    itemMeta.setDisplayName(displayName);
+                    itemMeta.setLore(lore);
+                    itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    itemStack.setItemMeta(itemMeta);
+                }
+                return itemStack;
+            }
+        }
 
         if (isNew) {
             itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), amount);
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
             if (skullMeta != null) {
-                if (playerName != null && !playerName.equalsIgnoreCase("")) {
-                    OfflinePlayer player = getPluginInstance().getServer().getOfflinePlayer(playerName);
+                if (nameInvalid) {
+                    OfflinePlayer player = getPluginInstance().getServer().getOfflinePlayer(headId);
                     skullMeta.setOwningPlayer(player);
                 }
 
@@ -484,8 +500,8 @@ public class Manager {
                     (short) org.bukkit.SkullType.PLAYER.ordinal());
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
             if (skullMeta != null) {
-                if (playerName != null && !playerName.equalsIgnoreCase(""))
-                    skullMeta.setOwner(playerName);
+                if (headId != null && !headId.equalsIgnoreCase(""))
+                    skullMeta.setOwner(headId);
                 skullMeta.setDisplayName(displayName);
                 skullMeta.setLore(lore);
                 skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);

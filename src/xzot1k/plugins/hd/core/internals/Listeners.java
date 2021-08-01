@@ -26,14 +26,15 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.util.Vector;
 import org.bukkit.permissions.PermissionAttachmentInfo;
+import org.bukkit.util.Vector;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.events.MenuOpenEvent;
 import xzot1k.plugins.hd.api.events.RandomTeleportEvent;
 import xzot1k.plugins.hd.api.events.WarpEvent;
 import xzot1k.plugins.hd.api.objects.Warp;
+import xzot1k.plugins.hd.core.internals.hooks.HookChecker;
 import xzot1k.plugins.hd.core.objects.Destination;
 import xzot1k.plugins.hd.core.objects.GroupTemp;
 import xzot1k.plugins.hd.core.objects.InteractionModule;
@@ -124,7 +125,7 @@ public class Listeners implements Listener {
                 && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         switch (interactionModule.getInteractionId().toLowerCase()) {
             case "create-warp":
-                if (!getPluginInstance().getHookChecker().isLocationHookSafe(e.getPlayer(), e.getPlayer().getLocation(), false)) {
+                if (!getPluginInstance().getHookChecker().isLocationHookSafe(e.getPlayer(), e.getPlayer().getLocation(), HookChecker.CheckType.CREATION)) {
                     getPluginInstance().getManager().sendCustomMessage("not-hook-safe", e.getPlayer());
                     break;
                 }
@@ -980,7 +981,6 @@ public class Listeners implements Listener {
             final ClickType clickType = e.getClick();
             final String warpName = Objects.requireNonNull(e.getCurrentItem()).getItemMeta().getDisplayName();
             Warp warp = getPluginInstance().getManager().getWarp(warpName);
-
             if (warp != null) {
                 String soundName = getPluginInstance().getConfig().getString("warp-icon-section.click-sound");
                 if (soundName != null && !soundName.equalsIgnoreCase(""))
@@ -1007,7 +1007,7 @@ public class Listeners implements Listener {
                                 return;
                             }
 
-                            if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warp.getWarpLocation().asBukkitLocation(), false)) {
+                            if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warp.getWarpLocation().asBukkitLocation(), HookChecker.CheckType.WARP)) {
                                 getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
                                 return;
                             }
@@ -1065,7 +1065,7 @@ public class Listeners implements Listener {
                                 return;
                             }
 
-                            if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warp.getWarpLocation().asBukkitLocation(), false)) {
+                            if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, warp.getWarpLocation().asBukkitLocation(), HookChecker.CheckType.WARP)) {
                                 getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
                                 return;
                             }
@@ -1149,6 +1149,7 @@ public class Listeners implements Listener {
                         break;
                 }
             }
+
             return;
         }
 
@@ -1230,7 +1231,7 @@ public class Listeners implements Listener {
                             return;
                         }
 
-                        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation(), false)) {
+                        if (!getPluginInstance().getHookChecker().isLocationHookSafe(player, player.getLocation(), HookChecker.CheckType.CREATION)) {
                             getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player);
                             break;
                         }

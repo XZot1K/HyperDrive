@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.events.RandomTeleportEvent;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
+import xzot1k.plugins.hd.core.internals.hooks.HookChecker;
 import xzot1k.plugins.hd.core.objects.Destination;
 
 import java.util.List;
@@ -21,7 +22,8 @@ public class RandomTeleportation implements Runnable {
 
     private HyperDrive pluginInstance;
     private List<String> biomeBlackList;
-    private int attempts, maxAttempts, boundsRadius;
+    private int attempts, maxAttempts;
+    private long boundsRadius;
     private boolean onlyUpdateDestination;
     private String teleportSound;
 
@@ -39,8 +41,27 @@ public class RandomTeleportation implements Runnable {
                 .toUpperCase().replace(" ", "_").replace("-", "_"));
         setAttempts(0);
 
+        final String customBorderString = getCustomBorderString(world);
+        if (customBorderString != null && customBorderString.contains(":")) {
+            final String[] borderArgs = customBorderString.split(":");
+            if (borderArgs.length >= 3) {
+                final String size = borderArgs[1], center = borderArgs[2];
+                if (!getPluginInstance().getManager().isNotNumeric(size) && center.contains(",")) {
+                    final String[] centerArgs = center.split(",");
+                    final long foundSize = Long.parseLong(size);
+                    if (!getPluginInstance().getManager().isNotNumeric(centerArgs[0])
+                            && !getPluginInstance().getManager().isNotNumeric(centerArgs[1])) {
+                        final int x = Integer.parseInt(centerArgs[0]), z = Integer.parseInt(centerArgs[1]);
+                        setBoundsRadius(foundSize);
+                        setBaseLocation(new Location(world, x, 0, z));
+                        return;
+                    }
+                }
+            }
+        }
+
         WorldBorder worldBorder = world.getWorldBorder();
-        setBoundsRadius((int) worldBorder.getSize());
+        setBoundsRadius((long) worldBorder.getSize());
         if ((worldBorder.getSize() / 2) < getBoundsRadius()) setBoundsRadius((int) (worldBorder.getSize() / 2));
         setBaseLocation(worldBorder.getCenter());
     }
@@ -54,8 +75,8 @@ public class RandomTeleportation implements Runnable {
         while ((getMaxAttempts() >= 0 && getAttempts() < getMaxAttempts())) {
             setAttempts(getAttempts() + 1);
 
-            int minX = (getBaseLocation().getBlockX() - getBoundsRadius()), maxX = (getBaseLocation().getBlockX() + getBoundsRadius()),
-                    minZ = (getBaseLocation().getBlockZ() - getBoundsRadius()), maxZ = (getBaseLocation().getBlockZ() + getBoundsRadius()),
+            int minX = (int) (getBaseLocation().getBlockX() - getBoundsRadius()), maxX = (int) (getBaseLocation().getBlockX() + getBoundsRadius()),
+                    minZ = (int) (getBaseLocation().getBlockZ() - getBoundsRadius()), maxZ = (int) (getBaseLocation().getBlockZ() + getBoundsRadius()),
                     xAddition = getPluginInstance().getTeleportationHandler().getRandomInRange(minX, maxX),
                     zAddition = getPluginInstance().getTeleportationHandler().getRandomInRange(minZ, maxZ),
                     x = (int) (getBaseLocation().getX() + xAddition), z = (int) (getBaseLocation().getZ() + zAddition);
@@ -85,7 +106,7 @@ public class RandomTeleportation implements Runnable {
                     break;
                 }
 
-            if (isBlockedBiome || !getPluginInstance().getHookChecker().isLocationHookSafe(getPlayer(), foundBlock.getLocation().clone(), true)
+            if (isBlockedBiome || !getPluginInstance().getHookChecker().isLocationHookSafe(getPlayer(), foundBlock.getLocation().clone(), HookChecker.CheckType.RTP)
                     || getPluginInstance().getManager().isForbiddenMaterial(foundBlock.getType(), foundBlock.getData()))
                 continue;
 
@@ -141,6 +162,12 @@ public class RandomTeleportation implements Runnable {
             getPluginInstance().getManager().clearCooldown(getPlayer(), "rtp");
             getPluginInstance().getTeleportationHandler().getRandomTeleportingPlayers().remove(getPlayer().getUniqueId());
         }
+    }
+
+    private String getCustomBorderString(World world) {
+        for (String line : getPluginInstance().getConfig().getStringList("random-teleport-section.custom-borders"))
+            if (line.toLowerCase().startsWith(world.getName().toLowerCase())) return line;
+        return null;
     }
 
     private int getHighestY(World world, double x, double z) {
@@ -203,11 +230,11 @@ public class RandomTeleportation implements Runnable {
         this.teleportSound = teleportSound;
     }
 
-    public int getBoundsRadius() {
+    public long getBoundsRadius() {
         return boundsRadius;
     }
 
-    private void setBoundsRadius(int boundsRadius) {
+    private void setBoundsRadius(long boundsRadius) {
         this.boundsRadius = boundsRadius;
     }
 
