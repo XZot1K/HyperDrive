@@ -70,20 +70,20 @@ general-section:
   sign-header-color: "&d"
   # This is a list of all commands that will be ran anytime a warp is used by any means.
   # Avoid using slashes (/) and always end a command with either :PLAYER or :CONSOLE to determine how it is sent.
-  global-warp-commands: []
+  global-warp-commands: [ ]
   # Here you can implement unlimited custom aliases that run commands. Use the format <alias:command:sender>.
   # You can use the placeholder {player}. (Note: Set the sender to PLAYER for the command to be re-sent as a
   # player and CONSOLE to send as console. Don't use the initial command / if it is set to CONSOLE)
-  custom-alias-commands: []
+  custom-alias-commands: [ ]
   # Worlds found in this list will not allow warp creation.
-  world-blacklist: []
+  world-blacklist: [ ]
 
 # Here is where filters can be customized to remove unwanted symbols or words from use in the plugin's features.
 filter-section:
   # Strings within the global filter will be remove from warp names, descriptions, and other similar textual features. (Case sensitive)
   # (Note: Phrases can be implemented into this list as well. The list can also be changed to a vertical format like
   # other lists in the configuration.)
-  global-filter: ["fuck", "shit", "cunt", "fag", "faggot", "bitch", "dick", "damn", "www.", ".com", ".net"]
+  global-filter: [ "fuck", "shit", "cunt", "fag", "faggot", "bitch", "dick", "damn", "www.", ".com", ".net" ]
   # Materials in this list will be avoided while a player is undergoing teleportation. If any of these material are encountered, the teleportation will return NOT SAFE.
   # (NOTE: The material name can be generalized, for example, the value "leaves" will detect all materials that have that value in their name)
   # This format is what needs to be followed to coordinate specific data values: <material>:<durability>

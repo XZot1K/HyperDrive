@@ -8,7 +8,7 @@ list-menu-section:
   size: 54
   # These are the slots that will be filled with warps from each page. To have this menu contain no warps, make sure this list is empty.
   # (Note: This list must only contain slots that are logical with the size value above.)
-  warp-slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+  warp-slots: [ 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34 ]
   # Warps with a traffic level above this value will be the warps added into the featured warps category/sort. They will then be sorted from highest to lowest.
   traffic-threshold: 100
   # This is the default filter status the filter will start on. (Available Indexes: [0 (Public), 1 (Private), 2 (Admin), 3 (Owned), 4 (Featured)])
@@ -192,7 +192,7 @@ list-menu-section:
       usage-cost: 0
       permission: ""
       display-name: ""
-      lore: []
+      lore: [ ]
       slot: 0
       use-player-head: false
       player-head-name: ""
@@ -665,7 +665,7 @@ edit-menu-section:
       usage-cost: 0
       permission: ""
       display-name: ""
-      lore: []
+      lore: [ ]
       slot: 0
       use-player-head: false
       player-head-name: ""
@@ -681,7 +681,7 @@ ps-menu-section:
   # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
   size: 54
   # These are the slots that will be filled with player heads from each page. (Note: This list must only contain slots that are logical with the size value above.)
-  player-slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+  player-slots: [ 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34 ]
   # This is the sound the player head will use when clicked. Set to "" to disable.
   # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
   # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
@@ -795,7 +795,7 @@ ps-menu-section:
       usage-cost: 0
       permission: ""
       display-name: ""
-      lore: []
+      lore: [ ]
       slot: 0
       use-player-head: false
       player-head-name: ""
@@ -958,7 +958,7 @@ like-menu-section:
       usage-cost: 0
       permission: ""
       display-name: ""
-      lore: []
+      lore: [ ]
       slot: 0
       use-player-head: false
       player-head-name: ""
@@ -976,7 +976,7 @@ custom-menus-section:
     size: 27
     # These are the slots that will be filled with warps from each page. To have a menu that contains no warps make sure this list is empty.
     # (Note: This list must only contain slots that are logical with the size value above.)
-    warp-slots: []
+    warp-slots: [ ]
     # Under this section unlimited fully customizable items can be created and inserted into the custom menu.
     items:
     # This is the item's id which is used to define each individual item. With this feature unlimited
