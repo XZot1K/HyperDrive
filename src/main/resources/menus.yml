@@ -1,0 +1,1027 @@
+## Inside this file is where each and every GUI can be full customized. ##
+
+# This is where the list menu can be fully customized.
+list-menu-section:
+  # This is the title of the menu. (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+  title: "&c&lWarps"
+  # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+  size: 54
+  # These are the slots that will be filled with warps from each page. To have this menu contain no warps, make sure this list is empty.
+  # (Note: This list must only contain slots that are logical with the size value above.)
+  warp-slots: [ 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34 ]
+  # Warps with a traffic level above this value will be the warps added into the featured warps category/sort. They will then be sorted from highest to lowest.
+  traffic-threshold: 100
+  # This is the default filter status the filter will start on. (Available Indexes: [0 (Public), 1 (Private), 2 (Admin), 3 (Owned), 4 (Featured)])
+  default-filter-index: 0
+  # This is the format that replaces the second to final status in the filter-switch, which only loads warps that are owned by the player.
+  own-status-format: "Assisted or Owned"
+  # This is the format that replaces the first status in the filter-switch, which only loads warps with the 'Public' status.
+  public-status-format: "Public"
+  # This is the format that replaces the second status in the filter-switch, which only loads warps with the 'Private' status.
+  private-status-format: "Private"
+  # This is the format that replaces the third status in the filter-switch, which only loads warps with the 'Admin' status.
+  # (Note: This filter will only show for those with proper permission)
+  admin-status-format: "Admin"
+  # This is the format that replaces the second status in the filter-switch, which only loads warps with the 'Private' status.
+  featured-status-format: "Featured"
+  # Under this section unlimited fully customizable items can be created and inserted into the menu.
+  items:
+    # This is the item's id which is used to define each individual item. With this feature unlimited
+    # items can be created and applied to the menu's interface.
+    next-page:
+      # Available click actions: "next-page", "previous-page", "filter-switch", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: "next-page"
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: ""
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "UI_BUTTON_CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 0
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
+      # This is the display name of the item. The display name can use placeholders which can be found below:
+      ###
+      # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
+      ###
+      display-name: "&cNext Page"
+      # This is the lore of the item.
+      lore:
+        - ""
+        - "&eClick to view the next page."
+      # This is the slot in the menu where the item will be placed.
+      slot: 53
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: true
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: "MHF_ArrowRight"
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "ARROW"
+      # This is the durability of the item's material.
+      durability: 0
+      # This is the stack count of the item.
+      amount: 1
+    # Starting here are all of the pre-generated items without comments.
+    previous-page:
+      click-action: "previous-page"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&cPrevious Page"
+      lore:
+        - ""
+        - "&eClick to view the previous page."
+      slot: 52
+      use-player-head: true
+      player-head-name: "MHF_ArrowLeft"
+      material: "ARROW"
+      durability: 0
+      amount: 1
+    create-warp:
+      click-action: "create-warp"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 25
+      permission: "hyperdrive.use.create"
+      display-name: "&aCreate New Warp"
+      lore:
+        - ""
+        - "&c&lWARNING: &r&7The cost of this action is &a$25&7."
+        - "&eClick to begin the process of creating a new warp."
+      slot: 48
+      use-player-head: false
+      player-head-name: ""
+      material: "PAPER"
+      durability: 0
+      amount: 1
+    filter-switch:
+      click-action: "filter-switch"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      # The {current-status} placeholder must be in the display name for a filter-switch.
+      display-name: "&dFilter: &e{current-status}"
+      lore:
+        - ""
+        - "&eClick to switch the warp status filter."
+      slot: 49
+      use-player-head: false
+      player-head-name: ""
+      material: "DIAMOND"
+      durability: 0
+      amount: 1
+    refresh:
+      click-action: "refresh"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&dRefresh"
+      lore:
+        - ""
+        - "&eClick to refresh the warp list."
+      slot: 51
+      use-player-head: false
+      player-head-name: ""
+      material: "RED_DYE"
+      durability: 0
+      amount: 1
+    random-teleport-solo:
+      click-action: "dispatch-command-player:rtp"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&cSolo Random Teleport"
+      lore:
+        - ""
+        - "&eClick to begin a solo random teleportation sequence."
+      slot: 45
+      use-player-head: false
+      player-head-name: ""
+      material: "COMPASS"
+      durability: 0
+      amount: 1
+    random-teleport-group:
+      click-action: "dispatch-command-player:grouprtp"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&cGroup Random Teleport"
+      lore:
+        - ""
+        - "&eClick to begin a group random teleportation sequence."
+      slot: 46
+      use-player-head: false
+      player-head-name: ""
+      material: "CLOCK"
+      durability: 0
+      amount: 1
+    background-items:
+      click-action: ""
+      click-message: ""
+      fill-empty-slots: true
+      click-sound: false
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: ""
+      lore: [ ]
+      slot: 0
+      use-player-head: false
+      player-head-name: ""
+      material: "BLACK_STAINED_GLASS_PANE"
+      durability: 15
+      amount: 1
+
+# This is where the edit menu can be fully customized.
+edit-menu-section:
+  # This is the title of the menu. The warp's name and display name color are automatically added to the end of the title.
+  # (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+  title: "&c&lEditing: &r"
+  # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+  size: 54
+  # Under this section unlimited fully customizable items can be created and inserted into the menu.
+  items:
+    rename-warp:
+      # Available click actions: "rename", "relocate", "change-status", "change-name-color", "edit-description", "give-ownership", "give-assistant", "remove-assistant",
+      # "add-to-list", "remove-from-list", "toggle-white-list", "change-usage-price", "add-command", "remove-command", "toggle-enchant-look", "change-animation-set", "change-icon-theme",
+      # "dispatch-command-console", "dispatch-command-player", "delete", and "open-custom-menu".
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: "rename"
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: ""
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "UI_BUTTON_CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 50
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
+      # This is the display name of the item. The display name can use placeholders which can be found below:
+      ###
+      # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
+      ###
+      display-name: "&dRename"
+      # This is the lore of the item.
+      # You can use the placeholder {warp-name} for the warp being edited's name and {usage-price} for the item's usage price.
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to rename the warp &a{warp-name}&e."
+      # This is the slot in the menu where the item will be placed.
+      slot: 10
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: false
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: ""
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "CLOCK"
+      # This is the durability of the item's material.
+      durability: 0
+      # This is the stack count of the item.
+      amount: 1
+    notify:
+      click-action: "notify"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 65
+      permission: ""
+      display-name: "&cToggle Notify"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&7Current Status: &e{notify-status}"
+        - ""
+        - "&eClick to toggle notifications&e."
+      slot: 19
+      use-player-head: false
+      player-head-name: ""
+      material: "PAPER"
+      durability: 0
+      amount: 1
+    change-status:
+      click-action: "change-status"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 65
+      permission: ""
+      display-name: "&bChange Status"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&7Current Status: &e{current-status}"
+        - "&7Next Status: &e{next-status}"
+        - ""
+        - "&eClick to change the status of the warp &a{warp-name}&e."
+      slot: 11
+      use-player-head: false
+      player-head-name: ""
+      material: "OAK_SIGN"
+      durability: 0
+      amount: 1
+    relocate-warp:
+      click-action: "relocate"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 125
+      permission: ""
+      display-name: "&cRelocate"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to relocate the warp"
+        - "&a{warp-name} &eto your current"
+        - "&elocation."
+      slot: 12
+      use-player-head: false
+      player-head-name: ""
+      material: "ENDER_PEARL"
+      durability: 0
+      amount: 1
+    give-ownership:
+      click-action: "give-ownership"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: ""
+      display-name: "&dGive Ownership"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to give ownership of the"
+        - "warp &a{warp-name} &eto another"
+        - "&eplayer."
+      slot: 13
+      use-player-head: false
+      player-head-name: ""
+      material: "TRIPWIRE_HOOK"
+      durability: 0
+      amount: 1
+    edit-description:
+      click-action: "edit-description"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 120
+      permission: ""
+      display-name: "&cEdit Description"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to edit the description"
+        - "&eof the warp &a{warp-name}&e."
+      slot: 14
+      use-player-head: false
+      player-head-name: ""
+      material: "BOOK"
+      durability: 0
+      amount: 1
+    change-usage-price:
+      click-action: "change-usage-price"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 120
+      permission: ""
+      display-name: "&cChange Usage Price"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to change the usage price"
+        - "&eof the warp &a{warp-name}&e."
+      slot: 15
+      use-player-head: false
+      player-head-name: ""
+      material: "GOLD_INGOT"
+      durability: 0
+      amount: 1
+    enchant-toggle:
+      click-action: "toggle-enchant-look"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: ""
+      display-name: "&bToggle Enchant Look"
+      lore:
+        - ""
+        - "&7Status: &e{enchant-status}"
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to toggle the whether the"
+        - "&ewarp icon looks enchanted or not."
+      slot: 16
+      use-player-head: false
+      player-head-name: ""
+      material: "ENCHANTED_BOOK"
+      durability: 0
+      amount: 1
+    give-assistant:
+      click-action: "give-assistant"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: ""
+      display-name: "&bGive Assistant"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to make a player an"
+        - "&eassistant of the warp &a{warp-name}&e."
+      slot: 37
+      use-player-head: false
+      player-head-name: ""
+      material: "GREEN_WOOL"
+      durability: 0
+      amount: 1
+    add-to-list:
+      click-action: "add-to-list"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: ""
+      display-name: "&aAdd To Player List"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&c&lINFO: &r&7The list functionality"
+        - "&7is determined by whether White List"
+        - "&7mode is activated. If disabled, the"
+        - "&7list will turn into a blacklist."
+        - ""
+        - "&eClick to add a player to the"
+        - "&elist of the warp &a{warp-name}&e."
+      slot: 38
+      use-player-head: false
+      player-head-name: ""
+      material: "GREEN_WOOL"
+      durability: 0
+      amount: 1
+    add-command:
+      click-action: "add-command"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: "hyperdrive.addcmd"
+      display-name: "&aAdd Command"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&c&lINFO: &r&7The warp commands enable"
+        - "&7and disable automatically based on"
+        - "&7if there are any commands in the warp's"
+        - "&7command list."
+        - ""
+        - "&eClick to add a command to the warp"
+        - "&a{warp-name}&e."
+      slot: 39
+      use-player-head: false
+      player-head-name: ""
+      material: "GREEN_WOOL"
+      durability: 0
+      amount: 1
+    remove-assistant:
+      click-action: "remove-assistant"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: ""
+      display-name: "&bRemove Assistant"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to remove assistant from"
+        - "&ea player for the warp &a{warp-name}&e."
+      slot: 41
+      use-player-head: false
+      player-head-name: ""
+      material: "RED_WOOL"
+      durability: 0
+      amount: 1
+    remove-from-list:
+      click-action: "remove-from-list"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: ""
+      display-name: "&cRemove From Player List"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&c&lINFO: &r&7The warp commands enable"
+        - "&7and disable automatically based on"
+        - "&7if there are any commands in the warp's"
+        - "&7command list."
+        - ""
+        - "&eClick to remove a player from the"
+        - "&elist of the warp &a{warp-name}&e."
+      slot: 42
+      use-player-head: false
+      player-head-name: ""
+      material: "RED_WOOL"
+      durability: 0
+      amount: 1
+    remove-command:
+      click-action: "remove-command"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: "hyperdrive.removecmd"
+      display-name: "&cRemove Command"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&c&lINFO: &r&7The warp commands enable"
+        - "&7and disable automatically based on"
+        - "&7if there are any commands in the warp's"
+        - "&7command list."
+        - ""
+        - "&eClick to add a command to the warp"
+        - "&a{warp-name}&e."
+      slot: 43
+      use-player-head: false
+      player-head-name: ""
+      material: "RED_WOOL"
+      durability: 0
+      amount: 1
+    change-icon:
+      click-action: "change-icon"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: ""
+      display-name: "&aChange Warp Icon"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to change the warp icon to"
+        - "&ethe item material you are holding."
+      slot: 21
+      use-player-head: false
+      player-head-name: ""
+      amount: 1
+    toggle-white-list:
+      click-action: "toggle-white-list"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: ""
+      display-name: "&aCycle List Type"
+      lore:
+        - ""
+        - "&7Usage Price: &e{usage-price}"
+        - "&7Next List Type: &e{next-list-type}"
+        - ""
+        - "&eClick to switch the player list"
+        - "&ebetween whitelist and blacklist."
+      slot: 20
+      use-player-head: false
+      player-head-name: ""
+      material: "PAPER"
+      durability: 0
+      amount: 1
+    change-animation-set:
+      click-action: "change-animation-set"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 80
+      permission: ""
+      display-name: "&aChange Animation Set"
+      lore:
+        - ""
+        - "&7Next Animation Set: &e{animation-set}"
+        - "&7Usage Price: &e{usage-price}"
+        - ""
+        - "&eClick to change the animation set of"
+        - "&ethe warp &a{warp-name}&e."
+      slot: 23
+      use-player-head: false
+      player-head-name: ""
+      material: "SLIME_BALL"
+      durability: 0
+      amount: 1
+    delete-warp:
+      click-action: "delete"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 50
+      permission: ""
+      display-name: "&cDelete Warp"
+      lore:
+        - ""
+        - "&eClick to delete the warp &a{warp-name}&e."
+      slot: 24
+      use-player-head: false
+      player-head-name: ""
+      material: "BARRIER"
+      durability: 0
+      amount: 1
+    return-list-menu:
+      click-action: "open-custom-menu:List Menu"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&cBack"
+      lore:
+        - ""
+        - "&eClick to return to the &bList Menu&e."
+      slot: 25
+      use-player-head: true
+      player-head-name: "MHF_ArrowLeft"
+      material: "ARROW"
+      durability: 0
+      amount: 1
+    background-items:
+      click-action: ""
+      click-message: ""
+      fill-empty-slots: true
+      click-sound: false
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: ""
+      lore: [ ]
+      slot: 0
+      use-player-head: false
+      player-head-name: ""
+      material: "BLACK_STAINED_GLASS_PANE"
+      durability: 0
+      amount: 1
+
+# This is where the player selection menu can be fully customized.
+ps-menu-section:
+  # This is the title of the menu. The warp's name and display name color are automatically added to the end of the title.
+  # (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+  title: "&d&lPlayer Selection"
+  # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+  size: 54
+  # These are the slots that will be filled with player heads from each page. (Note: This list must only contain slots that are logical with the size value above.)
+  player-slots: [ 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34 ]
+  # This is the sound the player head will use when clicked. Set to "" to disable.
+  # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+  # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+  player-click-sound: "UI_BUTTON_CLICK"
+  # This is the player head that is used when the player is not selected.
+  unselected-player-head:
+    # This is the display name of the player head item (Note: The player's name is added to the end of the entered value below).
+    display-name: "&d&l"
+    lore:
+      - ""
+      - "&cThis player is not selected."
+      - "&7Click to select this player."
+  # This is the player head that is used when the player is selected.
+  selected-player-head:
+    # This is the display name of the player head item (Note: The player's name is added to the end of the entered value below).
+    display-name: "&d&l"
+    lore:
+      - ""
+      - "&aThis player is selected."
+      - "&7Click to de-select this player."
+  # Under this section unlimited fully customizable items can be created and inserted into the menu.
+  items:
+    # This is the item's id which is used to define each individual item. With this feature unlimited
+    # items can be created and applied to the menu's interface.
+    next-page:
+      # Available click actions: "next-page", "previous-page", "confirm", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: "next-page"
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: ""
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "UI_BUTTON_CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 0
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
+      # This is the display name of the item. The display name can use placeholders which can be found below:
+      ###
+      # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
+      ###
+      display-name: "&cNext Page"
+      # This is the lore of the item.
+      lore:
+        - ""
+        - "&eClick to view the next page."
+      # This is the slot in the menu where the item will be placed.
+      slot: 53
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: true
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: "MHF_ArrowRight"
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "ARROW"
+      # This is the durability of the item's material.
+      durability: 0
+      # This is the stack count of the item.
+      amount: 1
+    previous-page:
+      click-action: "previous-page"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&cPrevious Page"
+      lore:
+        - ""
+        - "&eClick to view the next page."
+      slot: 52
+      use-player-head: true
+      player-head-name: "MHF_ArrowLeft"
+      material: "ARROW"
+      durability: 0
+      amount: 1
+    confirm:
+      click-action: "confirm"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&aConfirm Selection"
+      lore:
+        - ""
+        - "&eClick to confirm your selection."
+      slot: 51
+      use-player-head: false
+      player-head-name: ""
+      material: "LIME_WOOL"
+      durability: 0
+      amount: 1
+    background-items:
+      click-action: ""
+      click-message: ""
+      fill-empty-slots: true
+      click-sound: false
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: ""
+      lore: [ ]
+      slot: 0
+      use-player-head: false
+      player-head-name: ""
+      material: "BLACK_STAINED_GLASS_PANE"
+      durability: 0
+      amount: 1
+
+# This is where the like menu can be fully customized.
+like-menu-section:
+  # This is the title of the menu. The warp's name and display name color are automatically added to the end of the title.
+  # (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+  title: "&6&lRating: &r"
+  # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+  size: 9
+  # This is the sound the player head will use when clicked. Set to "" to disable.
+  # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+  # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+  player-click-sound: "UI_BUTTON_CLICK"
+  # Under this section unlimited fully customizable items can be created and inserted into the menu.
+  items:
+    # This is the item's id which is used to define each individual item. With this feature unlimited
+    # items can be created and applied to the menu's interface.
+    like-one:
+      # Available click actions: "like", "dislike", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: "like"
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: ""
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "UI_BUTTON_CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 0
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
+      # This is the display name of the item.
+      display-name: "&a&lLike"
+      # This is the lore of the item.
+      lore:
+        - ""
+        - "&eClick to like this warp."
+      # This is the slot in the menu where the item will be placed.
+      slot: 1
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: false
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: ""
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "GREEN_WOOL"
+      # This is the durability of the item's material.
+      durability: 0
+      # This is the stack count of the item.
+      amount: 1
+    like-two:
+      click-action: "like"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&a&lLike"
+      lore:
+        - ""
+        - "&eClick to like this warp."
+      slot: 2
+      use-player-head: false
+      player-head-name: ""
+      material: "GREEN_WOOL"
+      durability: 0
+      amount: 1
+    like-three:
+      click-action: "like"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&a&lLike"
+      lore:
+        - ""
+        - "&eClick to like this warp."
+      slot: 3
+      use-player-head: false
+      player-head-name: ""
+      material: "GREEN_WOOL"
+      durability: 0
+      amount: 1
+    dislike-one:
+      click-action: "dislike"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&c&lDislike"
+      lore:
+        - ""
+        - "&eClick to dislike this warp."
+      slot: 5
+      use-player-head: false
+      player-head-name: ""
+      material: "RED_WOOL"
+      durability: 0
+      amount: 1
+    dislike-two:
+      click-action: "dislike"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&c&lDislike"
+      lore:
+        - ""
+        - "&eClick to dislike this warp."
+      slot: 6
+      use-player-head: false
+      player-head-name: ""
+      material: "RED_WOOL"
+      durability: 0
+      amount: 1
+    dislike-three:
+      click-action: "dislike"
+      click-message: ""
+      fill-empty-slots: false
+      click-sound: true
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: "&c&lDislike"
+      lore:
+        - ""
+        - "&eClick to dislike this warp."
+      slot: 7
+      use-player-head: false
+      player-head-name: ""
+      material: "RED_WOOL"
+      durability: 0
+      amount: 1
+    background-items:
+      click-action: ""
+      click-message: ""
+      fill-empty-slots: true
+      click-sound: false
+      sound-name: "UI_BUTTON_CLICK"
+      usage-cost: 0
+      permission: ""
+      display-name: ""
+      lore: [ ]
+      slot: 0
+      use-player-head: false
+      player-head-name: ""
+      material: "BLACK_STAINED_GLASS_PANE"
+      durability: 0
+      amount: 1
+
+# Under this section unlimited fully customizable menus are able to be created and used within HyperDrive.
+custom-menus-section:
+  # This is the ID of the custom menu which is used as an identifier.
+  example-menu:
+    # This is the title of the menu. (Note: Be sure that this value is unique as this is how the menu is identified. This also prevents incompatibilities with other plugins.)
+    title: "&e&lExample Menu"
+    # This is the size of the menu entirely. (Note: Must be divisible by 9 and less than or equal to 54.)
+    size: 27
+    # These are the slots that will be filled with warps from each page. To have a menu that contains no warps make sure this list is empty.
+    # (Note: This list must only contain slots that are logical with the size value above.)
+    warp-slots: [ ]
+    # Under this section unlimited fully customizable items can be created and inserted into the custom menu.
+    items:
+    # This is the item's id which is used to define each individual item. With this feature unlimited
+    # items can be created and applied to the menu's interface.
+    next-page:
+      # Available click actions: "next-page", "previous-page", "filter-switch", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
+      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+      click-action: ""
+      # This is the message that is sent to the player when they click the item in the menu.
+      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+      click-message: "&cThis is an example button that can be fully customized."
+      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+      fill-empty-slots: false
+      # If this option is enabled, upon click of this item the defined sound will be played.
+      click-sound: true
+      # This is the sound the button will use if the "click-sound" is enabled.
+      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+      sound-name: "UI_BUTTON_CLICK"
+      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+      usage-cost: 0
+      # This is the permission required to interact with this item (Set to "" to disable).
+      permission: ""
+      # This is the display name of the item. The display name can use placeholders which can be found below:
+      ###
+      # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
+      ###
+      display-name: "&dExample Button"
+      # This is the lore of the item.
+      lore:
+        - ""
+        - "&eClick to receive a nice example message"
+      # This is the slot in the menu where the item will be placed.
+      slot: 14
+      # This determines whether the item will be a custom player head or not.
+      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+      use-player-head: true
+      # This is the name of the player to use for the player head.
+      # (Note: This does not accept custom textures, only real player skins and MHF.)
+      player-head-name: "MHF_Exclamation"
+      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+      material: "ARROW"
+      # This is the durability of the item's material.
+      durability: 0
+      # This is the stack count of the item.
+      amount: 1

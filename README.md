@@ -5,6 +5,7 @@
 
 ### Description
 -----
+
 ```
 HyperDrive is a high-class warp plugin allowing you and your players to warp through space and time with high
 control. The plugin aims to give players the capability to create, manage, and manipulate their own warps,
@@ -12,8 +13,11 @@ admin warps, and even specific warps they have been given access to. HyperDrive 
 utilities and features such as a Cross-Server teleportation method, group teleportation, and a full GUI based
 warp system.
 ```
+
 -----
+
 ### Installation
+
 ```
 1) Once the HyperDrive-Recode.jar is acquired, the jar must be placed into your server's plugins folder.
 2) Once this is completed,the server must be restarted in order to register and enable the plugin. The plugin
@@ -23,10 +27,12 @@ warp system.
 
 ### Developer Notes
 -----
-Though the plugin has been released as 'Open-Source'. If possible, please support the plugin by purchasing the plugin
-on the main page. The link can be found [here](https://www.spigotmc.org/resources/1-8-1-14-2-ready-%E2%96%BA%E2%96%BA%E2%96%BA-hyperdrive-%E2%96%BA%E2%96%BA%E2%96%BA-advanced-teleportation-plugin-%E2%96%BA%E2%96%BA%E2%96%BA.17184/).
+Though the plugin has been released as 'Open-Source'. If possible, please support the plugin by purchasing the plugin on the main page. The link can be
+found [here](https://www.spigotmc.org/resources/1-8-1-14-2-ready-%E2%96%BA%E2%96%BA%E2%96%BA-hyperdrive-%E2%96%BA%E2%96%BA%E2%96%BA-advanced-teleportation-plugin-%E2%96%BA%E2%96%BA%E2%96%BA.17184/)
+.
 
 Required Libraries when compiling:
+
 ```
 * Spigot 1.8-1.16 (ALL jars from 1.7.10-1.16 for the NMS containing R1-R3 classes for the interfaces)
 * Vault (Latest Official)
@@ -38,6 +44,8 @@ Required Libraries when compiling:
 * Residence
 * MySQL Java Connector
 ```
+
 ***
-I currently use DedicatedMC as the official ZotWare testing server. If you need something powerful in terms of hardware without digging a hole in your pocket give them a shot and let me know how you like them!
+I currently use DedicatedMC as the official ZotWare testing server. If you need something powerful in terms of hardware without digging a hole in your pocket give them a shot and
+let me know how you like them!
 [![image](https://imgur.com/oqEKWO3.png)](https://dedimc.promo/XZot1K)

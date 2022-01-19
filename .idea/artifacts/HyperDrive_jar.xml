@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="HyperDrive:jar">
+    <output-path>$PROJECT_DIR$/../../Plugin Builds</output-path>
+    <root id="archive" name="HyperDrive.jar">
+      <element id="module-output" name="HyperDrive" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/udojava/EvalEx/2.7/EvalEx-2.7.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/io/papermc/paperlib/1.0.7/paperlib-1.0.7.jar" path-in-jar="/" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/config.yml" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/lang.yml" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/menus.yml" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/plugin.yml" />
+    </root>
+  </artifact>
+</component>
