@@ -1,0 +1,4 @@
+name: TestPlugin
+main: me.username.testplugin.TestPlugin
+version: ${project.version}
+author: username

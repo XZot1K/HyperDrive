@@ -5,10 +5,15 @@
     <option name="description" value="" />
   </component>
   <component name="EntryPointsManager">
-    <list size="2">
+    <list size="4">
       <item index="0" class="java.lang.String" itemvalue="org.bukkit.event.EventHandler" />
       <item index="1" class="java.lang.String" itemvalue="net.md_5.bungee.event.EventHandler" />
+      <item index="2" class="java.lang.String" itemvalue="com.velocitypowered.api.event.Subscribe" />
+      <item index="3" class="java.lang.String" itemvalue="com.velocitypowered.api.plugin.Plugin" />
     </list>
+  </component>
+  <component name="JavadocGenerationManager">
+    <option name="OUTPUT_DIRECTORY" value="$PROJECT_DIR$/docs" />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
@@ -17,7 +22,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="17" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="18" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

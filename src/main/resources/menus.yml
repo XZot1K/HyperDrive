@@ -13,6 +13,8 @@ list-menu-section:
   traffic-threshold: 100
   # This is the default filter status the filter will start on. (Available Indexes: [0 (Public), 1 (Private), 2 (Admin), 3 (Owned), 4 (Featured)])
   default-filter-index: 0
+  # Statuses in this list will be completely skipped when cycling the filter (Available: [PUBLIC, PRIVATE, ADMIN, OWNED, FEATURED]).
+  disabled-filters: []
   # This is the format that replaces the second to final status in the filter-switch, which only loads warps that are owned by the player.
   own-status-format: "Assisted or Owned"
   # This is the format that replaces the first status in the filter-switch, which only loads warps with the 'Public' status.
@@ -979,49 +981,49 @@ custom-menus-section:
     warp-slots: [ ]
     # Under this section unlimited fully customizable items can be created and inserted into the custom menu.
     items:
-    # This is the item's id which is used to define each individual item. With this feature unlimited
-    # items can be created and applied to the menu's interface.
-    next-page:
-      # Available click actions: "next-page", "previous-page", "filter-switch", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
-      # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
-      click-action: ""
-      # This is the message that is sent to the player when they click the item in the menu.
-      # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
-      click-message: "&cThis is an example button that can be fully customized."
-      # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
-      # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
-      fill-empty-slots: false
-      # If this option is enabled, upon click of this item the defined sound will be played.
-      click-sound: true
-      # This is the sound the button will use if the "click-sound" is enabled.
-      # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
-      # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
-      sound-name: "UI_BUTTON_CLICK"
-      # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
-      # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
-      usage-cost: 0
-      # This is the permission required to interact with this item (Set to "" to disable).
-      permission: ""
-      # This is the display name of the item. The display name can use placeholders which can be found below:
-      ###
-      # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
-      ###
-      display-name: "&dExample Button"
-      # This is the lore of the item.
-      lore:
-        - ""
-        - "&eClick to receive a nice example message"
-      # This is the slot in the menu where the item will be placed.
-      slot: 14
-      # This determines whether the item will be a custom player head or not.
-      # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
-      use-player-head: true
-      # This is the name of the player to use for the player head.
-      # (Note: This does not accept custom textures, only real player skins and MHF.)
-      player-head-name: "MHF_Exclamation"
-      # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
-      material: "ARROW"
-      # This is the durability of the item's material.
-      durability: 0
-      # This is the stack count of the item.
-      amount: 1
+      # This is the item's id which is used to define each individual item. With this feature unlimited
+      # items can be created and applied to the menu's interface.
+      next-page:
+        # Available click actions: "next-page", "previous-page", "filter-switch", "dispatch-command-console", "dispatch-command-player", and "open-custom-menu"
+        # (Note: For the "dispatch-command-console", "dispatch-command-player", and "open-custom-menu" actions be sure to include a colon followed by the value.)
+        click-action: ""
+        # This is the message that is sent to the player when they click the item in the menu.
+        # (Note: The "{player}" and "{item-id}" placeholders can be used. Set to "" to disable.)
+        click-message: "&cThis is an example button that can be fully customized."
+        # If this option is enabled, all empty slots will be filled with this item, except for empty warp slots.
+        # (Note: The last item in the list that has this option enabled will replace empty slots. Therefore it is recommended to keep the background item at the bottom of the list.)
+        fill-empty-slots: false
+        # If this option is enabled, upon click of this item the defined sound will be played.
+        click-sound: true
+        # This is the sound the button will use if the "click-sound" is enabled.
+        # Latest Sound List: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+        # Sound List (Legacy): http://docs.codelanx.com/Bukkit/1.8/org/bukkit/Sound.html
+        sound-name: "UI_BUTTON_CLICK"
+        # This is how much the player will be charged for using the item. Set the value less than or equal to 0 to disable.
+        # (Note: If Vault is disable the player will be charge with custom items which can be configured.)
+        usage-cost: 0
+        # This is the permission required to interact with this item (Set to "" to disable).
+        permission: ""
+        # This is the display name of the item. The display name can use placeholders which can be found below:
+        ###
+        # The "filter-switch" click action, the {current-status} placeholders can be used. (Can only be used in the display name)
+        ###
+        display-name: "&dExample Button"
+        # This is the lore of the item.
+        lore:
+          - ""
+          - "&eClick to receive a nice example message"
+        # This is the slot in the menu where the item will be placed.
+        slot: 14
+        # This determines whether the item will be a custom player head or not.
+        # (Note: Normal player heads can be used by either setting "player-head-name" to nothing or using the "PLAYER_HEAD" material in 1.13+)
+        use-player-head: true
+        # This is the name of the player to use for the player head.
+        # (Note: This does not accept custom textures, only real player skins and MHF.)
+        player-head-name: "MHF_Exclamation"
+        # This is the material of the item. (Note: This remains untouched if the "use-player-head" option is enabled.)
+        material: "ARROW"
+        # This is the durability of the item's material.
+        durability: 0
+        # This is the stack count of the item.
+        amount: 1

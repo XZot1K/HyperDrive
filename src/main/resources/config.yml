@@ -7,6 +7,8 @@ mysql-connection:
   use-ssl: false
   # Make sure this option is disabled if you plan to only use MySQL without cross-server features.
   cross-server: true
+  # This id is used to mark warps to determine which server a warp belongs to.
+  server-id: "example-server"
   # If a warp's IP is found blank or null, its IP will be replaced with this IP similar to a backup. This IP should be your EXACT server's IP WITHOUT THE PORT.
   default-ip: "127.0.0.1"
   # Below, define your MySQL information. THE DEFINED DATABASE MUST ALREADY EXIST.
@@ -27,7 +29,7 @@ general-section:
   auto-save-log: true
   # This is the interval of the warp auto-save in seconds.
   auto-save-interval: 900
-  # Whether or not warps will be cleaned based on inactivity.
+  # Whether warps will be cleaned based on inactivity.
   warp-cleaner: false
   # The time a player must have not logged in or been seen in seconds before their warp is removed.
   warp-clean-time: 604800

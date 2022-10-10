@@ -6,6 +6,7 @@
 prefix: "&0(&dHyper&5Drive&0) "
 invalid-help-page: "&cThe entered help page does not exist."
 no-permission: "&cYou don't have permission to use this."
+give-no-permission: "&cThe player &e{player} &ccan't obtain ownership of warps without creation and edit permissions."
 player-invalid: "&cThe player &e{player} &cis either invalid or offline."
 world-invalid: "&cThe world &e{world} &cis invalid."
 must-be-player: "&cYou must be a player to use this."

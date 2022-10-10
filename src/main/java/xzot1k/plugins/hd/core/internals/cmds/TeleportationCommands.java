@@ -260,7 +260,7 @@ public class TeleportationCommands implements CommandExecutor {
 
         List<UUID> onlinePlayers = getPluginInstance().getManager().getPlayerUUIDs();
         onlinePlayers.remove(player.getUniqueId());
-        if (onlinePlayers.size() <= 0) {
+        if (onlinePlayers.isEmpty()) {
             getPluginInstance().getManager().sendCustomMessage("no-players-found", player);
             return;
         }
@@ -1584,12 +1584,8 @@ public class TeleportationCommands implements CommandExecutor {
     }
 
     public Location getLastLocation(Player player) {
-        if (!getLastLocationMap().isEmpty() && getLastLocationMap().containsKey(player.getUniqueId())) {
-            SerializableLocation serializableLocation = getLastLocationMap().get(player.getUniqueId());
-            if (serializableLocation != null) return serializableLocation.asBukkitLocation();
-        }
-
-        return null;
+        final SerializableLocation serializableLocation = getLastLocationMap().getOrDefault(player.getUniqueId(), null);
+        return (serializableLocation != null ? serializableLocation.asBukkitLocation() : null);
     }
 
     // getters & setters

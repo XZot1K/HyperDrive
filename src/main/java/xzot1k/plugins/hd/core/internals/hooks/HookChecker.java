@@ -4,26 +4,6 @@
 
 package xzot1k.plugins.hd.core.internals.hooks;
 
-import com.bekvon.bukkit.residence.Residence;
-import com.bekvon.bukkit.residence.protection.ClaimedResidence;
-import com.griefdefender.api.GriefDefender;
-import com.griefdefender.api.permission.flag.Flag;
-import com.griefdefender.api.registry.CatalogRegistryModule;
-import com.massivecraft.factions.*;
-import com.massivecraft.factions.entity.BoardColl;
-import com.massivecraft.factions.entity.FactionColl;
-import com.massivecraft.factions.entity.MPlayer;
-import com.massivecraft.massivecore.ps.PS;
-import com.palmergames.bukkit.towny.TownyAPI;
-import com.palmergames.bukkit.towny.object.Resident;
-import com.palmergames.bukkit.towny.object.Town;
-import com.palmergames.bukkit.towny.object.WorldCoord;
-import com.wasteofplastic.askyblock.ASkyBlockAPI;
-import com.wasteofplastic.askyblock.Island;
-import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.GriefPrevention;
-import net.prosavage.factionsx.manager.GridManager;
-import net.prosavage.factionsx.manager.PlayerManager;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -39,7 +19,7 @@ public class HookChecker {
             aSkyBlockInstalled, residenceInstalled, prismaInstalled, cmiInstalled;
     private HyperDrive pluginInstance;
     private Plugin essentialsPlugin;
-    private Flag HYPERDRIVE_PROTECTION;
+    private com.griefdefender.api.permission.flag.Flag HYPERDRIVE_PROTECTION;
     private FactionsType factionsType;
 
     public HookChecker(HyperDrive pluginInstance) {
@@ -73,9 +53,11 @@ public class HookChecker {
             essentialsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("EssentialsEx");
 
         if (griefDefenderInstalled) {
-            HYPERDRIVE_PROTECTION = Flag.builder().id("hyperdrive:protection").name("hd-protect")
+            HYPERDRIVE_PROTECTION = com.griefdefender.api.permission.flag.Flag.builder().id("hyperdrive:protection").name("hd-protect")
                     .permission("griefdefender.flag.hyperdrive.hd-protect").build();
-            Optional<CatalogRegistryModule<Flag>> catalogRegistryModule = GriefDefender.getRegistry().getRegistryModuleFor(Flag.class);
+            Optional<com.griefdefender.api.registry.CatalogRegistryModule<com.griefdefender.api.permission.flag.Flag>>
+                    catalogRegistryModule = com.griefdefender.api.GriefDefender.getRegistry()
+                    .getRegistryModuleFor(com.griefdefender.api.permission.flag.Flag.class);
             catalogRegistryModule.ifPresent(flagCatalogRegistryModule -> flagCatalogRegistryModule.registerCustomType(HYPERDRIVE_PROTECTION));
         }
     }
@@ -99,32 +81,38 @@ public class HookChecker {
         if (getFactionsType() != null && checkType != CheckType.WARP) {
             switch (getFactionsType()) {
                 case SABER:
-                    Faction factionAtLocation = Board.getInstance().getFactionAt(new FLocation(location));
-                    FPlayer saberPlayer = FPlayers.getInstance().getByPlayer(player);
+                    com.massivecraft.factions.Faction factionAtLocation = com.massivecraft.factions.Board
+                            .getInstance().getFactionAt(new com.massivecraft.factions.FLocation(location));
+                    com.massivecraft.factions.FPlayer saberPlayer = com.massivecraft.factions.FPlayers.getInstance().getByPlayer(player);
                     if (factionAtLocation != null && (!ownershipCheck || (!factionAtLocation.isWilderness()
                             && !factionAtLocation.getId().equalsIgnoreCase(saberPlayer.getFaction().getId()))))
                         return true;
                     break;
                 case X:
-                    net.prosavage.factionsx.core.Faction xfaction = GridManager.INSTANCE.getFactionAt(new net.prosavage
-                            .factionsx.persist.data.FLocation(location.getBlockX(), location.getBlockZ(), Objects.requireNonNull(location.getWorld()).getName()));
+                    net.prosavage.factionsx.core.Faction xfaction = net.prosavage.factionsx.manager.GridManager.INSTANCE.getFactionAt(new
+                            net.prosavage.factionsx.persist.data.FLocation(location.getBlockX(),
+                            location.getBlockZ(), Objects.requireNonNull(location.getWorld()).getName()));
                     if (xfaction != null) {
-                        net.prosavage.factionsx.core.FPlayer xFPlayer = PlayerManager.INSTANCE.getFPlayer(player);
+                        net.prosavage.factionsx.core.FPlayer xFPlayer = net.prosavage.factionsx.manager.PlayerManager.INSTANCE.getFPlayer(player);
                         if (!ownershipCheck || (xfaction.getId() != xFPlayer.getFaction().getId() && !xfaction.isWilderness()))
                             return true;
                     }
                     break;
                 case UUID:
-                    com.massivecraft.factions.entity.Faction uuidFaction = BoardColl.get().getFactionAt(PS.valueOf(location));
-                    FPlayer uuidPlayer = FPlayers.getInstance().getByPlayer(player);
-                    if (uuidFaction != null && (!ownershipCheck || (!uuidFaction.getId().equalsIgnoreCase(FactionColl.get().getNone().getId())
+                    com.massivecraft.factions.Faction uuidFaction = com.massivecraft.factions.Board.getInstance()
+                            .getFactionAt(new com.massivecraft.factions.FLocation(location));
+                    com.massivecraft.factions.FPlayer uuidPlayer = com.massivecraft.factions.FPlayers.getInstance().getByPlayer(player);
+                    if (uuidFaction != null && (!ownershipCheck || (!uuidFaction.getId()
+                            .equalsIgnoreCase(com.massivecraft.factions.Factions.getInstance().getWilderness().getId())
                             && !uuidFaction.getId().equalsIgnoreCase(uuidPlayer.getFaction().getId()))))
                         return true;
                     break;
                 case MASSIVE:
-                    com.massivecraft.factions.entity.Faction mFaction = BoardColl.get().getFactionAt(PS.valueOf(location));
-                    MPlayer fPlayer = MPlayer.get(player);
-                    if (mFaction != null && (!ownershipCheck || (mFaction.getComparisonName().equalsIgnoreCase(FactionColl.get().getNone().getComparisonName())
+                    com.massivecraft.factions.entity.Faction mFaction = com.massivecraft.factions.entity.BoardColl
+                            .get().getFactionAt(com.massivecraft.massivecore.ps.PS.valueOf(location));
+                    com.massivecraft.factions.entity.MPlayer fPlayer = com.massivecraft.factions.entity.MPlayer.get(player);
+                    if (mFaction != null && (!ownershipCheck || (mFaction.getComparisonName()
+                            .equalsIgnoreCase(com.massivecraft.factions.entity.FactionColl.get().getNone().getComparisonName())
                             && !fPlayer.getFaction().getComparisonName().equalsIgnoreCase(mFaction.getComparisonName())))) {
                         return true;
                     }
@@ -135,30 +123,39 @@ public class HookChecker {
         }
 
         if (aSkyBlockInstalled && checkType != CheckType.WARP) {
-            Island island = ASkyBlockAPI.getInstance().getIslandAt(location);
+            com.wasteofplastic.askyblock.Island island = com.wasteofplastic.askyblock.ASkyBlockAPI.getInstance().getIslandAt(location);
             if (island != null && (!ownershipCheck || (!island.getOwner().toString().equals(player.getUniqueId().toString())
                     && !island.getMembers().contains(player.getUniqueId())))) return true;
         }
 
         if (griefPreventionInstalled && checkType != CheckType.WARP) {
-            Claim claimAtLocation = GriefPrevention.instance.dataStore.getClaimAt(location, true, null);
+            me.ryanhamshire.GriefPrevention.Claim claimAtLocation = me.ryanhamshire.GriefPrevention.GriefPrevention
+                    .instance.dataStore.getClaimAt(location, true, null);
             if (claimAtLocation != null && (!ownershipCheck || !claimAtLocation.getOwnerName().equalsIgnoreCase(player.getName())))
                 return true;
         }
 
         final World world = player.getWorld();
-        if (griefDefenderInstalled && checkType != CheckType.WARP && GriefDefender.getCore().isEnabled(world.getUID())) {
-            com.griefdefender.api.claim.Claim claimAtLocation = GriefDefender.getCore().getClaimManager(Objects.requireNonNull(location.getWorld()).getUID())
-                    .getClaimAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-            if (claimAtLocation != null && !claimAtLocation.isWilderness() && (!ownershipCheck || (claimAtLocation.getOwnerUniqueId().toString()
-                    .equals(player.getUniqueId().toString()) || claimAtLocation.getUserTrusts().contains(player.getUniqueId())))) return true;
+        if (griefDefenderInstalled && checkType != CheckType.WARP
+                && com.griefdefender.api.GriefDefender.getCore().isEnabled(world.getUID()) && location.getWorld() != null) {
+            com.griefdefender.api.claim.ClaimManager claimManager = com.griefdefender.api.GriefDefender
+                    .getCore().getClaimManager(location.getWorld().getUID());
+            if (claimManager != null) {
+                com.griefdefender.api.claim.Claim claimAtLocation = claimManager.getClaimAt(location.getBlockX(),
+                        location.getBlockY(), location.getBlockZ());
+                if (claimAtLocation != null && !claimAtLocation.isWilderness()
+                        && (!ownershipCheck || (claimAtLocation.getOwnerUniqueId().toString().equals(player.getUniqueId().toString())))) return true;
+                //claimAtLocation.getUserTrusts().contains(player.getUniqueId())
+            }
         }
 
         if (townyInstalled && checkType != CheckType.WARP) {
             try {
-                Town town = WorldCoord.parseWorldCoord(location).getTownBlock().getTown();
+                com.palmergames.bukkit.towny.object.Town town = com.palmergames.bukkit.towny.object.WorldCoord
+                        .parseWorldCoord(location).getTownBlock().getTown();
                 if (town != null) {
-                    Resident resident = TownyAPI.getInstance().getDataSource().getResident(player.getName());
+                    final com.palmergames.bukkit.towny.object.Resident resident = com.palmergames.bukkit
+                            .towny.TownyAPI.getInstance().getResident(player.getName());
                     if (resident != null && (!ownershipCheck || (!town.getResidents().contains(resident) && town.getMayor() != resident)))
                         return true;
                 }
@@ -167,7 +164,8 @@ public class HookChecker {
         }
 
         if (residenceInstalled && checkType != CheckType.WARP) {
-            ClaimedResidence res = Residence.getInstance().getResidenceManager().getByLoc(location);
+            com.bekvon.bukkit.residence.protection.ClaimedResidence res = com.bekvon.bukkit.residence
+                    .Residence.getInstance().getResidenceManager().getByLoc(location);
             return (res != null && (!ownershipCheck || !res.isOwner(player))); // If false is returned, the hook failed and teleportation is blocked.
         }
 

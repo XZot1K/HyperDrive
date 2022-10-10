@@ -37,8 +37,7 @@ public class GroupTemp {
 
     private void createTask(Player player) {
         if (getSelectedPlayers() == null || getSelectedPlayers().isEmpty()) {
-            getPluginInstance().getManager().sendCustomMessage(
-                    getPluginInstance().getConfig().getString("language-section.player-selection-fail"), player);
+            getPluginInstance().getManager().sendCustomMessage("player-selection-fail", player);
             return;
         }
 
@@ -74,8 +73,7 @@ public class GroupTemp {
 
                         SerializableLocation serializableLocation = getDestination().getLocation();
                         if (serializableLocation == null) {
-                            getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getConfig()
-                                    .getString("language-section.group-destination-teleport-fail"), player);
+                            getPluginInstance().getManager().sendCustomMessage("group-destination-teleport-fail", player);
                             getPluginInstance().getManager().getPaging().getPlayerSelectedMap()
                                     .remove(player.getUniqueId());
                             getPluginInstance().getTeleportationHandler().clearGroupTemp(player);
@@ -139,10 +137,7 @@ public class GroupTemp {
                                 }
 
                                 teleportCount += 1;
-                                getPluginInstance().getManager().sendCustomMessage(
-                                        Objects.requireNonNull(getPluginInstance().getLangConfig().getString("group-teleported"))
-                                                .replace("{player}", player.getName()),
-                                        offlinePlayer.getPlayer());
+                                getPluginInstance().getManager().sendCustomMessage("group-teleported", offlinePlayer.getPlayer(), ("{player}:" + player.getName()));
                             }
 
                             if (useCrossWarping && useMySQL && getPluginInstance().getDatabaseConnection() != null) {
@@ -190,18 +185,14 @@ public class GroupTemp {
                             }
 
                             if (teleportCount > 0)
-                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig()
-                                        .getString("group-teleport-success"), player);
+                                getPluginInstance().getManager().sendCustomMessage("group-teleport-success", player);
                             else
-                                getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig()
-                                        .getString("group-teleport-fail"), player);
+                                getPluginInstance().getManager().sendCustomMessage("group-teleport-fail", player);
                         } else
-                            getPluginInstance().getManager().sendCustomMessage(
-                                    getPluginInstance().getLangConfig().getString("destination-invalid"),
-                                    player);
+                            getPluginInstance().getManager().sendCustomMessage("destination-invalid", player);
 
                     } else
-                        getPluginInstance().getManager().sendCustomMessage(getPluginInstance().getLangConfig().getString("group-teleport-fail"), player);
+                        getPluginInstance().getManager().sendCustomMessage("group-teleport-fail", player);
 
                     getPluginInstance().getManager().getPaging().getPlayerSelectedMap().remove(player.getUniqueId());
                     getPluginInstance().getTeleportationHandler().clearGroupTemp(player);

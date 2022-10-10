@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.SaberLLC:Saber-Factions:2.4.0-RC">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/SaberLLC/Saber-Factions/2.4.0-RC/Saber-Factions-2.4.0-RC.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/SaberLLC/Saber-Factions/2.4.0-RC/Saber-Factions-2.4.0-RC-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/SaberLLC/Saber-Factions/2.4.0-RC/Saber-Factions-2.4.0-RC-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

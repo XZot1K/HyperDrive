@@ -71,7 +71,8 @@ public class Listeners implements Listener {
             return;
         }
 
-        if (inventoryName.equalsIgnoreCase(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("list-menu-section.title")))) {
+        if (inventoryName.equalsIgnoreCase(getPluginInstance().getManager()
+                .colorText(getPluginInstance().getMenusConfig().getString("list-menu-section.title")))) {
             e.setCancelled(true);
             runListMenuClick(player, e);
         } else if (inventoryName.contains(getPluginInstance().getManager()
@@ -88,7 +89,8 @@ public class Listeners implements Listener {
             runPlayerSelectionClick(player, e);
         } else {
             String menuId = getPluginInstance().getManager().getMenuId(inventoryName);
-            if (menuId != null) {
+            if (menuId != null)
+            {
                 e.setCancelled(true);
                 runCustomMenuClick(player, menuId, e);
             }
@@ -103,7 +105,6 @@ public class Listeners implements Listener {
         e.setCancelled(true);
 
         Warp warp;
-        OfflinePlayer offlinePlayer;
         String textEntry = getPluginInstance().getManager().colorText(e.getMessage().replace("'", "").replace("\"", "")),
                 chatInteractionCancelKey = getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel");
 
@@ -125,7 +126,7 @@ public class Listeners implements Listener {
         boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
                 && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         switch (interactionModule.getInteractionId().toLowerCase()) {
-            case "create-warp":
+            case "create-warp": {
                 if (getPluginInstance().getHookChecker().isNotSafe(e.getPlayer(), e.getPlayer().getLocation(), HookChecker.CheckType.CREATION)) {
                     getPluginInstance().getManager().sendCustomMessage("not-hook-safe", e.getPlayer());
                     break;
@@ -166,7 +167,9 @@ public class Listeners implements Listener {
                 warp.register();
                 getPluginInstance().getManager().sendCustomMessage("warp-created", e.getPlayer(), "{warp}:" + warp.getWarpName());
                 break;
-            case "rename":
+            }
+
+            case "rename": {
                 String previousName = interactionModule.getInteractionValue();
                 warp = getPluginInstance().getManager().getWarp(previousName);
 
@@ -197,9 +200,12 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage("warp-renamed", e.getPlayer(), "{previous-name}:" + previousName, "{new-name}:" + finalTextEntry);
                 break;
-            case "give-ownership":
+            }
+
+            case "give-ownership": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
-                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                        || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("warp-invalid", e.getPlayer(), "{warp}:" + interactionModule.getInteractionValue());
                     return;
@@ -211,16 +217,22 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(textEntry);
-                if (!offlinePlayer.isOnline() || offlinePlayer.getName() == null) {
+                final Player enteredPlayer = getPluginInstance().getServer().getPlayer(textEntry);
+                if (enteredPlayer == null || !enteredPlayer.isOnline()) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("player-invalid", e.getPlayer(), "{player}:" + textEntry);
                     return;
                 }
 
-                if (getPluginInstance().getManager().wouldMeetWarpLimit(offlinePlayer, getPluginInstance().getManager().getOwnedWarps(offlinePlayer).size())) {
+                if (!enteredPlayer.hasPermission("hyperdrive.use.create") || !enteredPlayer.hasPermission("hyperdrive.use.edit")) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                    getPluginInstance().getManager().sendCustomMessage("warp-limit-met-other", e.getPlayer(), "{player}:" + offlinePlayer.getName());
+                    getPluginInstance().getManager().sendCustomMessage("give-no-permission", e.getPlayer(), "{player}:" + textEntry);
+                    return;
+                }
+
+                if (getPluginInstance().getManager().wouldMeetWarpLimit(enteredPlayer, getPluginInstance().getManager().getOwnedWarps(enteredPlayer).size())) {
+                    getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
+                    getPluginInstance().getManager().sendCustomMessage("warp-limit-met-other", e.getPlayer(), "{player}:" + enteredPlayer.getName());
                     return;
                 }
 
@@ -229,15 +241,17 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                warp.setOwner(offlinePlayer.getUniqueId());
+                warp.setOwner(enteredPlayer.getUniqueId());
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-                getPluginInstance().getManager().sendCustomMessage("ownership-given", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{player}:" + offlinePlayer.getName());
+                getPluginInstance().getManager().sendCustomMessage("ownership-given", e.getPlayer(),
+                        "{warp}:" + warp.getWarpName(), "{player}:" + enteredPlayer.getName());
 
-                final Player player = offlinePlayer.getPlayer();
-                if (player != null)
-                    getPluginInstance().getManager().sendCustomMessage("ownership-obtained", player, "{warp}:" + warp.getWarpName(), "{player}:" + offlinePlayer.getName());
+                getPluginInstance().getManager().sendCustomMessage("ownership-obtained", enteredPlayer,
+                        "{warp}:" + warp.getWarpName(), "{player}:" + enteredPlayer.getName());
                 break;
-            case "edit-description":
+            }
+
+            case "edit-description": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
@@ -260,8 +274,9 @@ public class Listeners implements Listener {
                 }
 
                 break;
+            }
 
-            case "change-usage-price":
+            case "change-usage-price": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
                         || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
@@ -285,8 +300,9 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage("usage-price-set", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{price}:" + warp.getUsagePrice());
                 break;
+            }
 
-            case "give-assistant":
+            case "give-assistant": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
@@ -294,7 +310,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(textEntry);
+                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(textEntry);
                 if (!offlinePlayer.isOnline()) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("player-invalid", e.getPlayer(), "{player}:" + textEntry);
@@ -314,7 +330,8 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage("give-assistant", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{player}:" + offlinePlayer.getName());
                 break;
-            case "remove-assistant":
+            }
+            case "remove-assistant": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
@@ -322,7 +339,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(textEntry);
+                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(textEntry);
                 if (!offlinePlayer.isOnline()) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("player-invalid", e.getPlayer(), "{player}:" + textEntry);
@@ -345,7 +362,8 @@ public class Listeners implements Listener {
 
                 getPluginInstance().getManager().sendCustomMessage("remove-assistant", e.getPlayer(), ("{warp}:" + warp.getWarpName()), ("{player}:" + offlinePlayer.getName()));
                 break;
-            case "add-to-list":
+            }
+            case "add-to-list": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
@@ -353,7 +371,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(textEntry);
+                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(textEntry);
                 if (!offlinePlayer.isOnline()) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("player-invalid", e.getPlayer(), "{player}:" + textEntry);
@@ -375,7 +393,8 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage("add-list", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{player}:" + offlinePlayer.getName());
                 break;
-            case "remove-from-list":
+            }
+            case "remove-from-list": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
@@ -383,7 +402,7 @@ public class Listeners implements Listener {
                     return;
                 }
 
-                offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(textEntry);
+                OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(textEntry);
                 if (!offlinePlayer.isOnline()) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                     getPluginInstance().getManager().sendCustomMessage("player-invalid", e.getPlayer(), "{player}:" + textEntry);
@@ -405,7 +424,8 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage("remove-list", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{player}:" + offlinePlayer.getName());
                 break;
-            case "add-command":
+            }
+            case "add-command": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                     getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
@@ -432,7 +452,8 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage("add-command", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{command}:" + textEntry);
                 break;
-            case "remove-command":
+            }
+            case "remove-command": {
                 String enteredIndex = e.getMessage();
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
@@ -463,6 +484,7 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
                 getPluginInstance().getManager().sendCustomMessage("remove-command", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{index}:" + index);
                 break;
+            }
         }
     }
 
@@ -538,7 +560,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onDamage(EntityDamageEvent e) {
         if (e.getEntity() instanceof Player) {
             final Player player = (Player) e.getEntity();
@@ -662,9 +684,10 @@ public class Listeners implements Listener {
             }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler
     public void onTeleport(PlayerTeleportEvent e) {
-        getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
+        if (e.getCause() != PlayerTeleportEvent.TeleportCause.UNKNOWN)
+            getPluginInstance().getTeleportationCommands().updateLastLocation(e.getPlayer(), e.getFrom());
     }
 
     @EventHandler
@@ -694,7 +717,7 @@ public class Listeners implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler
     public void onDeath(PlayerDeathEvent e) {
         getPluginInstance().getTeleportationCommands().updateLastLocation(e.getEntity(), e.getEntity().getLocation());
     }
@@ -985,8 +1008,12 @@ public class Listeners implements Listener {
             return;
         }
 
-        List<Integer> warpSlots = getPluginInstance().getMenusConfig().getIntegerList("list-menu-section.warp-slots");
-        if (warpSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta() && Objects.requireNonNull(e.getCurrentItem().getItemMeta()).hasDisplayName()) {
+        final ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section");
+        if (cs == null) return;
+
+        List<Integer> warpSlots = cs.getIntegerList("warp-slots");
+        if (warpSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta()
+                && Objects.requireNonNull(e.getCurrentItem().getItemMeta()).hasDisplayName()) {
             final ClickType clickType = e.getClick();
             final String warpName = Objects.requireNonNull(e.getCurrentItem()).getItemMeta().getDisplayName();
             Warp warp = getPluginInstance().getManager().getWarp(warpName);
@@ -1114,12 +1141,14 @@ public class Listeners implements Listener {
                     case SHIFT_LEFT:
 
                         if (player.hasPermission("hyperdrive.like")) {
-                            if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString())) && !warp.getAssistants().contains(player.getUniqueId())) {
+                            if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                                    && !warp.getAssistants().contains(player.getUniqueId())) {
                                 getPluginInstance().getManager().sendCustomMessage(Objects.requireNonNull(getPluginInstance().getLangConfig().getString("like-own")), player);
                                 return;
                             }
 
-                            if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql") && getPluginInstance().getDatabaseConnection() != null && getPluginInstance().getBungeeListener() != null) {
+                            if (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
+                                    && getPluginInstance().getDatabaseConnection() != null && getPluginInstance().getBungeeListener() != null) {
                                 String serverIP = (warp.getServerIPAddress().contains(".") ? getPluginInstance().getBungeeListener().getServerAddressMap().get(
                                         getPluginInstance().getBungeeListener().getMyServer()) : getPluginInstance().getBungeeListener().getMyServer());
 
@@ -1162,28 +1191,32 @@ public class Listeners implements Listener {
             return;
         }
 
-        String itemId = getPluginInstance().getManager().getIdFromSlot("list-menu-section", e.getSlot());
+        final String itemId = getPluginInstance().getManager().getIdFromSlot(cs, e.getSlot());
         if (itemId != null) {
-            if (getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".click-sound")) {
-                String soundName = getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".sound-name");
+            final ConfigurationSection itemSection = cs.getConfigurationSection("items." + itemId);
+            if (itemSection == null) return;
+
+            if (itemSection.getBoolean("click-sound")) {
+                final String soundName = itemSection.getString("sound-name");
                 if (soundName != null && !soundName.equalsIgnoreCase(""))
-                    player.playSound(player.getLocation(),
-                            Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+                    player.playSound(player.getLocation(), Sound.valueOf(soundName.toUpperCase()
+                            .replace(" ", "_").replace("-", "_")), 1, 1);
             }
 
-            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section.items." + itemId);
-            if (cs != null && cs.getKeys(false).contains("permission")) {
-                String permission = getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".permission");
+            if (itemSection.getKeys(false).contains("permission")) {
+                final String permission = itemSection.getString("permission");
                 if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
                     getPluginInstance().getManager().sendCustomMessage("no-permission", player);
                     return;
                 }
             }
 
-            String ownFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format"), publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
-                    privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"), adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format"),
-                    featuredFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format"), clickAction = getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".click-action");
-            getPluginInstance().getManager().sendCustomMessage("list-menu-section.items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+            final String clickAction = itemSection.getString("click-action"),
+                    message = itemSection.getString("click-message");
+
+            if (message != null && !message.isEmpty())
+                getPluginInstance().getManager().sendCustomMessage(message,
+                        player, "{player}:" + player.getName(), "{item-id}:" + itemId);
 
             if (clickAction != null) {
                 String action = clickAction, value = "";
@@ -1207,12 +1240,8 @@ public class Listeners implements Listener {
                         Expression exp = new Expression(priceExpression);
                         BigDecimal result = exp.eval();
                         itemUsageCost = result.doubleValue();
-                    } else {
-                        itemUsageCost = getPluginInstance().getMenusConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
-                    }
-                } else {
-                    itemUsageCost = getPluginInstance().getMenusConfig().getDouble("list-menu-section.items." + itemId + ".usage-cost");
-                }
+                    } else itemUsageCost = itemSection.getDouble("usage-cost");
+                } else itemUsageCost = itemSection.getDouble("usage-cost");
 
                 switch (action) {
                     case "dispatch-command-console":
@@ -1227,8 +1256,7 @@ public class Listeners implements Listener {
                     case "dispatch-command-player":
                         if (!value.equalsIgnoreCase("")) {
                             player.closeInventory();
-                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                return;
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
                             getPluginInstance().getServer().dispatchCommand(player, value);
                         }
 
@@ -1269,8 +1297,8 @@ public class Listeners implements Listener {
 
                         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
                             getPluginInstance().getManager().getPaging().resetWarpPages(player);
-                            String currentStatus = getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", e.getInventory());
-                            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", currentStatus);
+                            EnumContainer.Filter filter = getPluginInstance().getManager().getCurrentFilter("list-menu-section", e.getInventory());
+                            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", filter);
                             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
                             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
                             List<Warp> pageList = new ArrayList<>();
@@ -1293,12 +1321,14 @@ public class Listeners implements Listener {
 
                         break;
                     case "next-page":
-                        if (getPluginInstance().getManager().getPaging().hasNextWarpPage(player) && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                        if (getPluginInstance().getManager().getPaging().hasNextWarpPage(player)
+                                && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                             nextPage(player, e.getInventory(), warpSlots);
                         else getPluginInstance().getManager().sendCustomMessage("no-next-page", player);
                         break;
                     case "previous-page":
-                        if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player) && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                        if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player)
+                                && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                             previousPage(player, e.getInventory(), warpSlots);
                         else getPluginInstance().getManager().sendCustomMessage("no-previous-page", player);
                         break;
@@ -1306,39 +1336,15 @@ public class Listeners implements Listener {
                         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
                             String statusFromItem = getPluginInstance().getManager().getFilterStatusFromItem(e.getCurrentItem(), "list-menu-section", itemId);
                             if (statusFromItem != null && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) {
-                                int index = -1;
-                                boolean isOwnFormat = statusFromItem.equalsIgnoreCase(ownFormat), isPublicFormat = statusFromItem.equalsIgnoreCase(publicFormat), isPrivateFormat = statusFromItem.equalsIgnoreCase(privateFormat),
-                                        isAdminFormat = statusFromItem.equalsIgnoreCase(adminFormat), isFeaturedFormat = statusFromItem.equalsIgnoreCase(adminFormat);
 
-                                if (isPublicFormat || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PUBLIC.name()))
-                                    index = 0;
-                                else if (isPrivateFormat
-                                        || statusFromItem.equalsIgnoreCase(EnumContainer.Status.PRIVATE.name()))
-                                    index = 1;
-                                else if (isAdminFormat
-                                        || statusFromItem.equalsIgnoreCase(EnumContainer.Status.ADMIN.name()))
-                                    index = 2;
-                                else if (isOwnFormat)
-                                    index = 3;
-                                else if (isFeaturedFormat)
-                                    index = 4;
+                                EnumContainer.Filter next = EnumContainer.Filter.getByName(statusFromItem);
+                                if (next == null) next = EnumContainer.Filter.PUBLIC;
 
-                                int nextIndex = index + 1;
-                                String nextStatus;
-
-                                if (nextIndex == 1)
-                                    nextStatus = EnumContainer.Status.PRIVATE.name();
-                                else if (nextIndex == 2)
-                                    nextStatus = EnumContainer.Status.ADMIN.name();
-                                else if (nextIndex == 3)
-                                    nextStatus = ownFormat;
-                                else if (nextIndex == 4)
-                                    nextStatus = featuredFormat;
-                                else
-                                    nextStatus = EnumContainer.Status.PUBLIC.name();
+                                next = next.getNext();
+                                if (getPluginInstance().getManager().isDisabled(next)) next = next.getNext();
 
                                 ItemStack filterItem = getPluginInstance().getManager().buildItemFromId(player,
-                                        Objects.requireNonNull(nextStatus), "list-menu-section", itemId);
+                                        Objects.requireNonNull(next.getFormat()), "list-menu-section", itemId);
                                 e.getInventory().setItem(e.getSlot(), filterItem);
 
                                 for (int i = -1; ++i < warpSlots.size(); ) {
@@ -1347,7 +1353,7 @@ public class Listeners implements Listener {
                                 }
 
                                 getPluginInstance().getManager().getPaging().resetWarpPages(player);
-                                Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", nextStatus);
+                                Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", next);
                                 getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
                                 int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
                                 List<Warp> wList = new ArrayList<>();
@@ -1390,30 +1396,39 @@ public class Listeners implements Listener {
                 }
             }
         }
+
     }
 
     private void runEditMenuClick(Player player, String inventoryName, InventoryClickEvent e) {
         if (e.getCurrentItem() == null || cancelClick(e, player)) return;
 
-        String itemId = getPluginInstance().getManager().getIdFromSlot("edit-menu-section", e.getSlot());
+        final ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("edit-menu-section");
+        if (cs == null) return;
+
+        String itemId = getPluginInstance().getManager().getIdFromSlot(cs, e.getSlot());
         if (itemId != null) {
-            if (getPluginInstance().getMenusConfig().getBoolean("edit-menu-section.items." + itemId + ".click-sound")) {
-                String soundName = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".sound-name");
+            final ConfigurationSection itemSection = cs.getConfigurationSection("items." + itemId);
+            if (itemSection == null) return;
+
+            if (itemSection.getBoolean("click-sound")) {
+                final String soundName = itemSection.getString("sound-name");
                 if (soundName != null && !soundName.equalsIgnoreCase(""))
-                    player.playSound(player.getLocation(),
-                            Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+                    player.playSound(player.getLocation(), Sound.valueOf(soundName.toUpperCase()
+                            .replace(" ", "_").replace("-", "_")), 1, 1);
             }
 
-            getPluginInstance().getManager().sendCustomMessage("edit-menu-section.items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+            final String message = itemSection.getString("click-message");
+            if (message != null && !message.isEmpty())
+                getPluginInstance().getManager().sendCustomMessage(message,
+                    player, "{player}:" + player.getName(), "{item-id}:" + itemId);
 
-            String clickAction = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".click-action"),
+            String clickAction = itemSection.getString("click-action"),
                     toggleFormat = getPluginInstance().getConfig().getString("general-section.option-toggle-format"),
-                    warpName = inventoryName.replace(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("edit-menu-section.title")), "");
+                    warpName = inventoryName.replace(getPluginInstance().getManager().colorText(cs.getString("title")), "");
             Warp warp = getPluginInstance().getManager().getWarp(warpName);
 
-            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("edit-menu-section.items." + itemId);
-            if (cs != null && cs.getKeys(false).contains("permission")) {
-                String permission = getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".permission");
+            if (itemSection.getKeys(false).contains("permission")) {
+                final String permission = itemSection.getString("permission");
                 if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
                     getPluginInstance().getManager().sendCustomMessage("no-permission", player);
                     return;
@@ -1422,7 +1437,7 @@ public class Listeners implements Listener {
 
             if (clickAction != null) {
 
-                double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost");
+                final double itemUsageCost = itemSection.getDouble("usage-cost");
 
                 String value = "";
                 if (clickAction.contains(":")) {
@@ -1431,9 +1446,9 @@ public class Listeners implements Listener {
                     value = actionArgs[1].replace("{player}", player.getName());
                 }
 
-                String publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
-                        privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
-                        adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format");
+                final String publicFormat = cs.getString("public-status-format"),
+                        privateFormat = cs.getString("private-status-format"),
+                        adminFormat = cs.getString("admin-status-format");
                 boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
                         && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
 
@@ -1547,22 +1562,26 @@ public class Listeners implements Listener {
                     case "change-status":
 
                         player.closeInventory();
-                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                                || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
 
-                            EnumContainer.Status[] statusList = EnumContainer.Status.values();
-                            EnumContainer.Status nextStatus = EnumContainer.Status.PUBLIC, previousStatus = warp.getStatus();
-                            for (int i = -1; ++i < statusList.length; ) {
-                                EnumContainer.Status status = statusList[i];
-                                if (status == previousStatus) {
-                                    int nextIndex = (i + 1);
-                                    nextStatus = statusList[nextIndex >= statusList.length ? 0 : nextIndex];
-                                    if (!player.hasPermission("hyperdrive.admin.status") && nextStatus == EnumContainer.Status.ADMIN)
-                                        nextStatus = statusList[0];
-                                    break;
+                            final EnumContainer.Status[] statusList = EnumContainer.Status.values();
+                            EnumContainer.Status nextStatus, previousStatus = warp.getStatus();
+
+                            final int currentIndex = previousStatus.getIndex();
+                            int nextIndex = (currentIndex + 1);
+                            nextStatus = statusList[nextIndex >= statusList.length ? 0 : nextIndex];
+
+                            if (!player.hasPermission("hyperdrive.admin.status") && nextStatus == EnumContainer.Status.ADMIN)
+                                nextStatus = statusList[0];
+                            else
+                                while (getPluginInstance().getManager().isDisabled(nextStatus)
+                                        || !getPluginInstance().getManager().canUseStatus(player, nextStatus.name())) {
+                                    nextStatus = statusList[(nextIndex >= statusList.length) ? 0 : nextIndex];
+                                    nextIndex++;
                                 }
-                            }
 
                             warp.setStatus(nextStatus);
                             String nextStatusName, previousStatusName;
@@ -1731,7 +1750,8 @@ public class Listeners implements Listener {
                     case "toggle-enchant-look":
 
                         player.closeInventory();
-                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                                || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
 
@@ -1753,7 +1773,8 @@ public class Listeners implements Listener {
 
                     case "notify":
                         player.closeInventory();
-                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                                || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
 
@@ -1774,7 +1795,8 @@ public class Listeners implements Listener {
                     case "change-icon":
 
                         player.closeInventory();
-                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                                || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                             ItemStack handItem = getPluginInstance().getManager().getHandItem(player);
 
                             if (handItem == null || handItem.getType() == Material.AIR) {
@@ -1794,7 +1816,8 @@ public class Listeners implements Listener {
                     case "change-animation-set":
 
                         player.closeInventory();
-                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
+                        if ((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                                || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
 
@@ -1830,25 +1853,32 @@ public class Listeners implements Listener {
                 || e.getClickedInventory().getType() == InventoryType.PLAYER)
             return;
 
-        String itemId = getPluginInstance().getManager().getIdFromSlot("like-menu-section", e.getSlot());
+        final ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("like-menu-section");
+        if (cs == null) return;
+
+        final String itemId = getPluginInstance().getManager().getIdFromSlot(cs, e.getSlot());
         if (itemId != null) {
-            if (getPluginInstance().getConfig().getBoolean("like-menu-section.items." + itemId + ".click-sound")) {
-                String soundName = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".sound-name");
+            final ConfigurationSection itemSection = cs.getConfigurationSection("items." + itemId);
+            if (itemSection == null) return;
+
+            if (itemSection.getBoolean("click-sound")) {
+                String soundName = itemSection.getString("sound-name");
                 if (soundName != null && !soundName.equalsIgnoreCase(""))
-                    player.playSound(player.getLocation(),
-                            Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+                    player.playSound(player.getLocation(), Sound.valueOf(soundName.toUpperCase()
+                            .replace(" ", "_").replace("-", "_")), 1, 1);
             }
 
-            getPluginInstance().getManager().sendCustomMessage("like-menu-section.items." + itemId + ".click-message", player,
-                    "{player}:" + player.getName(), "{item-id}:" + itemId);
+            final String message = itemSection.getString("click-message");
+            if (message != null && !message.isEmpty())
+                getPluginInstance().getManager().sendCustomMessage(message,
+                    player, "{player}:" + player.getName(), "{item-id}:" + itemId);
 
-            String clickAction = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".click-action"),
-                    warpName = inventoryName.replace(getPluginInstance().getManager().colorText(getPluginInstance().getMenusConfig().getString("like-menu-section.title")), "");
-            Warp warp = getPluginInstance().getManager().getWarp(warpName);
+            String clickAction = itemSection.getString("click-action"),
+                    warpName = inventoryName.replace(getPluginInstance().getManager().colorText(cs.getString("title")), "");
+            final Warp warp = getPluginInstance().getManager().getWarp(warpName);
 
-            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("like-menu-section.items." + itemId);
-            if (cs != null && cs.getKeys(false).contains("permission")) {
-                String permission = getPluginInstance().getMenusConfig().getString("like-menu-section.items." + itemId + ".permission");
+            if (itemSection.getKeys(false).contains("permission")) {
+                String permission = itemSection.getString("permission");
                 if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
                     getPluginInstance().getManager().sendCustomMessage("no-permission", player);
                     return;
@@ -1856,7 +1886,7 @@ public class Listeners implements Listener {
             }
 
             if (clickAction != null) {
-                double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("like-menu-section.items." + itemId + ".usage-cost");
+                final double itemUsageCost = itemSection.getDouble("usage-cost");
                 String value = "";
                 if (clickAction.contains(":")) {
                     String[] actionArgs = clickAction.toLowerCase().split(":");
@@ -1976,28 +2006,35 @@ public class Listeners implements Listener {
             return;
         }
 
-        String itemId = getPluginInstance().getManager().getIdFromSlot("ps-menu-section", e.getSlot());
+        final ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("ps-menu-section");
+        if (cs == null) return;
+
+        String itemId = getPluginInstance().getManager().getIdFromSlot(cs, e.getSlot());
         if (itemId != null) {
-            if (getPluginInstance().getMenusConfig().getBoolean("ps-menu-section.items." + itemId + ".click-sound")) {
-                String soundName = getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".sound-name");
+            final ConfigurationSection itemSection = cs.getConfigurationSection("items." + itemId);
+            if (itemSection == null) return;
+
+            if (itemSection.getBoolean("click-sound")) {
+                final String soundName = itemSection.getString("sound-name");
                 if (soundName != null && !soundName.equalsIgnoreCase(""))
                     player.playSound(player.getLocation(),
-                            Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+                            Sound.valueOf(soundName.toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1, 1);
             }
 
-            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("ps-menu-section.items." + itemId);
-            if (cs != null && cs.getKeys(false).contains("permission")) {
-                String permission = getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".permission");
+            if (cs.getKeys(false).contains("permission")) {
+                String permission = itemSection.getString("permission");
                 if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
                     getPluginInstance().getManager().sendCustomMessage("no-permission", player);
                     return;
                 }
             }
 
-            double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("ps-menu-section.items." + itemId + ".usage-cost");
-            getPluginInstance().getManager().sendCustomMessage("ps-menu-section.items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+            final double itemUsageCost = itemSection.getDouble("usage-cost");
+            getPluginInstance().getManager().sendCustomMessage("click-message",
+                    player, "{player}:" + player.getName(), "{item-id}:" + itemId);
 
-            String clickAction = getPluginInstance().getMenusConfig().getString("ps-menu-section.items." + itemId + ".click-action");
+            final String clickAction = itemSection.getString("click-action");
             if (clickAction != null) {
                 String action = clickAction, value = "";
                 if (clickAction.contains(":")) {
@@ -2035,6 +2072,7 @@ public class Listeners implements Listener {
                         if (selectedPlayers.size() >= 1) {
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
+
                             for (int i = -1; ++i < selectedPlayers.size(); ) {
                                 UUID selectedPlayerId = selectedPlayers.get(i);
                                 if (selectedPlayerId == null) continue;
@@ -2045,10 +2083,12 @@ public class Listeners implements Listener {
                                 if (getPluginInstance().getTeleportationHandler().isTeleporting(offlinePlayer.getPlayer()))
                                     continue;
 
-                                getPluginInstance().getManager().sendCustomMessage("player-selected-teleport", offlinePlayer.getPlayer(), "{player}:" + player.getName());
+                                getPluginInstance().getManager().sendCustomMessage("player-selected-teleport", offlinePlayer.getPlayer(),
+                                        "{player}:" + player.getName());
                             }
 
-                            getPluginInstance().getTeleportationHandler().createGroupTemp(player, selectedPlayers, getPluginInstance().getTeleportationHandler().getDestination(player));
+                            getPluginInstance().getTeleportationHandler().createGroupTemp(player, selectedPlayers,
+                                    getPluginInstance().getTeleportationHandler().getDestination(player));
                             getPluginInstance().getManager().sendCustomMessage("group-teleport-sent", player);
                         } else
                             getPluginInstance().getManager().sendCustomMessage("player-selection-fail", player);
@@ -2185,27 +2225,36 @@ public class Listeners implements Listener {
                 || e.getClickedInventory().getType() == InventoryType.PLAYER)
             return;
 
-        String itemId = getPluginInstance().getManager().getIdFromSlot("custom-menu-section." + menuId, e.getSlot());
+        final ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection(("custom-menus-section." + menuId));
+        if (cs == null) return;
+
+        final String itemId = getPluginInstance().getManager().getIdFromSlot(cs, e.getSlot());
         if (itemId != null) {
-            if (getPluginInstance().getMenusConfig().getBoolean("custom-menu-section." + menuId + "." + itemId + ".click-sound")) {
-                String soundName = getPluginInstance().getMenusConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".sound-name");
+            final ConfigurationSection itemSection = cs.getConfigurationSection("items." + itemId);
+            if (itemSection == null) return;
+
+            if (itemSection.getBoolean("click-sound")) {
+                final String soundName = itemSection.getString("sound-name");
                 if (soundName != null && !soundName.equalsIgnoreCase(""))
-                    player.playSound(player.getLocation(), Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
+                    player.playSound(player.getLocation(), Sound.valueOf(soundName.toUpperCase()
+                            .replace(" ", "_").replace("-", "_")), 1, 1);
             }
 
-            getPluginInstance().getManager().sendCustomMessage("custom-menu-section." + menuId + ".items." + itemId + ".click-message", player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+            final String message = itemSection.getString("click-message");
+            if (message != null && !message.isEmpty())
+                getPluginInstance().getManager().sendCustomMessage(message,
+                    player, "{player}:" + player.getName(), "{item-id}:" + itemId);
 
-            ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("custom-menu-section." + menuId + ".items." + itemId);
-            if (cs != null && cs.getKeys(false).contains("permission")) {
-                String permission = getPluginInstance().getMenusConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".permission");
+            if (itemSection.getKeys(false).contains("permission")) {
+                final String permission = itemSection.getString("permission");
                 if (permission != null && !permission.equalsIgnoreCase("") && !player.hasPermission(permission)) {
                     getPluginInstance().getManager().sendCustomMessage("no-permission", player);
                     return;
                 }
             }
 
-            double itemUsageCost = getPluginInstance().getMenusConfig().getDouble("custom-menu-section." + menuId + ".items." + itemId + ".usage-cost");
-            String clickAction = getPluginInstance().getMenusConfig().getString("custom-menu-section." + menuId + ".items." + itemId + ".click-action");
+            final double itemUsageCost = itemSection.getDouble("usage-cost");
+            final String clickAction = itemSection.getString("click-action");
             if (clickAction != null) {
                 String action = clickAction, value = "";
                 if (clickAction.contains(":")) {
@@ -2265,7 +2314,7 @@ public class Listeners implements Listener {
     private void nextPage(Player player, Inventory inventory, List<Integer> warpSlots) {
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
             Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
-                    getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", inventory));
+                    getPluginInstance().getManager().getCurrentFilter("list-menu-section", inventory));
             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
             List<Warp> pageList = new ArrayList<>();
@@ -2291,7 +2340,7 @@ public class Listeners implements Listener {
     private void previousPage(Player player, Inventory inventory, List<Integer> warpSlots) {
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
             Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
-                    getPluginInstance().getManager().getCurrentFilterStatus("list-menu-section", inventory));
+                    getPluginInstance().getManager().getCurrentFilter("list-menu-section", inventory));
             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
             List<Warp> pageList = new ArrayList<>();

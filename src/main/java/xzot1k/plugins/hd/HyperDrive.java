@@ -32,6 +32,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -63,7 +64,8 @@ public class HyperDrive extends JavaPlugin {
     private HeadDatabaseHook headDatabaseHook;
 
     private synchronized static void copy(File source, File destination) throws IOException {
-        try (InputStream is = new FileInputStream(source); OutputStream os = new FileOutputStream(destination)) {
+        try (InputStream is = Files.newInputStream(source.toPath());
+             OutputStream os = Files.newOutputStream(destination.toPath())) {
             byte[] buf = new byte[1024];
             int bytesRead;
             while ((bytesRead = is.read(buf)) > 0) {
@@ -248,9 +250,11 @@ public class HyperDrive extends JavaPlugin {
             if (inputStream != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                 FileConfiguration yaml = YamlConfiguration.loadConfiguration(reader);
-                int updateCount = updateKeys(yaml, name.equalsIgnoreCase("config") ? getConfig() : name.equalsIgnoreCase("lang") ? getLangConfig() : getMenusConfig());
+                int updateCount = updateKeys(yaml, name.equalsIgnoreCase("config") ? getConfig()
+                        : name.equalsIgnoreCase("lang") ? getLangConfig() : getMenusConfig());
                 if (name.equalsIgnoreCase("config")) {
-                    String teleportationSound = getConfig().getString("general-section.global-sounds.teleport"), standaloneTeleporationSound = getConfig().getString("general-section.global-sounds.teleport");
+                    String teleportationSound = getConfig().getString("general-section.global-sounds.teleport"),
+                            standaloneTeleporationSound = getConfig().getString("general-section.global-sounds.teleport");
                     if (isOffhandVersion) {
                         if (teleportationSound == null || teleportationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
                             if (getServerVersion().toLowerCase().startsWith("v1_12") || getServerVersion().toLowerCase().startsWith("v1_11")
@@ -275,12 +279,14 @@ public class HyperDrive extends JavaPlugin {
                             updateCount++;
                         }
                     } else {
-                        if (teleportationSound == null || teleportationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || teleportationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
+                        if (teleportationSound == null || teleportationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT")
+                                || teleportationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
                             getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
                             updateCount++;
                         }
 
-                        if (standaloneTeleporationSound == null || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT") || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
+                        if (standaloneTeleporationSound == null || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT")
+                                || standaloneTeleporationSound.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
                             getConfig().set("general-section.global-sounds.teleport", "ENDERMAN_TELEPORT");
                             updateCount++;
                         }
@@ -320,7 +326,8 @@ public class HyperDrive extends JavaPlugin {
 
                 if (updateCount > 0) {
                     totalUpdates += updateCount;
-                    log(Level.INFO, updateCount + " things were fixed, updated, or removed in the '" + name + ".yml' configuration file. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+                    log(Level.INFO, updateCount + " things were fixed, updated, or removed in the '" + name
+                            + ".yml' configuration file. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
                 }
             }
         }
@@ -535,7 +542,13 @@ public class HyperDrive extends JavaPlugin {
                 Class.forName("org.sqlite.JDBC");
                 setDatabaseConnection(DriverManager.getConnection("jdbc:sqlite:" + getDataFolder() + "/warps.db"));
             } else {
-                Class.forName("com.mysql.jdbc.Driver");
+
+                try {
+                    Class.forName("com.mysql.cj.jdbc.Driver");
+                } catch (NoClassDefFoundError | ClassNotFoundException ignored) {
+                    Class.forName("com.mysql.jdbc.Driver");
+                }
+
                 String databaseName = getConfig().getString("mysql-connection.database-name"), host = getConfig().getString("mysql-connection.host"),
                         port = getConfig().getString("mysql-connection.port"), username = getConfig().getString("mysql-connection.username"),
                         password = getConfig().getString("mysql-connection.password");
@@ -942,6 +955,9 @@ public class HyperDrive extends JavaPlugin {
 
                 for (Map.Entry<UUID, SerializableLocation> mapEntry : new ArrayList<>(getBungeeListener().getTransferMap().entrySet())) {
                     if (mapEntry.getKey() == null || mapEntry.getValue() == null) continue;
+
+                    System.out.println(mapEntry.getKey() + " - " + mapEntry.getValue()); // TODO REMOVE
+
                     OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(mapEntry.getKey());
                     if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() != null) {
                         getBungeeListener().getTransferMap().remove(mapEntry.getKey());

@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.sk89q.worldguard:worldguard-core:7.0.7-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/sk89q/worldguard/worldguard-core/7.0.7-SNAPSHOT/worldguard-core-7.0.7-20220303.130012-23.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/sk89q/worldguard/worldguard-core/7.0.7-SNAPSHOT/worldguard-core-7.0.7-20220303.130012-23-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/sk89q/worldguard/worldguard-core/7.0.7-SNAPSHOT/worldguard-core-7.0.7-20220303.130012-23-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

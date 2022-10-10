@@ -1,0 +1,15 @@
+xzot1k.plugins.hd
+xzot1k.plugins.hd.api
+xzot1k.plugins.hd.api.events
+xzot1k.plugins.hd.api.objects
+xzot1k.plugins.hd.core.internals
+xzot1k.plugins.hd.core.internals.cmds
+xzot1k.plugins.hd.core.internals.hooks
+xzot1k.plugins.hd.core.internals.tabs
+xzot1k.plugins.hd.core.objects
+xzot1k.plugins.hd.core.packets.actionbars
+xzot1k.plugins.hd.core.packets.actionbars.versions
+xzot1k.plugins.hd.core.packets.particles
+xzot1k.plugins.hd.core.packets.particles.versions
+xzot1k.plugins.hd.core.packets.titles
+xzot1k.plugins.hd.core.packets.titles.versions

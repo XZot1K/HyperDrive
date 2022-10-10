@@ -64,11 +64,14 @@ public class RandomTeleportation implements Runnable {
             }
         }
 
-        WorldBorder worldBorder = world.getWorldBorder();
+        final WorldBorder worldBorder = world.getWorldBorder();
+
         if (boundsRadius <= 0) {
             boundsRadius = (long) worldBorder.getSize();
             if ((worldBorder.getSize() / 2) < boundsRadius) boundsRadius = (long) (worldBorder.getSize() / 2);
-        } if (baseLocation == null) baseLocation = worldBorder.getCenter();
+        }
+
+        if (baseLocation == null) baseLocation = worldBorder.getCenter();
         if (boundsRadius >= 29999984) boundsRadius = 5000;
 
         taskId = pluginInstance.getServer().getScheduler().runTaskTimerAsynchronously(pluginInstance, this, 0, 20).getTaskId();
@@ -86,49 +89,9 @@ public class RandomTeleportation implements Runnable {
 
     public static void clearRTPInstance(UUID playerUniqueId) {
         RandomTeleportation randomTeleportation = rtpMap.getOrDefault(playerUniqueId, null);
-        if (randomTeleportation != null) pluginInstance.getServer().getScheduler().cancelTask(randomTeleportation.getTaskId()); rtpMap.remove(playerUniqueId);
+        if (randomTeleportation != null) pluginInstance.getServer().getScheduler().cancelTask(randomTeleportation.getTaskId());
+        rtpMap.remove(playerUniqueId);
     }
-
-    /*public Location findLocation(@NotNull Player player, @NotNull World world, @NotNull List<String> biomeBlackList, @NotNull Location baseLocation, long boundsRadius) {
-        int x = lastX, z = lastZ; if (chunkCompleteFuture == null) {
-            int minX = (int) (baseLocation.getBlockX() - boundsRadius), maxX = (int) (baseLocation.getBlockX() + boundsRadius), minZ = (int) (baseLocation.getBlockZ() - boundsRadius), maxZ = (int) (baseLocation.getBlockZ() + boundsRadius), xAddition = pluginInstance.getTeleportationHandler().getRandomInRange(minX, maxX), zAddition = pluginInstance.getTeleportationHandler().getRandomInRange(minZ, maxZ);
-
-            lastX = x = (int) (baseLocation.getX() + xAddition); lastZ = z = (int) (baseLocation.getZ() + zAddition);
-
-            final int diffx = (Math.max(x, baseLocation.getBlockX()) - Math.min(x, baseLocation.getBlockX())), diffz = (Math.max(z, baseLocation.getBlockZ()) - Math.min(z, baseLocation.getBlockZ())), distance = (int) Math.sqrt(Math.pow(diffx, 2) + Math.pow(diffz, 2));
-            if (distance < (boundsRadius * 0.1) || x >= boundsRadius || z >= boundsRadius || x <= -boundsRadius || z <= -boundsRadius) return null;
-
-            try {
-                chunkCompleteFuture = PaperLib.getChunkAtAsyncUrgently(world, x, z, true); if (!chunkCompleteFuture.isDone()) return null;
-            } catch (NoSuchMethodError | Exception ignored) {
-                try {
-                    chunkCompleteFuture = PaperLib.getChunkAtAsync(world, x, z, true); if (!chunkCompleteFuture.isDone()) return null;
-                } catch (NoSuchMethodError | Exception ignored2) {
-                }
-            }
-        }
-
-        if (!chunkCompleteFuture.isDone()) return null;
-        final int highestY = getHighestY(world, x, z); if (highestY <= -1) {
-            chunkCompleteFuture = null; return null;
-        }
-
-        final Block block = world.getBlockAt(x, highestY, z);
-        boolean isBlockedBiome = false;
-        if (!biomeBlackList.isEmpty()) for (String biomeName : biomeBlackList)
-            if (block.getBiome().name().contains(biomeName.toUpperCase().replace(" ", "_").replace("-", "_"))) {
-                isBlockedBiome = true; break;
-            }
-
-        final boolean failedSafeCheck = pluginInstance.getHookChecker().isNotSafe(player, block.getLocation().clone(), HookChecker.CheckType.RTP),
-                isForbiddenMaterial = pluginInstance.getManager().isForbiddenMaterial(block.getType(), block.getData());
-        if (isBlockedBiome || failedSafeCheck || isForbiddenMaterial) {
-            chunkCompleteFuture = null; return null;
-        }
-
-        Location newLocation = block.getLocation().clone().add(0.5, 2, 0.5); newLocation.setYaw(player.getLocation().getYaw());
-        newLocation.setPitch(player.getLocation().getPitch()); return newLocation;
-    }*/
 
     public static LinkedHashMap<UUID, RandomTeleportation> getRtpMap() {
         return rtpMap;
@@ -136,23 +99,26 @@ public class RandomTeleportation implements Runnable {
 
     @Override
     public void run() {
-        if (chunkCompleteFuture != null && !chunkCompleteFuture.isDone() && !chunkCompleteFuture.isCompletedExceptionally()) {
-            System.out.println("Still attempting to load a chunk."); // TODO remove
-            return;
-        }
+        if (chunkCompleteFuture != null && !chunkCompleteFuture.isDone() && !chunkCompleteFuture.isCompletedExceptionally()) return;
 
         if (attempts >= maxAttempts) {
             pluginInstance.getServer().getScheduler().cancelTask(getTaskId());
-            clearRTPInstance(player.getUniqueId()); pluginInstance.getManager().sendCustomMessage("random-teleport-fail", player, ("{tries}:" + attempts));
+            clearRTPInstance(player.getUniqueId());
+            pluginInstance.getManager().sendCustomMessage("random-teleport-fail", player, ("{tries}:" + attempts));
             pluginInstance.getManager().clearCooldown(player, "rtp");
             return;
         } else attempts += 1;
 
-        int minX = (int) (baseLocation.getBlockX() - boundsRadius), maxX = (int) (baseLocation.getBlockX() + boundsRadius),
-                minZ = (int) (baseLocation.getBlockZ() - boundsRadius), maxZ = (int) (baseLocation.getBlockZ() + boundsRadius),
+        int xCalcOne = (int) (baseLocation.getBlockX() - boundsRadius), xCalcTwo = (int) (baseLocation.getBlockX() + boundsRadius),
+                zCalcOne = (int) (baseLocation.getBlockZ() - boundsRadius), zCalcTwo = (int) (baseLocation.getBlockZ() + boundsRadius);
+
+        int minX = Math.min(xCalcOne, xCalcTwo), maxX = Math.max(xCalcOne, xCalcTwo),
+                minZ = Math.min(zCalcOne, zCalcTwo), maxZ = Math.max(zCalcOne, zCalcTwo),
                 xAddition = pluginInstance.getTeleportationHandler().getRandomInRange(minX, maxX),
                 zAddition = pluginInstance.getTeleportationHandler().getRandomInRange(minZ, maxZ),
                 x = (int) (baseLocation.getX() + xAddition), z = (int) (baseLocation.getZ() + zAddition);
+
+        if(xAddition >= boundsRadius || zAddition >= boundsRadius) return;
 
         try {
             chunkCompleteFuture = PaperLib.getChunkAtAsyncUrgently(world, x >> 16, z >> 16, true);
@@ -161,46 +127,15 @@ public class RandomTeleportation implements Runnable {
         }
 
         chunkCompleteFuture.whenComplete((chunk, exception) -> handleAction(chunk, x, z));
-
-        // TODO OLD STUFF
-       /* if (chunkCompleteFuture == null || !chunkCompleteFuture.isDone()) {
-            if (attempts >= maxAttempts) {
-                clearRTPInstance(player.getUniqueId()); pluginInstance.getManager().sendCustomMessage("random-teleport-fail", player, ("{tries}:" + attempts));
-                pluginInstance.getManager().clearCooldown(player, "rtp"); return;
-            } else attempts += 1;
-        } else if (chunkCompleteFuture != null && !chunkCompleteFuture.isDone()) return;
-
-        Location location = findLocation(player, world, biomeBlackList, baseLocation, boundsRadius); if (location == null) return;
-        pluginInstance.getServer().getScheduler().cancelTask(getTaskId());
-
-        RandomTeleportEvent randomTeleportEvent = new RandomTeleportEvent(location, player); pluginInstance.getServer().getPluginManager().callEvent(randomTeleportEvent);
-        if (randomTeleportEvent.isCancelled()) return;
-
-        if (onlyUpdateDestination) {
-            pluginInstance.getTeleportationHandler().updateDestination(player, new Destination(pluginInstance, location)); return;
-        }
-
-        pluginInstance.getTeleportationHandler().teleportPlayer(player, location);
-
-        if (!player.hasPermission("hyperdrive.rtpbypass")) pluginInstance.getManager().updateCooldown(player, "rtp");
-
-        String animationLine = pluginInstance.getConfig().getString("special-effects-section.random-teleport-animation");
-        if (animationLine != null && animationLine.contains(":")) {
-            String[] animationArgs = animationLine.split(":"); if (animationArgs.length >= 2) {
-                EnumContainer.Animation animation = EnumContainer.Animation.valueOf(animationArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
-                pluginInstance.getTeleportationHandler().getAnimation().playAnimation(player, animationArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"), animation, 1);
-            }
-        }
-
-        if (!teleportSound.equalsIgnoreCase("")) Objects.requireNonNull(location.getWorld()).playSound(location, Sound.valueOf(teleportSound), 1, 1);
-
-        complete = true;
-        pluginInstance.getManager().sendCustomMessage("random-teleported", player, "{tries}:" + attempts, "{x}:" + location.getBlockX(), "{y}:" + location.getBlockY(), "{z}:" + location.getBlockZ(), "{world}:" + Objects.requireNonNull(location.getWorld()).getName());
-   */
     }
 
     private void handleAction(@NotNull Chunk chunk, int x, int z) {
         final int highestY = getHighestY(world, x, z);
+        if (world.getEnvironment() == World.Environment.NETHER && highestY >= 120) {
+            chunkCompleteFuture = null;
+            return;
+        }
+
         final Block block = world.getBlockAt(x, highestY, z);
         boolean isBlockedBiome = false;
         if (!biomeBlackList.isEmpty()) for (String biomeName : biomeBlackList)
@@ -235,7 +170,8 @@ public class RandomTeleportation implements Runnable {
 
         String animationLine = pluginInstance.getConfig().getString("special-effects-section.random-teleport-animation");
         if (animationLine != null && animationLine.contains(":")) {
-            String[] animationArgs = animationLine.split(":"); if (animationArgs.length >= 2) {
+            String[] animationArgs = animationLine.split(":");
+            if (animationArgs.length >= 2) {
                 EnumContainer.Animation animation = EnumContainer.Animation.valueOf(animationArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
                 pluginInstance.getTeleportationHandler().getAnimation().playAnimation(player, animationArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"), animation, 1);
             }
@@ -248,7 +184,8 @@ public class RandomTeleportation implements Runnable {
 
     private String getCustomBorderString(World world) {
         for (String line : pluginInstance.getConfig().getStringList("random-teleport-section.custom-borders"))
-            if (line.toLowerCase().startsWith(world.getName().toLowerCase())) return line; return null;
+            if (line.toLowerCase().startsWith(world.getName().toLowerCase())) return line;
+        return null;
     }
 
     private int getHighestY(@NotNull World world, double x, double z) {
@@ -264,7 +201,8 @@ public class RandomTeleportation implements Runnable {
                 if (!blockTwoAbove.getType().name().contains("AIR")) continue;
 
                 return i;
-            } return -1;
+            }
+            return -1;
         }
 
         return world.getHighestBlockYAt((int) x, (int) z);

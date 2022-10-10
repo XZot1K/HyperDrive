@@ -4,7 +4,9 @@
 
 package xzot1k.plugins.hd.core.internals;
 
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.objects.Warp;
@@ -12,7 +14,6 @@ import xzot1k.plugins.hd.api.objects.Warp;
 import java.util.*;
 
 public class Paging {
-    final String ownedFormat, publicFormat, privateFormat, adminFormat, featuredFormat;
     private HyperDrive pluginInstance;
     private Map<UUID, Map<Integer, List<UUID>>> playerSelectionPageMap;
     private Map<UUID, List<UUID>> playerSelectedMap;
@@ -27,12 +28,6 @@ public class Paging {
         setPlayerSelectionPageMap(new HashMap<>());
         setPlayerSelectedMap(new HashMap<>());
         setRandom(new Random());
-
-        ownedFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format");
-        publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format");
-        privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format");
-        adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format");
-        featuredFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format");
     }
 
     public int getCurrentPage(OfflinePlayer player) {
@@ -210,28 +205,29 @@ public class Paging {
         return false;
     }
 
-    public Map<Integer, List<Warp>> getWarpPages(OfflinePlayer player, String menuPath, String status) {
-        switch (status.toLowerCase()) {
-            case "public":
-                status = publicFormat;
-                break;
-            case "private":
-                status = privateFormat;
-                break;
-            case "admin":
-                status = adminFormat;
-                break;
-            case "featured":
-                status = featuredFormat;
-                break;
-            default:
-                break;
-        }
-        if (status == null || getPluginInstance().getManager().getWarpMap().isEmpty()) return new HashMap<>();
+    public Map<Integer, List<Warp>> getWarpPages(OfflinePlayer player, String menuPath, EnumContainer.Filter filter) {
 
         final int slotCount = getPluginInstance().getMenusConfig().getIntegerList(menuPath + ".warp-slots").size();
         List<Warp> warpList = new ArrayList<>(getPluginInstance().getManager().getWarpMap().values());
-        warpSort(warpList, status.equals(featuredFormat));
+
+        final ConfigurationSection customMenus = getPluginInstance().getMenusConfig().getConfigurationSection("custom-menus-section");
+        if (customMenus != null) {
+            for (String menuId : customMenus.getKeys(false)) {
+                if (!customMenus.contains(menuId + ".items")) continue;
+                final ConfigurationSection cs = customMenus.getConfigurationSection(menuId + ".items");
+                if (cs != null) {
+                    for (String itemId : cs.getKeys(false)) {
+                        final String clickAction = cs.getString(itemId + ".click-action");
+                        if (clickAction != null) {
+                            warpList.removeIf(warp -> clickAction.toLowerCase().contains(ChatColor
+                                    .stripColor(warp.getWarpName().toLowerCase())));
+                        }
+                    }
+                }
+            }
+        }
+
+        warpSort(warpList, (filter == EnumContainer.Filter.FEATURED));
 
         Map<Integer, List<Warp>> finalMap = new HashMap<>();
         int currentPage = 1, trafficThreshold = getPluginInstance().getMenusConfig().getInt("list-menu-section.traffic-threshold");
@@ -241,7 +237,7 @@ public class Paging {
             if (warp == null || !getPluginInstance().getManager().getWarpMap().containsKey(warp.getWarpName().toLowerCase()))
                 continue;
 
-            if (status.equalsIgnoreCase(featuredFormat)) {
+            if (filter == EnumContainer.Filter.FEATURED) {
                 if (warp.getTraffic() >= trafficThreshold)
                     if (currentWarpList.size() < slotCount)
                         currentWarpList.add(warp);
@@ -253,7 +249,7 @@ public class Paging {
                     }
 
                 continue;
-            } else if (status.equalsIgnoreCase(ownedFormat)) {
+            } else if (filter == EnumContainer.Filter.OWNED) {
                 if (warp.getOwner().toString().equalsIgnoreCase(player.getUniqueId().toString())
                         || warp.getAssistants().contains(player.getUniqueId()))
                     if (currentWarpList.size() < slotCount)
@@ -266,7 +262,7 @@ public class Paging {
                     }
 
                 continue;
-            } else if (status.equalsIgnoreCase(publicFormat)) {
+            } else if (filter == EnumContainer.Filter.PUBLIC) {
                 if (warp.getStatus() == EnumContainer.Status.PUBLIC)
                     if (currentWarpList.size() < slotCount)
                         currentWarpList.add(warp);
@@ -278,7 +274,7 @@ public class Paging {
                     }
 
                 continue;
-            } else if (status.equalsIgnoreCase(privateFormat)) {
+            } else if (filter == EnumContainer.Filter.PRIVATE) {
                 if (warp.getStatus() == EnumContainer.Status.PRIVATE)
                     if (currentWarpList.size() < slotCount)
                         currentWarpList.add(warp);
@@ -290,7 +286,7 @@ public class Paging {
                     }
 
                 continue;
-            } else if (status.equalsIgnoreCase(adminFormat)) {
+            } else if (filter == EnumContainer.Filter.ADMIN) {
                 if (warp.getStatus() == EnumContainer.Status.ADMIN)
                     if (currentWarpList.size() < slotCount)
                         currentWarpList.add(warp);
