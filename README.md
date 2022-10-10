@@ -41,6 +41,7 @@ Required Libraries when compiling:
 * ASkyBlock
 * Towny
 * GriefPrevention
+* GriefDefender
 * Residence
 * MySQL Java Connector
 ```
