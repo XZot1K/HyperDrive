@@ -1511,7 +1511,8 @@ public class Listeners implements Listener {
                         player.closeInventory();
                         if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
                             getPluginInstance().getManager().updateChatInteraction(player, "rename", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                            getPluginInstance().getManager().sendCustomMessage("rename-warp-interaction", player, "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                            getPluginInstance().getManager().sendCustomMessage("rename-warp-interaction", player, "{cancel}:" + getPluginInstance().getConfig().getString("general-section" +
+                             ".chat-interaction-cancel"),
                                     "{player}:" + player.getName());
                         } else
                             getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
@@ -1521,7 +1522,8 @@ public class Listeners implements Listener {
                     case "delete":
 
                         player.closeInventory();
-                        if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
+                        if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                                || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
 

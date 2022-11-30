@@ -994,7 +994,9 @@ public class HyperDrive extends JavaPlugin {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 try {
-                    String warpName = resultSet.getString("name").replace("'", "").replace("\"", ""), nameColor = null;
+                    String warpName = resultSet.getString("name")
+                            .replace("'", "").replace("\"", ""),
+                            nameColor = null;
                     if (warpName.isEmpty()) continue;
 
                     if (hasColumn(resultSet, "name_color")) {
@@ -1010,7 +1012,8 @@ public class HyperDrive extends JavaPlugin {
                     warpName = (nameColor != null) ? (nameColor + getManager().colorText(warpName)) : getManager().colorText(warpName);
                     final String strippedName = ChatColor.stripColor(warpName);
                     if (strippedName.isEmpty()) continue;
-                    if (!warpName.contains("§")) warpName = ("§f" + warpName);
+
+                    boolean oldWarp = !warpName.contains("§");
 
                     String ipAddress = resultSet.getString("server_ip").replace("localhost", "127.0.0.1"),
                             locationString = resultSet.getString("location");
@@ -1027,12 +1030,18 @@ public class HyperDrive extends JavaPlugin {
 
                         Warp warp;
                         if (uuid == null) warp = new Warp(warpName, serializableLocation);
-                        else
-                            warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
-                        warp.register();
-                        loadedWarps += 1;
+                        else warp = new Warp(warpName, getPluginInstance().getServer().getOfflinePlayer(uuid), serializableLocation);
 
                         converterWarpSpecifics(resultSet, ipAddress, warp);
+
+                        if (oldWarp) {
+                            warp.delete(warpName);
+                            warp.setWarpName(("§f" + warpName));
+                            warp.save(false);
+                        }
+
+                        warp.register();
+                        loadedWarps += 1;
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

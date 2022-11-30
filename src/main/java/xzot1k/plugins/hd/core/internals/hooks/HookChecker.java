@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import xzot1k.plugins.hd.HyperDrive;
 
-import java.util.Objects;
 import java.util.Optional;
 
 public class HookChecker {
@@ -87,16 +86,6 @@ public class HookChecker {
                     if (factionAtLocation != null && (!ownershipCheck || (!factionAtLocation.isWilderness()
                             && !factionAtLocation.getId().equalsIgnoreCase(saberPlayer.getFaction().getId()))))
                         return true;
-                    break;
-                case X:
-                    net.prosavage.factionsx.core.Faction xfaction = net.prosavage.factionsx.manager.GridManager.INSTANCE.getFactionAt(new
-                            net.prosavage.factionsx.persist.data.FLocation(location.getBlockX(),
-                            location.getBlockZ(), Objects.requireNonNull(location.getWorld()).getName()));
-                    if (xfaction != null) {
-                        net.prosavage.factionsx.core.FPlayer xFPlayer = net.prosavage.factionsx.manager.PlayerManager.INSTANCE.getFPlayer(player);
-                        if (!ownershipCheck || (xfaction.getId() != xFPlayer.getFaction().getId() && !xfaction.isWilderness()))
-                            return true;
-                    }
                     break;
                 case UUID:
                     com.massivecraft.factions.Faction uuidFaction = com.massivecraft.factions.Board.getInstance()

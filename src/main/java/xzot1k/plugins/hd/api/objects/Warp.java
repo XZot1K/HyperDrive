@@ -197,7 +197,7 @@ public class Warp implements Comparable<Warp> {
             getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> delete(getWarpName()));
     }
 
-    private synchronized void delete(String warpName){
+    public void delete(String warpName) {
         try {
             Statement statement = getPluginInstance().getDatabaseConnection().createStatement();
             statement.executeUpdate("DELETE FROM warps WHERE name = '" + warpName + "';");
@@ -214,7 +214,7 @@ public class Warp implements Comparable<Warp> {
         else save();
     }
 
-    private synchronized void save() {
+    private void save() {
         try {
             setWarpName(getWarpName().replace("'", "").replace("\"", ""));
 
