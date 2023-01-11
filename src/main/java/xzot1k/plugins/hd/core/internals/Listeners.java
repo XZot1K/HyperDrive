@@ -89,8 +89,7 @@ public class Listeners implements Listener {
             runPlayerSelectionClick(player, e);
         } else {
             String menuId = getPluginInstance().getManager().getMenuId(inventoryName);
-            if (menuId != null)
-            {
+            if (menuId != null) {
                 e.setCancelled(true);
                 runCustomMenuClick(player, menuId, e);
             }
@@ -126,6 +125,16 @@ public class Listeners implements Listener {
         boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
                 && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         switch (interactionModule.getInteractionId().toLowerCase()) {
+
+            case "search": {
+
+                Inventory inventory = getPluginInstance().getManager().buildListMenu(e.getPlayer(), EnumContainer.Filter.SEARCH, strippedName);
+                getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> e.getPlayer().openInventory(inventory));
+                getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
+
+                break;
+            }
+
             case "create-warp": {
                 if (getPluginInstance().getHookChecker().isNotSafe(e.getPlayer(), e.getPlayer().getLocation(), HookChecker.CheckType.CREATION)) {
                     getPluginInstance().getManager().sendCustomMessage("not-hook-safe", e.getPlayer());
@@ -270,7 +279,8 @@ public class Listeners implements Listener {
                     getPluginInstance().getManager().sendCustomMessage("description-cleared", e.getPlayer(), "{warp}:" + warp.getWarpName());
                 } else {
                     warp.setDescription(textEntry);
-                    getPluginInstance().getManager().sendCustomMessage("description-set", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{description}:" + net.md_5.bungee.api.ChatColor.stripColor(textEntry));
+                    getPluginInstance().getManager().sendCustomMessage("description-set", e.getPlayer(), "{warp}:" + warp.getWarpName(),
+                            "{description}:" + net.md_5.bungee.api.ChatColor.stripColor(textEntry));
                 }
 
                 break;
@@ -1298,7 +1308,13 @@ public class Listeners implements Listener {
                         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
                             getPluginInstance().getManager().getPaging().resetWarpPages(player);
                             EnumContainer.Filter filter = getPluginInstance().getManager().getCurrentFilter("list-menu-section", e.getInventory());
-                            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", filter);
+
+                            String filterValue = null;
+                            ItemStack filterItem = e.getInventory().getItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items.filter-switch.slot"));
+                            if (filterItem != null && filterItem.getItemMeta() != null)
+                                filterValue = ChatColor.stripColor(filterItem.getItemMeta().getDisplayName()).replace(EnumContainer.Filter.SEARCH.getFormat(), "");
+
+                            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", filter, filterValue);
                             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
                             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
                             List<Warp> pageList = new ArrayList<>();
@@ -1323,13 +1339,13 @@ public class Listeners implements Listener {
                     case "next-page":
                         if (getPluginInstance().getManager().getPaging().hasNextWarpPage(player)
                                 && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                            nextPage(player, e.getInventory(), warpSlots);
+                            nextPage(player, e.getInventory(), warpSlots, true);
                         else getPluginInstance().getManager().sendCustomMessage("no-next-page", player);
                         break;
                     case "previous-page":
                         if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player)
                                 && getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                            previousPage(player, e.getInventory(), warpSlots);
+                            previousPage(player, e.getInventory(), warpSlots, true);
                         else getPluginInstance().getManager().sendCustomMessage("no-previous-page", player);
                         break;
                     case "filter-switch":
@@ -1343,6 +1359,22 @@ public class Listeners implements Listener {
                                 next = next.getNext();
                                 if (getPluginInstance().getManager().isDisabled(next)) next = next.getNext();
 
+                                if (next == EnumContainer.Filter.SEARCH) {
+                                    getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> {
+                                        player.closeInventory();
+
+                                        if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
+                                            getPluginInstance().getManager().updateChatInteraction(player, "search", null, itemUsageCost);
+                                            getPluginInstance().getManager().sendCustomMessage("search-interaction", player,
+                                                    "{cancel}:" + getPluginInstance().getConfig().getString("general-section.chat-interaction-cancel"),
+                                                    "{player}:" + player.getName());
+                                        } else
+                                            getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
+                                    });
+                                    return;
+                                }
+
+
                                 ItemStack filterItem = getPluginInstance().getManager().buildItemFromId(player,
                                         Objects.requireNonNull(next.getFormat()), "list-menu-section", itemId);
                                 e.getInventory().setItem(e.getSlot(), filterItem);
@@ -1353,7 +1385,7 @@ public class Listeners implements Listener {
                                 }
 
                                 getPluginInstance().getManager().getPaging().resetWarpPages(player);
-                                Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", next);
+                                Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section", next, null);
                                 getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
                                 int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
                                 List<Warp> wList = new ArrayList<>();
@@ -1420,7 +1452,7 @@ public class Listeners implements Listener {
             final String message = itemSection.getString("click-message");
             if (message != null && !message.isEmpty())
                 getPluginInstance().getManager().sendCustomMessage(message,
-                    player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+                        player, "{player}:" + player.getName(), "{item-id}:" + itemId);
 
             String clickAction = itemSection.getString("click-action"),
                     toggleFormat = getPluginInstance().getConfig().getString("general-section.option-toggle-format"),
@@ -1480,7 +1512,7 @@ public class Listeners implements Listener {
                                 if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                     return;
 
-                                Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
+                                Inventory inventory = getPluginInstance().getManager().buildListMenu(player, null, null);
                                 MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player.getPlayer());
                                 getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
                                 if (menuOpenEvent.isCancelled())
@@ -1512,7 +1544,7 @@ public class Listeners implements Listener {
                         if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
                             getPluginInstance().getManager().updateChatInteraction(player, "rename", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
                             getPluginInstance().getManager().sendCustomMessage("rename-warp-interaction", player, "{cancel}:" + getPluginInstance().getConfig().getString("general-section" +
-                             ".chat-interaction-cancel"),
+                                            ".chat-interaction-cancel"),
                                     "{player}:" + player.getName());
                         } else
                             getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
@@ -1873,7 +1905,7 @@ public class Listeners implements Listener {
             final String message = itemSection.getString("click-message");
             if (message != null && !message.isEmpty())
                 getPluginInstance().getManager().sendCustomMessage(message,
-                    player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+                        player, "{player}:" + player.getName(), "{item-id}:" + itemId);
 
             String clickAction = itemSection.getString("click-action"),
                     warpName = inventoryName.replace(getPluginInstance().getManager().colorText(cs.getString("title")), "");
@@ -1920,7 +1952,7 @@ public class Listeners implements Listener {
                                 if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                     return;
 
-                                Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
+                                Inventory inventory = getPluginInstance().getManager().buildListMenu(player, null, null);
                                 MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player.getPlayer());
                                 getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
                                 if (menuOpenEvent.isCancelled())
@@ -2151,7 +2183,8 @@ public class Listeners implements Listener {
                                             continue;
 
                                         List<UUID> sps = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
-                                        e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player, sps != null && sps.contains(offlinePlayer.getUniqueId())));
+                                        e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player,
+                                                sps != null && sps.contains(offlinePlayer.getUniqueId())));
                                         playerSelectionPageList.remove(playerUniqueId);
                                     }
                                 }
@@ -2164,7 +2197,8 @@ public class Listeners implements Listener {
                         if (getPluginInstance().getManager().getPaging().hasPreviousWarpPage(player)) {
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
-                            playerSelectionPageMap = getPluginInstance().getManager().getPaging().getCurrentPlayerSelectionPages(player) == null ? getPluginInstance().getManager().getPaging().getPlayerSelectionPages(player)
+                            playerSelectionPageMap = getPluginInstance().getManager().getPaging().getCurrentPlayerSelectionPages(player) == null ?
+                                    getPluginInstance().getManager().getPaging().getPlayerSelectionPages(player)
                                     : getPluginInstance().getManager().getPaging().getCurrentPlayerSelectionPages(player);
                             getPluginInstance().getManager().getPaging().getPlayerSelectionPageMap().put(player.getUniqueId(), playerSelectionPageMap);
 
@@ -2183,7 +2217,8 @@ public class Listeners implements Listener {
                                         if (!offlinePlayer.isOnline()) continue;
 
                                         List<UUID> sps = getPluginInstance().getManager().getPaging().getSelectedPlayers(player);
-                                        e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player, sps != null && sps.contains(offlinePlayer.getUniqueId())));
+                                        e.getInventory().setItem(playerSlots.get(i), getPluginInstance().getManager().getPlayerSelectionHead(player,
+                                                sps != null && sps.contains(offlinePlayer.getUniqueId())));
                                         playerSelectionPageList.remove(playerUniqueId);
                                     }
                                 }
@@ -2245,7 +2280,7 @@ public class Listeners implements Listener {
             final String message = itemSection.getString("click-message");
             if (message != null && !message.isEmpty())
                 getPluginInstance().getManager().sendCustomMessage(message,
-                    player, "{player}:" + player.getName(), "{item-id}:" + itemId);
+                        player, "{player}:" + player.getName(), "{item-id}:" + itemId);
 
             if (itemSection.getKeys(false).contains("permission")) {
                 final String permission = itemSection.getString("permission");
@@ -2313,10 +2348,18 @@ public class Listeners implements Listener {
         }
     }
 
-    private void nextPage(Player player, Inventory inventory, List<Integer> warpSlots) {
+    private void nextPage(Player player, Inventory inventory, List<Integer> warpSlots, boolean isListMenu) {
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+
+            String filterValue = null;
+            if (isListMenu) {
+                ItemStack filterItem = inventory.getItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items.filter-switch.slot"));
+                if (filterItem != null && filterItem.getItemMeta() != null)
+                    filterValue = ChatColor.stripColor(filterItem.getItemMeta().getDisplayName()).replace(EnumContainer.Filter.SEARCH.getFormat(), "");
+            }
+
             Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
-                    getPluginInstance().getManager().getCurrentFilter("list-menu-section", inventory));
+                    getPluginInstance().getManager().getCurrentFilter("list-menu-section", inventory), filterValue);
             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
             List<Warp> pageList = new ArrayList<>();
@@ -2339,10 +2382,18 @@ public class Listeners implements Listener {
         });
     }
 
-    private void previousPage(Player player, Inventory inventory, List<Integer> warpSlots) {
+    private void previousPage(Player player, Inventory inventory, List<Integer> warpSlots, boolean isListMenu) {
         getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
+
+            String filterValue = null;
+            if (isListMenu) {
+                ItemStack filterItem = inventory.getItem(getPluginInstance().getMenusConfig().getInt("list-menu-section.items.filter-switch.slot"));
+                if (filterItem != null && filterItem.getItemMeta() != null)
+                    filterValue = ChatColor.stripColor(filterItem.getItemMeta().getDisplayName()).replace(EnumContainer.Filter.SEARCH.getFormat(), "");
+            }
+
             Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, "list-menu-section",
-                    getPluginInstance().getManager().getCurrentFilter("list-menu-section", inventory));
+                    getPluginInstance().getManager().getCurrentFilter("list-menu-section", inventory), filterValue);
             getPluginInstance().getManager().getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
             List<Warp> pageList = new ArrayList<>();

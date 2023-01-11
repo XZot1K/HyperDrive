@@ -7,6 +7,7 @@ package xzot1k.plugins.hd.core.internals;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Nullable;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.objects.Warp;
@@ -205,7 +206,7 @@ public class Paging {
         return false;
     }
 
-    public Map<Integer, List<Warp>> getWarpPages(OfflinePlayer player, String menuPath, EnumContainer.Filter filter) {
+    public Map<Integer, List<Warp>> getWarpPages(OfflinePlayer player, String menuPath, EnumContainer.Filter filter, @Nullable String filterValue) {
 
         final int slotCount = getPluginInstance().getMenusConfig().getIntegerList(menuPath + ".warp-slots").size();
         List<Warp> warpList = new ArrayList<>(getPluginInstance().getManager().getWarpMap().values());
@@ -227,17 +228,35 @@ public class Paging {
             }
         }
 
-        warpSort(warpList, (filter == EnumContainer.Filter.FEATURED));
+        warpSort(warpList, false, false);
+        if (filter == EnumContainer.Filter.FEATURED) warpSort(warpList, true, false);
+        else warpSort(warpList, false, true);
 
         Map<Integer, List<Warp>> finalMap = new HashMap<>();
-        int currentPage = 1, trafficThreshold = getPluginInstance().getMenusConfig().getInt("list-menu-section.traffic-threshold");
+        int currentPage = 1, trafficThreshold = getPluginInstance().getMenusConfig().getInt(menuPath + ".traffic-threshold");
         List<Warp> currentWarpList = new ArrayList<>();
         for (int i = -1; ++i < warpList.size(); ) {
             final Warp warp = warpList.get(i);
             if (warp == null || !getPluginInstance().getManager().getWarpMap().containsKey(warp.getWarpName().toLowerCase()))
                 continue;
 
-            if (filter == EnumContainer.Filter.FEATURED) {
+            if (filter == EnumContainer.Filter.SEARCH && filterValue != null && !filterValue.isEmpty()) {
+
+                OfflinePlayer op = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
+                if ((op != null && op.hasPlayedBefore() && op.getName() != null && op.getName().equalsIgnoreCase(filterValue))
+                        || ChatColor.stripColor(warp.getWarpName()).contains(filterValue)) {
+                    if (currentWarpList.size() < slotCount)
+                        currentWarpList.add(warp);
+                    else {
+                        finalMap.put(currentPage, new ArrayList<>(currentWarpList));
+                        currentWarpList.clear();
+                        currentWarpList.add(warp);
+                        currentPage += 1;
+                    }
+                }
+
+                continue;
+            } else if (filter == EnumContainer.Filter.FEATURED) {
                 if (warp.getTraffic() >= trafficThreshold)
                     if (currentWarpList.size() < slotCount)
                         currentWarpList.add(warp);
@@ -323,25 +342,26 @@ public class Paging {
         return finalMap;
     }
 
-    private void warpSort(List<Warp> warpList, boolean sortAsFeatured) {
-        warpSort(warpList, 0, warpList.size() - 1, sortAsFeatured);
+    private void warpSort(List<Warp> warpList, boolean sortFeatured, boolean applyOtherFilters) {
+        warpSort(warpList, 0, warpList.size() - 1, sortFeatured, applyOtherFilters);
     }
 
-    private void warpSort(List<Warp> warpList, int low, int high, boolean sortAsFeatured) {
+    private void warpSort(List<Warp> warpList, int low, int high, boolean sortFeatured, boolean applyOtherFilters) {
         if (low < (high + 1)) {
-            int p = warpPartition(warpList, low, high, sortAsFeatured);
-            warpSort(warpList, low, (p - 1), sortAsFeatured);
-            warpSort(warpList, (p + 1), high, sortAsFeatured);
+            int p = warpPartition(warpList, low, high, sortFeatured, applyOtherFilters);
+            warpSort(warpList, low, (p - 1), sortFeatured, applyOtherFilters);
+            warpSort(warpList, (p + 1), high, sortFeatured, applyOtherFilters);
         }
     }
 
-    private int warpPartition(List<Warp> warpList, int low, int high, boolean sortAsFeatured) {
+    private int warpPartition(List<Warp> warpList, int low, int high, boolean sortFeatured, boolean applyOtherFilters) {
         warpSwapIndex(warpList, low, (getRandom().nextInt((high - low) + 1) + low));
         int border = (low + 1);
         for (int i = border - 1; ++i <= high; ) {
             Warp warpAtHigh = warpList.get(i), warpAtLow = warpList.get(low);
             final int compareResult = warpAtLow.compareTo(warpAtHigh);
-            if (compareResult >= 0 || (sortAsFeatured && warpAtLow.getTraffic() >= warpAtHigh.getTraffic())) continue;
+            if (compareResult >= 0 || (sortFeatured && warpAtLow.getTraffic() >= warpAtHigh.getTraffic())
+                    || (applyOtherFilters && warpAtLow.getLikeRatio() >= warpAtHigh.getLikeRatio())) continue;
             warpSwapIndex(warpList, i, border++);
         }
 

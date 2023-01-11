@@ -26,7 +26,7 @@ public final class EnumContainer {
 
     public enum Filter {
 
-        PUBLIC, PRIVATE, ADMIN, OWNED, FEATURED;
+        PUBLIC, PRIVATE, ADMIN, OWNED, FEATURED, SEARCH;
 
         public static Filter get(int index) {
             for (int i = -1; ++i < values().length; )
@@ -37,7 +37,8 @@ public final class EnumContainer {
         public static Filter getByName(@NotNull String filter) {
             for (int i = -1; ++i < values().length; ) {
                 final Filter foundFilter = values()[i];
-                if (foundFilter.name().equals(filter) || foundFilter.getFormat().equalsIgnoreCase(filter))
+                if (filter.toLowerCase().contains(foundFilter.name().toLowerCase())
+                        || filter.toLowerCase().contains(foundFilter.getFormat().toLowerCase()))
                     return foundFilter;
             }
             return null;
@@ -64,6 +65,8 @@ public final class EnumContainer {
                 case OWNED: {return HyperDrive.getPluginInstance().getMenusConfig().getString("list-menu-section.own-status-format");}
 
                 case FEATURED: {return HyperDrive.getPluginInstance().getMenusConfig().getString("list-menu-section.featured-status-format");}
+
+                case SEARCH: {return HyperDrive.getPluginInstance().getMenusConfig().getString("list-menu-section.search-status-format");}
 
                 default: {return HyperDrive.getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format");}
             }

@@ -120,21 +120,22 @@ public class HookChecker {
         if (griefPreventionInstalled && checkType != CheckType.WARP) {
             me.ryanhamshire.GriefPrevention.Claim claimAtLocation = me.ryanhamshire.GriefPrevention.GriefPrevention
                     .instance.dataStore.getClaimAt(location, true, null);
-            if (claimAtLocation != null && (!ownershipCheck || !claimAtLocation.getOwnerName().equalsIgnoreCase(player.getName())))
+            if (claimAtLocation != null && (!ownershipCheck || !claimAtLocation.getOwnerName().equalsIgnoreCase(player.getName())
+                    || !claimAtLocation.getOwnerID().toString().equals(player.getUniqueId().toString())))
                 return true;
         }
 
         final World world = player.getWorld();
         if (griefDefenderInstalled && checkType != CheckType.WARP
                 && com.griefdefender.api.GriefDefender.getCore().isEnabled(world.getUID()) && location.getWorld() != null) {
-            com.griefdefender.api.claim.ClaimManager claimManager = com.griefdefender.api.GriefDefender
-                    .getCore().getClaimManager(location.getWorld().getUID());
-            if (claimManager != null) {
-                com.griefdefender.api.claim.Claim claimAtLocation = claimManager.getClaimAt(location.getBlockX(),
-                        location.getBlockY(), location.getBlockZ());
-                if (claimAtLocation != null && !claimAtLocation.isWilderness()
-                        && (!ownershipCheck || (claimAtLocation.getOwnerUniqueId().toString().equals(player.getUniqueId().toString())))) return true;
-                //claimAtLocation.getUserTrusts().contains(player.getUniqueId())
+            com.griefdefender.api.claim.Claim claimAtLocation = com.griefdefender.api.GriefDefender.getCore().getClaimAt(location);
+            if (claimAtLocation != null && !claimAtLocation.isWilderness()) {
+
+                if (claimAtLocation.getParent() != null && !claimAtLocation.getParent().isWilderness()
+                        && claimAtLocation.getParent().getOwnerUniqueId().toString().equals(player.getUniqueId().toString()))
+                    return true;
+
+                if (!claimAtLocation.getOwnerUniqueId().toString().equals(player.getUniqueId().toString())) return true;
             }
         }
 

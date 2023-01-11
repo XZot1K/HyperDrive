@@ -62,15 +62,18 @@ public class Manager {
 
     public Manager(HyperDrive pluginInstance) {
         setPluginInstance(pluginInstance);
-        hexPatternOne = Pattern.compile("#[a-fA-F\\d]{6}");
-        hexPatternTwo = Pattern.compile("\\{#[a-fA-F\\d]{6}}");
-        eventPlaceholders = new String[]{"{is-owner}", "{has-access}", "{no-access}", "{can-edit}", "{is-private}", "{is-public}", "{is-admin}"};
         setSimpleDateFormat(new SimpleDateFormat("MM/dd/yyyy"));
         setPaging(new Paging(getPluginInstance()));
         setCooldownMap(new HashMap<>());
         setWarpMap(new HashMap<>());
         setChatInteractionMap(new HashMap<>());
         setGroupMap(new HashMap<>());
+
+        hexPatternOne = Pattern.compile("#[a-fA-F\\d]{6}");
+        hexPatternTwo = Pattern.compile("\\{#[a-fA-F\\d]{6}}");
+        eventPlaceholders = new String[]{"{is-owner}", "{not-owner}", "{has-access}", "{no-access}",
+                "{can-edit}", "{is-private}", "{is-public}", "{is-admin}"};
+
         setupPackets();
     }
 
@@ -203,7 +206,8 @@ public class Manager {
                     String colorText = message.substring(matcher.start(), matcher.end());
                     matcher = hexPatternOne.matcher(message = message.replace(colorText, (net.md_5.bungee.api.ChatColor.of(colorText) + "")));
                 }
-            } catch (IllegalArgumentException ignored) {}
+            } catch (IllegalArgumentException ignored) {
+            }
         }
 
         return net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', message);
@@ -651,6 +655,10 @@ public class Manager {
                         if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
                             newLore.add(colorText(furtherFormattedLine));
                         break;
+                    case "{not-owner}":
+                        if (warp.getOwner() != null && !warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                            newLore.add(colorText(furtherFormattedLine));
+                        break;
                     case "{can-edit}":
                         if (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()) || warp.getAssistants().contains(player.getUniqueId()))
                             newLore.add(colorText(furtherFormattedLine));
@@ -857,17 +865,19 @@ public class Manager {
         return null;
     }
 
-    public Inventory buildListMenu(Player player) {
+    public Inventory buildListMenu(@NotNull Player player, @Nullable EnumContainer.Filter defaultFilter, @Nullable String filterValue) {
         final Inventory inventory = getPluginInstance().getServer().createInventory(null, getPluginInstance().getMenusConfig().getInt("list-menu-section.size"),
                 colorText(getPluginInstance().getMenusConfig().getString("list-menu-section.title")));
 
-        if (player != null && player.isOnline()) {
+        if (player.isOnline()) {
             getPluginInstance().getServer().getScheduler().runTaskAsynchronously(getPluginInstance(), () -> {
                 List<Integer> warpSlots = getPluginInstance().getMenusConfig().getIntegerList("list-menu-section.warp-slots");
 
-                final EnumContainer.Filter filter = EnumContainer.Filter.get(Math.max(0, Math.min(EnumContainer.Filter.values().length,
-                        getPluginInstance().getMenusConfig().getInt("list-menu-section.default-filter-index"))));
                 ItemStack emptySlotFiller = null;
+
+                EnumContainer.Filter filter = defaultFilter;
+                if (filter == null) filter = EnumContainer.Filter.get(Math.max(0, Math.min(EnumContainer.Filter.values().length,
+                        getPluginInstance().getMenusConfig().getInt("list-menu-section.default-filter-index"))));
 
                 getPaging().resetWarpPages(player);
                 int currentPage = getPaging().getCurrentPage(player);
@@ -886,7 +896,9 @@ public class Manager {
                             String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None", replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) : "None";
                             String displayName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".display-name"))
                                     .replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement).replace("{next-page}", replacement1)
-                                    .replace("{current-status}", Objects.requireNonNull(filter).getFormat());
+                                    .replace("{current-status}", Objects.requireNonNull(filter).getFormat())
+                                    + ((itemId.equalsIgnoreCase("filter-switch") && defaultFilter == EnumContainer.Filter.SEARCH && filterValue != null) ? filterValue : "");
+
                             if (usePlayerHead) {
                                 List<String> newLore = new ArrayList<>(), lore = getPluginInstance().getMenusConfig().getStringList("list-menu-section.items." + itemId + ".lore");
                                 for (int j = -1; ++j < lore.size(); )
@@ -941,7 +953,7 @@ public class Manager {
                     }
                 }
 
-                Map<Integer, List<Warp>> warpPageMap = getPaging().getWarpPages(player, "list-menu-section", filter);
+                Map<Integer, List<Warp>> warpPageMap = getPaging().getWarpPages(player, "list-menu-section", filter, filterValue);
                 getPaging().getWarpPageMap().put(player.getUniqueId(), warpPageMap);
                 if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(1)) {
                     List<Warp> pageOneWarpList = new ArrayList<>(warpPageMap.get(1));
@@ -1393,7 +1405,7 @@ public class Manager {
                 }
             }
 
-            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, ("custom-menus-section." + menuId), filter);
+            Map<Integer, List<Warp>> wpMap = getPluginInstance().getManager().getPaging().getWarpPages(player, ("custom-menus-section." + menuId), filter, null);
             getPaging().getWarpPageMap().put(player.getUniqueId(), wpMap);
             int page = getPluginInstance().getManager().getPaging().getCurrentPage(player);
             List<Warp> wList = new ArrayList<>();
@@ -1450,7 +1462,8 @@ public class Manager {
             return getPluginInstance().getHookChecker().getEssentialsPlugin() != null
                     && ((com.earth2me.essentials.Essentials) getPluginInstance().getHookChecker()
                     .getEssentialsPlugin()).getUser(player.getUniqueId()).isVanished();
-        } catch (NoClassDefFoundError ignored) {}
+        } catch (NoClassDefFoundError ignored) {
+        }
 
         return false;
     }
@@ -1686,18 +1699,8 @@ public class Manager {
 
     public boolean canUseStatus(@NotNull Player player, @NotNull String status) {
         if (player.hasPermission("hyperdrive.status.*")) return true;
-
-        List<PermissionAttachmentInfo> list = new ArrayList<>(player.getEffectivePermissions());
-        for (int i = -1; ++i < list.size(); ) {
-            PermissionAttachmentInfo permission = list.get(i);
-            if (permission.getPermission().toLowerCase().startsWith("hyperdrive.status.") && permission.getValue()) {
-                final String foundValue = permission.getPermission().toLowerCase().replace("hyperdrive.status.", "");
-                if (status.toUpperCase().replace(" ", "_").equals(foundValue.toUpperCase().replace(" ", "_")))
-                    return true;
-            }
-        }
-
-        return false;
+        else return (player.hasPermission("hyperdrive.status."
+                + status.toUpperCase().replace(" ", "_")));
     }
 
     public boolean isDisabled(@NotNull EnumContainer.Filter filter) {

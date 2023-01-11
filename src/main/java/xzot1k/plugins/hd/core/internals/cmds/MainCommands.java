@@ -13,6 +13,7 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
@@ -843,8 +844,7 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        List<String> globalFilterStrings = getPluginInstance().getConfig()
-                .getStringList("filter-section.global-filter");
+        List<String> globalFilterStrings = getPluginInstance().getConfig().getStringList("filter-section.global-filter");
         for (int i = -1; ++i < globalFilterStrings.size(); ) {
             String filterString = globalFilterStrings.get(i);
             warpName = warpName.replace(filterString, "");
@@ -859,6 +859,15 @@ public class MainCommands implements CommandExecutor {
 
         if (getPluginInstance().getManager().doesWarpExist(warpName)) {
             getPluginInstance().getManager().sendCustomMessage("warp-exists", player, "{warp}:" + warpName);
+            return;
+        }
+
+        double cost = 0;
+        ConfigurationSection cs = getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section.items");
+        if (cs != null && cs.contains("create-warp")) cost = cs.getDouble("create-warp.usage-cost");
+
+        if (!getPluginInstance().getManager().initiateEconomyCharge(player, cost)) {
+            getPluginInstance().getManager().clearChatInteraction(player);
             return;
         }
 
@@ -1052,7 +1061,7 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        Inventory inventory = getPluginInstance().getManager().buildListMenu(player);
+        Inventory inventory = getPluginInstance().getManager().buildListMenu(player, null, null);
         MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player);
         getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
         if (!menuOpenEvent.isCancelled())

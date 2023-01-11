@@ -64,6 +64,7 @@ give-assistant-interaction: "&ePlease enter the name of the player you wish to g
 remove-assistant-interaction: "&ePlease enter the name of the player you wish to remove assistant from (Type &a{cancel} &eto stop the interaction):"
 add-list-interaction: "&ePlease enter the name of the player you wish to add to the list (Type &a{cancel} &eto stop the interaction):"
 remove-list-interaction: "&ePlease enter the name of the player you wish to remove from the list (Type &a{cancel} &eto stop the interaction):"
+search-interaction: "&ePlease enter some text to filter names by (Type &a{cancel} &eto stop the interaction):"
 player-already-assistant: "&cThe player &e{player} &cis already an assistant for this warp."
 player-not-assistant: "&cThe player &e{player} &cis not an assistant for this warp."
 remove-assistant: "&aThe player &e{player} &ais no longer an assistant for the warp &e{warp}&a."

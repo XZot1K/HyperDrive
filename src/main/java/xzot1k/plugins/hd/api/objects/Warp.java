@@ -191,6 +191,8 @@ public class Warp implements Comparable<Warp> {
         return bar.toString();
     }
 
+    public double getLikeRatio() {return (((double) getLikes()) / ((double) getDislikes()));}
+
     public void deleteSaved(boolean async) {
         if (!async) delete(getWarpName());
         else

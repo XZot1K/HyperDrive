@@ -12,6 +12,7 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.sk89q.worldguard.protection.regions.RegionQuery;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -23,9 +24,7 @@ public class WorldGuardHandler {
 
     private final WorldGuardPlugin worldGuardPlugin;
 
-    public WorldGuardHandler() {
-        worldGuardPlugin = WorldGuardPlugin.inst();
-    }
+    public WorldGuardHandler() {worldGuardPlugin = WorldGuardPlugin.inst();}
 
     /**
      * Checks if the location is within a region that also has correct flag setup.
@@ -39,6 +38,8 @@ public class WorldGuardHandler {
         if (worldGuardPlugin == null) return true;
 
         LocalPlayer localPlayer = (player != null ? WorldGuardPlugin.inst().wrapPlayer(player) : null);
+        if (localPlayer == null) return true;
+
         if (worldGuardPlugin.getDescription().getVersion().startsWith("6")) {
             try {
                 Method method = worldGuardPlugin.getClass().getMethod("getRegionManager", World.class);
@@ -52,7 +53,7 @@ public class WorldGuardHandler {
                 applicableRegionsMethod.setAccessible(true);
 
                 ApplicableRegionSet regionSet = ((ApplicableRegionSet) applicableRegionsMethod.invoke(regionManager, location));
-                if (checkOwnerShip && localPlayer != null) {
+                if (checkOwnerShip) {
                     for (ProtectedRegion region : regionSet) {
                         if (region.isOwner(localPlayer)) continue;
                         return false;
@@ -62,9 +63,11 @@ public class WorldGuardHandler {
                 e.printStackTrace();
             }
         } else {
-            ApplicableRegionSet set = WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery().getApplicableRegions(BukkitAdapter.adapt(location));
+            if (WorldGuard.getInstance().getPlatform().getSessionManager().hasBypass(localPlayer, localPlayer.getWorld())) return true;
+
+            RegionQuery set = WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery();
             if (set == null) return true;
-            return set.testState(localPlayer, Flags.BUILD);
+            return set.testState(BukkitAdapter.adapt(location), localPlayer, Flags.BUILD);
         }
 
         return true;

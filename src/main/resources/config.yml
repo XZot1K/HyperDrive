@@ -214,6 +214,7 @@ warp-icon-section:
   # Only one event will be read and used all extra events will be ignored.)
   ###
   # {is-owner} - Only displays the line if the player is the owner of the warp.
+  # {not-owner} - Only displays the line if the player is NOT the owner of the warp.
   # {has-access} - Only displays the line if the player has access to use the warp.
   # {no-access} - Only displays the line if the player does NOT have access to use the warp.
   # {can-edit} - Only displays the line if the player can edit the warp.
@@ -226,7 +227,7 @@ warp-icon-section:
     - "{no-access}&cYou don't have access to use this warp."
     - "{has-access}&a(Left-Click) &eBegin the teleportation process."
     - "{has-access}&a(Right-Click) &eBegin the group teleportation process."
-    - "{has-access}&a(Shift + Left-Click) &eBegin the warp rating process."
+    - "{not-owner}&a(Shift + Left-Click) &eBegin the warp rating process."
     - "{can-edit}&a(Shift + Right-Click) &eBegin the warp edit process."
     - ""
     - "&7It will cost &e${usage-price} &7to use this warp."
