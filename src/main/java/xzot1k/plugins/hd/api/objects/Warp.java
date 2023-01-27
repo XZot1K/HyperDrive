@@ -169,29 +169,39 @@ public class Warp implements Comparable<Warp> {
 
     public String getLikeBar() {
         StringBuilder bar = new StringBuilder();
-        double averageValue = Math.min(getLikes(), getDislikes());
-        for (int i = -1; ++i < 12; ) {
-            if (getLikes() == getDislikes()) {
-                bar.append("&f").append("\u25CF");
-                continue;
-            } else if (getLikes() == 0 && getDislikes() != 0) {
-                bar.append("&c").append("\u25CF");
-                continue;
-            } else if (getDislikes() == 0 && getLikes() != 0) {
-                bar.append("&a").append("\u25CF");
-                continue;
-            }
 
-            if (averageValue >= 0.1) {
+        if (getLikes() == 0 && getDislikes() == 0) {
+            for (int i = -1; ++i < 12; ) bar.append("&f").append("\u25CF");
+            return bar.toString();
+        }
+
+        double likePercentage = getLikePercentage(),
+                dislikePercentage = getDisLikePercentage(),
+                likeSegments = Math.round(12 * likePercentage),
+                dislikeSegments = Math.round(12 * dislikePercentage);
+
+        for (int i = -1; ++i < 12; ) {
+            if (likeSegments > 0) {
+                likeSegments--;
                 bar.append("&a").append("\u25CF");
-                averageValue -= 0.1;
-            } else bar.append("&c").append("\u25CF");
+            } else if (dislikeSegments > 0) {
+                dislikeSegments--;
+                bar.append("&c").append("\u25CF");
+            }
         }
 
         return bar.toString();
     }
 
-    public double getLikeRatio() {return (((double) getLikes()) / ((double) getDislikes()));}
+    public double getLikePercentage() {
+        double totalLikes = (getLikes() + getDislikes());
+        return (((double) getLikes()) / totalLikes);
+    }
+
+    public double getDisLikePercentage() {
+        double totalLikes = (getLikes() + getDislikes());
+        return (((double) getDislikes()) / totalLikes);
+    }
 
     public void deleteSaved(boolean async) {
         if (!async) delete(getWarpName());

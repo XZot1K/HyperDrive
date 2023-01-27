@@ -361,7 +361,7 @@ public class Paging {
             Warp warpAtHigh = warpList.get(i), warpAtLow = warpList.get(low);
             final int compareResult = warpAtLow.compareTo(warpAtHigh);
             if (compareResult >= 0 || (sortFeatured && warpAtLow.getTraffic() >= warpAtHigh.getTraffic())
-                    || (applyOtherFilters && warpAtLow.getLikeRatio() >= warpAtHigh.getLikeRatio())) continue;
+                    || (applyOtherFilters && Math.round(12 * warpAtLow.getLikePercentage()) >= Math.round(12 * warpAtHigh.getLikePercentage()))) continue;
             warpSwapIndex(warpList, i, border++);
         }
 

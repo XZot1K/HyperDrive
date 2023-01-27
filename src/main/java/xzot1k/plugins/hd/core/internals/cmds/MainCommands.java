@@ -963,6 +963,18 @@ public class MainCommands implements CommandExecutor {
         Player player = (Player) commandSender;
         Warp warp = getPluginInstance().getManager().getWarp(warpName);
         if (warp == null) {
+
+            if (player.hasPermission("hyperdrive.use")) {
+                Inventory inventory = getPluginInstance().getManager().buildListMenu(player, EnumContainer.Filter.SEARCH, warpName);
+
+                MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.LIST, inventory, player);
+                getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                if (!menuOpenEvent.isCancelled())
+                    player.openInventory(inventory);
+
+                return;
+            }
+
             getPluginInstance().getManager().sendCustomMessage("warp-invalid", player, "{warp}:" + warpName);
             return;
         }
