@@ -458,18 +458,15 @@ public class Warp implements Comparable<Warp> {
 
     @Override
     public int compareTo(Warp warp) {
-        final int comparedNamesResult = ChatColor.stripColor(warp.getWarpName()).compareToIgnoreCase(ChatColor.stripColor(getWarpName()));
-        if (comparedNamesResult != 0) return comparedNamesResult;
 
-        final double maxRatioMax = Math.max(warp.getLikes(), getDislikes()), maxRatioMin = Math.min(warp.getLikes(), getDislikes()),
-                minRatioMax = Math.max(warp.getLikes(), getDislikes()), minRatioMin = Math.min(warp.getLikes(), getDislikes());
-        if (!(maxRatioMax == 0 && maxRatioMin == 0) && !(minRatioMax == 0 && minRatioMin == 0)) {
-            final double maxRatio = (maxRatioMin / maxRatioMax), minRatio = (minRatioMin / minRatioMax),
-                    ratioDifference = (maxRatio - minRatio);
-            if (ratioDifference != 0) return (int) ratioDifference;
-        }
+        final int likeCompare = Double.compare(Math.round(12 * getLikePercentage()), Math.round(12 * warp.getLikePercentage()));
+        if (likeCompare != 0) return likeCompare;
+        else if (getLikes() != warp.getLikes()) return Integer.compare(getLikes(), warp.getLikes());
 
-        return 0;
+        final String thisString = ChatColor.stripColor(getWarpName()), otherString = ChatColor.stripColor(warp.getWarpName());
+        final int maxLength = Math.min(thisString.length(), otherString.length());
+
+        return -thisString.substring(0, maxLength).compareToIgnoreCase(otherString.substring(0, maxLength));
     }
 
     public boolean canNotify() {
@@ -479,4 +476,17 @@ public class Warp implements Comparable<Warp> {
     public void setNotify(boolean notify) {
         this.notify = notify;
     }
+
+    public static class TrafficSort implements Comparator<Warp> {
+        @Override
+        public int compare(Warp warpOne, Warp warpTwo) {
+
+            final int trafficCompare = Integer.compare(warpOne.getTraffic(), warpTwo.getTraffic());
+            if (trafficCompare != 0) return trafficCompare;
+
+            return warpOne.compareTo(warpTwo);
+        }
+
+    }
+
 }

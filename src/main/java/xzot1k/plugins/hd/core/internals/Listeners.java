@@ -1478,9 +1478,9 @@ public class Listeners implements Listener {
                     value = actionArgs[1].replace("{player}", player.getName());
                 }
 
-                final String publicFormat = cs.getString("public-status-format"),
-                        privateFormat = cs.getString("private-status-format"),
-                        adminFormat = cs.getString("admin-status-format");
+                final String publicFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.public-status-format"),
+                        privateFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.private-status-format"),
+                        adminFormat = getPluginInstance().getMenusConfig().getString("list-menu-section.admin-status-format");
                 boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
                         && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
 

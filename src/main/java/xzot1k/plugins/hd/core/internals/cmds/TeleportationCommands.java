@@ -968,8 +968,8 @@ public class TeleportationCommands implements CommandExecutor {
             }
         }
 
-        if (getTpaSentMap().isEmpty() || (foundPlayer == null || !getTpaSentMap().containsKey(foundPlayer.getUniqueId()))) {
-            getPluginInstance().getManager().sendCustomMessage("player-tpa-invalid", player, "{player}:" + (foundPlayer != null ? foundPlayer.getName() : ""));
+        if (foundPlayer == null) {
+            getPluginInstance().getManager().sendCustomMessage("player-tpa-invalid", player);
             return;
         }
 

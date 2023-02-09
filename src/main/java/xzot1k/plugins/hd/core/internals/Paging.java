@@ -228,9 +228,16 @@ public class Paging {
             }
         }
 
-        warpSort(warpList, false, false);
-        if (filter == EnumContainer.Filter.FEATURED) warpSort(warpList, true, false);
-        else warpSort(warpList, false, true);
+        final boolean isFeatured = (filter == EnumContainer.Filter.FEATURED);
+
+        if (!isFeatured) warpList.sort(Warp::compareTo);
+        else warpList.sort(new Warp.TrafficSort());
+
+        warpList.sort(Comparator.reverseOrder());
+
+        //warpSort(warpList, false, false);
+        //if (filter == EnumContainer.Filter.FEATURED) warpSort(warpList, true, false);
+        // else warpSort(warpList, false, true);
 
         Map<Integer, List<Warp>> finalMap = new HashMap<>();
         int currentPage = 1, trafficThreshold = getPluginInstance().getMenusConfig().getInt(menuPath + ".traffic-threshold");
@@ -359,9 +366,15 @@ public class Paging {
         int border = (low + 1);
         for (int i = border - 1; ++i <= high; ) {
             Warp warpAtHigh = warpList.get(i), warpAtLow = warpList.get(low);
-            final int compareResult = warpAtLow.compareTo(warpAtHigh);
-            if (compareResult >= 0 || (sortFeatured && warpAtLow.getTraffic() >= warpAtHigh.getTraffic())
-                    || (applyOtherFilters && Math.round(12 * warpAtLow.getLikePercentage()) >= Math.round(12 * warpAtHigh.getLikePercentage()))) continue;
+
+            final int compareResult = warpAtHigh.compareTo(warpAtLow);
+
+            boolean hasMoreLikes = (Math.round(12 * warpAtHigh.getLikePercentage()) >= Math.round(12 * warpAtLow.getLikePercentage()));
+
+            if (compareResult > 0 || (sortFeatured && warpAtLow.getTraffic() > warpAtHigh.getTraffic())) continue;
+
+            if (applyOtherFilters && !hasMoreLikes) continue;
+
             warpSwapIndex(warpList, i, border++);
         }
 
