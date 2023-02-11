@@ -15,10 +15,13 @@ import java.lang.reflect.Method;
 
 public class Titles_Old implements TitleHandler {
 
-    private Class<?> csClass, titlePacketClass, etaClass, cpClass, packetClass;
+    private Class<?> cbcClass, csClass, titlePacketClass, etaClass, cpClass, packetClass;
 
     public Titles_Old() {
         try {
+            cbcClass = Class.forName("net.minecraft.server."
+                    + HyperDrive.getPluginInstance().getServerVersion() + ".IChatBaseComponent");
+
             csClass = Class.forName("net.minecraft.server."
                     + HyperDrive.getPluginInstance().getServerVersion() + ".IChatBaseComponent$ChatSerializer");
 
@@ -48,14 +51,43 @@ public class Titles_Old implements TitleHandler {
 
     private void send(@NotNull Player player, @NotNull String action, @NotNull String text, int fadeIn, int displayTime, int fadeOut) {
         try {
-            final Object titleAction = etaClass.getDeclaredField(action);
+            final Object titleAction = etaClass.getDeclaredField(action).get(null);
 
             final Method aMethod = csClass.getDeclaredMethod("a", String.class);
-            final String textField = (String) aMethod.invoke(csClass, "{\"text\":\""
+            final Object textField = aMethod.invoke(csClass, "{\"text\":\""
                     + HyperDrive.getPluginInstance().getManager().colorText(text) + "\"}");
 
-            final Constructor<?> pConst = titlePacketClass.getConstructor(etaClass, String.class,
-                    Integer.class, Integer.class, Integer.class);
+
+            Constructor<?> pConst = null;
+            for (Constructor<?> con : titlePacketClass.getConstructors()) {
+
+                if (con.getParameterTypes().length != 5) continue;
+
+                if (con.getParameterTypes()[0] != etaClass || con.getParameterTypes()[1] != cbcClass
+                        && con.getParameterTypes()[2] != int.class
+                        && con.getParameterTypes()[3] != int.class
+                        && con.getParameterTypes()[4] != int.class) continue;
+
+                pConst = con;
+                break;
+            }
+
+            if (pConst == null) {
+                for (Constructor<?> con : titlePacketClass.getConstructors()) {
+
+                    if (con.getParameterTypes().length != 5) continue;
+
+                    if (con.getParameterTypes()[0] != etaClass || con.getParameterTypes()[1] != String.class
+                            && con.getParameterTypes()[2] != int.class
+                            && con.getParameterTypes()[3] != int.class
+                            && con.getParameterTypes()[4] != int.class) continue;
+
+                    pConst = con;
+                    break;
+                }
+
+                if (pConst == null) return;
+            }
 
             final Object packet = pConst.newInstance(titleAction, textField, (fadeIn * 20), (displayTime * 20), (fadeOut * 20));
 

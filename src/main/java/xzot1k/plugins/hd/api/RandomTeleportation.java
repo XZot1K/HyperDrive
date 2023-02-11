@@ -118,15 +118,20 @@ public class RandomTeleportation implements Runnable {
                 zAddition = pluginInstance.getTeleportationHandler().getRandomInRange(minZ, maxZ),
                 x = (int) (baseLocation.getX() + xAddition), z = (int) (baseLocation.getZ() + zAddition);
 
-        if(xAddition >= boundsRadius || zAddition >= boundsRadius) return;
+        if (xAddition >= boundsRadius || zAddition >= boundsRadius) return;
 
         try {
             chunkCompleteFuture = PaperLib.getChunkAtAsyncUrgently(world, x >> 16, z >> 16, true);
-        } catch (NoSuchMethodError ignored) {
+        } catch (IllegalStateException | NoSuchMethodError ignored) {
             chunkCompleteFuture = PaperLib.getChunkAtAsync(world, x >> 16, z >> 16, true);
         }
 
-        chunkCompleteFuture.whenComplete((chunk, exception) -> handleAction(chunk, x, z));
+        //System.out.println("X: " + x + " Z: " + z);
+
+        chunkCompleteFuture.whenComplete((chunk, exception) -> {
+            //System.out.println("Handled  ->  X: " + x + " Z: " + z);
+            handleAction(chunk, x, z);
+        });
     }
 
     private void handleAction(@NotNull Chunk chunk, int x, int z) {
@@ -136,7 +141,9 @@ public class RandomTeleportation implements Runnable {
             return;
         }
 
-        final Block block = world.getBlockAt(x, highestY, z);
+        final Block block = world.getBlockAt(x, highestY - 1, z);
+        //System.out.println(block.getType() + "  ->  X: " + x + " Z: " + z);
+
         boolean isBlockedBiome = false;
         if (!biomeBlackList.isEmpty()) for (String biomeName : biomeBlackList)
             if (block.getBiome().name().contains(biomeName.toUpperCase().replace(" ", "_").replace("-", "_"))) {
@@ -172,8 +179,10 @@ public class RandomTeleportation implements Runnable {
         if (animationLine != null && animationLine.contains(":")) {
             String[] animationArgs = animationLine.split(":");
             if (animationArgs.length >= 2) {
-                EnumContainer.Animation animation = EnumContainer.Animation.valueOf(animationArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
-                pluginInstance.getTeleportationHandler().getAnimation().playAnimation(player, animationArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"), animation, 1);
+                EnumContainer.Animation animation = EnumContainer.Animation.valueOf(animationArgs[0].toUpperCase().replace(" ", "_").replace("-",
+                        "_"));
+                pluginInstance.getTeleportationHandler().getAnimation().playAnimation(player,
+                        animationArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"), animation, 1);
             }
         }
 

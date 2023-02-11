@@ -347,7 +347,33 @@ public class HyperDrive extends JavaPlugin {
         if (configurationSection == null) return updateCount;
 
         for (String key : configurationSection.getKeys(true)) {
-            if (key.toLowerCase().endsWith(".material")) {
+
+            if (key.toLowerCase().startsWith("global-sounds")) {
+
+                String keyValue = yaml.getString(key);
+                if (keyValue != null) {
+
+                    if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
+                            || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
+                        if (!keyValue.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
+                            yaml.set(key, "ENTITY_ENDERMEN_TELEPORT");
+                            updateCount++;
+                        }
+                    } else if (getServerVersion().startsWith("v1_8")) {
+                        if (!keyValue.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
+                            yaml.set(key, "ENDERMAN_TELEPORT");
+                            updateCount++;
+                        }
+                    } else {
+                        if (!keyValue.equalsIgnoreCase("ENTITY_ENDERMAN_TELEPORT")) {
+                            yaml.set(key, "ENTITY_ENDERMAN_TELEPORT");
+                            updateCount++;
+                        }
+                    }
+
+                }
+
+            } else if (key.toLowerCase().endsWith(".material")) {
                 String keyValue = yaml.getString(key);
                 if (keyValue == null || keyValue.equalsIgnoreCase("")) {
                     yaml.set(key, "ARROW");
