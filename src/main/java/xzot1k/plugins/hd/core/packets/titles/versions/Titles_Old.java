@@ -85,9 +85,9 @@ public class Titles_Old implements TitleHandler {
                     pConst = con;
                     break;
                 }
-
-                if (pConst == null) return;
             }
+
+            if (pConst == null) return;
 
             final Object packet = pConst.newInstance(titleAction, textField, (fadeIn * 20), (displayTime * 20), (fadeOut * 20));
 

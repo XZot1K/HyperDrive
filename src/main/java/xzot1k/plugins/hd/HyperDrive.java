@@ -297,6 +297,31 @@ public class HyperDrive extends JavaPlugin {
                             updateCount++;
                         }
                     }
+                } else if (name.equalsIgnoreCase("menus")) {
+
+                    ConfigurationSection generalSection = getMenusConfig().getConfigurationSection("");
+                    if (generalSection != null) {
+
+                        for (String option : generalSection.getKeys(true)) {
+                            if (option.toLowerCase().contains("sound-name")) {
+
+                                String value = getMenusConfig().getString(option);
+                                if (isOffhandVersion) {
+                                    if (value == null || !value.equalsIgnoreCase("UI_BUTTON_CLICK")) {
+                                        getMenusConfig().set(option, "UI_BUTTON_CLICK");
+                                        updateCount++;
+                                    }
+                                } else {
+                                    if (value == null || !value.equalsIgnoreCase("CLICK")) {
+                                        getMenusConfig().set(option, "CLICK");
+                                        updateCount++;
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
                 }
 
                 try {

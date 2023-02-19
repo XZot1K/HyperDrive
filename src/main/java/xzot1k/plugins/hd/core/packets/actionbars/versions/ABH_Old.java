@@ -42,7 +42,17 @@ public class ABH_Old implements ActionBarHandler {
             final Object icbc = method.invoke(csClass, ("{\"text\": \""
                     + HyperDrive.getPluginInstance().getManager().colorText(message) + "\"}"));
 
-            final Constructor<?> packetConstructor = packetChatClass.getConstructor(icbClass, Byte.class);
+            Constructor<?> packetConstructor = null;
+            for (Constructor<?> con : packetChatClass.getConstructors()) {
+
+                if (con.getParameterTypes().length != 2 || con.getParameterTypes()[0] != icbClass
+                        || con.getParameterTypes()[1] != byte.class) continue;
+
+                packetConstructor = con;
+                break;
+            }
+
+            if (packetConstructor == null) return;
             final Object packet = packetConstructor.newInstance(icbc, (byte) 2);
 
             final Object cPlayer = craftPlayerClass.cast(player);

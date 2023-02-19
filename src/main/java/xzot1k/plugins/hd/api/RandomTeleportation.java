@@ -120,17 +120,28 @@ public class RandomTeleportation implements Runnable {
 
         if (xAddition >= boundsRadius || zAddition >= boundsRadius) return;
 
-        try {
-            chunkCompleteFuture = PaperLib.getChunkAtAsyncUrgently(world, x >> 16, z >> 16, true);
-        } catch (IllegalStateException | NoSuchMethodError ignored) {
-            chunkCompleteFuture = PaperLib.getChunkAtAsync(world, x >> 16, z >> 16, true);
-        }
+        pluginInstance.getServer().getScheduler().runTask(pluginInstance, () -> {
+            if (pluginInstance.getServerVersion().startsWith("v1_8") || pluginInstance.getServerVersion().startsWith("v1_9")
+                    || pluginInstance.getServerVersion().startsWith("v1_10") || pluginInstance.getServerVersion().startsWith("v1_11")
+                    || pluginInstance.getServerVersion().startsWith("v1_12")) {
+                chunkCompleteFuture = PaperLib.getChunkAtAsync(world, x >> 16, z >> 16, true);
+            } else {
+                try {
+                    chunkCompleteFuture = PaperLib.getChunkAtAsyncUrgently(world, x >> 16, z >> 16, true);
+                } catch (IllegalStateException | NoSuchMethodError ignored) {
+                    chunkCompleteFuture = PaperLib.getChunkAtAsync(world, x >> 16, z >> 16, true);
+                }
+            }
 
-        //System.out.println("X: " + x + " Z: " + z);
+            //System.out.println("X: " + x + " Z: " + z);
 
-        chunkCompleteFuture.whenComplete((chunk, exception) -> {
-            //System.out.println("Handled  ->  X: " + x + " Z: " + z);
-            handleAction(chunk, x, z);
+            chunkCompleteFuture.whenComplete((chunk, exception) -> {
+                //System.out.println("Handled  ->  X: " + x + " Z: " + z);
+
+                handleAction(chunk, x, z);
+
+            });
+
         });
     }
 

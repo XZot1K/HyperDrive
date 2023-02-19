@@ -9,7 +9,7 @@
     <version>5.5.3 (Build ${build})</version>
 
     <properties>
-        <build>4</build>
+        <build>5</build>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
