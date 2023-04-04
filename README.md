@@ -45,8 +45,3 @@ Required Libraries when compiling:
 * Residence
 * MySQL Java Connector
 ```
-
-***
-I currently use DedicatedMC as the official ZotWare testing server. If you need something powerful in terms of hardware without digging a hole in your pocket give them a shot and
-let me know how you like them!
-[![image](https://imgur.com/oqEKWO3.png)](https://dedimc.promo/XZot1K)
