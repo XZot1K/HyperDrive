@@ -255,10 +255,23 @@ special-effects-section:
     - "&fFlash Backs:CONE/CLOUD:CIRCLE/SPELL_WITCH"
     - "&6Over Drive:VORTEX/SPELL_WITCH:CIRCLE/CLOUD"
     - "&cOddly Hot:RING/FLAME:CIRCLE/FLAME"
+
+  # This is the animation that is displayed when the player is successfully teleported to spawn.
+  # (Format: <type>:<effect>) Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
+  # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
+  spawn-teleport-animation: "CIRCLE:FIREWORKS_SPARK"
+  # This is the animation that is displayed when the player is in the process of teleporting to spawn.
+  # (Format: <type>:<effect>) Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
+  # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
+  spawn-teleport-delay-animation: "VORTEX:FIREWORKS_SPARK"
+  # This is the animation that is displayed when the player is undergoing a standalone teleportation command, such as /TP or /TPO, delay.
+  # (Format: <type>:<effect>) Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
+  # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
+  standalone-teleport-animation: "CIRCLE:FIREWORKS_SPARK"
   # This is the animation that is displayed when the player is successfully teleported through a standalone teleportation command such as /TP or /TPO.
   # (Format: <type>:<effect>) Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
   # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]
-  standalone-teleport-animation: "VORTEX:FIREWORKS_SPARK"
+  standalone-teleport-delay-animation: "VORTEX:FIREWORKS_SPARK"
   # This is the animation that is displayed for each player involved in a group teleport after the teleportation is complete. (Format: <type>:<effect>)
   # Particle effects can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
   # The current types are: [CONE, HELIX, CIRCLE, VORTEX, RING]

@@ -394,8 +394,24 @@ public class TeleportationHandler implements Runnable {
                 if (teleportTitle != null && teleportSubTitle != null)
                     getPluginInstance().getManager().sendTitle(player, spawnTitle, spawnSubTitle, 0, 5, 0);
 
+                final String currentAnimationSet = getPluginInstance().getConfig().getString("special-effects-section.spawn-teleport-animation");
+                if (!isVanished && currentAnimationSet != null && currentAnimationSet.contains(":")) {
+                    String[] themeArgs = currentAnimationSet.split(":");
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
+                            .toUpperCase().replace(" ", "_").replace("-", "_")), 1);
+                }
+
                 getPluginInstance().getManager().sendCustomMessage("teleport-spawn", player);
             } else {
+
+                final String currentAnimationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
+                if (!isVanished && currentAnimationSet != null && currentAnimationSet.contains(":")) {
+                    String[] themeArgs = currentAnimationSet.split(":");
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
+                            .toUpperCase().replace(" ", "_").replace("-", "_")), 1);
+                }
 
                 if (teleportTitle != null && teleportSubTitle != null)
                     getPluginInstance().getManager().sendTitle(player,
@@ -412,8 +428,37 @@ public class TeleportationHandler implements Runnable {
     }
 
     // teleportation temp stuff
-    public void updateTeleportTemp(Player player, String teleportTypeId, String teleportValue, int seconds) {
-        getTeleportTempMap().put(player.getUniqueId(), new TeleportTemp(getPluginInstance(), teleportTypeId, teleportValue, seconds));
+    public void updateTeleportTemp(Player player, String teleportTypeId, String teleportValue, int duration) {
+        getTeleportTempMap().put(player.getUniqueId(), new TeleportTemp(getPluginInstance(), teleportTypeId, teleportValue, duration));
+
+        if (teleportTypeId.equals("spawn")) {
+            if (duration > 0) {
+                boolean isVanished = getPluginInstance().getManager().isVanished(player);
+                final String animationSet = getPluginInstance().getConfig().getString("special-effects-section.spawn-teleport-delay-animation");
+                if (!isVanished && animationSet != null && animationSet.contains(":")) {
+                    String[] themeArgs = animationSet.split(":");
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
+                            .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                }
+            }
+
+            getPluginInstance().getManager().sendCustomMessage("teleport-spawn" + (duration > 0 ? "-delay" : ""), player, "{duration}:" + duration);
+
+        } else if (teleportTypeId.equals("tp")) {
+
+            if (duration > 0) {
+                boolean isVanished = getPluginInstance().getManager().isVanished(player);
+                final String animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-delay-animation");
+                if (!isVanished && animationSet != null && animationSet.contains(":")) {
+                    String[] themeArgs = animationSet.split(":");
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
+                            .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                }
+            }
+
+        }
     }
 
     public boolean isTeleporting(Player player) {

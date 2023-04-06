@@ -6,7 +6,7 @@
 
     <groupId>xzot1k.plugins.hd</groupId>
     <artifactId>HyperDrive</artifactId>
-    <version>5.5.3 (Build ${build})</version>
+    <version>5.5.3 <!--(Build ${build})--></version>
 
     <properties>
         <build>7</build>

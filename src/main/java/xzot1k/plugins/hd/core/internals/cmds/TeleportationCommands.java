@@ -454,25 +454,7 @@ public class TeleportationCommands implements CommandExecutor {
             }
 
             int duration = !player.hasPermission("hyperdrive.spawndelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.standalone-delay-duration") : 0;
-
             getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "spawn", getSpawnLocation().toString(), duration);
-
-            if (duration > 0) {
-                boolean isVanished = getPluginInstance().getManager().isVanished(player);
-                final String animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
-                if (!isVanished && animationSet != null && animationSet.contains(":")) {
-                    String[] themeArgs = animationSet.split(":");
-                    String delayTheme = themeArgs[1];
-                    if (delayTheme.contains("/")) {
-                        String[] delayThemeArgs = delayTheme.split("/");
-                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0]
-                                .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
-                    }
-                }
-            }
-
-            getPluginInstance().getManager().sendCustomMessage("teleport-spawn" + (duration > 0 ? "-delay" : ""), player, "{duration}:" + duration);
             return;
         }
 
@@ -500,7 +482,7 @@ public class TeleportationCommands implements CommandExecutor {
                 return;
             }
 
-            getPluginInstance().getTeleportationHandler().updateTeleportTemp(foundPlayer, "tp", getSpawnLocation().toString(), 0);
+            getPluginInstance().getTeleportationHandler().updateTeleportTemp(foundPlayer, "spawn", getSpawnLocation().toString(), 0);
             getPluginInstance().getManager().sendCustomMessage("teleport-spawn", player, "{duration}:" + 0);
             if (!foundPlayer.getUniqueId().toString().equals(player.getUniqueId().toString()))
                 getPluginInstance().getManager().sendCustomMessage("teleport-spawn-admin", player, "{player}:" + foundPlayer.getName());
