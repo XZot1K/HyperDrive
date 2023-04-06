@@ -459,7 +459,7 @@ public class TeleportationCommands implements CommandExecutor {
 
             if (duration > 0) {
                 boolean isVanished = getPluginInstance().getManager().isVanished(player);
-                final String animationSet = getPluginInstance().getConfig().getString("standalone-teleport-animation");
+                final String animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
                 if (!isVanished && animationSet != null && animationSet.contains(":")) {
                     String[] themeArgs = animationSet.split(":");
                     String delayTheme = themeArgs[1];
