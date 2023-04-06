@@ -198,13 +198,13 @@ public class Manager {
                 Matcher matcher = hexPatternOne.matcher(message);
                 while (matcher.find()) {
                     String colorText = message.substring(matcher.start(), matcher.end());
-                    matcher = hexPatternOne.matcher(message = message.replace(colorText, (net.md_5.bungee.api.ChatColor.of(colorText) + "")));
+                    matcher = hexPatternOne.matcher(message = message.replace(colorText, (String.valueOf(net.md_5.bungee.api.ChatColor.of(colorText)))));
                 }
 
                 matcher = hexPatternTwo.matcher(message);
                 while (matcher.find()) {
                     String colorText = message.substring(matcher.start(), matcher.end());
-                    matcher = hexPatternOne.matcher(message = message.replace(colorText, (net.md_5.bungee.api.ChatColor.of(colorText) + "")));
+                    matcher = hexPatternOne.matcher(message = message.replace(colorText, (String.valueOf(net.md_5.bungee.api.ChatColor.of(colorText)))));
                 }
             } catch (IllegalArgumentException ignored) {
             }
@@ -929,7 +929,9 @@ public class Manager {
                                         itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                                         itemStack.setItemMeta(itemMeta);
                                     }
-                                    return;
+
+                                    inventory.setItem(slot, itemStack);
+                                    continue;
                                 }
 
                                 Material material = Material.getMaterial(materialName);
@@ -1055,15 +1057,16 @@ public class Manager {
                             itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                             itemStack.setItemMeta(itemMeta);
                         }
-                        return;
+
+                        inventory.setItem(slot, itemStack);
+                        continue;
                     }
 
                     Material material = Material.getMaterial(materialName);
                     ItemStack itemStack = buildItem(material, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".durability"),
                             colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("ps-menu-section.items." + itemId + ".amount"));
                     inventory.setItem(slot, itemStack);
-                    if (fillEmptySlots)
-                        emptySlotFiller = itemStack;
+                    if (fillEmptySlots) emptySlotFiller = itemStack;
                 }
             }
 
@@ -1236,6 +1239,8 @@ public class Manager {
                                 itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                                 itemStack.setItemMeta(itemMeta);
                             }
+
+                            inventory.setItem(slot, itemStack);
                         } else
                             itemStack = buildItem(Material.getMaterial(materialName), getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".durability"),
                                     colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
@@ -1302,7 +1307,9 @@ public class Manager {
                             itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                             itemStack.setItemMeta(itemMeta);
                         }
-                        return;
+
+                        inventory.setItem(slot, itemStack);
+                        continue;
                     }
 
                     Material material = Material.getMaterial(materialName);
@@ -1386,7 +1393,9 @@ public class Manager {
                             itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                             itemStack.setItemMeta(itemMeta);
                         }
-                        return;
+
+                        inventory.setItem(slot, itemStack);
+                        continue;
                     }
 
                     Material material = Material.getMaterial(materialName);

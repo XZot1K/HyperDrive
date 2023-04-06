@@ -54,8 +54,9 @@ public class Titles_Old implements TitleHandler {
             final Object titleAction = etaClass.getDeclaredField(action).get(null);
 
             final Method aMethod = csClass.getDeclaredMethod("a", String.class);
-            final Object textField = aMethod.invoke(csClass, "{\"text\":\""
-                    + HyperDrive.getPluginInstance().getManager().colorText(text) + "\"}");
+
+            final String coloredText = HyperDrive.getPluginInstance().getManager().colorText(text);
+            final Object textField = aMethod.invoke(csClass, "{\"text\":\"" + coloredText + "\"}");
 
 
             Constructor<?> pConst = null;
@@ -72,6 +73,7 @@ public class Titles_Old implements TitleHandler {
                 break;
             }
 
+            boolean isOld = false;
             if (pConst == null) {
                 for (Constructor<?> con : titlePacketClass.getConstructors()) {
 
@@ -83,21 +85,24 @@ public class Titles_Old implements TitleHandler {
                             && con.getParameterTypes()[4] != int.class) continue;
 
                     pConst = con;
+                    isOld = true;
                     break;
                 }
             }
 
             if (pConst == null) return;
 
-            final Object packet = pConst.newInstance(titleAction, textField, (fadeIn * 20), (displayTime * 20), (fadeOut * 20));
+            final Object packet = pConst.newInstance(titleAction, (!isOld ? textField : coloredText), (fadeIn * 20), (displayTime * 20), (fadeOut * 20));
 
             final Object cPlayer = cpClass.cast(player);
             final Object getHandle = cpClass.getDeclaredMethod("getHandle").invoke(cPlayer);
             final Object pConnection = getHandle.getClass().getDeclaredField("playerConnection").get(getHandle);
             final Method sendPacket = pConnection.getClass().getDeclaredMethod("sendPacket", packetClass);
             sendPacket.invoke(pConnection, packet);
-        } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException
-                 | InvocationTargetException | InstantiationException e) {e.printStackTrace();}
+        } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | IllegalArgumentException
+                 | InvocationTargetException | InstantiationException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

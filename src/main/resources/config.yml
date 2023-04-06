@@ -120,15 +120,21 @@ teleportation-section:
   warp-delay-duration: 10
   # This is the duration the player must wait before engaging a standalone teleport (In seconds).
   standalone-delay-duration: 10
+  # These are the title and sub-title that are sent to the player after they are teleported to spawn (Note: Set to "" to disable).
+  spawn-title: "&eYou have been teleported"
+  spawn-sub-title: "&eto &aSpawn&e."
   # These are the title and sub-title that are sent to the player after they are teleported (Note: Set to "" to disable).
+  standalone-teleport-title: "&eYou have been teleported to"
+  standalone-teleport-sub-title: "&6World: &a{world} &6X: &a{x} &6Y: &a{y} &6Z: &a{z}&e."
+  # These are the title and sub-title that are sent to the player after they are teleported to a warp (Note: Set to "" to disable).
   teleport-title: "&eYou have been teleported"
   teleport-sub-title: "&eto the &a{warp} &ewarp."
   # These are the title and sub-title that are sent to the player 5 seconds before the teleportation is engaged (Note: Set to "" to disable).
   delay-title: "&eTeleportation will be engaged"
-  delay-sub-title: "&ein approximately &a{duration} &eseconds."
+  delay-sub-title: "&ein &a{duration} &eseconds."
   # These are the title and sub-title that are sent to the player when the teleportation process has begun (Note: Set to "" to disable).
   start-title: "&eYou will be teleported to"
-  start-sub-title: "&ethe &a{warp} &ein approximately &a{duration} &eseconds."
+  start-sub-title: "&ethe &a{warp} &ein &a{duration} &eseconds."
   # This is the message display on the player's action bar while the teleportation process is counting down (Set to "" to disable).
   delay-bar-message: "&eTeleportation will engage in: &r{progress} &e- &a{duration-left} &eSeconds"
   # This is the message display on the player's action bar when a teleportation process has begun (Set to "" to disable).
@@ -144,10 +150,10 @@ random-teleport-section:
   delay-duration: 10
   # These are the title and sub-title that are sent to the player 5 seconds before the random teleportation is engaged (Note: Set to "" to disable).
   delay-title: "&eRandom teleportation will be engaged"
-  delay-sub-title: "&ein approximately &a{duration} &eseconds."
+  delay-sub-title: "&ein &a{duration} &eseconds."
   # These are the title and sub-title that are sent to the player when the random teleportation process has begun (Note: Set to "" to disable).
   start-title: "&eYou will be randomly teleported"
-  start-sub-title: "&ein approximately &a{duration} &eseconds."
+  start-sub-title: "&ein &a{duration} &eseconds."
   # This is the message display on the player's action bar while the random teleportation process is counting down (Set to "" to disable).
   delay-bar-message: "&eRandom teleportation will engage in: &r{progress} &e- &a{duration-left} &eSeconds"
   # This is the message display on the player's action bar when a random teleportation process has begun (Set to "" to disable).
