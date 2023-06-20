@@ -1024,132 +1024,129 @@ public class Listeners implements Listener {
         List<Integer> warpSlots = cs.getIntegerList("warp-slots");
         if (warpSlots.contains(e.getSlot()) && e.getCurrentItem() != null && e.getCurrentItem().hasItemMeta()
                 && Objects.requireNonNull(e.getCurrentItem().getItemMeta()).hasDisplayName()) {
+
             final ClickType clickType = e.getClick();
+            if ((clickType == ClickType.RIGHT && !player.hasPermission("hyperdrive.groups.use"))
+                    || (clickType == ClickType.SHIFT_LEFT && !player.hasPermission("hyperdrive.like"))) return;
+
             final String warpName = Objects.requireNonNull(e.getCurrentItem()).getItemMeta().getDisplayName();
             Warp warp = getPluginInstance().getManager().getWarp(warpName);
             if (warp != null) {
+
+                if (!getPluginInstance().getManager().canUseWarp(player, warp)) return;
+
                 String soundName = getPluginInstance().getConfig().getString("warp-icon-section.click-sound");
                 if (soundName != null && !soundName.equalsIgnoreCase(""))
                     player.getWorld().playSound(player.getLocation(),
                             Sound.valueOf(soundName.toUpperCase().replace(" ", "_").replace("-", "_")), 1, 1);
 
                 switch (clickType) {
-                    case LEFT:
+                    case LEFT: {
+                        player.closeInventory();
+                        int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0,
+                                cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
 
-                        if (getPluginInstance().getManager().canUseWarp(player, warp)) {
-                            player.closeInventory();
-                            int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0,
-                                    cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
-
-                            long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
-                            if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
-                                getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
-                                return;
-                            }
-
-                            if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
-                                player.closeInventory();
-                                getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
-                                return;
-                            }
-
-                            if (getPluginInstance().getHookChecker().isNotSafe(player, warp.getWarpLocation().asBukkitLocation(), HookChecker.CheckType.WARP)) {
-                                getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
-                                return;
-                            }
-
-                            if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
-                                    && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
-                                    && !getPluginInstance().getVaultHandler().getEconomy().has(player, warp.getUsagePrice())) {
-                                getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + warp.getUsagePrice());
-                                return;
-                            }
-
-                            boolean isVanished = getPluginInstance().getManager().isVanished(player);
-                            if (!isVanished && warp.getAnimationSet().contains(":")) {
-                                String[] themeArgs = warp.getAnimationSet().split(":");
-                                String delayTheme = themeArgs[1];
-                                if (delayTheme.contains("/")) {
-                                    String[] delayThemeArgs = delayTheme.split("/");
-                                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0]
-                                            .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
-                                }
-                            }
-
-                            String title = getPluginInstance().getConfig().getString("teleportation-section.start-title"),
-                                    subTitle = getPluginInstance().getConfig().getString("teleportation-section.start-sub-title");
-                            if (title != null && subTitle != null)
-                                getPluginInstance().getManager().sendTitle(player, title.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()),
-                                        subTitle.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()), 0, 5, 0);
-
-                            String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.start-bar-message");
-                            if (actionMessage != null && !actionMessage.isEmpty())
-                                getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
-                            getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(), duration);
-                            getPluginInstance().getManager().sendCustomMessage("teleportation-start", player, "{warp}:" + warp.getWarpName(), "{duration}:" + duration);
+                        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
+                        if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
+                            getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
                             return;
                         }
 
-                        break;
-
-                    case RIGHT:
-
-                        if (getPluginInstance().getManager().canUseWarp(player, warp) && player.hasPermission("hyperdrive.groups.use")) {
-
+                        if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
                             player.closeInventory();
-                            final int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
-                            long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
-                            if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
-                                getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
-                                return;
-                            }
-
-                            if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
-                                player.closeInventory();
-                                getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
-                                return;
-                            }
-
-                            if (getPluginInstance().getHookChecker().isNotSafe(player, warp.getWarpLocation().asBukkitLocation(), HookChecker.CheckType.WARP)) {
-                                getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
-                                return;
-                            }
-
-                            if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
-                                    && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
-                                    && !getPluginInstance().getVaultHandler().getEconomy().has(player, warp.getUsagePrice())) {
-                                getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + warp.getUsagePrice());
-                                return;
-                            }
-
-                            Destination destination = new Destination(warp.getWarpLocation());
-                            destination.setWarp(warp);
-                            getPluginInstance().getTeleportationHandler().updateDestination(player, destination);
-                            List<UUID> playerList = getPluginInstance().getManager().getPlayerUUIDs();
-                            playerList.remove(player.getUniqueId());
-                            if (playerList.size() <= 0) {
-                                getPluginInstance().getManager().sendCustomMessage("no-players-found", player);
-                                return;
-                            }
-
-                            Inventory inventory = getPluginInstance().getManager().buildPlayerSelectionMenu(player);
-
-                            MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(),
-                                    EnumContainer.MenuType.PLAYER_SELECTION, inventory, player.getPlayer());
-                            getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                            if (menuOpenEvent.isCancelled())
-                                return;
-
-                            player.openInventory(inventory);
-                            getPluginInstance().getManager().sendCustomMessage("group-selection-start", player);
+                            getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
                             return;
                         }
 
+                        if (getPluginInstance().getHookChecker().isNotSafe(player, warp.getWarpLocation().asBukkitLocation(), HookChecker.CheckType.WARP)) {
+                            getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
+                            return;
+                        }
+
+                        if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
+                                && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
+                                && !getPluginInstance().getVaultHandler().getEconomy().has(player, warp.getUsagePrice())) {
+                            getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + warp.getUsagePrice());
+                            return;
+                        }
+
+                        boolean isVanished = getPluginInstance().getManager().isVanished(player);
+                        if (!isVanished && warp.getAnimationSet().contains(":")) {
+                            String[] themeArgs = warp.getAnimationSet().split(":");
+                            String delayTheme = themeArgs[1];
+                            if (delayTheme.contains("/")) {
+                                String[] delayThemeArgs = delayTheme.split("/");
+                                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0]
+                                        .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                            }
+                        }
+
+                        String title = getPluginInstance().getConfig().getString("teleportation-section.start-title"),
+                                subTitle = getPluginInstance().getConfig().getString("teleportation-section.start-sub-title");
+                        if (title != null && subTitle != null)
+                            getPluginInstance().getManager().sendTitle(player, title.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()),
+                                    subTitle.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()), 0, 5, 0);
+
+                        String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.start-bar-message");
+                        if (actionMessage != null && !actionMessage.isEmpty())
+                            getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
+                        getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(), duration);
+                        getPluginInstance().getManager().sendCustomMessage("teleportation-start", player, "{warp}:" + warp.getWarpName(), "{duration}:" + duration);
                         break;
+                    }
 
-                    case SHIFT_LEFT:
+                    case RIGHT: {
+                        player.closeInventory();
+                        final int cooldown = getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration");
+                        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", cooldown);
+                        if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
+                            getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
+                            return;
+                        }
 
+                        if (getPluginInstance().getTeleportationHandler().isTeleporting(player)) {
+                            player.closeInventory();
+                            getPluginInstance().getManager().sendCustomMessage("already-teleporting", player);
+                            return;
+                        }
+
+                        if (getPluginInstance().getHookChecker().isNotSafe(player, warp.getWarpLocation().asBukkitLocation(), HookChecker.CheckType.WARP)) {
+                            getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player, ("{warp}:" + warp.getWarpName()));
+                            return;
+                        }
+
+                        if (getPluginInstance().getConfig().getBoolean("general-section.use-vault") && !player.hasPermission("hyperdrive.economybypass")
+                                && !player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString()) && !warp.getAssistants().contains(player.getUniqueId())
+                                && !getPluginInstance().getVaultHandler().getEconomy().has(player, warp.getUsagePrice())) {
+                            getPluginInstance().getManager().sendCustomMessage("insufficient-funds", player, "{amount}:" + warp.getUsagePrice());
+                            return;
+                        }
+
+                        Destination destination = new Destination(warp.getWarpLocation());
+                        destination.setWarp(warp);
+                        getPluginInstance().getTeleportationHandler().updateDestination(player, destination);
+                        List<UUID> playerList = getPluginInstance().getManager().getPlayerUUIDs();
+                        playerList.remove(player.getUniqueId());
+                        if (playerList.size() <= 0) {
+                            getPluginInstance().getManager().sendCustomMessage("no-players-found", player);
+                            return;
+                        }
+
+                        Inventory inventory = getPluginInstance().getManager().buildPlayerSelectionMenu(player);
+
+                        MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(),
+                                EnumContainer.MenuType.PLAYER_SELECTION, inventory, player.getPlayer());
+                        getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                        if (menuOpenEvent.isCancelled())
+                            return;
+
+                        player.openInventory(inventory);
+                        getPluginInstance().getManager().sendCustomMessage("group-selection-start", player);
+                        break;
+                    }
+
+                    case SHIFT_LEFT: {
                         if (player.hasPermission("hyperdrive.like")) {
                             if ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
                                     && !warp.getAssistants().contains(player.getUniqueId())) {
@@ -1178,20 +1175,18 @@ public class Listeners implements Listener {
                         }
 
                         break;
-                    case SHIFT_RIGHT:
+                    }
 
-                        if (getPluginInstance().getManager().canEditWarp(player, warp)) {
-                            Inventory inventory = getPluginInstance().getManager().buildEditMenu(player, warp);
+                    case SHIFT_RIGHT: {
+                        Inventory inventory = getPluginInstance().getManager().buildEditMenu(player, warp);
 
-                            MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.EDIT, inventory, player.getPlayer());
-                            getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                            if (menuOpenEvent.isCancelled()) return;
+                        MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.EDIT, inventory, player.getPlayer());
+                        getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                        if (menuOpenEvent.isCancelled()) return;
 
-                            player.openInventory(inventory);
-                            return;
-                        }
-
+                        player.openInventory(inventory);
                         break;
+                    }
 
                     default:
                         break;
@@ -1246,7 +1241,7 @@ public class Listeners implements Listener {
                     }
                     if (!priceExpression.equals("0")) {
                         if (action.equals("create-warp"))
-                            priceExpression = priceExpression.replace("n", getPluginInstance().getManager().getWarpCount(player) + "");
+                            priceExpression = priceExpression.replace("n", String.valueOf(getPluginInstance().getManager().getWarpCount(player)));
                         Expression exp = new Expression(priceExpression);
                         BigDecimal result = exp.eval();
                         itemUsageCost = result.doubleValue();

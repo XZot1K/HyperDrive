@@ -36,7 +36,9 @@ public class Titles_Old implements TitleHandler {
 
             cpClass = Class.forName("org.bukkit.craftbukkit."
                     + HyperDrive.getPluginInstance().getServerVersion() + ".entity.CraftPlayer");
-        } catch (NoClassDefFoundError | ClassNotFoundException e) {e.printStackTrace();}
+        } catch (NoClassDefFoundError | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -50,6 +52,7 @@ public class Titles_Old implements TitleHandler {
     }
 
     private void send(@NotNull Player player, @NotNull String action, @NotNull String text, int fadeIn, int displayTime, int fadeOut) {
+
         try {
             final Object titleAction = etaClass.getDeclaredField(action).get(null);
 

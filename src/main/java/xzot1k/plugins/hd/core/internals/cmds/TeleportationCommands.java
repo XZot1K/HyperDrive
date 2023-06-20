@@ -1064,7 +1064,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
+        if (enteredPlayer == null || !enteredPlayer.isOnline() || getPluginInstance().getManager().isVanished(enteredPlayer)) {
             getPluginInstance().getManager().sendCustomMessage("player-invalid", player, "{player}:" + playerName);
             return;
         }
@@ -1120,7 +1120,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         Player enteredPlayer = getPluginInstance().getServer().getPlayer(playerName);
-        if (enteredPlayer == null || !enteredPlayer.isOnline()) {
+        if (enteredPlayer == null || !enteredPlayer.isOnline() || getPluginInstance().getManager().isVanished(enteredPlayer)) {
             getPluginInstance().getManager().sendCustomMessage("player-invalid", player, "{player}:" + playerName);
             return;
         }
@@ -1170,7 +1170,8 @@ public class TeleportationCommands implements CommandExecutor {
         yEntry = yEntry.replace("~", String.valueOf(player.getLocation().getY()));
         zEntry = zEntry.replace("~", String.valueOf(player.getLocation().getZ()));
 
-        if (getPluginInstance().getManager().isNotNumeric(xEntry) || getPluginInstance().getManager().isNotNumeric(yEntry) || getPluginInstance().getManager().isNotNumeric(zEntry)) {
+        if (getPluginInstance().getManager().isNotNumeric(xEntry) || getPluginInstance().getManager().isNotNumeric(yEntry)
+                || getPluginInstance().getManager().isNotNumeric(zEntry)) {
             getPluginInstance().getManager().sendCustomMessage("coordinate-invalid", (Player) commandSender);
             return;
         }
