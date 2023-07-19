@@ -670,7 +670,8 @@ public class Listeners implements Listener {
 
                 List<String> commandList = getPluginInstance().getConfig().getStringList("general-section.first-join-commands");
                 for (int i = -1; ++i < commandList.size(); )
-                    getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), commandList.get(i).replace("{player}", e.getPlayer().getName()));
+                    getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), commandList.get(i).replace("{player}",
+                            e.getPlayer().getName()));
                 getPluginInstance().getManager().sendCustomMessage("teleport-first-join-spawn", e.getPlayer(), "{player}:" + e.getPlayer().getName());
             } else if (!getPluginInstance().getConfig().getBoolean("general-section.force-only-first-join")
                     && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null) {
@@ -786,7 +787,8 @@ public class Listeners implements Listener {
 
                     warp = getPluginInstance().getManager().getWarp(warpName);
                     if (warp.getStatus() == EnumContainer.Status.PUBLIC || (player.getUniqueId().toString().equalsIgnoreCase(warp.getOwner().toString())
-                            || warp.getAssistants().contains(player.getUniqueId()) || player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive.warps.*")
+                            || warp.getAssistants().contains(player.getUniqueId()) || player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive" +
+                            ".warps.*")
                             || (!warp.getPlayerList().isEmpty() && ((warp.getPlayerList().contains(player.getUniqueId()) && warp.isWhiteListMode()) || (!warp.getPlayerList().contains(player.getUniqueId()) && !warp.isWhiteListMode()))))) {
                         player.closeInventory();
                         int duration = getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration"),
@@ -1077,8 +1079,9 @@ public class Listeners implements Listener {
                             if (delayTheme.contains("/")) {
                                 String[] delayThemeArgs = delayTheme.split("/");
                                 getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0]
-                                        .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1],
+                                        EnumContainer.Animation.valueOf(delayThemeArgs[0]
+                                                .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
                             }
                         }
 
@@ -1090,7 +1093,8 @@ public class Listeners implements Listener {
 
                         String actionMessage = getPluginInstance().getConfig().getString("teleportation-section.start-bar-message");
                         if (actionMessage != null && !actionMessage.isEmpty())
-                            getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{duration}", String.valueOf(duration)).replace("{warp}", warp.getWarpName()));
+                            getPluginInstance().getManager().sendActionBar(player, actionMessage.replace("{duration}", String.valueOf(duration)).replace("{warp}",
+                                    warp.getWarpName()));
                         getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "warp", warp.getWarpName(), duration);
                         getPluginInstance().getManager().sendCustomMessage("teleportation-start", player, "{warp}:" + warp.getWarpName(), "{duration}:" + duration);
                         break;
@@ -1178,13 +1182,17 @@ public class Listeners implements Listener {
                     }
 
                     case SHIFT_RIGHT: {
-                        Inventory inventory = getPluginInstance().getManager().buildEditMenu(player, warp);
+                        if (player.hasPermission("hyperdrive.use.edit")
+                                && ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                                || warp.getAssistants().contains(player.getUniqueId()))) {
+                            Inventory inventory = getPluginInstance().getManager().buildEditMenu(player, warp);
 
-                        MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.EDIT, inventory, player.getPlayer());
-                        getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
-                        if (menuOpenEvent.isCancelled()) return;
+                            MenuOpenEvent menuOpenEvent = new MenuOpenEvent(getPluginInstance(), EnumContainer.MenuType.EDIT, inventory, player.getPlayer());
+                            getPluginInstance().getServer().getPluginManager().callEvent(menuOpenEvent);
+                            if (menuOpenEvent.isCancelled()) return;
 
-                        player.openInventory(inventory);
+                            player.openInventory(inventory);
+                        }
                         break;
                     }
 
@@ -1538,8 +1546,9 @@ public class Listeners implements Listener {
                         player.closeInventory();
                         if (getPluginInstance().getManager().isNotInChatInteraction(player)) {
                             getPluginInstance().getManager().updateChatInteraction(player, "rename", warp != null ? warp.getWarpName() : warpName, itemUsageCost);
-                            getPluginInstance().getManager().sendCustomMessage("rename-warp-interaction", player, "{cancel}:" + getPluginInstance().getConfig().getString("general-section" +
-                                            ".chat-interaction-cancel"),
+                            getPluginInstance().getManager().sendCustomMessage("rename-warp-interaction", player, "{cancel}:" + getPluginInstance().getConfig().getString(
+                                            "general-section" +
+                                                    ".chat-interaction-cancel"),
                                     "{player}:" + player.getName());
                         } else
                             getPluginInstance().getManager().sendCustomMessage("interaction-already-active", player);
@@ -1549,16 +1558,19 @@ public class Listeners implements Listener {
                     case "delete":
 
                         player.closeInventory();
-                        if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
-                                || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
-                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                return;
+                        if (player.hasPermission("hyperdrive.use.delete") && (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))) {
+                            if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                                    || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
+                                if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
+                                    return;
 
-                            warp.unRegister();
-                            warp.deleteSaved(true);
-                            getPluginInstance().getManager().sendCustomMessage("warp-deleted", player, "{warp}:" + warp.getWarpName());
-                        } else
-                            getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
+                                warp.unRegister();
+                                warp.deleteSaved(true);
+                                getPluginInstance().getManager().sendCustomMessage("warp-deleted", player, "{warp}:" + warp.getWarpName());
+                            } else
+                                getPluginInstance().getManager().sendCustomMessage("warp-no-longer-exists", player, "{warp}:" + warp.getWarpName());
+
+                        } else getPluginInstance().getManager().sendCustomMessage("delete-not-owner", player, "{warp}:" + warp.getWarpName());
 
                         break;
 
