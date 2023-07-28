@@ -458,15 +458,15 @@ public class Warp implements Comparable<Warp> {
 
     @Override
     public int compareTo(Warp warp) {
-
         final int likeCompare = Double.compare(Math.round(12 * getLikePercentage()), Math.round(12 * warp.getLikePercentage()));
         if (likeCompare != 0) return likeCompare;
         else if (getLikes() != warp.getLikes()) return Integer.compare(getLikes(), warp.getLikes());
 
-        final String thisString = ChatColor.stripColor(getWarpName()), otherString = ChatColor.stripColor(warp.getWarpName());
+        final String thisString = ChatColor.stripColor(getPluginInstance().getManager().colorText(getWarpName())),
+                otherString = ChatColor.stripColor(getPluginInstance().getManager().colorText(warp.getWarpName()));
         final int maxLength = Math.min(thisString.length(), otherString.length());
 
-        return -thisString.substring(0, maxLength).compareToIgnoreCase(otherString.substring(0, maxLength));
+        return thisString.substring(0, maxLength).compareToIgnoreCase(otherString.substring(0, maxLength));
     }
 
     public boolean canNotify() {

@@ -233,7 +233,7 @@ public class Paging {
         if (!isFeatured) warpList.sort(Warp::compareTo);
         else warpList.sort(new Warp.TrafficSort());
 
-        warpList.sort(Comparator.reverseOrder());
+        //warpList.sort(Comparator.reverseOrder());
 
         //warpSort(warpList, false, false);
         //if (filter == EnumContainer.Filter.FEATURED) warpSort(warpList, true, false);
