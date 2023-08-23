@@ -101,6 +101,7 @@ permissions:
       hyperdrive.like: true
       hyperdrive.back: true
       hyperdrive.status.PUBLIC: true
+      hyperdrive.status.PRIVATE: true
 
   # ADMIN STAR PERMISSION
   hyperdrive.admin.*:
