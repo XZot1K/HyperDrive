@@ -185,6 +185,7 @@ invalid-warp-name: "&cThe name you entered was invalid. Please try another name.
 warps-cleared: "&aAll warps have been cleared from the world &e{world}&a!"
 unsafe-back: "&cYour previous location is unsafe and therefore can not be teleported to with administrator access."
 not-safe-distance: "&cThe are warps nearby please move further away to create a new warp."
+invalid-world: "&cThe world specified does not exist."
 
 help-header: "&e<&m-----------&r&e( &d&lCommands &e[&dPage &a{page}&e] &e)&m-----------&r&e>"
 help-footer-static: "&e<&m-------------------------------------------------------&r&e>"

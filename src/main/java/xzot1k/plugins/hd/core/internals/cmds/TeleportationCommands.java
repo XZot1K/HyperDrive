@@ -51,7 +51,6 @@ public class TeleportationCommands implements CommandExecutor {
             if (keys.contains("first-join-spawn"))
                 setFirstJoinLocation(new SerializableLocation(cs.getString("first-join-spawn")));
         } catch (Exception e) {
-            e.printStackTrace();
             getPluginInstance().log(Level.WARNING, "There was an issue loading one of the spawn locations (" + e.getMessage() + ").");
         }
     }
@@ -67,7 +66,10 @@ public class TeleportationCommands implements CommandExecutor {
 
                 switch (args.length) {
                     case 0:
-                        runRTPCommand(commandSender, false);
+                        runRTPCommand(commandSender, null, false);
+                        return true;
+                    case 1:
+                        runRTPCommand(commandSender, args[0], false);
                         return true;
                     case 2:
                         runRTPCommand(commandSender, args[0], args[1], false);
@@ -82,7 +84,10 @@ public class TeleportationCommands implements CommandExecutor {
 
                 switch (args.length) {
                     case 0:
-                        runRTPCommand(commandSender, true);
+                        runRTPCommand(commandSender, null, true);
+                        return true;
+                    case 1:
+                        runRTPCommand(commandSender, args[0], true);
                         return true;
                     case 2:
                         runRTPCommand(commandSender, args[0], args[1], true);
@@ -299,7 +304,8 @@ public class TeleportationCommands implements CommandExecutor {
         }
 
         if (!bypassLimits && !enteredPlayer.hasPermission("hyperdrive.rtpbypass")) {
-            long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(enteredPlayer, "rtp", getPluginInstance().getConfig().getInt("random-teleport-section.cooldown"));
+            long cooldownDurationLeft = getPluginInstance().getManager().getCooldownDuration(enteredPlayer, "rtp", getPluginInstance().getConfig().getInt("random-teleport" +
+                    "-section.cooldown"));
             if (cooldownDurationLeft > 0) {
                 getPluginInstance().getManager().sendCustomMessage("random-teleport-cooldown", enteredPlayer, "{duration}:" + cooldownDurationLeft);
                 return;
@@ -353,7 +359,8 @@ public class TeleportationCommands implements CommandExecutor {
                 String[] animationArgs = animationLine.split(":");
                 if (animationArgs.length >= 2) {
                     EnumContainer.Animation animation = EnumContainer.Animation.valueOf(animationArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
-                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, animationArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"), animation, 1);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, animationArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"),
+                            animation, 1);
                 }
             }
 
@@ -368,7 +375,7 @@ public class TeleportationCommands implements CommandExecutor {
         }
     }
 
-    private void runRTPCommand(CommandSender commandSender, boolean bypassLimits) {
+    private void runRTPCommand(CommandSender commandSender, String worldName, boolean bypassLimits) {
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("must-be-player")));
             return;
@@ -394,8 +401,19 @@ public class TeleportationCommands implements CommandExecutor {
             return;
         }
 
+        World world = player.getWorld();
+        if (worldName != null && !worldName.isEmpty() && player.hasPermission("hyperdrive.rtp.world")) {
+            World specifiedWorld = getPluginInstance().getServer().getWorld(worldName);
+            if (specifiedWorld == null) {
+                getPluginInstance().getManager().sendCustomMessage("invalid-world", player);
+                return;
+            }
+
+            world = specifiedWorld;
+        }
+
         for (String forbiddenWorld : getPluginInstance().getConfig().getStringList("random-teleport-section.forbidden-worlds")) {
-            if (player.getWorld().getName().equalsIgnoreCase(forbiddenWorld)) {
+            if (world.getName().equalsIgnoreCase(forbiddenWorld)) {
                 getPluginInstance().getManager().sendCustomMessage("forbidden-world", player);
                 return;
             }
@@ -406,7 +424,7 @@ public class TeleportationCommands implements CommandExecutor {
         final int rtpDelay = getPluginInstance().getConfig().getInt("random-teleport-section.delay-duration");
         int duration = (!bypassLimits && !player.hasPermission("hyperdrive.tpdelaybypass")) ? rtpDelay : 0;
         if (duration > 0) {
-            getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "rtp", player.getWorld().getName(), duration);
+            getPluginInstance().getTeleportationHandler().updateTeleportTemp(player, "rtp", world.getName(), duration);
             if (title != null && subTitle != null)
                 getPluginInstance().getManager().sendTitle(player, title.replace("{duration}", String.valueOf(duration)),
                         subTitle.replace("{duration}", String.valueOf(duration)), 0, 5, 0);
@@ -419,13 +437,15 @@ public class TeleportationCommands implements CommandExecutor {
             if (animationLine != null && animationLine.contains(":")) {
                 String[] animationArgs = animationLine.split(":");
                 if (animationArgs.length >= 2) {
-                    EnumContainer.Animation animation = EnumContainer.Animation.valueOf(animationArgs[0].toUpperCase().replace(" ", "_").replace("-", "_"));
-                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, animationArgs[1].toUpperCase().replace(" ", "_").replace("-", "_"), animation, 1);
+                    EnumContainer.Animation animation = EnumContainer.Animation.valueOf(animationArgs[0].toUpperCase()
+                            .replace(" ", "_").replace("-", "_"));
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, animationArgs[1].toUpperCase()
+                            .replace(" ", "_").replace("-", "_"), animation, 1);
                 }
             }
 
             getPluginInstance().getManager().sendCustomMessage("random-teleport-begin", player, "{duration}:" + duration);
-        } else getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(player, player.getWorld());
+        } else getPluginInstance().getTeleportationHandler().randomlyTeleportPlayer(player, world);
     }
 
     private void runSpawnCommand(CommandSender commandSender, String firstArg) {

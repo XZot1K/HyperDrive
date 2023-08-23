@@ -701,7 +701,8 @@ public class MainCommands implements CommandExecutor {
         }
 
         if (!(commandSender instanceof Player)) {
-            String warpList = getPluginInstance().getManager().getWarpMap().keySet().isEmpty() ? "[]" : new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()).toString()
+            String warpList = getPluginInstance().getManager().getWarpMap().keySet().isEmpty() ? "[]" :
+                    new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()).toString()
                     .replace("[", "").replace("]", "");
             String message = getPluginInstance().getLangConfig().getString("warp-list");
             if (message != null && !message.isEmpty())
@@ -984,7 +985,8 @@ public class MainCommands implements CommandExecutor {
             return;
         }
 
-        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", getPluginInstance().getConfig().getInt("teleportation-section.cooldown-duration"));
+        long currentCooldown = getPluginInstance().getManager().getCooldownDuration(player, "warp", getPluginInstance().getConfig().getInt("teleportation-section" +
+                ".cooldown-duration"));
         if (currentCooldown > 0 && !player.hasPermission("hyperdrive.tpcooldown")) {
             getPluginInstance().getManager().sendCustomMessage("warp-cooldown", player, "{duration}:" + currentCooldown);
             return;
@@ -1039,7 +1041,8 @@ public class MainCommands implements CommandExecutor {
             if (delayTheme.contains("/")) {
                 String[] delayThemeArgs = delayTheme.split("/");
                 getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(delayThemeArgs[0].toUpperCase().replace(" ", "_")
+                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1],
+                        EnumContainer.Animation.valueOf(delayThemeArgs[0].toUpperCase().replace(" ", "_")
                         .replace("-", "_")), duration);
             }
         }
@@ -1086,7 +1089,7 @@ public class MainCommands implements CommandExecutor {
                 cmdPrefix = getPluginInstance().getLangConfig().getString("command-prefix"),
                 descriptionPrefix = getPluginInstance().getLangConfig().getString("command-description-prefix");
         ArrayList<String> page1 = new ArrayList<>(), page2 = new ArrayList<>(), page3 = new ArrayList<>(),
-                page4 = new ArrayList<>(), page5 = new ArrayList<>(), page6 = new ArrayList<>();
+                page4 = new ArrayList<>(), page5 = new ArrayList<>(), page6 = new ArrayList<>(), page7 = new ArrayList<>();
         page1.add("");
         page1.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(1)));
         page1.add("");
@@ -1136,25 +1139,33 @@ public class MainCommands implements CommandExecutor {
         page5.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(5)));
         page5.add("");
         page5.add(cmdPrefix + "/rtp " + descriptionPrefix + "begins the random teleportation process on the sender.");
+        page5.add(cmdPrefix + "/rtp <world> " + descriptionPrefix + "begins the random teleportation process on the sender to the entered world.");
         page5.add(cmdPrefix + "/rtp <player> <world> " + descriptionPrefix + "begins the random teleportation process on the entered player to the entered world.");
         page5.add(cmdPrefix + "/spawn " + descriptionPrefix + "teleports the sender to the normal spawn, if it exists.");
-        page5.add(cmdPrefix + "/spawn <set/setfirstjoin/clear> " + descriptionPrefix + "sets the first join spawn, normal spawn, or clears both spawns based on the entered argument.");
-        page5.add(cmdPrefix + "/crossserver <player> <server> <world> <x> <y> <z> " + descriptionPrefix + "attempts to teleport the defined player " +
-                "to the server at the defined coordinates.");
-        page5.add(cmdPrefix + "/crossserver <player> <server> <world> <x> <y> <z> <yaw> <pitch> " + descriptionPrefix + "attempts to teleport the " +
-                "defined player to the server at the defined coordinates.");
+        page5.add(cmdPrefix + "/spawn <set/setfirstjoin/clear> " + descriptionPrefix + "sets the first join spawn, normal spawn, or clears both spawns based on the entered " +
+                "argument.");
         page5.add("");
         getAdminHelpPages().put(5, page5);
 
         page6.add("");
         page6.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(6)));
         page6.add("");
+        page6.add(cmdPrefix + "/crossserver <player> <server> <world> <x> <y> <z> " + descriptionPrefix + "attempts to teleport the defined player " +
+                "to the server at the defined coordinates.");
+        page6.add(cmdPrefix + "/crossserver <player> <server> <world> <x> <y> <z> <yaw> <pitch> " + descriptionPrefix + "attempts to teleport the " +
+                "defined player to the server at the defined coordinates.");
         page6.add(cmdPrefix + "/warps visits add <warp> <amount> " + descriptionPrefix + "Adds the defined amount to the warp's total visit count.");
         page6.add(cmdPrefix + "/warps visits remove <warp> <amount> " + descriptionPrefix + "Removes the defined amount from the warp's total visit count.");
-        page6.add(cmdPrefix + "/warps visits set <warp> <amount> " + descriptionPrefix + "Sets the defined amount as the warp's total visit count.");
-        page6.add(cmdPrefix + "/warps clear <world> " + descriptionPrefix + "Deletes all warps from the defined world.");
         page6.add("");
         getAdminHelpPages().put(6, page6);
+
+        page7.add("");
+        page7.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(7)));
+        page7.add("");
+        page7.add(cmdPrefix + "/warps visits set <warp> <amount> " + descriptionPrefix + "Sets the defined amount as the warp's total visit count.");
+        page7.add(cmdPrefix + "/warps clear <world> " + descriptionPrefix + "Deletes all warps from the defined world.");
+        page7.add("");
+        getAdminHelpPages().put(7, page7);
     }
 
     private void setupHelpPages() {
@@ -1199,6 +1210,7 @@ public class MainCommands implements CommandExecutor {
         page4.add(Objects.requireNonNull(pageHeader).replace("{page}", String.valueOf(4)));
         page4.add("");
         page3.add(cmdPrefix + "/rtp " + descriptionPrefix + "begins the random teleportation process.");
+        page3.add(cmdPrefix + "/rtp <world>" + descriptionPrefix + "begins the random teleportation process to the specified world.");
         page3.add(cmdPrefix + "/spawn " + descriptionPrefix + "teleports to the normal spawn, if it exists.");
         page4.add("");
         getHelpPages().put(4, page4);
@@ -1207,11 +1219,16 @@ public class MainCommands implements CommandExecutor {
     public void sendJSONLine(Player player, int page) {
         final String previousCommand = ("/hyperdrive help " + (page - 1)), nextCommand = ("/hyperdrive help " + (page + 1));
 
-        TextComponent footerLeft = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-left")))),
-                footerRight = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-right")))),
-                separator = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-separator")))),
-                previousMessage = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-previous")))),
-                nextMessage = new TextComponent(TextComponent.fromLegacyText((getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer-next")))));
+        TextComponent footerLeft = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help" +
+                "-footer-left")))),
+                footerRight = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help" +
+                        "-footer-right")))),
+                separator = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help-footer" +
+                        "-separator")))),
+                previousMessage = new TextComponent(TextComponent.fromLegacyText(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help" +
+                        "-footer-previous")))),
+                nextMessage = new TextComponent(TextComponent.fromLegacyText((getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("help" +
+                        "-footer-next")))));
         previousMessage.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, previousCommand));
         nextMessage.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, nextCommand));
 

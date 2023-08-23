@@ -494,7 +494,8 @@ public class Manager {
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
             if (skullMeta != null) {
                 skullMeta.setOwner(player.getName());
-                skullMeta.setDisplayName(colorText(isSelected ? getPluginInstance().getMenusConfig().getString("ps-menu-section.selected-player-head.display-name") + player.getName()
+                skullMeta.setDisplayName(colorText(isSelected ?
+                        getPluginInstance().getMenusConfig().getString("ps-menu-section.selected-player-head.display-name") + player.getName()
                         : getPluginInstance().getMenusConfig().getString("ps-menu-section.unselected-player-head.display-name") + player.getName()));
 
                 List<String> lore = isSelected ? getPluginInstance().getMenusConfig().getStringList("ps-menu-section.selected-player-head.lore")
@@ -618,7 +619,8 @@ public class Manager {
         }
 
         List<String> iconLoreFormat = getPluginInstance().getConfig().getStringList("warp-icon-section.list-lore-format"), newLore = new ArrayList<>(),
-                wrappedDescription = getPluginInstance().getManager().wrapString(warp.getDescription(), getPluginInstance().getConfig().getInt("warp-icon-section.description-line-cap"));
+                wrappedDescription = getPluginInstance().getManager().wrapString(warp.getDescription(), getPluginInstance().getConfig().getInt("warp-icon-section" +
+                        ".description-line-cap"));
 
         for (int i = -1; ++i < iconLoreFormat.size(); ) {
             String formatLine = iconLoreFormat.get(i), foundEventPlaceholder = null;
@@ -652,7 +654,8 @@ public class Manager {
                     .replace("{theme}", (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) ? warp.getIconTheme().split(",")[0] : "")
                     .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
                     .replace("{player}", player.getName())
-                    .replace("{traffic}", String.valueOf(warp.getTraffic())).replace("{owner}", offlinePlayer != null ? (offlinePlayer.getName() != null ? offlinePlayer.getName() : invalidRetrieval) :
+                    .replace("{traffic}", String.valueOf(warp.getTraffic())).replace("{owner}", offlinePlayer != null ? (offlinePlayer.getName() != null ?
+                            offlinePlayer.getName() : invalidRetrieval) :
                             invalidRetrieval)
                     .replace("{likes}", String.valueOf(warp.getLikes())).replace("{dislikes}", String.valueOf(warp.getDislikes()))
                     .replace("{like-bar}", warp.getLikeBar());
@@ -675,7 +678,8 @@ public class Manager {
                         if (warp.getStatus() == EnumContainer.Status.PUBLIC || (warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
                                 || warp.getAssistants().contains(player.getUniqueId()) || (warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
                                 || (!warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
-                                || player.hasPermission("hyperdrive.warps." + net.md_5.bungee.api.ChatColor.stripColor(warp.getWarpName())) || player.hasPermission("hyperdrive.warps.*"))
+                                || player.hasPermission("hyperdrive.warps." + net.md_5.bungee.api.ChatColor.stripColor(warp.getWarpName())) || player.hasPermission("hyperdrive" +
+                                ".warps.*"))
                             newLore.add(colorText(furtherFormattedLine));
                         break;
                     case "{no-access}":
@@ -891,7 +895,8 @@ public class Manager {
                 int currentPage = getPaging().getCurrentPage(player);
                 boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player), hasNextPage = getPaging().hasNextWarpPage(player);
 
-                List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section.items")).getKeys(false));
+                List<String> itemIds =
+                        new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section.items")).getKeys(false));
                 for (int i = -1; ++i < itemIds.size(); ) {
                     String itemId = itemIds.get(i);
                     if (itemId != null && !itemId.equalsIgnoreCase("")) {
@@ -901,7 +906,8 @@ public class Manager {
 
                             boolean usePlayerHead = getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".use-player-head"),
                                     fillEmptySlots = getPluginInstance().getMenusConfig().getBoolean("list-menu-section.items." + itemId + ".fill-empty-slots");
-                            String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None", replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) : "None";
+                            String replacement = hasPreviousPage ? String.valueOf((currentPage - 1)) : "None", replacement1 = hasNextPage ? String.valueOf((currentPage + 1)) :
+                                    "None";
                             String displayName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".display-name"))
                                     .replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement).replace("{next-page}", replacement1)
                                     .replace("{current-status}", Objects.requireNonNull(filter).getFormat())
@@ -924,7 +930,8 @@ public class Manager {
                                     newLore.add(colorText(lore.get(j).replace("{current-page}", String.valueOf(currentPage)).replace("{previous-page}", replacement)
                                             .replace("{next-page}", replacement1).replace("{current-status}", Objects.requireNonNull(filter).getFormat())));
 
-                                final String materialName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId + ".material"))
+                                final String materialName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("list-menu-section.items." + itemId +
+                                                ".material"))
                                         .toUpperCase().replace(" ", "_").replace("-", "_");
                                 if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
                                     final String[] materialNameArgs = materialName.split(":");
@@ -1250,7 +1257,8 @@ public class Manager {
 
                             inventory.setItem(slot, itemStack);
                         } else
-                            itemStack = buildItem(Material.getMaterial(materialName), getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".durability"),
+                            itemStack = buildItem(Material.getMaterial(materialName), getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId +
+                                            ".durability"),
                                     colorText(displayName), newLore, getPluginInstance().getMenusConfig().getInt("edit-menu-section.items." + itemId + ".amount"));
                     }
 
@@ -1718,6 +1726,16 @@ public class Manager {
         if (player.hasPermission("hyperdrive.status.*")) return true;
         else return (player.hasPermission("hyperdrive.status."
                 + status.toUpperCase().replace(" ", "_")));
+    }
+
+    public boolean hasAnyStatusPermission(@NotNull Player player) {
+        if (player.hasPermission("hyperdrive.status.*")) return true;
+        for (int i = -1; ++i < EnumContainer.Status.values().length; ) {
+            EnumContainer.Status ss = EnumContainer.Status.values()[i];
+            if (player.hasPermission("hyperdrive.status." + ss.name().toUpperCase().replace(" ", "_")))
+                return true;
+        }
+        return false;
     }
 
     public boolean isDisabled(@NotNull EnumContainer.Filter filter) {

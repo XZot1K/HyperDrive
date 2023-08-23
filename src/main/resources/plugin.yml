@@ -100,6 +100,7 @@ permissions:
       hyperdrive.use.list: true
       hyperdrive.like: true
       hyperdrive.back: true
+      hyperdrive.status.PUBLIC: true
 
   # ADMIN STAR PERMISSION
   hyperdrive.admin.*:
@@ -142,6 +143,7 @@ permissions:
       hyperdrive.admin.signs: true
       hyperdrive.admin.visits: true
       hyperdrive.clear: true
+      hyperdrive.rtp.world: true
 
   # INTENDED PLAYER PERMISSIONS
   hyperdrive.use:
@@ -290,3 +292,6 @@ permissions:
   hyperdrive.clear:
     default: op
     description: This permission node is used to allow the sender to clear all warps from a defined world.
+  hyperdrive.rtp.world:
+    default: op
+    description: This permission node is used to allow the sender to RTP to a specified world.

@@ -1617,12 +1617,13 @@ public class Listeners implements Listener {
 
                             if (!player.hasPermission("hyperdrive.admin.status") && nextStatus == EnumContainer.Status.ADMIN)
                                 nextStatus = statusList[0];
-                            else
+                            else if (getPluginInstance().getManager().hasAnyStatusPermission(player)) {
                                 while (getPluginInstance().getManager().isDisabled(nextStatus)
                                         || !getPluginInstance().getManager().canUseStatus(player, nextStatus.name())) {
                                     nextStatus = statusList[(nextIndex >= statusList.length) ? 0 : nextIndex];
                                     nextIndex++;
                                 }
+                            }
 
                             warp.setStatus(nextStatus);
                             String nextStatusName, previousStatusName;
