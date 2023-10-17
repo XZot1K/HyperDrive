@@ -78,4 +78,8 @@ public final class EnumContainer {
         CONE, HELIX, CIRCLE, VORTEX, RING
     }
 
+    public enum VoteType {
+        LIKE, DISLIKE
+    }
+
 }

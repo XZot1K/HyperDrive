@@ -4,7 +4,9 @@
 
 package xzot1k.plugins.hd.core.internals;
 
-import com.udojava.evalex.Expression;
+import com.ezylang.evalex.EvaluationException;
+import com.ezylang.evalex.Expression;
+import com.ezylang.evalex.parser.ParseException;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.*;
 import org.bukkit.block.Sign;
@@ -125,17 +127,18 @@ public class Listeners implements Listener {
         boolean useMySQL = (getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql")
                 && getPluginInstance().getConfig().getBoolean("mysql-connection.cross-server"));
         switch (interactionModule.getInteractionId().toLowerCase()) {
-
             case "search": {
-
                 Inventory inventory = getPluginInstance().getManager().buildListMenu(e.getPlayer(), EnumContainer.Filter.SEARCH, strippedName);
                 getPluginInstance().getServer().getScheduler().runTask(getPluginInstance(), () -> e.getPlayer().openInventory(inventory));
                 getPluginInstance().getManager().clearChatInteraction(e.getPlayer());
-
                 break;
             }
-
             case "create-warp": {
+                if (getPluginInstance().getManager().isBlockedWorld(e.getPlayer().getWorld())) {
+                    getPluginInstance().getManager().sendCustomMessage("blocked-world", e.getPlayer());
+                    return;
+                }
+
                 if (getPluginInstance().getHookChecker().isNotSafe(e.getPlayer(), e.getPlayer().getLocation(), HookChecker.CheckType.CREATION)) {
                     getPluginInstance().getManager().sendCustomMessage("not-hook-safe", e.getPlayer());
                     break;
@@ -177,7 +180,6 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().sendCustomMessage("warp-created", e.getPlayer(), "{warp}:" + warp.getWarpName());
                 break;
             }
-
             case "rename": {
                 String previousName = interactionModule.getInteractionValue();
                 warp = getPluginInstance().getManager().getWarp(previousName);
@@ -210,7 +212,6 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().sendCustomMessage("warp-renamed", e.getPlayer(), "{previous-name}:" + previousName, "{new-name}:" + finalTextEntry);
                 break;
             }
-
             case "give-ownership": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
@@ -259,7 +260,6 @@ public class Listeners implements Listener {
                         "{warp}:" + warp.getWarpName(), "{player}:" + enteredPlayer.getName());
                 break;
             }
-
             case "edit-description": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
@@ -285,7 +285,6 @@ public class Listeners implements Listener {
 
                 break;
             }
-
             case "change-usage-price": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
@@ -311,7 +310,6 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().sendCustomMessage("usage-price-set", e.getPlayer(), "{warp}:" + warp.getWarpName(), "{price}:" + warp.getUsagePrice());
                 break;
             }
-
             case "give-assistant": {
                 warp = getPluginInstance().getManager().getWarp(interactionModule.getInteractionValue());
                 if (warp == null || (useMySQL && !getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && !getPluginInstance().getManager().doesWarpExist(warp.getWarpName()))) {
@@ -998,7 +996,6 @@ public class Listeners implements Listener {
                 || player.getGameMode() == GameMode.CREATIVE) {
             e.setCancelled(true);
             e.setResult(Event.Result.DENY);
-            player.updateInventory();
         }
 
         if (e.getClick() == ClickType.DOUBLE_CLICK || e.getClick() == ClickType.CREATIVE) {
@@ -1251,8 +1248,11 @@ public class Listeners implements Listener {
                         if (action.equals("create-warp"))
                             priceExpression = priceExpression.replace("n", String.valueOf(getPluginInstance().getManager().getWarpCount(player)));
                         Expression exp = new Expression(priceExpression);
-                        BigDecimal result = exp.eval();
-                        itemUsageCost = result.doubleValue();
+                        BigDecimal result = null;
+                        try {
+                            result = exp.evaluate().getNumberValue();
+                        } catch (EvaluationException | ParseException ex) {ex.printStackTrace();}
+                        itemUsageCost = (result == null ? 0 : result.doubleValue());
                     } else itemUsageCost = itemSection.getDouble("usage-cost");
                 } else itemUsageCost = itemSection.getDouble("usage-cost");
 
@@ -1327,7 +1327,7 @@ public class Listeners implements Listener {
                             if (!pageList.isEmpty())
                                 for (int i = -1; ++i < warpSlots.size(); ) {
                                     e.getInventory().setItem(warpSlots.get(i), null);
-                                    if (pageList.size() >= 1) {
+                                    if (!pageList.isEmpty()) {
                                         Warp warp = pageList.get(0);
                                         ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
                                         if (warpIcon != null)
@@ -1574,7 +1574,7 @@ public class Listeners implements Listener {
 
                         break;
 
-                    case "relocate":
+                    case "relocate": {
                         player.closeInventory();
                         if (getPluginInstance().getManager().isBlockedWorld(player.getWorld())) {
                             getPluginInstance().getManager().sendCustomMessage("blocked-world", player);
@@ -1599,7 +1599,7 @@ public class Listeners implements Listener {
 
                         player.openInventory(getPluginInstance().getManager().buildEditMenu(player, warp));
                         break;
-
+                    }
                     case "change-status":
 
                         player.closeInventory();
@@ -1937,7 +1937,7 @@ public class Listeners implements Listener {
                 }
 
                 switch (clickAction) {
-                    case "dispatch-command-console":
+                    case "dispatch-command-console": {
                         if (!value.equalsIgnoreCase("")) {
                             player.closeInventory();
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
@@ -1945,7 +1945,8 @@ public class Listeners implements Listener {
                             getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(), value);
                         }
                         break;
-                    case "dispatch-command-player":
+                    }
+                    case "dispatch-command-player": {
                         if (!value.equalsIgnoreCase("")) {
                             player.closeInventory();
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
@@ -1953,7 +1954,8 @@ public class Listeners implements Listener {
                             getPluginInstance().getServer().dispatchCommand(player, value);
                         }
                         break;
-                    case "open-custom-menu":
+                    }
+                    case "open-custom-menu": {
                         if (!value.equalsIgnoreCase(""))
                             if (value.equalsIgnoreCase("List Menu") || value.equalsIgnoreCase("List-Menu")) {
                                 player.closeInventory();
@@ -1983,32 +1985,68 @@ public class Listeners implements Listener {
                                 return;
                             }
                         break;
-                    case "like":
+                    }
+                    case "like": {
                         player.closeInventory();
-                        if (!player.hasPermission("hyperdrive.likebypass") && warp.getVoters().contains(player.getUniqueId())) {
-                            getPluginInstance().getManager().sendCustomMessage("already-liked", player);
+
+                        final boolean hasBypass = player.hasPermission("hyperdrive.likebypass");
+                        EnumContainer.VoteType voteType = warp.getVoters().getOrDefault(player.getUniqueId(), null);
+
+                        if (voteType != null) {
+                            if (!hasBypass && voteType == EnumContainer.VoteType.LIKE) {
+                                getPluginInstance().getManager().sendCustomMessage("already-liked", player);
+                                return;
+                            }
+
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
+
+                            if (!hasBypass) {
+                                if (voteType == EnumContainer.VoteType.DISLIKE) warp.setDislikes(Math.max(0, (warp.getDislikes() - 1)));
+                                warp.getVoters().put(player.getUniqueId(), EnumContainer.VoteType.LIKE);
+                            }
+
+                            warp.setLikes(warp.getLikes() + 1);
+                            getPluginInstance().getManager().sendCustomMessage("liked-message", player, "{warp}:" + warp.getWarpName());
                             return;
                         }
 
                         if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
                         warp.setLikes(warp.getLikes() + 1);
-                        warp.getVoters().add(player.getUniqueId());
+                        if (!hasBypass) warp.getVoters().put(player.getUniqueId(), EnumContainer.VoteType.LIKE);
                         getPluginInstance().getManager().sendCustomMessage("liked-message", player, "{warp}:" + warp.getWarpName());
                         break;
-                    case "dislike":
+                    }
+                    case "dislike": {
                         player.closeInventory();
-                        if (!player.hasPermission("hyperdrive.likebypass") && warp.getVoters().contains(player.getUniqueId())) {
-                            getPluginInstance().getManager().sendCustomMessage("already-liked", player, "{warp}:" + warp.getWarpName());
+
+                        final boolean hasBypass = player.hasPermission("hyperdrive.likebypass");
+                        EnumContainer.VoteType voteType = warp.getVoters().getOrDefault(player.getUniqueId(), null);
+
+                        if (voteType != null) {
+                            if (!hasBypass && voteType == EnumContainer.VoteType.DISLIKE) {
+                                getPluginInstance().getManager().sendCustomMessage("already-disliked", player, "{warp}:" + warp.getWarpName());
+                                return;
+                            }
+
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
+
+                            if (!hasBypass) {
+                                if (voteType == EnumContainer.VoteType.LIKE) warp.setLikes(Math.max(0, (warp.getLikes() - 1)));
+                                warp.getVoters().put(player.getUniqueId(), EnumContainer.VoteType.DISLIKE);
+                            }
+
+                            warp.setDislikes(warp.getDislikes() + 1);
+                            getPluginInstance().getManager().sendCustomMessage("disliked-message", player, "{warp}:" + warp.getWarpName());
                             return;
                         }
 
                         if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
                         warp.setDislikes(warp.getDislikes() + 1);
-                        warp.getVoters().add(player.getUniqueId());
+                        if (!hasBypass) warp.getVoters().put(player.getUniqueId(), EnumContainer.VoteType.DISLIKE);
                         getPluginInstance().getManager().sendCustomMessage("disliked-message", player, "{warp}:" + warp.getWarpName());
                         break;
-                    default:
-                        break;
+                    }
+                    default: {break;}
                 }
             }
         }

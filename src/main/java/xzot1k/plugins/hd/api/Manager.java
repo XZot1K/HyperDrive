@@ -895,8 +895,8 @@ public class Manager {
                 int currentPage = getPaging().getCurrentPage(player);
                 boolean hasPreviousPage = getPaging().hasPreviousWarpPage(player), hasNextPage = getPaging().hasNextWarpPage(player);
 
-                List<String> itemIds =
-                        new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig().getConfigurationSection("list-menu-section.items")).getKeys(false));
+                List<String> itemIds = new ArrayList<>(Objects.requireNonNull(getPluginInstance().getMenusConfig()
+                        .getConfigurationSection("list-menu-section.items")).getKeys(false));
                 for (int i = -1; ++i < itemIds.size(); ) {
                     String itemId = itemIds.get(i);
                     if (itemId != null && !itemId.equalsIgnoreCase("")) {
@@ -975,7 +975,7 @@ public class Manager {
                 if (warpPageMap != null && !warpPageMap.isEmpty() && warpPageMap.containsKey(1)) {
                     List<Warp> pageOneWarpList = new ArrayList<>(warpPageMap.get(1));
                     for (int i = -1; ++i < inventory.getSize(); )
-                        if (warpSlots.contains(i) && pageOneWarpList.size() >= 1) {
+                        if (warpSlots.contains(i) && !pageOneWarpList.isEmpty()) {
                             Warp warp = pageOneWarpList.get(0);
 
                             ItemStack item = buildWarpIcon(player, warp);

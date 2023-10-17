@@ -5,7 +5,7 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.event.EventHandler;
 
-public class HyperDriveBungee extends Plugin implements Listener {
+public class HyperDriveBungee extends Plugin implements Listener { // TODO work in progress
 
     @Override
     public void onEnable() {
@@ -19,7 +19,6 @@ public class HyperDriveBungee extends Plugin implements Listener {
     public void onPluginMessage(PluginMessageEvent event) {
 
     }
-
 
 
 }

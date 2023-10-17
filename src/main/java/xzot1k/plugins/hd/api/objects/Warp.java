@@ -22,7 +22,8 @@ public class Warp implements Comparable<Warp> {
     private String warpName, creationDate, iconTheme, animationSet, serverIPAddress, description;
     private EnumContainer.Status status;
     private UUID owner;
-    private List<UUID> playerList, assistants, voters;
+    private HashMap<UUID, EnumContainer.VoteType> voters;
+    private List<UUID> playerList, assistants;
     private List<String> commands;
     private int traffic, likes, dislikes;
     private double usagePrice;
@@ -44,7 +45,7 @@ public class Warp implements Comparable<Warp> {
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
-        setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
+        setAnimationSet(!animationSetList.isEmpty() ? animationSetList.get(0) : "");
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
@@ -52,7 +53,7 @@ public class Warp implements Comparable<Warp> {
         setTraffic(0);
         setLikes(0);
         setDislikes(0);
-        setVoters(new ArrayList<>());
+        setVoters(new HashMap<>());
         setPlayerList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -76,7 +77,7 @@ public class Warp implements Comparable<Warp> {
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
-        setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
+        setAnimationSet(!animationSetList.isEmpty() ? animationSetList.get(0) : "");
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
@@ -84,7 +85,7 @@ public class Warp implements Comparable<Warp> {
         setTraffic(0);
         setLikes(0);
         setDislikes(0);
-        setVoters(new ArrayList<>());
+        setVoters(new HashMap<>());
         setPlayerList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -109,7 +110,7 @@ public class Warp implements Comparable<Warp> {
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
-        setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
+        setAnimationSet(!animationSetList.isEmpty() ? animationSetList.get(0) : "");
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
@@ -117,7 +118,7 @@ public class Warp implements Comparable<Warp> {
         setTraffic(0);
         setLikes(0);
         setDislikes(0);
-        setVoters(new ArrayList<>());
+        setVoters(new HashMap<>());
         setPlayerList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -141,7 +142,7 @@ public class Warp implements Comparable<Warp> {
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
         setIconTheme(defaultMaterial != null ? defaultMaterial : "");
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
-        setAnimationSet(animationSetList.size() > 0 ? animationSetList.get(0) : "");
+        setAnimationSet(!animationSetList.isEmpty() ? animationSetList.get(0) : "");
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
                 .toUpperCase().replace(" ", "_").replace("-", "_")));
         setDescription(getPluginInstance().getConfig().getString("warp-icon-section.default-description"));
@@ -149,7 +150,7 @@ public class Warp implements Comparable<Warp> {
         setTraffic(0);
         setLikes(0);
         setDislikes(0);
-        setVoters(new ArrayList<>());
+        setVoters(new HashMap<>());
         setPlayerList(new ArrayList<>());
         setCommands(new ArrayList<>());
         setAssistants(new ArrayList<>());
@@ -237,15 +238,16 @@ public class Warp implements Comparable<Warp> {
                 playerList.append(getPlayerList().get(j).toString()).append(",");
             for (int j = -1; ++j < getAssistants().size(); )
                 assistants.append(getAssistants().get(j).toString()).append(",");
-            for (int j = -1; ++j < getVoters().size(); )
-                voters.append(getVoters().get(j).toString()).append(",");
+            for (Map.Entry<UUID, EnumContainer.VoteType> entry : getVoters().entrySet())
+                voters.append(entry.getKey().toString()).append(":").append(entry.getValue().name()).append(",");
 
             final String locationString = (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + "," + getWarpLocation().getY() + ","
                     + getWarpLocation().getZ() + "," + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch());
 
             String syntax;
             if (!getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))
-                syntax = "INSERT OR REPLACE INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, traffic, usage_price, "
+                syntax = "INSERT OR REPLACE INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, " +
+                        "traffic, usage_price, "
                         + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
                         + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '"
                         + getDescription().replace("'", "<hd:sq>").replace("\"", "<hd:dq>")
@@ -254,7 +256,8 @@ public class Warp implements Comparable<Warp> {
                         + ", '" + getServerIPAddress() + "', " + getLikes() + ", " + getDislikes() + ", '" + voters
                         + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ");";
             else
-                syntax = "INSERT INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, traffic, usage_price, "
+                syntax = "INSERT INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, traffic, " +
+                        "usage_price, "
                         + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
                         + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
@@ -262,11 +265,14 @@ public class Warp implements Comparable<Warp> {
                         + ", '" + getServerIPAddress() + "', " + getLikes() + ", " + getDislikes() + ", '" + voters
                         + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ") ON DUPLICATE KEY UPDATE name = '" + getWarpName() + "',"
                         + " location = '" + locationString + "', status = '" + getStatus().name() + "', creation_date = '" + getCreationDate() + "', "
-                        + "icon_theme = '" + getIconTheme() + "', animation_set = '" + getAnimationSet() + "', description = '" + getDescription().replace("'", "<hd:sq>").replace("\"", "<hd:dq>")
-                        + "', commands = '" + commands.toString().replace("'", "").replace("\"", "") + "', owner = '" + (getOwner() != null ? getOwner().toString() : "")
-                        + "', player_list = '" + playerList + "', assistants = '" + assistants + "', traffic = '" + getTraffic() + "', usage_price = '" + getUsagePrice() + "',"
-                        + " enchanted_look = '" + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress() + "',"
-                        + " likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters + "', white_list_mode = '" + (isWhiteListMode() ? 1 : 0) + "', notify = '" + (canNotify() ? 1 : 0) + "';";
+                        + "icon_theme = '" + getIconTheme() + "', animation_set = '" + getAnimationSet() + "', description = '"
+                        + getDescription().replace("'", "<hd:sq>").replace("\"", "<hd:dq>")
+                        + "', commands = '" + commands.toString().replace("'", "").replace("\"", "")
+                        + "', owner = '" + (getOwner() != null ? getOwner().toString() : "")
+                        + "', player_list = '" + playerList + "', assistants = '" + assistants + "', traffic = '" + getTraffic() + "', usage_price = '" + getUsagePrice()
+                        + "', enchanted_look = '" + (hasIconEnchantedLook() ? 1 : 0) + "', server_ip = '" + getServerIPAddress() + "',"
+                        + " likes = '" + getLikes() + "', dislikes = '" + getDislikes() + "', voters = '" + voters + "', white_list_mode = '" + (isWhiteListMode() ? 1 : 0)
+                        + "', notify = '" + (canNotify() ? 1 : 0) + "';";
 
             PreparedStatement preparedStatement = getPluginInstance().getDatabaseConnection().prepareStatement(syntax);
             preparedStatement.execute();
@@ -432,11 +438,11 @@ public class Warp implements Comparable<Warp> {
         this.dislikes = dislikes;
     }
 
-    public List<UUID> getVoters() {
+    public HashMap<UUID, EnumContainer.VoteType> getVoters() {
         return voters;
     }
 
-    public void setVoters(List<UUID> voters) {
+    public void setVoters(HashMap<UUID, EnumContainer.VoteType> voters) {
         this.voters = voters;
     }
 

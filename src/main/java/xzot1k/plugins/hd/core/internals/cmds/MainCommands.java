@@ -46,7 +46,6 @@ public class MainCommands implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender commandSender, Command command, @NotNull String label, String[] args) {
         switch (command.getName().toLowerCase()) {
             case "hyperdrive":
-
                 switch (args.length) {
                     case 1:
                         switch (args[0].toLowerCase()) {

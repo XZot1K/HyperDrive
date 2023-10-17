@@ -359,7 +359,8 @@ public class HyperDrive extends JavaPlugin {
 
         if (totalUpdates > 0) {
             reloadConfigs();
-            log(Level.INFO, "A total of " + totalUpdates + " thing(s) were fixed, updated, or removed from all the configuration together. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+            log(Level.INFO,
+                    "A total of " + totalUpdates + " thing(s) were fixed, updated, or removed from all the configuration together. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
             log(Level.WARNING, "Please go checkout the configuration files as they are no longer the same as their default counterparts.");
         } else
             log(Level.INFO, "Everything inside the configuration seems to be up to date. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
@@ -671,7 +672,8 @@ public class HyperDrive extends JavaPlugin {
 
             file.renameTo(new File(getDataFolder(), "/converted-warps.yml"));
             log(Level.INFO, convertedWarpCount + " " + ((convertedWarpCount == 1) ? "warp was" : "warps were") + " converted and "
-                    + failedToConvertWarps + " " + ((failedToConvertWarps == 1) ? "warp" : "warps") + " failed to convert. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+                    + failedToConvertWarps + " " + ((failedToConvertWarps == 1) ? "warp" : "warps") + " failed to convert. (Took " + (System.currentTimeMillis() - startTime) +
+                    "ms)");
         }
     }
 
@@ -689,14 +691,38 @@ public class HyperDrive extends JavaPlugin {
                 playerList.add(uniqueId);
             }
 
+            warp.setLikes(yaml.getInt(warpName + ".likes"));
+            warp.setDislikes(yaml.getInt(warpName + ".dislikes"));
+
+            HashMap<UUID, EnumContainer.VoteType> voterMap = new HashMap<>();
+            int likes = warp.getLikes(), dislikes = warp.getDislikes();
+            Random random = new Random();
+
             ConfigurationSection cs = yaml.getConfigurationSection(warpName);
             if (cs != null && cs.getKeys(false).contains("voters")) {
                 List<String> voterList = yaml.getStringList(warpName + ".voters");
                 for (int j = -1; ++j < voterList.size(); ) {
-                    UUID uniqueId = UUID.fromString(voterList.get(j));
-                    voters.add(uniqueId);
+                    String voterLine = voterList.get(j);
+
+                    if (!voterList.contains(":")) {
+                        UUID uniqueId = UUID.fromString(voterList.get(j));
+                        voters.add(uniqueId);
+                        continue;
+                    }
+
+                    EnumContainer.VoteType voteType = EnumContainer.VoteType.values()[random.nextInt(EnumContainer.VoteType.values().length)];
+                    if (voteType == EnumContainer.VoteType.LIKE) {
+                        if (likes > 0) likes -= 1;
+                        else voteType = EnumContainer.VoteType.DISLIKE;
+                    } else if (voteType == EnumContainer.VoteType.DISLIKE) {
+                        if (likes > 0) dislikes -= 1;
+                        else voteType = EnumContainer.VoteType.LIKE;
+                    }
+
+                    voterMap.put(UUID.fromString(voterLine), voteType);
                 }
             }
+            warp.setVoters(voterMap);
 
             String statusString = yaml.getString(warpName + ".status");
             if (statusString == null) statusString = EnumContainer.Status.PUBLIC.name();
@@ -735,9 +761,6 @@ public class HyperDrive extends JavaPlugin {
             warp.setIconEnchantedLook(yaml.getBoolean(warpName + ".icon.use-enchanted-look"));
             warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
             warp.setTraffic(yaml.getInt(warpName + ".traffic"));
-            warp.setVoters(voters);
-            warp.setLikes(yaml.getInt(warpName + ".likes"));
-            warp.setDislikes(yaml.getInt(warpName + ".dislikes"));
             warp.setWhiteListMode(yaml.getBoolean(warpName + ".white-list-mode"));
             warp.setServerIPAddress(Objects.requireNonNull(yaml.getString(warpName + ".server-ip")).replace("localhost", "127.0.0.1"));
         } catch (Exception e) {
@@ -815,14 +838,6 @@ public class HyperDrive extends JavaPlugin {
                 warp.setAssistants(assistants);
             }
 
-            String votersString = resultSet.getString("voters");
-            if (votersString.contains(",")) {
-                List<UUID> voters = new ArrayList<>();
-                String[] votersStringArgs = votersString.split(",");
-                for (int i = -1; ++i < votersStringArgs.length; ) voters.add(UUID.fromString(votersStringArgs[i]));
-                warp.setVoters(voters);
-            }
-
             warp.setTraffic(resultSet.getInt("traffic"));
             warp.setUsagePrice(resultSet.getDouble("usage_price"));
             warp.setIconEnchantedLook(resultSet.getInt("enchanted_look") >= 1);
@@ -831,6 +846,38 @@ public class HyperDrive extends JavaPlugin {
             warp.setServerIPAddress(ipAddress);
             warp.setWhiteListMode(resultSet.getInt("white_list_mode") >= 1);
             warp.setNotify(resultSet.getInt("notify") >= 1);
+
+            String votersString = resultSet.getString("voters");
+            if (votersString.contains(",")) {
+                int likes = warp.getLikes(), dislikes = warp.getDislikes();
+                Random random = new Random();
+                HashMap<UUID, EnumContainer.VoteType> voters = new HashMap<>();
+                String[] votersStringArgs = votersString.split(",");
+                for (int i = -1; ++i < votersStringArgs.length; ) {
+                    String voterLine = votersStringArgs[i];
+                    if (voterLine == null || voterLine.isEmpty()) continue;
+
+                    if (voterLine.contains(":")) {
+                        final String[] voteArgs = voterLine.split(":");
+                        voters.put(UUID.fromString(voteArgs[0]), EnumContainer.VoteType.valueOf(voteArgs[1].toUpperCase()
+                                .replace(" ", "_").replace("-", "_")));
+                        continue;
+                    }
+
+                    EnumContainer.VoteType voteType = EnumContainer.VoteType.values()[random.nextInt(EnumContainer.VoteType.values().length)];
+                    if (voteType == EnumContainer.VoteType.LIKE) {
+                        if (likes > 0) likes -= 1;
+                        else voteType = EnumContainer.VoteType.DISLIKE;
+                    } else if (voteType == EnumContainer.VoteType.DISLIKE) {
+                        if (likes > 0) dislikes -= 1;
+                        else voteType = EnumContainer.VoteType.LIKE;
+                    }
+
+                    voters.put(UUID.fromString(voterLine), voteType);
+                }
+                warp.setVoters(voters);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
@@ -858,11 +905,13 @@ public class HyperDrive extends JavaPlugin {
                             float yaw = (float) ymlFile.getDouble("Location.Yaw"), pitch = (float) ymlFile.getDouble("Location.Pitch");
 
                             SerializableLocation serializableLocation = new SerializableLocation(ymlFile.getString("Location.World"), x, y, z, yaw, pitch);
-                            Warp warp = new Warp(warpName, getServer().getOfflinePlayer(UUID.fromString(Objects.requireNonNull(ymlFile.getString("Main Owner")))), serializableLocation);
+                            Warp warp = new Warp(warpName, getServer().getOfflinePlayer(UUID.fromString(Objects.requireNonNull(ymlFile.getString("Main Owner")))),
+                                    serializableLocation);
 
                             String statusName = ymlFile.getString("Status");
                             if (statusName != null)
-                                warp.setStatus(statusName.equalsIgnoreCase("SHOP") ? EnumContainer.Status.PUBLIC : statusName.equalsIgnoreCase("SERVER") ? EnumContainer.Status.ADMIN
+                                warp.setStatus(statusName.equalsIgnoreCase("SHOP") ? EnumContainer.Status.PUBLIC : statusName.equalsIgnoreCase("SERVER") ?
+                                        EnumContainer.Status.ADMIN
                                         : EnumContainer.Status.valueOf(statusName.toUpperCase().replace(" ", "_").replace("-", "_")));
                             warp.setCommands(ymlFile.getStringList("Commands"));
                             warp.setDescription(ymlFile.getStringList("Description").toString().replace("[", "").replace("]", "").replace(",", ""));
@@ -891,7 +940,8 @@ public class HyperDrive extends JavaPlugin {
         }
 
         if (convertedWarpCount > 0) {
-            log(Level.INFO, "A total of " + convertedWarpCount + " old warp(s) were found and converted into new warp(s). " + "(Took " + (System.currentTimeMillis() - startTime) + "ms)");
+            log(Level.INFO,
+                    "A total of " + convertedWarpCount + " old warp(s) were found and converted into new warp(s). " + "(Took " + (System.currentTimeMillis() - startTime) + "ms)");
             log(Level.INFO, "All old warp files are never deleted from the original location; therefore, nothing has been lost!");
         }
 
