@@ -15,7 +15,7 @@ import java.util.Optional;
 public class HookChecker {
 
     public final boolean townyInstalled, griefPreventionInstalled, griefDefenderInstalled,
-            aSkyBlockInstalled, residenceInstalled, prismaInstalled, cmiInstalled;
+            aSkyBlockInstalled, residenceInstalled, prismaInstalled, cmiInstalled, landsInstalled;
     private HyperDrive pluginInstance;
     private Plugin essentialsPlugin;
     private com.griefdefender.api.permission.flag.Flag HYPERDRIVE_PROTECTION;
@@ -46,6 +46,7 @@ public class HookChecker {
         residenceInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("Residence") != null);
         prismaInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("Prisma") != null);
         cmiInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("CMI") != null);
+        landsInstalled = (getPluginInstance().getServer().getPluginManager().getPlugin("Lands") != null);
 
         essentialsPlugin = getPluginInstance().getServer().getPluginManager().getPlugin("Essentials");
         if (essentialsPlugin == null)
@@ -157,6 +158,22 @@ public class HookChecker {
             com.bekvon.bukkit.residence.protection.ClaimedResidence res = com.bekvon.bukkit.residence
                     .Residence.getInstance().getResidenceManager().getByLoc(location);
             return (res != null && (!ownershipCheck || !res.isOwner(player))); // If false is returned, the hook failed and teleportation is blocked.
+        }
+
+        if (landsInstalled && checkType != CheckType.WARP) {
+            me.angeschossen.lands.api.LandsIntegration api = me.angeschossen.lands.api.LandsIntegration.of(pluginInstance);
+            me.angeschossen.lands.api.land.LandWorld landWorld = api.getWorld(world);
+            if (landWorld != null) {
+                me.angeschossen.lands.api.land.Area area = landWorld.getArea(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+                if (area != null) {
+                    if (checkType == CheckType.RTP) return false;
+                    if (!area.getOwnerUID().toString().equals(player.getUniqueId().toString())) {
+                        // me.angeschossen.lands.api.player.LandPlayer landPlayer = api.getLandPlayer(player.getUniqueId());
+                        // if(landPlayer != null && !landWorld.hasFlag(landPlayer, location, null,  me.angeschossen.lands.api.flags.Flags., false))
+                        return false;
+                    }
+                }
+            }
         }
 
         return false;

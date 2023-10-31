@@ -1398,7 +1398,7 @@ public class Listeners implements Listener {
                                 if (!wList.isEmpty())
                                     for (int i = -1; ++i < warpSlots.size(); ) {
                                         e.getInventory().setItem(warpSlots.get(i), null);
-                                        if (wList.size() >= 1) {
+                                        if (!wList.isEmpty()) {
                                             Warp warp = wList.get(0);
                                             ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
                                             if (warpIcon != null)
@@ -1581,13 +1581,19 @@ public class Listeners implements Listener {
                             return;
                         }
 
+                        if (getPluginInstance().getHookChecker().isNotSafe(player, player.getLocation(), HookChecker.CheckType.CREATION)) {
+                            getPluginInstance().getManager().sendCustomMessage("not-hook-safe", player);
+                            break;
+                        }
+
                         if (!getPluginInstance().getManager().isSafeDistance(player.getLocation())) {
                             getPluginInstance().getManager().clearChatInteraction(player);
                             getPluginInstance().getManager().sendCustomMessage("not-safe-distance", player);
                             return;
                         }
 
-                        if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName())) || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
+                        if (((useMySQL && getPluginInstance().doesWarpExistInDatabase(warp.getWarpName()))
+                                || (!useMySQL && getPluginInstance().getManager().doesWarpExist(warp.getWarpName())))) {
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
 
@@ -1994,7 +2000,8 @@ public class Listeners implements Listener {
 
                         if (voteType != null) {
                             if (!hasBypass && voteType == EnumContainer.VoteType.LIKE) {
-                                getPluginInstance().getManager().sendCustomMessage("already-liked", player);
+                                warp.setLikes(warp.getLikes() - 1);
+                                getPluginInstance().getManager().sendCustomMessage("redacted-like", player, ("{warp}:" + warp.getWarpName()));
                                 return;
                             }
 
@@ -2006,7 +2013,7 @@ public class Listeners implements Listener {
                             }
 
                             warp.setLikes(warp.getLikes() + 1);
-                            getPluginInstance().getManager().sendCustomMessage("liked-message", player, "{warp}:" + warp.getWarpName());
+                            getPluginInstance().getManager().sendCustomMessage("liked-message", player, ("{warp}:" + warp.getWarpName()));
                             return;
                         }
 
@@ -2024,7 +2031,8 @@ public class Listeners implements Listener {
 
                         if (voteType != null) {
                             if (!hasBypass && voteType == EnumContainer.VoteType.DISLIKE) {
-                                getPluginInstance().getManager().sendCustomMessage("already-disliked", player, "{warp}:" + warp.getWarpName());
+                                warp.setDislikes(warp.getDislikes() - 1);
+                                getPluginInstance().getManager().sendCustomMessage("redacted-dislike", player, ("{warp}:" + warp.getWarpName()));
                                 return;
                             }
 

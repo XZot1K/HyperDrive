@@ -6,7 +6,7 @@
 
     <groupId>xzot1k.plugins.hd</groupId>
     <artifactId>HyperDrive</artifactId>
-    <version>5.5.4</version>
+    <version>5.5.5</version>
 
     <properties>
         <build>1</build>
@@ -15,7 +15,7 @@
     </properties>
 
     <build>
-        <finalName>${project.artifactId}-${project.version}</finalName><!---${project.version}-build_${build}</finalName> -->
+        <finalName>${project.artifactId}_${project.version}-build_${build}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -277,6 +277,12 @@
             <groupId>com.residence</groupId>
             <artifactId>Residence</artifactId>
             <version>5.1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.angeschossen</groupId>
+            <artifactId>LandsAPI</artifactId>
+            <version>6.37.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

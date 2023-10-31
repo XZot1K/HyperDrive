@@ -47,20 +47,20 @@ public class MainCommands implements CommandExecutor {
         switch (command.getName().toLowerCase()) {
             case "hyperdrive":
                 switch (args.length) {
-                    case 1:
+                    case 1: {
                         switch (args[0].toLowerCase()) {
-                            case "reload":
+                            case "reload": {
                                 runReloadCommand(commandSender);
                                 return true;
-                            case "info":
+                            }
+                            case "info": {
                                 runInfoCommand(commandSender);
                                 return true;
-                            default:
-                                if (commandSender.hasPermission("hyperdrive.admin.help"))
-                                    sendAdminHelpPage(commandSender, 1);
+                            }
+                            default: {
+                                if (commandSender.hasPermission("hyperdrive.admin.help")) sendAdminHelpPage(commandSender, 1);
                                 else {
-                                    if (commandSender instanceof Player)
-                                        getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+                                    if (commandSender instanceof Player) getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
                                     else {
                                         String message = getPluginInstance().getLangConfig().getString("no-permission");
                                         if (message != null && !message.isEmpty())
@@ -68,27 +68,24 @@ public class MainCommands implements CommandExecutor {
                                     }
                                 }
                                 return true;
+                            }
                         }
-                    case 2:
+                    }
+                    case 2: {
                         if (args[0].equalsIgnoreCase("help")) {
                             if (commandSender.hasPermission("hyperdrive.admin.help"))
                                 sendAdminHelpPage(commandSender, !getPluginInstance().getManager().isNotNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
-                            else
-                                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                            else commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
                             return true;
                         } else if (args[0].equalsIgnoreCase("clear")) {
-                            if (commandSender.hasPermission("hyperdrive.clear"))
-                                sendClear(commandSender, args[1]);
-                            else
-                                commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                            if (commandSender.hasPermission("hyperdrive.clear")) sendClear(commandSender, args[1]);
+                            else commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
                             return true;
                         }
 
-                        if (commandSender.hasPermission("hyperdrive.admin.help"))
-                            sendAdminHelpPage(commandSender, 1);
+                        if (commandSender.hasPermission("hyperdrive.admin.help")) sendAdminHelpPage(commandSender, 1);
                         else {
-                            if (commandSender instanceof Player)
-                                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+                            if (commandSender instanceof Player) getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
                             else {
                                 String message = getPluginInstance().getLangConfig().getString("no-permission");
                                 if (message != null && !message.isEmpty())
@@ -97,17 +94,16 @@ public class MainCommands implements CommandExecutor {
                         }
 
                         return true;
-                    case 3:
+                    }
+                    case 3: {
                         if (args[0].equalsIgnoreCase("updateip")) {
                             runUpdateIP(commandSender, args);
                             return true;
                         }
 
-                        if (commandSender.hasPermission("hyperdrive.admin.help"))
-                            sendAdminHelpPage(commandSender, 1);
+                        if (commandSender.hasPermission("hyperdrive.admin.help")) sendAdminHelpPage(commandSender, 1);
                         else {
-                            if (commandSender instanceof Player)
-                                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+                            if (commandSender instanceof Player) getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
                             else {
                                 String message = getPluginInstance().getLangConfig().getString("no-permission");
                                 if (message != null && !message.isEmpty())
@@ -116,12 +112,11 @@ public class MainCommands implements CommandExecutor {
                         }
 
                         return true;
-                    default:
-                        if (commandSender.hasPermission("hyperdrive.admin.help"))
-                            sendAdminHelpPage(commandSender, 1);
+                    }
+                    default: {
+                        if (commandSender.hasPermission("hyperdrive.admin.help")) sendAdminHelpPage(commandSender, 1);
                         else {
-                            if (commandSender instanceof Player)
-                                getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
+                            if (commandSender instanceof Player) getPluginInstance().getManager().sendCustomMessage("no-permission", (Player) commandSender);
                             else {
                                 String message = getPluginInstance().getLangConfig().getString("no-permission");
                                 if (message != null && !message.isEmpty())
@@ -130,43 +125,56 @@ public class MainCommands implements CommandExecutor {
                         }
 
                         return true;
+                    }
                 }
 
             case "warps":
                 switch (args.length) {
-                    case 0:
+                    case 0: {
                         openListMenu(commandSender);
                         return true;
-                    case 1:
+                    }
+                    case 1: {
                         switch (args[0].toLowerCase()) {
-                            case "help":
+                            case "help": {
                                 sendHelpPage(commandSender, 1);
                                 return true;
-                            case "list":
+                            }
+                            case "list": {
                                 runWarpListCommand(commandSender);
                                 return true;
-                            default:
-                                break;
+                            }
+                            case "resetlikes": {
+                                if (commandSender.hasPermission("hyperdrive.admin.resetlikes")) runResetLikes(commandSender, null, true);
+                                else commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                                return true;
+                            }
+                            default: {break;}
                         }
-
-                    case 2:
-
+                    }
+                    case 2: {
                         switch (args[0].toLowerCase()) {
-                            case "accept":
+                            case "accept": {
                                 beginAcceptCommand(commandSender, args[1]);
                                 return true;
-                            case "deny":
+                            }
+                            case "deny": {
                                 beginDenyCommand(commandSender, args[1]);
                                 return true;
-                            case "help":
+                            }
+                            case "help": {
                                 sendHelpPage(commandSender, !getPluginInstance().getManager().isNotNumeric(args[1]) ? Integer.parseInt(args[1]) : 1);
                                 return true;
-                            default:
-                                break;
+                            }
+                            case "resetlikes": {
+                                if (commandSender.hasPermission("hyperdrive.admin.resetlikes")) runResetLikes(commandSender, args[1], false);
+                                else commandSender.sendMessage(getPluginInstance().getManager().colorText(getPluginInstance().getLangConfig().getString("no-permission")));
+                                return true;
+                            }
+                            default: {break;}
                         }
-
-                    default:
-                        break;
+                    }
+                    default: {break;}
                 }
 
                 if (args.length >= 4 && args[0].equalsIgnoreCase("visits")) {
@@ -192,7 +200,6 @@ public class MainCommands implements CommandExecutor {
                 }
 
                 if (args.length >= 2) {
-
                     if (args[0].equalsIgnoreCase("create")) {
                         StringBuilder warpNameBuilder = new StringBuilder();
                         for (int i = 0; ++i < args.length; ) {
@@ -261,11 +268,41 @@ public class MainCommands implements CommandExecutor {
 
                 beginWarpCommand(commandSender, warpNameBuilder.toString().trim());
                 return true;
-            default:
-                break;
+            default: {break;}
         }
 
         return false;
+    }
+
+    private void runResetLikes(CommandSender commandSender, String warpName, boolean allWarps) {
+        if (!allWarps) {
+            if (!getPluginInstance().getManager().doesWarpExist(warpName)) {
+                commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance()
+                        .getLangConfig().getString("warp-invalid")).replace("{warp}", warpName)));
+                return;
+            }
+
+            Warp warp = getPluginInstance().getManager().getWarp(warpName);
+            warp.getVoters().clear();
+            warp.setLikes(0);
+            warp.setDislikes(0);
+            warp.save(true);
+
+            commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance()
+                    .getLangConfig().getString("warp-votes-reset")).replace("{warp}", warpName)));
+            return;
+        }
+
+        getPluginInstance().getManager().getWarpMap().entrySet().parallelStream().forEach(entry -> {
+            final Warp currentWarp = entry.getValue();
+            currentWarp.getVoters().clear();
+            currentWarp.setLikes(0);
+            currentWarp.setDislikes(0);
+            currentWarp.save(true);
+        });
+
+        commandSender.sendMessage(getPluginInstance().getManager().colorText(Objects.requireNonNull(getPluginInstance()
+                .getLangConfig().getString("all-votes-reset"))));
     }
 
     private void sendClear(CommandSender commandSender, String worldName) {
@@ -702,7 +739,7 @@ public class MainCommands implements CommandExecutor {
         if (!(commandSender instanceof Player)) {
             String warpList = getPluginInstance().getManager().getWarpMap().keySet().isEmpty() ? "[]" :
                     new ArrayList<>(getPluginInstance().getManager().getWarpMap().keySet()).toString()
-                    .replace("[", "").replace("]", "");
+                            .replace("[", "").replace("]", "");
             String message = getPluginInstance().getLangConfig().getString("warp-list");
             if (message != null && !message.isEmpty())
                 commandSender.sendMessage(getPluginInstance().getManager().colorText(message.replace("{list}", warpList).replace("{count}",
@@ -1042,7 +1079,7 @@ public class MainCommands implements CommandExecutor {
                 getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
                 getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1],
                         EnumContainer.Animation.valueOf(delayThemeArgs[0].toUpperCase().replace(" ", "_")
-                        .replace("-", "_")), duration);
+                                .replace("-", "_")), duration);
             }
         }
 
@@ -1163,6 +1200,7 @@ public class MainCommands implements CommandExecutor {
         page7.add("");
         page7.add(cmdPrefix + "/warps visits set <warp> <amount> " + descriptionPrefix + "Sets the defined amount as the warp's total visit count.");
         page7.add(cmdPrefix + "/warps clear <world> " + descriptionPrefix + "Deletes all warps from the defined world.");
+        page7.add(cmdPrefix + "/warps resetlikes <warp>" + descriptionPrefix + "Resets all likes/dislikes of a warp (all warps, if <warp> is undefined).");
         page7.add("");
         getAdminHelpPages().put(7, page7);
     }

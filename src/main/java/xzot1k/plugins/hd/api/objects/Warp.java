@@ -462,19 +462,6 @@ public class Warp implements Comparable<Warp> {
         this.whiteListMode = whiteListMode;
     }
 
-    @Override
-    public int compareTo(Warp warp) {
-        final int likeCompare = Double.compare(Math.round(12 * getLikePercentage()), Math.round(12 * warp.getLikePercentage()));
-        if (likeCompare != 0) return likeCompare;
-        else if (getLikes() != warp.getLikes()) return Integer.compare(getLikes(), warp.getLikes());
-
-        final String thisString = ChatColor.stripColor(getPluginInstance().getManager().colorText(getWarpName())),
-                otherString = ChatColor.stripColor(getPluginInstance().getManager().colorText(warp.getWarpName()));
-        final int maxLength = Math.min(thisString.length(), otherString.length());
-
-        return thisString.substring(0, maxLength).compareToIgnoreCase(otherString.substring(0, maxLength));
-    }
-
     public boolean canNotify() {
         return notify;
     }
@@ -483,14 +470,43 @@ public class Warp implements Comparable<Warp> {
         this.notify = notify;
     }
 
-    public static class TrafficSort implements Comparator<Warp> {
+    @Override
+    public int compareTo(Warp warp) {
+        final String thisString = ChatColor.stripColor(getPluginInstance().getManager().colorText(getWarpName())),
+                otherString = ChatColor.stripColor(getPluginInstance().getManager().colorText(warp.getWarpName()));
+        final int maxLength = Math.min(thisString.length(), otherString.length());
+        return otherString.substring(0, maxLength).compareToIgnoreCase(thisString.substring(0, maxLength));
+    }
+
+    public static class LikesSort implements Comparator<Warp> {
+        /**
+         * @param warpOne the first object to be compared.
+         * @param warpTwo the second object to be compared.
+         * @return likes/dislikes comparison (fallback to name comparison, if comparison has no difference).
+         */
         @Override
         public int compare(Warp warpOne, Warp warpTwo) {
+            final int likesCompare = Float.compare(Math.round(12 * warpTwo.getLikePercentage()), Math.round(12 * warpOne.getLikePercentage()));
 
-            final int trafficCompare = Integer.compare(warpOne.getTraffic(), warpTwo.getTraffic());
-            if (trafficCompare != 0) return trafficCompare;
+            if (likesCompare > 0) System.out.println(warpOne.getWarpName() + " is ahead of " + warpTwo.getWarpName() + ".");
 
+            if (likesCompare != 0) return likesCompare;
             return warpOne.compareTo(warpTwo);
+        }
+
+    }
+
+    public static class TrafficSort implements Comparator<Warp> {
+        /**
+         * @param warpOne the first object to be compared.
+         * @param warpTwo the second object to be compared.
+         * @return traffic/visits comparison (fallback to like/dislike comparison, if comparison has no difference).
+         */
+        @Override
+        public int compare(Warp warpOne, Warp warpTwo) {
+            final int trafficCompare = Integer.compare(warpTwo.getTraffic(), warpOne.getTraffic());
+            if (trafficCompare != 0) return trafficCompare;
+            return new LikesSort().compare(warpOne, warpTwo);
         }
 
     }

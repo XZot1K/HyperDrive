@@ -94,8 +94,7 @@ public class Paging {
             }
         }
 
-        if (currentPlayerList.size() > 0)
-            finalMap.put(currentPage, currentPlayerList);
+        if (!currentPlayerList.isEmpty()) finalMap.put(currentPage, currentPlayerList);
         return finalMap;
     }
 
@@ -229,9 +228,14 @@ public class Paging {
         }
 
         final boolean isFeatured = (filter == EnumContainer.Filter.FEATURED);
+        if (isFeatured) warpList.sort(new Warp.TrafficSort());
+        else warpList.sort(new Warp.LikesSort());
 
-        if (!isFeatured) warpList.sort(Warp::compareTo);
-        else warpList.sort(new Warp.TrafficSort());
+        // warpList.sort(Warp::compareTo);
+        //Collections.reverse(warpList);
+
+        //if (!isFeatured) warpList.sort(Warp::compareTo);
+        //else warpList.sort(new Warp.TrafficSort());
 
         //warpList.sort(Comparator.reverseOrder());
 
@@ -250,7 +254,7 @@ public class Paging {
             if (filter == EnumContainer.Filter.SEARCH && filterValue != null && !filterValue.isEmpty()) {
 
                 OfflinePlayer op = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                if ((op != null && op.hasPlayedBefore() && op.getName() != null && op.getName().equalsIgnoreCase(filterValue))
+                if ((op.hasPlayedBefore() && op.getName() != null && op.getName().equalsIgnoreCase(filterValue))
                         || ChatColor.stripColor(warp.getWarpName()).contains(filterValue)) {
                     if (currentWarpList.size() < slotCount)
                         currentWarpList.add(warp);
@@ -336,7 +340,7 @@ public class Paging {
             }
         }
 
-        if (currentWarpList.size() > 0) {
+        if (!currentWarpList.isEmpty()) {
             if (currentWarpList.size() > slotCount) {
                 finalMap.put(currentPage, new ArrayList<>(currentWarpList));
                 currentWarpList.clear();
@@ -347,45 +351,6 @@ public class Paging {
         }
 
         return finalMap;
-    }
-
-    private void warpSort(List<Warp> warpList, boolean sortFeatured, boolean applyOtherFilters) {
-        warpSort(warpList, 0, warpList.size() - 1, sortFeatured, applyOtherFilters);
-    }
-
-    private void warpSort(List<Warp> warpList, int low, int high, boolean sortFeatured, boolean applyOtherFilters) {
-        if (low < (high + 1)) {
-            int p = warpPartition(warpList, low, high, sortFeatured, applyOtherFilters);
-            warpSort(warpList, low, (p - 1), sortFeatured, applyOtherFilters);
-            warpSort(warpList, (p + 1), high, sortFeatured, applyOtherFilters);
-        }
-    }
-
-    private int warpPartition(List<Warp> warpList, int low, int high, boolean sortFeatured, boolean applyOtherFilters) {
-        warpSwapIndex(warpList, low, (getRandom().nextInt((high - low) + 1) + low));
-        int border = (low + 1);
-        for (int i = border - 1; ++i <= high; ) {
-            Warp warpAtHigh = warpList.get(i), warpAtLow = warpList.get(low);
-
-            final int compareResult = warpAtHigh.compareTo(warpAtLow);
-
-            boolean hasMoreLikes = (Math.round(12 * warpAtHigh.getLikePercentage()) >= Math.round(12 * warpAtLow.getLikePercentage()));
-
-            if (compareResult > 0 || (sortFeatured && warpAtLow.getTraffic() > warpAtHigh.getTraffic())) continue;
-
-            if (applyOtherFilters && !hasMoreLikes) continue;
-
-            warpSwapIndex(warpList, i, border++);
-        }
-
-        warpSwapIndex(warpList, low, border - 1);
-        return border - 1;
-    }
-
-    private void warpSwapIndex(List<Warp> warpList, int index1, int index2) {
-        Warp temp = warpList.get(index1);
-        warpList.set(index1, warpList.get(index2));
-        warpList.set(index2, temp);
     }
 
     // getters & setters

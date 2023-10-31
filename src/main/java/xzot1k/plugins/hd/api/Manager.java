@@ -4,6 +4,8 @@
 
 package xzot1k.plugins.hd.api;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -40,6 +42,9 @@ import xzot1k.plugins.hd.core.packets.titles.versions.Titles_Old;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
@@ -414,46 +419,86 @@ public class Manager {
     private ItemStack getPlayerHead(String headId, String displayName, List<String> lore, int amount) {
         final boolean isNew = !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
                 || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9")
-                || getPluginInstance().getServerVersion().startsWith("v1_8")), nameInvalid = (headId != null && !headId.equalsIgnoreCase(""));
-        ItemStack itemStack;
+                || getPluginInstance().getServerVersion().startsWith("v1_8"));
+        ItemStack itemStack = null;
 
         if (headId != null && !headId.isEmpty()) {
-            String materialName = headId.toUpperCase().replace(" ", "_").replace("-", "_");
-            if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
-                final String[] materialNameArgs = materialName.split(":");
+            if (headId.startsWith("HEAD") && headId.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                final String[] materialNameArgs = headId.split(":");
                 itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
-                ItemMeta itemMeta = itemStack.getItemMeta();
-                if (itemMeta != null) {
-                    itemMeta.setDisplayName(displayName);
-                    itemMeta.setLore(lore);
-                    itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                    itemStack.setItemMeta(itemMeta);
+
+                SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
+                if (skullMeta != null) {
+                    skullMeta.setDisplayName(displayName);
+                    skullMeta.setLore(lore);
+                    skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                    itemStack.setItemMeta(skullMeta);
                 }
+
                 return itemStack;
-            }
-        }
+            } else if (headId.startsWith("TEXTURE") && headId.contains(":")) {
+                final String[] materialArgs = headId.split(":");
+                Material mat = Material.getMaterial(isNew ? "PLAYER_HEAD" : "SKULL_ITEM");
+                mat = (mat != null ? mat : Material.STONE);
+                itemStack = new ItemStack(mat, amount, (isNew ? 0 : (short) 3));
 
-        if (isNew) {
-            itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), amount);
-            SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
-            if (skullMeta != null) {
-                if (nameInvalid) {
-                    OfflinePlayer player = getPluginInstance().getServer().getOfflinePlayer(headId);
-                    skullMeta.setOwner(player.getName());
+                SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
+                if (skullMeta != null && materialArgs[1] != null && !materialArgs[1].equalsIgnoreCase("")) {
+                    String base64 = materialArgs[1];
+                    UUID uuid = new UUID(base64.substring(base64.length() - 20).hashCode(), base64.substring(base64.length() - 10).hashCode());
+
+                    GameProfile profile = new GameProfile(uuid, "Player");
+                    profile.getProperties().put("textures", new Property("textures", ""));
+
+                    Field profileField;
+                    try {
+
+                        profileField = skullMeta.getClass().getDeclaredField("profile");
+                        profileField.setAccessible(true);
+                        profileField.set(skullMeta, profile);
+                    } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+                        e.printStackTrace();
+                    }
+
+                    skullMeta.setDisplayName(displayName);
+                    skullMeta.setLore(lore);
+                    skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+
+                    itemStack.setItemMeta(skullMeta);
                 }
+            } else if (headId.startsWith("URL") && headId.contains(":")) {
+                final String[] materialArgs = headId.split(":");
+                Material mat = Material.getMaterial(isNew ? "PLAYER_HEAD" : "SKULL_ITEM");
+                mat = (mat != null ? mat : Material.STONE);
+                itemStack = new ItemStack(mat, amount, (isNew ? 0 : (short) 3));
 
-                skullMeta.setDisplayName(displayName);
-                skullMeta.setLore(lore);
-                skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                itemStack.setItemMeta(skullMeta);
+                SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
+                if (skullMeta != null && materialArgs[1] != null && !materialArgs[1].equalsIgnoreCase("")) {
+
+                    org.bukkit.profile.PlayerProfile pp = Bukkit.createPlayerProfile(UUID.fromString("4fbecd49-c7d4-4c18-8410-adf7a7348728"));
+                    org.bukkit.profile.PlayerTextures pt = pp.getTextures();
+                    try {
+                        pt.setSkin(new URL("https://textures.minecraft.net/texture/" + materialArgs[1]));
+                    } catch (MalformedURLException e) {e.printStackTrace();}
+                    pp.setTextures(pt);
+                    skullMeta.setOwnerProfile(pp);
+
+                    skullMeta.setDisplayName(displayName);
+                    skullMeta.setLore(lore);
+                    skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+
+                    itemStack.setItemMeta(skullMeta);
+                    return itemStack;
+                }
             }
-        } else {
-            itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial("SKULL_ITEM")), amount,
-                    (short) org.bukkit.SkullType.PLAYER.ordinal());
+
+            itemStack = new ItemStack(Objects.requireNonNull(Material.getMaterial(isNew ? "PLAYER_HEAD" : "SKULL_ITEM")), amount);
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
             if (skullMeta != null) {
-                if (headId != null && !headId.equalsIgnoreCase(""))
-                    skullMeta.setOwner(headId);
+                OfflinePlayer player = getPluginInstance().getServer().getOfflinePlayer(headId);
+                if (isNew || getPluginInstance().getServerVersion().startsWith("v1_12")) skullMeta.setOwningPlayer(player);
+                else skullMeta.setOwner(player.getName());
+
                 skullMeta.setDisplayName(displayName);
                 skullMeta.setLore(lore);
                 skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);

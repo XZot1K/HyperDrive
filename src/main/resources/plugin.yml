@@ -6,7 +6,7 @@ main: xzot1k.plugins.hd.HyperDrive
 description: A high class warp plugin allowing you and your players to warp through space and time with high control.
 load: POSTWORLD
 softdepend: [ Essentials, Vault, WorldGuard, Factions, ASkyBlock, Towny, GriefPrevention, Residence, MultiWorld, Multiverse-Core,
-              Prisma, PlaceholderAPI, CMI, HeadDatabase, PlayerWorldsPro, GriefDefender ]
+              Prisma, PlaceholderAPI, CMI, HeadDatabase, PlayerWorldsPro, GriefDefender, Lands ]
 
 commands:
   hyperdrive:
@@ -145,6 +145,7 @@ permissions:
       hyperdrive.admin.visits: true
       hyperdrive.clear: true
       hyperdrive.rtp.world: true
+      hyperdrive.admin.resetlikes: true
 
   # INTENDED PLAYER PERMISSIONS
   hyperdrive.use:
@@ -296,3 +297,6 @@ permissions:
   hyperdrive.rtp.world:
     default: op
     description: This permission node is used to allow the sender to RTP to a specified world.
+  hyperdrive.admin.resetlikes:
+    default: op
+    description: This permission node allows any player to use the /warps resetlikes <warp> command.

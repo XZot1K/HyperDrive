@@ -25,8 +25,8 @@ import xzot1k.plugins.hd.core.internals.BungeeListener;
 import xzot1k.plugins.hd.core.internals.Listeners;
 import xzot1k.plugins.hd.core.internals.cmds.MainCommands;
 import xzot1k.plugins.hd.core.internals.cmds.TeleportationCommands;
+import xzot1k.plugins.hd.core.internals.cmds.WarpTabComplete;
 import xzot1k.plugins.hd.core.internals.hooks.*;
-import xzot1k.plugins.hd.core.internals.tabs.WarpTabComplete;
 
 import java.io.*;
 import java.net.HttpURLConnection;

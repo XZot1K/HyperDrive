@@ -2,7 +2,7 @@
  * Copyright (c) 2021. All rights reserved.
  */
 
-package xzot1k.plugins.hd.core.internals.tabs;
+package xzot1k.plugins.hd.core.internals.cmds;
 
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.World;
@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 import xzot1k.plugins.hd.api.objects.Warp;
@@ -27,7 +28,7 @@ public class WarpTabComplete implements TabCompleter {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, Command command, String label, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender commandSender, Command command, @NotNull String label, String[] args) {
 
         if (command.getName().equalsIgnoreCase("rtp")) {
             if (args.length == 1) return new ArrayList<String>() {{
@@ -95,25 +96,29 @@ public class WarpTabComplete implements TabCompleter {
             else if ("edit".startsWith(args[0].toLowerCase())) list.add("edit");
             else if ("accept".startsWith(args[0].toLowerCase())) list.add("accept");
             else if ("deny".startsWith(args[0].toLowerCase())) list.add("deny");
+            else if ("resetlikes".startsWith(args[0].toLowerCase())) list.add("resetlikes");
 
-            if (hasAllAccess) {
-                for (Warp warp : getPluginInstance().getManager().getWarpMap().values()) {
-                    final String warpName = ChatColor.stripColor(warp.getWarpName());
-                    if (warpName.toLowerCase().startsWith(args[0].toLowerCase()))
-                        list.add(warpName);
-                }
-            } else if (commandSender instanceof Player) {
-                Player player = (Player) commandSender;
-                for (Warp warp : getPluginInstance().getManager().getWarpMap().values()) {
-                    final String warpName = ChatColor.stripColor(warp.getWarpName());
-                    if (warpName.toLowerCase().startsWith(args[0].toLowerCase()) && !list.contains(warpName)
-                            && ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
-                            || warp.getAssistants().contains(player.getUniqueId()) || (warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
-                            || (!warp.isWhiteListMode() && !warp.getPlayerList().contains(player.getUniqueId()))
-                            || warp.getStatus() == EnumContainer.Status.PUBLIC || (warp.getStatus() == EnumContainer.Status.ADMIN
-                            && ((player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive.warps.*"))))))
+            if (list.isEmpty()) {
+                if (hasAllAccess) {
+                    getPluginInstance().getManager().getWarpMap().entrySet().parallelStream().forEach(entry -> {
+                        final String warpName = ChatColor.stripColor(entry.getValue().getWarpName());
                         if (warpName.toLowerCase().startsWith(args[0].toLowerCase()))
-                            list.add(ChatColor.stripColor(warp.getWarpName()));
+                            list.add(warpName);
+                    });
+                } else if (commandSender instanceof Player) {
+                    Player player = (Player) commandSender;
+                    getPluginInstance().getManager().getWarpMap().entrySet().parallelStream().forEach(entry -> {
+                        final Warp warp = entry.getValue();
+                        final String warpName = ChatColor.stripColor(warp.getWarpName());
+                        if (warpName.toLowerCase().startsWith(args[0].toLowerCase()) && !list.contains(warpName)
+                                && ((warp.getOwner() != null && warp.getOwner().toString().equals(player.getUniqueId().toString()))
+                                || warp.getAssistants().contains(player.getUniqueId()) || (warp.isWhiteListMode() && warp.getPlayerList().contains(player.getUniqueId()))
+                                || (!warp.isWhiteListMode() && !warp.getPlayerList().contains(player.getUniqueId()))
+                                || warp.getStatus() == EnumContainer.Status.PUBLIC || (warp.getStatus() == EnumContainer.Status.ADMIN
+                                && ((player.hasPermission("hyperdrive.warps." + warpName) || player.hasPermission("hyperdrive.warps.*"))))))
+                            if (warpName.toLowerCase().startsWith(args[0].toLowerCase()))
+                                list.add(ChatColor.stripColor(warp.getWarpName()));
+                    });
                 }
             }
 
