@@ -166,12 +166,8 @@ public class HookChecker {
             if (landWorld != null) {
                 me.angeschossen.lands.api.land.Area area = landWorld.getArea(location.getBlockX(), location.getBlockY(), location.getBlockZ());
                 if (area != null) {
-                    if (checkType == CheckType.RTP) return false;
-                    if (!area.getOwnerUID().toString().equals(player.getUniqueId().toString())) {
-                        // me.angeschossen.lands.api.player.LandPlayer landPlayer = api.getLandPlayer(player.getUniqueId());
-                        // if(landPlayer != null && !landWorld.hasFlag(landPlayer, location, null,  me.angeschossen.lands.api.flags.Flags., false))
-                        return false;
-                    }
+                    if (checkType == CheckType.RTP) return true;
+                    return !area.getOwnerUID().toString().equals(player.getUniqueId().toString());
                 }
             }
         }

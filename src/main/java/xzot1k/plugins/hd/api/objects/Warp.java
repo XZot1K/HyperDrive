@@ -487,9 +487,6 @@ public class Warp implements Comparable<Warp> {
         @Override
         public int compare(Warp warpOne, Warp warpTwo) {
             final int likesCompare = Float.compare(Math.round(12 * warpTwo.getLikePercentage()), Math.round(12 * warpOne.getLikePercentage()));
-
-            if (likesCompare > 0) System.out.println(warpOne.getWarpName() + " is ahead of " + warpTwo.getWarpName() + ".");
-
             if (likesCompare != 0) return likesCompare;
             return warpOne.compareTo(warpTwo);
         }
