@@ -133,15 +133,7 @@ public class RandomTeleportation implements Runnable {
                 }
             }
 
-            //System.out.println("X: " + x + " Z: " + z);
-
-            chunkCompleteFuture.whenComplete((chunk, exception) -> {
-                //System.out.println("Handled  ->  X: " + x + " Z: " + z);
-
-                handleAction(chunk, x, z);
-
-            });
-
+            chunkCompleteFuture.whenComplete((chunk, exception) -> {handleAction(chunk, x, z);});
         });
     }
 
@@ -153,7 +145,6 @@ public class RandomTeleportation implements Runnable {
         }
 
         final Block block = world.getBlockAt(x, highestY - 1, z);
-        //System.out.println(block.getType() + "  ->  X: " + x + " Z: " + z);
 
         boolean isBlockedBiome = false;
         if (!biomeBlackList.isEmpty()) for (String biomeName : biomeBlackList)

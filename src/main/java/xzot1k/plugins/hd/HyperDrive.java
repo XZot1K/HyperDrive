@@ -1057,8 +1057,6 @@ public class HyperDrive extends JavaPlugin {
                 for (Map.Entry<UUID, SerializableLocation> mapEntry : new ArrayList<>(getBungeeListener().getTransferMap().entrySet())) {
                     if (mapEntry.getKey() == null || mapEntry.getValue() == null) continue;
 
-                    System.out.println(mapEntry.getKey() + " - " + mapEntry.getValue()); // TODO REMOVE
-
                     OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(mapEntry.getKey());
                     if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() != null) {
                         getBungeeListener().getTransferMap().remove(mapEntry.getKey());
