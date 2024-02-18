@@ -7,12 +7,14 @@ package xzot1k.plugins.hd;
 import io.papermc.lib.PaperLib;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -21,7 +23,6 @@ import xzot1k.plugins.hd.api.Manager;
 import xzot1k.plugins.hd.api.TeleportationHandler;
 import xzot1k.plugins.hd.api.objects.SerializableLocation;
 import xzot1k.plugins.hd.api.objects.Warp;
-import xzot1k.plugins.hd.core.internals.BungeeListener;
 import xzot1k.plugins.hd.core.internals.Listeners;
 import xzot1k.plugins.hd.core.internals.cmds.MainCommands;
 import xzot1k.plugins.hd.core.internals.cmds.TeleportationCommands;
@@ -46,12 +47,11 @@ public class HyperDrive extends JavaPlugin {
     private MainCommands mainCommands;
     private TeleportationCommands teleportationCommands;
     private Manager manager;
-    private BungeeListener bungeeListener;
 
     private Connection databaseConnection;
     private List<String> databaseWarps;
 
-    private String serverVersion, tableName;
+    private String serverVersion;
     private int teleportationHandlerTaskId, autoSaveTaskId, crossServerTaskId;
 
     private FileConfiguration langConfig, menusConfig, dataConfig;
@@ -97,10 +97,6 @@ public class HyperDrive extends JavaPlugin {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
         setServerVersion(getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
-        tableName = "create table if not exists warps (name varchar(100), location varchar(255), status varchar(100), creation_date varchar(100),"
-                + " icon_theme varchar(100), animation_set varchar(100), description varchar(255), commands varchar(255), owner varchar(100), player_list varchar(255), "
-                + "assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int, dislikes int, voters longtext, "
-                + "white_list_mode int, notify int, extra_data longtext, primary key (name))";
 
         PaperLib.suggestPaper(this);
 
@@ -136,17 +132,12 @@ public class HyperDrive extends JavaPlugin {
         setupDatabase(getConfig().getBoolean("mysql-connection.use-mysql"), getConfig().getBoolean("mysql-connection.use-ssl"));
         long databaseStartTime = System.currentTimeMillis();
         if (getDatabaseConnection() == null) {
-            log(Level.WARNING, "Communication to the database failed. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
+            log(Level.WARNING, "Communication to the database failed. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms). Plugin disabling...");
             getServer().getPluginManager().disablePlugin(this);
+            return;
         }
 
         log(Level.INFO, "Communication to the database was successful. (Took " + (System.currentTimeMillis() - databaseStartTime) + "ms)");
-
-        if (getConfig().getBoolean("mysql-connection.use-mysql") && getConfig().getBoolean("mysql-connection.cross-server")) {
-            getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-            setBungeeListener(new BungeeListener(this));
-            getServer().getMessenger().registerIncomingPluginChannel(this, "BungeeCord", getBungeeListener());
-        }
 
         // sets up the manager class including all API methods.
         setManager(new Manager(this));
@@ -589,7 +580,6 @@ public class HyperDrive extends JavaPlugin {
         if (getDatabaseConnection() != null) return;
 
         try {
-            Statement statement;
             if (!useMySQL) {
                 Class.forName("org.sqlite.JDBC");
                 setDatabaseConnection(DriverManager.getConnection("jdbc:sqlite:" + getDataFolder() + "/warps.db"));
@@ -608,20 +598,43 @@ public class HyperDrive extends JavaPlugin {
                         + (useSSL ? "verifyServerCertificate=false&useSSL=true&requireSSL=true&" : "") + "useSSL=false&autoReconnect=true&useUnicode=yes", username, password));
             }
 
-            statement = getDatabaseConnection().createStatement();
-            statement.executeUpdate(tableName);
+            String tableName = getConfig().getString("mysql-connection.table"),
+                    transferTableName = getConfig().getString("mysql-connection.transfer-table");
+
+            try (PreparedStatement statement = getDatabaseConnection().prepareStatement("create table if not exists " + tableName
+                    + " (name varchar(100), location varchar(255), status varchar(100), creation_date varchar(100), icon_theme varchar(100), "
+                    + "animation_set varchar(100), description varchar(255), commands varchar(255), owner varchar(100), player_list varchar(255), "
+                    + "assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int, dislikes int, "
+                    + "voters longtext, white_list_mode int, notify int, extra_data longtext, primary key (name));")) {
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                log(Level.WARNING, "Unable to create the \"" + tableName + "\" table.");
+            }
+
+            try (PreparedStatement statement = getDatabaseConnection().prepareStatement("CREATE TABLE IF NOT EXISTS " + transferTableName
+                    + " (uuid VARCHAR(100) PRIMARY KEY NOT NULL, server LONGTEXT, payload LONGTEXT, extra LONGTEXT);")) {
+                statement.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                log(Level.WARNING, "Unable to create the \"" + transferTableName + "\" table.");
+            }
 
             DatabaseMetaData md = getDatabaseConnection().getMetaData();
-
-            ResultSet rs1 = md.getColumns(null, null, "warps", "notify");
-            if (!rs1.next()) statement.executeUpdate("alter table warps add column notify int");
-            rs1.close();
-
-            ResultSet rs2 = md.getColumns(null, null, "warps", "extra_data");
-            if (!rs2.next()) statement.executeUpdate("alter table warps add column extra_data longtext");
-            rs2.close();
-
-            statement.close();
+            final String[] newColumns = {"notify", "extra_data"};
+            for (int i = -1; ++i < newColumns.length; ) {
+                final String columnId = newColumns[i];
+                try (ResultSet rs1 = md.getColumns(null, null, "warps", columnId)) {
+                    if (!rs1.next()) {
+                        try (PreparedStatement statement = getDatabaseConnection().prepareStatement("alter table " + tableName + " add column " + columnId + " int;")) {
+                            statement.executeUpdate();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                            log(Level.WARNING, "Unable to add the \"" + columnId + "\" column to the \"" + transferTableName + "\" table.");
+                        }
+                    }
+                }
+            }
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
             log(Level.WARNING, "There was an issue involving the MySQL connection.");
@@ -631,7 +644,8 @@ public class HyperDrive extends JavaPlugin {
     public boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
         ResultSetMetaData rsmd = rs.getMetaData();
         int columns = rsmd.getColumnCount();
-        for (int x = 0; ++x <= columns; ) if (rsmd.getColumnName(x).equalsIgnoreCase(columnName)) return true;
+        for (int i = 0; ++i <= columns; )
+            if (rsmd.getColumnName(i).equalsIgnoreCase(columnName)) return true;
         return false;
     }
 
@@ -715,7 +729,7 @@ public class HyperDrive extends JavaPlugin {
                         if (likes > 0) likes -= 1;
                         else voteType = EnumContainer.VoteType.DISLIKE;
                     } else if (voteType == EnumContainer.VoteType.DISLIKE) {
-                        if (likes > 0) dislikes -= 1;
+                        if (dislikes > 0) dislikes -= 1;
                         else voteType = EnumContainer.VoteType.LIKE;
                     }
 
@@ -740,7 +754,18 @@ public class HyperDrive extends JavaPlugin {
             warp.setCreationDate(creationDate);
             warp.setCommands(yaml.getStringList(warpName + ".commands"));
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
-            warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
+
+            String theme = yaml.getString(warpName + ".icon.theme");
+            if (theme != null && theme.startsWith("item:")) {
+                YamlConfiguration config = new YamlConfiguration();
+                try {
+                    config.loadFromString(theme);
+                    ItemStack itemStack = config.getItemStack("item");
+                    warp.setItemIcon(itemStack != null ? itemStack : new ItemStack(Material.STONE));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
             String descriptionColor = "";
             try {
@@ -762,7 +787,7 @@ public class HyperDrive extends JavaPlugin {
             warp.setUsagePrice(yaml.getDouble(warpName + ".icon.prices.usage"));
             warp.setTraffic(yaml.getInt(warpName + ".traffic"));
             warp.setWhiteListMode(yaml.getBoolean(warpName + ".white-list-mode"));
-            warp.setServerIPAddress(Objects.requireNonNull(yaml.getString(warpName + ".server-ip")).replace("localhost", "127.0.0.1"));
+            warp.setServerId(Objects.requireNonNull(yaml.getString(warpName + ".server-ip")).replace("localhost", "127.0.0.1"));
         } catch (Exception e) {
             e.printStackTrace();
             log(Level.INFO, "There was an issue loading the warp " + warp.getWarpName() + "'s data aside it's location.");
@@ -784,8 +809,19 @@ public class HyperDrive extends JavaPlugin {
             creationDate = getManager().getSimpleDateFormat().format(Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()));
 
             warp.setCreationDate(creationDate);
-            warp.setIconTheme(resultSet.getString("icon_theme").replace(":", ","));
             warp.setAnimationSet(resultSet.getString("animation_set"));
+
+            String theme = resultSet.getString("icon_theme").replace(":", ",");
+            if (theme.startsWith("item:")) {
+                YamlConfiguration config = new YamlConfiguration();
+                try {
+                    config.loadFromString(theme);
+                    ItemStack itemStack = config.getItemStack("item");
+                    warp.setItemIcon(itemStack != null ? itemStack : new ItemStack(Material.STONE));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
 
             String descriptionColor = "";
@@ -843,7 +879,7 @@ public class HyperDrive extends JavaPlugin {
             warp.setIconEnchantedLook(resultSet.getInt("enchanted_look") >= 1);
             warp.setLikes(resultSet.getInt("likes"));
             warp.setDislikes(resultSet.getInt("dislikes"));
-            warp.setServerIPAddress(ipAddress);
+            warp.setServerId(ipAddress);
             warp.setWhiteListMode(resultSet.getInt("white_list_mode") >= 1);
             warp.setNotify(resultSet.getInt("notify") >= 1);
 
@@ -869,7 +905,7 @@ public class HyperDrive extends JavaPlugin {
                         if (likes > 0) likes -= 1;
                         else voteType = EnumContainer.VoteType.DISLIKE;
                     } else if (voteType == EnumContainer.VoteType.DISLIKE) {
-                        if (likes > 0) dislikes -= 1;
+                        if (dislikes > 0) dislikes -= 1;
                         else voteType = EnumContainer.VoteType.LIKE;
                     }
 
@@ -955,7 +991,7 @@ public class HyperDrive extends JavaPlugin {
                     File file = essentialsFileList[i];
                     if (file.isDirectory() && file.getName().equalsIgnoreCase("warps")) {
                         File[] essentialsWarpsList = file.listFiles();
-                        if (essentialsWarpsList != null && essentialsWarpsList.length <= 0) {
+                        if (essentialsWarpsList != null && essentialsWarpsList.length == 0) {
                             log(Level.INFO, "There are no more warps that need to be converted.");
                             return;
                         }
@@ -1014,13 +1050,8 @@ public class HyperDrive extends JavaPlugin {
         BukkitTask autoSaveTask = getServer().getScheduler().runTaskTimerAsynchronously(this, () -> saveWarps(useMySQL), 20L * interval, 20L * interval);
         setAutoSaveTaskId(autoSaveTask.getTaskId());
 
-        if (useMySQL && getConfig().getBoolean("mysql-connection.cross-server")) {
-            BukkitTask crossServerTeleportTaskId = getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
-                if (getBungeeListener() == null) {
-                    getServer().getScheduler().cancelTask(getCrossServerTaskId());
-                    return;
-                }
-
+        if (useMySQL) {
+            setCrossServerTaskId(getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
                 getDatabaseWarps().clear();
                 try {
                     Statement statement = getDatabaseConnection().createStatement();
@@ -1071,10 +1102,12 @@ public class HyperDrive extends JavaPlugin {
                         });
                     }
                 }
-            }, 0, 60);
-            setCrossServerTaskId(crossServerTeleportTaskId.getTaskId());
+            }, 0, 60).getTaskId());
         }
     }
+
+    public String getServerId() {getConfig().getString("mysql-connection.server-id");}
+
 
     public void saveWarps(boolean async) {
         long startTime = System.currentTimeMillis();

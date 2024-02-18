@@ -13,7 +13,6 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
@@ -143,9 +142,7 @@ public class Manager {
                 Double.parseDouble(coordSplit[2]), (float) Double.parseDouble(coordSplit[3]), (float) Double.parseDouble(coordSplit[4]));
     }
 
-    public ItemStack getHandItem(Player player) {
-        return player.getItemInHand();
-    }
+    public ItemStack getHandItem(Player player) {return player.getItemInHand();}
 
     /**
      * See if a string is NOT a numerical value.
@@ -401,7 +398,7 @@ public class Manager {
 
     // inventory stuff
     @SuppressWarnings("deprecation")
-    private ItemStack buildItem(Material material, int durability, String displayName, List<String> lore, int amount) {
+    public ItemStack buildItem(Material material, int durability, String displayName, List<String> lore, int amount) {
         ItemStack itemStack = new ItemStack((material == null ? Material.STONE : material), amount);
         itemStack.setDurability((short) durability);
         ItemMeta itemMeta = itemStack.getItemMeta();
@@ -416,7 +413,7 @@ public class Manager {
     }
 
     @SuppressWarnings("deprecation")
-    private ItemStack getPlayerHead(String headId, String displayName, List<String> lore, int amount) {
+    public ItemStack getPlayerHead(String headId, String displayName, List<String> lore, int amount) {
         final boolean isNew = !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
                 || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9")
                 || getPluginInstance().getServerVersion().startsWith("v1_8"));
@@ -674,7 +671,7 @@ public class Manager {
                 continue;
 
             if (formatLine.equalsIgnoreCase("{description}") && warp.getDescription() != null) {
-                if (wrappedDescription != null && wrappedDescription.size() > 0)
+                if (wrappedDescription != null && !wrappedDescription.isEmpty())
                     for (int j = -1; ++j < wrappedDescription.size(); )
                         newLore.add(ChatColor.GRAY + colorText(wrappedDescription.get(j)));
                 continue;
@@ -696,7 +693,6 @@ public class Manager {
                     .replace("{usage-price}", String.valueOf(warp.getUsagePrice()))
                     .replace("{list-count}", String.valueOf(warp.getPlayerList().size()))
                     .replace("{status}", statusName != null ? statusName : "")
-                    .replace("{theme}", (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) ? warp.getIconTheme().split(",")[0] : "")
                     .replace("{animation-set}", warp.getAnimationSet() != null && warp.getAnimationSet().contains(":") ? warp.getAnimationSet().split(":")[0] : "")
                     .replace("{player}", player.getName())
                     .replace("{traffic}", String.valueOf(warp.getTraffic())).replace("{owner}", offlinePlayer != null ? (offlinePlayer.getName() != null ?
@@ -754,97 +750,15 @@ public class Manager {
                 newLore.add(colorText(furtherFormattedLine));
         }
 
-        if (warp.getIconTheme() != null && warp.getIconTheme().contains(",")) {
-            String[] themeArgs = warp.getIconTheme().split(",");
-
-            if (themeArgs.length <= 3) {
-                String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
-                if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
-                    final String[] materialNameArgs = materialName.split(":");
-                    ItemStack itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
-                    ItemMeta itemMeta = itemStack.getItemMeta();
-                    if (itemMeta != null) {
-                        itemMeta.setDisplayName(warp.getWarpName());
-                        itemMeta.setLore(newLore);
-
-                        if (warp.hasIconEnchantedLook()) {
-                            itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                            itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                        }
-
-                        itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                        itemStack.setItemMeta(itemMeta);
-                    }
-                    return itemStack;
-                }
-
-                int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
-                if ((materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) && warp.getOwner() != null) {
-                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                    ItemStack item = getPlayerHead(offlinePlayer.getName(), colorText(warp.getWarpName()), newLore, amount);
-                    ItemMeta itemMeta = item.getItemMeta();
-                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                        item.setItemMeta(itemMeta);
-                    }
-                    return item;
-                } else {
-                    Material material;
-                    try {
-                        material = Material.getMaterial(materialName);
-                    } catch (Exception ignored) {
-                        material = Material.ARROW;
-                    }
-
-                    ItemStack item = buildItem(material, durability, colorText(warp.getWarpName()), newLore, amount);
-                    ItemMeta itemMeta = item.getItemMeta();
-                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                        item.setItemMeta(itemMeta);
-                    }
-
-                    return item;
-                }
-            }
+        ItemStack itemStack = (warp.getItemIcon() != null ? warp.getItemIcon().clone() : new ItemStack(Material.STONE));
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta != null) {
+            itemMeta.setDisplayName(warp.getWarpName());
+            itemMeta.setLore(newLore);
+            itemStack.setItemMeta(itemMeta);
         }
 
-        warp.setIconTheme("");
-        ItemStack item;
-        if (warp.getOwner() != null) {
-            OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-            item = getPlayerHead(offlinePlayer.getName(), warp.getWarpName(), newLore, 1);
-            ItemMeta itemMeta = item.getItemMeta();
-            if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                item.setItemMeta(itemMeta);
-            }
-        } else {
-            if (!(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
-                    || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9")
-                    || getPluginInstance().getServerVersion().startsWith("v1_8")))
-                item = new ItemStack(Objects.requireNonNull(Material.getMaterial("PLAYER_HEAD")), 1);
-            else item = new ItemStack(Objects.requireNonNull(Material.getMaterial("SKULL_ITEM")), 1, (short) 3);
-
-            ItemMeta itemMeta = item.getItemMeta();
-            if (itemMeta != null) {
-                itemMeta.setDisplayName(warp.getWarpName());
-                itemMeta.setLore(newLore);
-
-                if (warp.hasIconEnchantedLook()) {
-                    itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                    itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                }
-
-                itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                item.setItemMeta(itemMeta);
-            }
-        }
-
-        return item;
+        return itemStack;
     }
 
     public ItemStack buildItemFromId(Player player, String currentFilterStatus, String menuPath, String itemId) {
@@ -1236,55 +1150,8 @@ public class Manager {
                                 .replace("{usage-price}", String.valueOf(getPluginInstance().getMenusConfig().getDouble("edit-menu-section.items." + itemId + ".usage-cost")))));
 
                     ItemStack itemStack = null;
-                    if (itemId.equalsIgnoreCase("change-icon") && warp.getIconTheme() != null && warp.getIconTheme().contains(",")) {
-                        String[] themeArgs = warp.getIconTheme().split(",");
-                        if (themeArgs.length <= 3) {
-                            String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
-                            if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
-                                final String[] materialNameArgs = materialName.split(":");
-                                itemStack = getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]);
-                                ItemMeta itemMeta = itemStack.getItemMeta();
-                                if (itemMeta != null) {
-                                    itemMeta.setDisplayName(warp.getWarpName());
-                                    itemMeta.setLore(newLore);
+                    if (itemId.equalsIgnoreCase("change-icon") && warp.getItemIcon() != null) {
 
-                                    if (warp.hasIconEnchantedLook()) {
-                                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                                    }
-
-                                    itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                                    itemStack.setItemMeta(itemMeta);
-                                }
-                            } else {
-                                int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length >= 3 ? Integer.parseInt(themeArgs[2]) : 1;
-                                if ((materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) && warp.getOwner() != null) {
-                                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(warp.getOwner());
-                                    itemStack = getPlayerHead(offlinePlayer.getName(), colorText(warp.getWarpName()), newLore, amount);
-                                    ItemMeta itemMeta = itemStack.getItemMeta();
-                                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                                        itemStack.setItemMeta(itemMeta);
-                                    }
-                                } else {
-                                    Material material;
-                                    try {
-                                        material = Material.getMaterial(materialName);
-                                    } catch (Exception ignored) {
-                                        material = Material.ARROW;
-                                    }
-
-                                    itemStack = buildItem(material, durability, colorText(warp.getWarpName()), newLore, amount);
-                                    ItemMeta itemMeta = itemStack.getItemMeta();
-                                    if (warp.hasIconEnchantedLook() && itemMeta != null) {
-                                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
-                                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-                                        itemStack.setItemMeta(itemMeta);
-                                    }
-                                }
-                            }
-                        }
                     } else {
                         final String materialName = Objects.requireNonNull(getPluginInstance().getMenusConfig().getString("edit-menu-section.items." + itemId + ".material"))
                                 .toUpperCase().replace(" ", "_").replace("-", "_");

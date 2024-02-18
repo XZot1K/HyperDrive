@@ -5,14 +5,13 @@ mysql-connection:
   use-mysql: false
   # Determines whether the connection should utilize SSL.
   use-ssl: false
-  # Make sure this option is disabled if you plan to only use MySQL without cross-server features.
-  cross-server: true
   # This id is used to mark warps to determine which server a warp belongs to.
   server-id: "example-server"
-  # If a warp's IP is found blank or null, its IP will be replaced with this IP similar to a backup. This IP should be your EXACT server's IP WITHOUT THE PORT.
-  default-ip: "127.0.0.1"
   # Below, define your MySQL information. THE DEFINED DATABASE MUST ALREADY EXIST.
   database-name: "hyperdrive"
+  table: "warps"
+  # This table is used to handle cross-server teleportation
+  transfer-table: "hyperdrive-transfer"
   host: "localhost"
   port: 3306
   username: "root"
@@ -206,7 +205,6 @@ warp-icon-section:
   # {creation-date} - replaced with the warp's creation date.
   # {owner} - replaced with the warp owner's name.
   # {assistant-count}- replaced with warp's assistants count.
-  # {theme} - replaced with the name of the icon theme currently in use by the warp.
   # {animation-set} - replaced with the name of the animation set.
   # {list-count} - The total of players in the player list.
   # {assistant-count} - The total of assistant players.
