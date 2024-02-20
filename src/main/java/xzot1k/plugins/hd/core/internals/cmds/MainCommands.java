@@ -649,7 +649,7 @@ public class MainCommands implements CommandExecutor {
         for (int i = -1; ++i < foundWarps.size(); ) {
             Warp warp = warps.get(i);
             if (warp != null)
-                warp.setServerIPAddress(setIP);
+                warp.setServerId(setIP);
         }
 
         if (commandSender instanceof Player)
