@@ -7,12 +7,14 @@ package xzot1k.plugins.hd;
 import io.papermc.lib.PaperLib;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -715,7 +717,7 @@ public class HyperDrive extends JavaPlugin {
                         if (likes > 0) likes -= 1;
                         else voteType = EnumContainer.VoteType.DISLIKE;
                     } else if (voteType == EnumContainer.VoteType.DISLIKE) {
-                        if (likes > 0) dislikes -= 1;
+                        if (dislikes > 0) dislikes -= 1;
                         else voteType = EnumContainer.VoteType.LIKE;
                     }
 
@@ -740,7 +742,18 @@ public class HyperDrive extends JavaPlugin {
             warp.setCreationDate(creationDate);
             warp.setCommands(yaml.getStringList(warpName + ".commands"));
             warp.setAnimationSet(yaml.getString(warpName + ".animation-set"));
-            warp.setIconTheme(Objects.requireNonNull(yaml.getString(warpName + ".icon.theme")).replace(":", ","));
+
+            String theme = yaml.getString(warpName + ".icon.theme");
+            if (theme != null && theme.startsWith("item:")) {
+                YamlConfiguration config = new YamlConfiguration();
+                try {
+                    config.loadFromString(theme);
+                    ItemStack itemStack = config.getItemStack("item");
+                    warp.setItemIcon(itemStack != null ? itemStack : new ItemStack(Material.STONE));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
             String descriptionColor = "";
             try {
@@ -784,9 +797,19 @@ public class HyperDrive extends JavaPlugin {
             creationDate = getManager().getSimpleDateFormat().format(Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant()));
 
             warp.setCreationDate(creationDate);
-            warp.setIconTheme(resultSet.getString("icon_theme").replace(":", ","));
             warp.setAnimationSet(resultSet.getString("animation_set"));
 
+            String theme = resultSet.getString("icon_theme").replace(":", ",");
+            if (theme.startsWith("item:")) {
+                YamlConfiguration config = new YamlConfiguration();
+                try {
+                    config.loadFromString(theme);
+                    ItemStack itemStack = config.getItemStack("item");
+                    warp.setItemIcon(itemStack != null ? itemStack : new ItemStack(Material.STONE));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
             String descriptionColor = "";
             try {
@@ -869,7 +892,7 @@ public class HyperDrive extends JavaPlugin {
                         if (likes > 0) likes -= 1;
                         else voteType = EnumContainer.VoteType.DISLIKE;
                     } else if (voteType == EnumContainer.VoteType.DISLIKE) {
-                        if (likes > 0) dislikes -= 1;
+                        if (dislikes > 0) dislikes -= 1;
                         else voteType = EnumContainer.VoteType.LIKE;
                     }
 

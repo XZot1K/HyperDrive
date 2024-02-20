@@ -136,8 +136,8 @@
         </dependency>
         <dependency>
             <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
-            <version>1.20.2-R0.1-SNAPSHOT</version>
+            <artifactId>spigot-api</artifactId>
+            <version>1.20.4-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -250,18 +250,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.massivecraft.massivecore</groupId>
-            <artifactId>MassiveCore</artifactId>
-            <version>2.14.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.massivecraft.factions</groupId>
-            <artifactId>Factions</artifactId>
-            <version>2.14.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>net.essentialsx</groupId>
             <artifactId>EssentialsX</artifactId>
             <version>2.20.1</version>
@@ -270,13 +258,13 @@
         <dependency>
             <groupId>com.Zrips.CMI</groupId>
             <artifactId>CMI</artifactId>
-            <version>9.0.0.0</version>
+            <version>9.6.10.5</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.residence</groupId>
+            <groupId>com.bekvon.bukkit</groupId>
             <artifactId>Residence</artifactId>
-            <version>5.1.0.0</version>
+            <version>5.1.4.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

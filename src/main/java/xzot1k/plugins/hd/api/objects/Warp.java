@@ -6,7 +6,13 @@ package xzot1k.plugins.hd.api.objects;
 
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import xzot1k.plugins.hd.HyperDrive;
 import xzot1k.plugins.hd.api.EnumContainer;
 
@@ -19,10 +25,11 @@ import java.util.logging.Level;
 public class Warp implements Comparable<Warp> {
     private HyperDrive pluginInstance;
     private SerializableLocation warpLocation;
-    private String warpName, creationDate, iconTheme, animationSet, serverIPAddress, description;
+    private String warpName, creationDate, animationSet, serverIPAddress, description;
     private EnumContainer.Status status;
     private UUID owner;
     private HashMap<UUID, EnumContainer.VoteType> voters;
+    private ItemStack itemIcon;
     private List<UUID> playerList, assistants;
     private List<String> commands;
     private int traffic, likes, dislikes;
@@ -43,7 +50,8 @@ public class Warp implements Comparable<Warp> {
         else setServerIPAddress(getPluginInstance().getBungeeListener().getMyServer());
 
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
-        setIconTheme(defaultMaterial != null ? defaultMaterial : "");
+        updateIconItemFromTheme(defaultMaterial != null ? defaultMaterial : "STONE");
+
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(!animationSetList.isEmpty() ? animationSetList.get(0) : "");
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
@@ -75,7 +83,8 @@ public class Warp implements Comparable<Warp> {
         else setServerIPAddress(getPluginInstance().getBungeeListener().getMyServer());
 
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
-        setIconTheme(defaultMaterial != null ? defaultMaterial : "");
+        updateIconItemFromTheme(defaultMaterial != null ? defaultMaterial : "STONE");
+
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(!animationSetList.isEmpty() ? animationSetList.get(0) : "");
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
@@ -108,7 +117,8 @@ public class Warp implements Comparable<Warp> {
         else setServerIPAddress(getPluginInstance().getBungeeListener().getMyServer());
 
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
-        setIconTheme(defaultMaterial != null ? defaultMaterial : "");
+        updateIconItemFromTheme(defaultMaterial != null ? defaultMaterial : "STONE");
+
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(!animationSetList.isEmpty() ? animationSetList.get(0) : "");
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
@@ -140,7 +150,8 @@ public class Warp implements Comparable<Warp> {
         else setServerIPAddress(getPluginInstance().getBungeeListener().getMyServer());
 
         String defaultMaterial = getPluginInstance().getConfig().getString("warp-icon-section.default-icon-material");
-        setIconTheme(defaultMaterial != null ? defaultMaterial : "");
+        updateIconItemFromTheme(defaultMaterial != null ? defaultMaterial : "STONE");
+
         List<String> animationSetList = getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list");
         setAnimationSet(!animationSetList.isEmpty() ? animationSetList.get(0) : "");
         setStatus(EnumContainer.Status.valueOf(Objects.requireNonNull(getPluginInstance().getConfig().getString("warp-icon-section.default-status"))
@@ -244,12 +255,19 @@ public class Warp implements Comparable<Warp> {
             final String locationString = (getWarpLocation().getWorldName() + "," + getWarpLocation().getX() + "," + getWarpLocation().getY() + ","
                     + getWarpLocation().getZ() + "," + getWarpLocation().getYaw() + "," + getWarpLocation().getPitch());
 
+            String itemString = "";
+            if (getItemIcon() != null) {
+                YamlConfiguration config = new YamlConfiguration();
+                config.set("item", getItemIcon());
+                itemString = config.saveToString();
+            }
+
             String syntax;
             if (!getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))
                 syntax = "INSERT OR REPLACE INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, " +
                         "traffic, usage_price, "
                         + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
-                        + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '"
+                        + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + itemString + "', '" + getAnimationSet() + "', '"
                         + getDescription().replace("'", "<hd:sq>").replace("\"", "<hd:dq>")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', '" + playerList + "', '" + assistants + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
@@ -259,13 +277,13 @@ public class Warp implements Comparable<Warp> {
                 syntax = "INSERT INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, traffic, " +
                         "usage_price, "
                         + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
-                        + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + getIconTheme() + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
+                        + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + itemString + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', '" + playerList + "', '" + assistants + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
                         + ", '" + getServerIPAddress() + "', " + getLikes() + ", " + getDislikes() + ", '" + voters
                         + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ") ON DUPLICATE KEY UPDATE name = '" + getWarpName() + "',"
                         + " location = '" + locationString + "', status = '" + getStatus().name() + "', creation_date = '" + getCreationDate() + "', "
-                        + "icon_theme = '" + getIconTheme() + "', animation_set = '" + getAnimationSet() + "', description = '"
+                        + "icon_theme = '" + itemString + "', animation_set = '" + getAnimationSet() + "', description = '"
                         + getDescription().replace("'", "<hd:sq>").replace("\"", "<hd:dq>")
                         + "', commands = '" + commands.toString().replace("'", "").replace("\"", "")
                         + "', owner = '" + (getOwner() != null ? getOwner().toString() : "")
@@ -295,6 +313,44 @@ public class Warp implements Comparable<Warp> {
         setWarpName(newName);
         register();
         save(true);
+    }
+
+    private void updateIconItemFromTheme(String theme) {
+        String[] themeArgs = theme.split(",");
+        if (themeArgs.length <= 3) {
+            String materialName = themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_");
+            if (materialName.toUpperCase().startsWith("HEAD") && materialName.contains(":") && getPluginInstance().getHeadDatabaseHook() != null) {
+                final String[] materialNameArgs = materialName.split(":");
+                setItemIcon(getPluginInstance().getHeadDatabaseHook().getHeadDatabaseAPI().getItemHead(materialNameArgs[1]));
+            } else {
+                int durability = themeArgs.length >= 2 ? Integer.parseInt(themeArgs[1]) : 0, amount = themeArgs.length == 3 ? Integer.parseInt(themeArgs[2]) : 1;
+                if ((materialName.equalsIgnoreCase("SKULL_ITEM") || materialName.equalsIgnoreCase("PLAYER_HEAD")) && getOwner() != null) {
+                    OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(getOwner());
+                    setItemIcon(getPluginInstance().getManager().getPlayerHead(offlinePlayer.getName(), getPluginInstance().getManager().colorText(getWarpName()), new ArrayList<>(), amount));
+                    ItemMeta itemMeta = getItemIcon().getItemMeta();
+                    if (hasIconEnchantedLook() && itemMeta != null) {
+                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        getItemIcon().setItemMeta(itemMeta);
+                    }
+                } else {
+                    Material material;
+                    try {
+                        material = Material.getMaterial(materialName);
+                    } catch (Exception ignored) {
+                        material = Material.ARROW;
+                    }
+
+                    setItemIcon(getPluginInstance().getManager().buildItem(material, durability, getPluginInstance().getManager().colorText(getWarpName()), new ArrayList<>(), amount));
+                    ItemMeta itemMeta = getItemIcon().getItemMeta();
+                    if (hasIconEnchantedLook() && itemMeta != null) {
+                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                        getItemIcon().setItemMeta(itemMeta);
+                    }
+                }
+            }
+        }
     }
 
     // getters & setters
@@ -390,14 +446,6 @@ public class Warp implements Comparable<Warp> {
         this.creationDate = creationDate;
     }
 
-    public String getIconTheme() {
-        return iconTheme;
-    }
-
-    public void setIconTheme(String iconTheme) {
-        this.iconTheme = iconTheme;
-    }
-
     public String getAnimationSet() {
         return animationSet;
     }
@@ -477,6 +525,10 @@ public class Warp implements Comparable<Warp> {
         final int maxLength = Math.min(thisString.length(), otherString.length());
         return otherString.substring(0, maxLength).compareToIgnoreCase(thisString.substring(0, maxLength));
     }
+
+    public ItemStack getItemIcon() {return itemIcon;}
+
+    public void setItemIcon(ItemStack itemIcon) {this.itemIcon = itemIcon;}
 
     public static class LikesSort implements Comparator<Warp> {
         /**

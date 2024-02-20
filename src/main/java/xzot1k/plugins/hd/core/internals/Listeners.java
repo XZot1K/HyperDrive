@@ -1852,9 +1852,9 @@ public class Listeners implements Listener {
                                 return;
                             }
 
-                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
-                                return;
-                            warp.setIconTheme(handItem.getType().name() + "," + handItem.getDurability() + "," + handItem.getAmount());
+                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
+                            warp.setItemIcon(handItem.clone());
+
                             getPluginInstance().getManager().sendCustomMessage("icon-changed", player, "{warp}:" + warp.getWarpName());
                         }
 
@@ -1992,66 +1992,51 @@ public class Listeners implements Listener {
                             }
                         break;
                     }
-                    case "like": {
-                        player.closeInventory();
-
-                        final boolean hasBypass = player.hasPermission("hyperdrive.likebypass");
-                        EnumContainer.VoteType voteType = warp.getVoters().getOrDefault(player.getUniqueId(), null);
-
-                        if (voteType != null) {
-                            if (!hasBypass && voteType == EnumContainer.VoteType.LIKE) {
-                                warp.setLikes(warp.getLikes() - 1);
-                                getPluginInstance().getManager().sendCustomMessage("redacted-like", player, ("{warp}:" + warp.getWarpName()));
-                                return;
-                            }
-
-                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
-
-                            if (!hasBypass) {
-                                if (voteType == EnumContainer.VoteType.DISLIKE) warp.setDislikes(Math.max(0, (warp.getDislikes() - 1)));
-                                warp.getVoters().put(player.getUniqueId(), EnumContainer.VoteType.LIKE);
-                            }
-
-                            warp.setLikes(warp.getLikes() + 1);
-                            getPluginInstance().getManager().sendCustomMessage("liked-message", player, ("{warp}:" + warp.getWarpName()));
-                            return;
-                        }
-
-                        if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
-                        warp.setLikes(warp.getLikes() + 1);
-                        if (!hasBypass) warp.getVoters().put(player.getUniqueId(), EnumContainer.VoteType.LIKE);
-                        getPluginInstance().getManager().sendCustomMessage("liked-message", player, "{warp}:" + warp.getWarpName());
-                        break;
-                    }
+                    case "like":
                     case "dislike": {
                         player.closeInventory();
 
-                        final boolean hasBypass = player.hasPermission("hyperdrive.likebypass");
-                        EnumContainer.VoteType voteType = warp.getVoters().getOrDefault(player.getUniqueId(), null);
+                        // handle payment
+                        if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
 
+                        EnumContainer.VoteType voteType = warp.getVoters().getOrDefault(player.getUniqueId(), null),
+                                typeComparison = (clickAction.equals("like") ? EnumContainer.VoteType.LIKE : EnumContainer.VoteType.DISLIKE);
+
+                        // vote already exists for the player
                         if (voteType != null) {
-                            if (!hasBypass && voteType == EnumContainer.VoteType.DISLIKE) {
-                                warp.setDislikes(warp.getDislikes() - 1);
-                                getPluginInstance().getManager().sendCustomMessage("redacted-dislike", player, ("{warp}:" + warp.getWarpName()));
+                            // vote is identical to previous
+                            if (voteType == typeComparison) {
+                                warp.getVoters().remove(player.getUniqueId());
+
+                                if (typeComparison == EnumContainer.VoteType.LIKE) warp.setLikes(Math.max(0, (warp.getLikes() - 1)));
+                                else warp.setDislikes(Math.max(0, (warp.getDislikes() - 1)));
+
+                                getPluginInstance().getManager().sendCustomMessage("redacted-" + typeComparison.name().toLowerCase(), player, ("{warp}:" + warp.getWarpName()));
                                 return;
                             }
 
-                            if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
+                            // previous vote is opposite
+                            warp.getVoters().put(player.getUniqueId(), typeComparison);
 
-                            if (!hasBypass) {
-                                if (voteType == EnumContainer.VoteType.LIKE) warp.setLikes(Math.max(0, (warp.getLikes() - 1)));
-                                warp.getVoters().put(player.getUniqueId(), EnumContainer.VoteType.DISLIKE);
+                            if (typeComparison == EnumContainer.VoteType.LIKE) {
+                                warp.setDislikes(Math.max(0, (warp.getDislikes() - 1)));
+                                warp.setLikes(Math.min(warp.getVoters().size(), (warp.getLikes() + 1)));
+                            } else {
+                                warp.setLikes(Math.max(0, (warp.getLikes() - 1)));
+                                warp.setDislikes(Math.min(warp.getVoters().size(), (warp.getDislikes() + 1)));
                             }
 
-                            warp.setDislikes(warp.getDislikes() + 1);
-                            getPluginInstance().getManager().sendCustomMessage("disliked-message", player, "{warp}:" + warp.getWarpName());
+                            getPluginInstance().getManager().sendCustomMessage(typeComparison.name().toLowerCase() + "d-message", player, "{warp}:" + warp.getWarpName());
                             return;
                         }
 
-                        if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost)) return;
-                        warp.setDislikes(warp.getDislikes() + 1);
-                        if (!hasBypass) warp.getVoters().put(player.getUniqueId(), EnumContainer.VoteType.DISLIKE);
-                        getPluginInstance().getManager().sendCustomMessage("disliked-message", player, "{warp}:" + warp.getWarpName());
+                        // new vote
+                        warp.getVoters().put(player.getUniqueId(), typeComparison);
+
+                        if (typeComparison == EnumContainer.VoteType.LIKE) warp.setLikes(Math.min(warp.getVoters().size(), (warp.getLikes() + 1)));
+                        else warp.setDislikes(Math.min(warp.getVoters().size(), (warp.getDislikes() + 1)));
+
+                        getPluginInstance().getManager().sendCustomMessage(typeComparison.name().toLowerCase() + "d-message", player, "{warp}:" + warp.getWarpName());
                         break;
                     }
                     default: {break;}
@@ -2157,7 +2142,7 @@ public class Listeners implements Listener {
 
                         player.closeInventory();
                         final List<UUID> selectedPlayers = new ArrayList<>(getPluginInstance().getManager().getPaging().getSelectedPlayers(player));
-                        if (selectedPlayers.size() >= 1) {
+                        if (!selectedPlayers.isEmpty()) {
                             if (!getPluginInstance().getManager().initiateEconomyCharge(player, itemUsageCost))
                                 return;
 
@@ -2199,7 +2184,7 @@ public class Listeners implements Listener {
                                 int playerSlot = playerSlots.get(i);
                                 e.getInventory().setItem(playerSlot, null);
 
-                                if (playerSelectionPageList.size() >= 1) {
+                                if (!playerSelectionPageList.isEmpty()) {
                                     UUID playerUniqueId = playerSelectionPageList.get(0);
                                     OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
                                     if (!offlinePlayer.isOnline())
@@ -2230,7 +2215,7 @@ public class Listeners implements Listener {
                                 getPluginInstance().getManager().getPaging().updateCurrentPlayerSelectionPage(player, true);
                                 for (int i = -1; ++i < playerSlots.size(); ) {
                                     e.getInventory().setItem(playerSlots.get(i), null);
-                                    if (playerSelectionPageList.size() >= 1) {
+                                    if (!playerSelectionPageList.isEmpty()) {
                                         UUID playerUniqueId = playerSelectionPageList.get(0);
                                         OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
                                         if (!offlinePlayer.isOnline())
@@ -2265,7 +2250,7 @@ public class Listeners implements Listener {
                                 getPluginInstance().getManager().getPaging().updateCurrentPlayerSelectionPage(player, false);
                                 for (int i = -1; ++i < playerSlots.size(); ) {
                                     e.getInventory().setItem(playerSlots.get(i), null);
-                                    if (playerSelectionPageList.size() >= 1) {
+                                    if (!playerSelectionPageList.isEmpty()) {
                                         UUID playerUniqueId = playerSelectionPageList.get(0);
                                         OfflinePlayer offlinePlayer = getPluginInstance().getServer().getOfflinePlayer(playerUniqueId);
                                         if (!offlinePlayer.isOnline()) continue;
@@ -2424,7 +2409,7 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().getPaging().updateCurrentWarpPage(player, true);
                 for (int i = -1; ++i < warpSlots.size(); ) {
                     inventory.setItem(warpSlots.get(i), null);
-                    if (pageList.size() >= 1) {
+                    if (!pageList.isEmpty()) {
                         Warp warp = pageList.get(0);
                         ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
                         if (warpIcon != null)
@@ -2458,7 +2443,7 @@ public class Listeners implements Listener {
                 getPluginInstance().getManager().getPaging().updateCurrentWarpPage(player, false);
                 for (int i = -1; ++i < warpSlots.size(); ) {
                     inventory.setItem(warpSlots.get(i), null);
-                    if (pageList.size() >= 1) {
+                    if (!pageList.isEmpty()) {
                         Warp warp = pageList.get(0);
                         ItemStack warpIcon = getPluginInstance().getManager().buildWarpIcon(player, warp);
                         if (warpIcon != null)

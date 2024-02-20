@@ -73,10 +73,22 @@ public class HookChecker {
     public boolean isNotSafe(Player player, Location location, CheckType checkType) {
         if (player.hasPermission("hyperdrive.admin.bypass")) return false;
 
+        final World world = location.getWorld();
+        if (world == null) return false;
+
         final boolean ownershipCheck = getPluginInstance().getConfig().getBoolean("general-section.claim-ownership-checks");
         if (checkType != CheckType.WARP && getPluginInstance().getWorldGuardHandler() != null
                 && !getPluginInstance().getWorldGuardHandler().passedWorldGuardHook(location, ownershipCheck, player))
             return true;
+
+        if (landsInstalled && checkType == CheckType.RTP) {
+            me.angeschossen.lands.api.LandsIntegration api = me.angeschossen.lands.api.LandsIntegration.of(pluginInstance);
+            me.angeschossen.lands.api.land.LandWorld landWorld = api.getWorld(world);
+            if (landWorld != null) {
+                me.angeschossen.lands.api.land.Area area = landWorld.getArea(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+                if (area != null) return true;
+            }
+        }
 
         if (getFactionsType() != null && checkType != CheckType.WARP) {
             switch (getFactionsType()) {
@@ -98,14 +110,14 @@ public class HookChecker {
                         return true;
                     break;
                 case MASSIVE:
-                    com.massivecraft.factions.entity.Faction mFaction = com.massivecraft.factions.entity.BoardColl
+                /*    com.massivecraft.factions.entity.Faction mFaction = com.massivecraft.factions.entity.BoardColl
                             .get().getFactionAt(com.massivecraft.massivecore.ps.PS.valueOf(location));
                     com.massivecraft.factions.entity.MPlayer fPlayer = com.massivecraft.factions.entity.MPlayer.get(player);
                     if (mFaction != null && (!ownershipCheck || (mFaction.getComparisonName()
                             .equalsIgnoreCase(com.massivecraft.factions.entity.FactionColl.get().getNone().getComparisonName())
                             && !fPlayer.getFaction().getComparisonName().equalsIgnoreCase(mFaction.getComparisonName())))) {
                         return true;
-                    }
+                    }*/
                     break;
                 default:
                     break;
@@ -126,7 +138,6 @@ public class HookChecker {
                 return true;
         }
 
-        final World world = player.getWorld();
         if (griefDefenderInstalled && checkType != CheckType.WARP
                 && com.griefdefender.api.GriefDefender.getCore().isEnabled(world.getUID()) && location.getWorld() != null) {
             com.griefdefender.api.claim.Claim claimAtLocation = com.griefdefender.api.GriefDefender.getCore().getClaimAt(location);
@@ -158,18 +169,6 @@ public class HookChecker {
             com.bekvon.bukkit.residence.protection.ClaimedResidence res = com.bekvon.bukkit.residence
                     .Residence.getInstance().getResidenceManager().getByLoc(location);
             return (res != null && (!ownershipCheck || !res.isOwner(player))); // If false is returned, the hook failed and teleportation is blocked.
-        }
-
-        if (landsInstalled && checkType != CheckType.WARP) {
-            me.angeschossen.lands.api.LandsIntegration api = me.angeschossen.lands.api.LandsIntegration.of(pluginInstance);
-            me.angeschossen.lands.api.land.LandWorld landWorld = api.getWorld(world);
-            if (landWorld != null) {
-                me.angeschossen.lands.api.land.Area area = landWorld.getArea(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-                if (area != null) {
-                    if (checkType == CheckType.RTP) return true;
-                    return !area.getOwnerUID().toString().equals(player.getUniqueId().toString());
-                }
-            }
         }
 
         return false;
