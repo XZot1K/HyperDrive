@@ -803,7 +803,7 @@ public class HyperDrive extends JavaPlugin {
             if (theme.startsWith("item:")) {
                 YamlConfiguration config = new YamlConfiguration();
                 try {
-                    config.loadFromString(theme);
+                    config.loadFromString(theme.replace("[sq]", "'").replace("[dq]", "\""));
                     ItemStack itemStack = config.getItemStack("item");
                     warp.setItemIcon(itemStack != null ? itemStack : new ItemStack(Material.STONE));
                 } catch (Exception e) {

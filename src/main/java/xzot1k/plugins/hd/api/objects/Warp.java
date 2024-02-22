@@ -259,14 +259,13 @@ public class Warp implements Comparable<Warp> {
             if (getItemIcon() != null) {
                 YamlConfiguration config = new YamlConfiguration();
                 config.set("item", getItemIcon());
-                itemString = config.saveToString();
+                itemString = config.saveToString().replace("'", "[sq]").replace("\"", "[dq]");
             }
 
             String syntax;
             if (!getPluginInstance().getConfig().getBoolean("mysql-connection.use-mysql"))
                 syntax = "INSERT OR REPLACE INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, " +
-                        "traffic, usage_price, "
-                        + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
+                        "traffic, usage_price, enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
                         + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + itemString + "', '" + getAnimationSet() + "', '"
                         + getDescription().replace("'", "<hd:sq>").replace("\"", "<hd:dq>")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
@@ -275,8 +274,7 @@ public class Warp implements Comparable<Warp> {
                         + "', " + (isWhiteListMode() ? 1 : 0) + ", " + (canNotify() ? 1 : 0) + ");";
             else
                 syntax = "INSERT INTO warps(name, location, status, creation_date, icon_theme, animation_set, description, commands, owner, player_list, assistants, traffic, " +
-                        "usage_price, "
-                        + "enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
+                        "usage_price, enchanted_look, server_ip, likes, dislikes, voters, white_list_mode, notify) VALUES('" + getWarpName() + "', '" + locationString + "',"
                         + " '" + getStatus().name() + "', '" + getCreationDate() + "', '" + itemString + "', '" + getAnimationSet() + "', '" + getDescription().replace("'", "")
                         + "', '" + commands.toString().replace("'", "") + "', '" + (getOwner() != null ? getOwner().toString() : "")
                         + "', '" + playerList + "', '" + assistants + "', " + getTraffic() + ", " + getUsagePrice() + ", " + (hasIconEnchantedLook() ? 1 : 0)
