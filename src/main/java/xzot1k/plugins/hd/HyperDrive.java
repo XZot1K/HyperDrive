@@ -99,9 +99,9 @@ public class HyperDrive extends JavaPlugin {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
         setServerVersion(getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
-        tableName = "create table if not exists warps (name varchar(100), location varchar(255), status varchar(100), creation_date varchar(100),"
-                + " icon_theme varchar(100), animation_set varchar(100), description varchar(255), commands varchar(255), owner varchar(100), player_list varchar(255), "
-                + "assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int, dislikes int, voters longtext, "
+        tableName = "create table if not exists warps (name longtext, location longtext, status longtext, creation_date longtext,"
+                + " icon_theme longtext, animation_set longtext, description longtext, commands longtext, owner longtext, player_list longtext, "
+                + "assistants longtext, traffic int, usage_price double, enchanted_look int, server_ip longtext, likes int, dislikes int, voters longtext, "
                 + "white_list_mode int, notify int, extra_data longtext, primary key (name))";
 
         PaperLib.suggestPaper(this);
@@ -596,7 +596,6 @@ public class HyperDrive extends JavaPlugin {
                 Class.forName("org.sqlite.JDBC");
                 setDatabaseConnection(DriverManager.getConnection("jdbc:sqlite:" + getDataFolder() + "/warps.db"));
             } else {
-
                 try {
                     Class.forName("com.mysql.cj.jdbc.Driver");
                 } catch (NoClassDefFoundError | ClassNotFoundException ignored) {
@@ -610,20 +609,44 @@ public class HyperDrive extends JavaPlugin {
                         + (useSSL ? "verifyServerCertificate=false&useSSL=true&requireSSL=true&" : "") + "useSSL=false&autoReconnect=true&useUnicode=yes", username, password));
             }
 
-            statement = getDatabaseConnection().createStatement();
-            statement.executeUpdate(tableName);
+            try (PreparedStatement preparedStatement = getDatabaseConnection().prepareStatement(tableName)) {
+                preparedStatement.executeUpdate();
+            } catch (SQLException ex) {log(Level.WARNING, "Error creating the \"warps\" table in the database.");}
 
-            DatabaseMetaData md = getDatabaseConnection().getMetaData();
+            DatabaseMetaData metaData = getDatabaseConnection().getMetaData();
 
-            ResultSet rs1 = md.getColumns(null, null, "warps", "notify");
-            if (!rs1.next()) statement.executeUpdate("alter table warps add column notify int");
-            rs1.close();
+            try (ResultSet columns = metaData.getColumns(null, null, tableName, null)) {
 
-            ResultSet rs2 = md.getColumns(null, null, "warps", "extra_data");
-            if (!rs2.next()) statement.executeUpdate("alter table warps add column extra_data longtext");
-            rs2.close();
+                while (columns.next()) {
+                    String columnName = columns.getString("COLUMN_NAME"),
+                            columnType = columns.getString("TYPE_NAME");
+                    // int charLength = columns.getInt("COLUMN_SIZE");
 
-            statement.close();
+                    if ("VARCHAR".equalsIgnoreCase(columnType)) {
+                        try (PreparedStatement preparedStatement = getDatabaseConnection().prepareStatement("ALTER TABLE " + tableName + " MODIFY " + columnName + " LONGTEXT;")) {
+                            preparedStatement.executeUpdate();
+                            log(Level.INFO, "The \"" + columnName + "\" was converted to a LONGTEXT from VARCHAR.");
+                        } catch (SQLException ex) {
+                            log(Level.WARNING, "Error altering existing columns (" + ex.getMessage() + ").");
+                        }
+                    }
+                }
+
+            } catch (SQLException ex) {
+                log(Level.WARNING, "Error reading existing columns (" + ex.getMessage() + ").");
+            }
+
+            final String[][] newColumns = {{"notify", "extra_data"}, {"INT", "LONGTEXT"}};
+            for (int i = -1; ++i < newColumns.length; ) {
+                final String columnName = newColumns[i][0], columnType = newColumns[i][1];
+                try (ResultSet resultSet = metaData.getColumns(null, null, "warps", "notify")) {
+                    if (resultSet.next()) continue;
+
+                    try (PreparedStatement preparedStatement = getDatabaseConnection().prepareStatement("ALTER TABLE warps ADD COLUMN " + columnName + " " + columnType + ";")) {
+                        preparedStatement.executeUpdate();
+                    } catch (SQLException ex) {log(Level.WARNING, "Error altering the \"" + columnName + "\" to data type \"" + columnType + "\" in the database.");}
+                } catch (SQLException ex) {log(Level.WARNING, "Error adding the \"" + columnName + "\" to the database table.");}
+            }
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
             log(Level.WARNING, "There was an issue involving the MySQL connection.");

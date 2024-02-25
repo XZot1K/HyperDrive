@@ -81,12 +81,17 @@ public class HookChecker {
                 && !getPluginInstance().getWorldGuardHandler().passedWorldGuardHook(location, ownershipCheck, player))
             return true;
 
-        if (landsInstalled && checkType == CheckType.RTP) {
+        if (landsInstalled && checkType != CheckType.WARP) {
             me.angeschossen.lands.api.LandsIntegration api = me.angeschossen.lands.api.LandsIntegration.of(pluginInstance);
             me.angeschossen.lands.api.land.LandWorld landWorld = api.getWorld(world);
             if (landWorld != null) {
-                me.angeschossen.lands.api.land.Area area = landWorld.getArea(location.getBlockX(), location.getBlockY(), location.getBlockZ());
-                if (area != null) return true;
+                final int chunkX = (location.getBlockX() >> 4), chunkZ = (location.getBlockZ() >> 4);
+                me.angeschossen.lands.api.land.Land land;
+
+                if (landWorld.isChunkLoaded(chunkX, chunkZ)) land = landWorld.getLandByChunk(chunkX, chunkZ);
+                else land = landWorld.getLandByUnloadedChunk(chunkX, chunkZ);
+
+                if (land != null && (!ownershipCheck || !land.getOwnerUID().toString().equals(player.getUniqueId().toString()))) return true;
             }
         }
 
