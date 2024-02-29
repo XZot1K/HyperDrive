@@ -53,7 +53,7 @@ public class HyperDrive extends JavaPlugin {
     private Connection databaseConnection;
     private List<String> databaseWarps;
 
-    private String serverVersion, tableName;
+    private String serverVersion, syntax;
     private int teleportationHandlerTaskId, autoSaveTaskId, crossServerTaskId;
 
     private FileConfiguration langConfig, menusConfig, dataConfig;
@@ -99,7 +99,7 @@ public class HyperDrive extends JavaPlugin {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
         setServerVersion(getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
-        tableName = "create table if not exists warps (name longtext, location longtext, status longtext, creation_date longtext,"
+        syntax = "create table if not exists warps (name varchar(100), location longtext, status longtext, creation_date longtext,"
                 + " icon_theme longtext, animation_set longtext, description longtext, commands longtext, owner longtext, player_list longtext, "
                 + "assistants longtext, traffic int, usage_price double, enchanted_look int, server_ip longtext, likes int, dislikes int, voters longtext, "
                 + "white_list_mode int, notify int, extra_data longtext, primary key (name))";
@@ -591,7 +591,6 @@ public class HyperDrive extends JavaPlugin {
         if (getDatabaseConnection() != null) return;
 
         try {
-            Statement statement;
             if (!useMySQL) {
                 Class.forName("org.sqlite.JDBC");
                 setDatabaseConnection(DriverManager.getConnection("jdbc:sqlite:" + getDataFolder() + "/warps.db"));
@@ -609,21 +608,20 @@ public class HyperDrive extends JavaPlugin {
                         + (useSSL ? "verifyServerCertificate=false&useSSL=true&requireSSL=true&" : "") + "useSSL=false&autoReconnect=true&useUnicode=yes", username, password));
             }
 
-            try (PreparedStatement preparedStatement = getDatabaseConnection().prepareStatement(tableName)) {
+            try (PreparedStatement preparedStatement = getDatabaseConnection().prepareStatement(syntax)) {
                 preparedStatement.executeUpdate();
             } catch (SQLException ex) {log(Level.WARNING, "Error creating the \"warps\" table in the database.");}
 
             DatabaseMetaData metaData = getDatabaseConnection().getMetaData();
 
-            try (ResultSet columns = metaData.getColumns(null, null, tableName, null)) {
-
+            try (ResultSet columns = metaData.getColumns(null, null, "warps", null)) {
                 while (columns.next()) {
                     String columnName = columns.getString("COLUMN_NAME"),
                             columnType = columns.getString("TYPE_NAME");
                     // int charLength = columns.getInt("COLUMN_SIZE");
 
-                    if ("VARCHAR".equalsIgnoreCase(columnType)) {
-                        try (PreparedStatement preparedStatement = getDatabaseConnection().prepareStatement("ALTER TABLE " + tableName + " MODIFY " + columnName + " LONGTEXT;")) {
+                    if (columnType.startsWith("VARCHAR") && !columnName.equalsIgnoreCase("name")) {
+                        try (PreparedStatement preparedStatement = getDatabaseConnection().prepareStatement("ALTER TABLE warps MODIFY " + columnName + " LONGTEXT;")) {
                             preparedStatement.executeUpdate();
                             log(Level.INFO, "The \"" + columnName + "\" was converted to a LONGTEXT from VARCHAR.");
                         } catch (SQLException ex) {
@@ -770,7 +768,7 @@ public class HyperDrive extends JavaPlugin {
             if (theme != null && theme.startsWith("item:")) {
                 YamlConfiguration config = new YamlConfiguration();
                 try {
-                    config.loadFromString(theme);
+                    config.loadFromString(theme.replace("[sq]", "'").replace("[dq]", "\""));
                     ItemStack itemStack = config.getItemStack("item");
                     warp.setItemIcon(itemStack != null ? itemStack : new ItemStack(Material.STONE));
                 } catch (Exception e) {
@@ -822,7 +820,7 @@ public class HyperDrive extends JavaPlugin {
             warp.setCreationDate(creationDate);
             warp.setAnimationSet(resultSet.getString("animation_set"));
 
-            String theme = resultSet.getString("icon_theme").replace(":", ",");
+            String theme = resultSet.getString("icon_theme");
             if (theme.startsWith("item:")) {
                 YamlConfiguration config = new YamlConfiguration();
                 try {
@@ -1208,7 +1206,7 @@ public class HyperDrive extends JavaPlugin {
         if (fixTables) {
             try {
                 PreparedStatement statement = getDatabaseConnection().prepareStatement("ALTER TABLE warps RENAME TO warps_old;");
-                statement.executeUpdate(tableName);
+                statement.executeUpdate(syntax);
 
                 final String columnsSeparated = "name, location, status, creation_date, icon_theme, animation_set, description, "
                         + "commands, owner, player_list, assistants, traffic, usage_price, enchanted_look, server_ip, likes, "

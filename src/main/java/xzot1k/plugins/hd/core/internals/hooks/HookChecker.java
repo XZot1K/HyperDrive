@@ -168,8 +168,7 @@ public class HookChecker {
                 }
             } catch (Exception ignored) {
             }
-        }
-
+        } //u2_n7c1fmqzg4:4!lumxVaLVCv.WuvfAj71L6s@192.168.86.49:3306/s2_Main
         if (residenceInstalled && checkType != CheckType.WARP) {
             com.bekvon.bukkit.residence.protection.ClaimedResidence res = com.bekvon.bukkit.residence
                     .Residence.getInstance().getResidenceManager().getByLoc(location);
