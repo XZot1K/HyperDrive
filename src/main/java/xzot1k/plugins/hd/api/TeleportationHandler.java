@@ -11,6 +11,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import xzot1k.plugins.hd.HyperDrive;
@@ -510,7 +511,7 @@ public class TeleportationHandler implements Runnable {
             entity.eject();
 
             try {
-                PaperLib.teleportAsync(player, location);
+                PaperLib.teleportAsync(player, location, PlayerTeleportEvent.TeleportCause.PLUGIN);
             } catch (NoSuchMethodError | Exception e) {
                 player.teleport(location);
             }
@@ -519,7 +520,7 @@ public class TeleportationHandler implements Runnable {
                 @Override
                 public void run() {
                     try {
-                        PaperLib.teleportAsync(entity, location);
+                        PaperLib.teleportAsync(entity, location, PlayerTeleportEvent.TeleportCause.PLUGIN);
                     } catch (NoSuchMethodError | Exception e) {
                         entity.teleport(location);
                     }
@@ -534,7 +535,7 @@ public class TeleportationHandler implements Runnable {
             }.runTaskLater(getPluginInstance(), 1);
         } else {
             try {
-                PaperLib.teleportAsync(player, location);
+                PaperLib.teleportAsync(player, location, PlayerTeleportEvent.TeleportCause.PLUGIN);
             } catch (NoSuchMethodError | Exception e) {
                 player.teleport(location);
             }

@@ -82,7 +82,7 @@ public class RandomTeleportation implements Runnable {
         if (randomTeleportation != null) {
             pluginInstance.getServer().getScheduler().cancelTask(randomTeleportation.getTaskId());
             rtpMap.remove(playerUniqueId);
-            return null;
+            return randomTeleportation;
         }
         return null;
     }

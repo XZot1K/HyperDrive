@@ -81,7 +81,7 @@ public class HookChecker {
                 && !getPluginInstance().getWorldGuardHandler().passedWorldGuardHook(location, ownershipCheck, player))
             return true;
 
-        if (landsInstalled && checkType != CheckType.WARP) {
+        if (landsInstalled) {
             me.angeschossen.lands.api.LandsIntegration api = me.angeschossen.lands.api.LandsIntegration.of(pluginInstance);
             me.angeschossen.lands.api.land.LandWorld landWorld = api.getWorld(world);
             if (landWorld != null) {
