@@ -71,14 +71,13 @@ public class HookChecker {
      * @return Whether it is safe.
      */
     public boolean isNotSafe(Player player, Location location, CheckType checkType) {
-        if (player.hasPermission("hyperdrive.admin.bypass")) return false;
+        if (player.hasPermission("hyperdrive.admin.bypass") || checkType == CheckType.WARP) return false;
 
         final World world = location.getWorld();
         if (world == null) return false;
 
         final boolean ownershipCheck = getPluginInstance().getConfig().getBoolean("general-section.claim-ownership-checks");
-        if (checkType != CheckType.WARP && getPluginInstance().getWorldGuardHandler() != null
-                && !getPluginInstance().getWorldGuardHandler().passedWorldGuardHook(location, ownershipCheck, player))
+        if (getPluginInstance().getWorldGuardHandler() != null && !getPluginInstance().getWorldGuardHandler().passedWorldGuardHook(location, ownershipCheck, player))
             return true;
 
         if (landsInstalled) {
@@ -95,7 +94,7 @@ public class HookChecker {
             }
         }
 
-        if (getFactionsType() != null && checkType != CheckType.WARP) {
+        if (getFactionsType() != null) {
             switch (getFactionsType()) {
                 case SABER:
                     com.massivecraft.factions.Faction factionAtLocation = com.massivecraft.factions.Board
@@ -129,22 +128,20 @@ public class HookChecker {
             }
         }
 
-        if (aSkyBlockInstalled && checkType != CheckType.WARP) {
+        if (aSkyBlockInstalled) {
             com.wasteofplastic.askyblock.Island island = com.wasteofplastic.askyblock.ASkyBlockAPI.getInstance().getIslandAt(location);
             if (island != null && (!ownershipCheck || (!island.getOwner().toString().equals(player.getUniqueId().toString())
                     && !island.getMembers().contains(player.getUniqueId())))) return true;
         }
 
-        if (griefPreventionInstalled && checkType != CheckType.WARP) {
-            me.ryanhamshire.GriefPrevention.Claim claimAtLocation = me.ryanhamshire.GriefPrevention.GriefPrevention
-                    .instance.dataStore.getClaimAt(location, true, null);
+        if (griefPreventionInstalled) {
+            me.ryanhamshire.GriefPrevention.Claim claimAtLocation = me.ryanhamshire.GriefPrevention.GriefPrevention.instance.dataStore.getClaimAt(location, true, null);
             if (claimAtLocation != null && (!ownershipCheck || !claimAtLocation.getOwnerName().equalsIgnoreCase(player.getName())
                     || !claimAtLocation.getOwnerID().toString().equals(player.getUniqueId().toString())))
                 return true;
         }
 
-        if (griefDefenderInstalled && checkType != CheckType.WARP
-                && com.griefdefender.api.GriefDefender.getCore().isEnabled(world.getUID()) && location.getWorld() != null) {
+        if (griefDefenderInstalled && com.griefdefender.api.GriefDefender.getCore().isEnabled(world.getUID()) && location.getWorld() != null) {
             com.griefdefender.api.claim.Claim claimAtLocation = com.griefdefender.api.GriefDefender.getCore().getClaimAt(location);
             if (claimAtLocation != null && !claimAtLocation.isWilderness()) {
 
@@ -156,22 +153,20 @@ public class HookChecker {
             }
         }
 
-        if (townyInstalled && checkType != CheckType.WARP) {
+        if (townyInstalled) {
             try {
-                com.palmergames.bukkit.towny.object.Town town = com.palmergames.bukkit.towny.object.WorldCoord
-                        .parseWorldCoord(location).getTownBlock().getTown();
+                com.palmergames.bukkit.towny.object.Town town = com.palmergames.bukkit.towny.object.WorldCoord.parseWorldCoord(location).getTownBlock().getTown();
                 if (town != null) {
-                    final com.palmergames.bukkit.towny.object.Resident resident = com.palmergames.bukkit
-                            .towny.TownyAPI.getInstance().getResident(player.getName());
+                    final com.palmergames.bukkit.towny.object.Resident resident = com.palmergames.bukkit.towny.TownyAPI.getInstance().getResident(player.getName());
                     if (resident != null && (!ownershipCheck || (!town.getResidents().contains(resident) && town.getMayor() != resident)))
                         return true;
                 }
             } catch (Exception ignored) {
             }
-        } //u2_n7c1fmqzg4:4!lumxVaLVCv.WuvfAj71L6s@192.168.86.49:3306/s2_Main
-        if (residenceInstalled && checkType != CheckType.WARP) {
-            com.bekvon.bukkit.residence.protection.ClaimedResidence res = com.bekvon.bukkit.residence
-                    .Residence.getInstance().getResidenceManager().getByLoc(location);
+        }
+
+        if (residenceInstalled) {
+            com.bekvon.bukkit.residence.protection.ClaimedResidence res = com.bekvon.bukkit.residence.Residence.getInstance().getResidenceManager().getByLoc(location);
             return (res != null && (!ownershipCheck || !res.isOwner(player))); // If false is returned, the hook failed and teleportation is blocked.
         }
 

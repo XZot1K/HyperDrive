@@ -241,7 +241,8 @@ public class TeleportationHandler implements Runnable {
                                         } else {
                                             for (String command : warp.getCommands()) {
                                                 if (command.toUpperCase().endsWith(":PLAYER"))
-                                                    getPluginInstance().getServer().dispatchCommand(player, command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
+                                                    getPluginInstance().getServer().dispatchCommand(player, command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}",
+                                                            player.getName()));
                                                 else if (command.toUpperCase().endsWith(":CONSOLE"))
                                                     getPluginInstance().getServer().dispatchCommand(getPluginInstance().getServer().getConsoleSender(),
                                                             command.replaceAll("(?i):PLAYER", "").replaceAll("(?i):CONSOLE", "").replace("{player}", player.getName()));
@@ -414,16 +415,17 @@ public class TeleportationHandler implements Runnable {
                             .toUpperCase().replace(" ", "_").replace("-", "_")), 1);
                 }
 
-                if (teleportTitle != null && teleportSubTitle != null)
+                if (teleportTitle != null && teleportSubTitle != null) {
                     getPluginInstance().getManager().sendTitle(player,
-                            standaloneTitle.replace("{world}", Objects.requireNonNull(toLocation.getWorld()).getName())
+                            standaloneTitle != null ? standaloneTitle.replace("{world}", toLocation.getWorld().getName())
                                     .replace("{x}", String.valueOf(toLocation.getBlockX()))
                                     .replace("{y}", String.valueOf(toLocation.getBlockY()))
-                                    .replace("{z}", String.valueOf(toLocation.getBlockZ())),
-                            standaloneSubTitle.replace("{world}", Objects.requireNonNull(toLocation.getWorld()).getName())
+                                    .replace("{z}", String.valueOf(toLocation.getBlockZ())) : "",
+                            standaloneSubTitle != null ? standaloneSubTitle.replace("{world}", toLocation.getWorld().getName())
                                     .replace("{x}", String.valueOf(toLocation.getBlockX()))
                                     .replace("{y}", String.valueOf(toLocation.getBlockY()))
-                                    .replace("{z}", String.valueOf(toLocation.getBlockZ())), 0, 5, 0);
+                                    .replace("{z}", String.valueOf(toLocation.getBlockZ())) : "", 0, 5, 0);
+                }
             }
         }
     }
