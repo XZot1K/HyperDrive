@@ -9,7 +9,7 @@
     <version>5.5.5</version>
 
     <properties>
-        <build>1</build>
+        <build>2</build>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -270,19 +270,19 @@
         <dependency>
             <groupId>com.Zrips.CMI</groupId>
             <artifactId>CMI</artifactId>
-            <version>9.6.10.5</version>
+            <version>9.6.11.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.bekvon.bukkit</groupId>
+            <groupId>com.bekvon.bukkit.residence</groupId>
             <artifactId>Residence</artifactId>
-            <version>5.1.4.1</version>
+            <version>5.1.4.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.angeschossen</groupId>
-            <artifactId>LandsAPI</artifactId>
-            <version>6.37.0</version>
+            <groupId>me.angeschossen.lands</groupId>
+            <artifactId>Lands</artifactId>
+            <version>6.46.2</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

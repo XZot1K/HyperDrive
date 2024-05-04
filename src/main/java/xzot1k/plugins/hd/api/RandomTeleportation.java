@@ -7,6 +7,7 @@ package xzot1k.plugins.hd.api;
 import io.papermc.lib.PaperLib;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import xzot1k.plugins.hd.HyperDrive;
@@ -24,13 +25,13 @@ public class RandomTeleportation implements Runnable {
 
     private final static HyperDrive pluginInstance = HyperDrive.getPluginInstance();
     private final static LinkedHashMap<UUID, RandomTeleportation> rtpMap = new LinkedHashMap<>();
-    private final int taskId;
-    private final int maxAttempts;
+    private final int taskId, maxAttempts;
     private final String teleportSound;
     private final List<String> biomeBlackList;
     private final Player player;
     private final World world;
     private final boolean onlyUpdateDestination;
+    private boolean foundLocation = false;
     private int attempts;
     private long boundsRadius;
     private Location baseLocation = null;
@@ -101,6 +102,12 @@ public class RandomTeleportation implements Runnable {
     public void run() {
         if (chunkCompleteFuture != null && !chunkCompleteFuture.isDone() && !chunkCompleteFuture.isCompletedExceptionally()) return;
 
+        if (foundLocation) {
+            pluginInstance.getServer().getScheduler().cancelTask(getTaskId());
+            clearRTPInstance(player.getUniqueId());
+            return;
+        }
+
         if (attempts >= maxAttempts) {
             pluginInstance.getServer().getScheduler().cancelTask(getTaskId());
             clearRTPInstance(player.getUniqueId());
@@ -120,21 +127,20 @@ public class RandomTeleportation implements Runnable {
 
         if (xAddition >= boundsRadius || zAddition >= boundsRadius) return;
 
-        pluginInstance.getServer().getScheduler().runTask(pluginInstance, () -> {
-            if (pluginInstance.getServerVersion().startsWith("v1_8_") || pluginInstance.getServerVersion().startsWith("v1_9_")
-                    || pluginInstance.getServerVersion().startsWith("v1_10_") || pluginInstance.getServerVersion().startsWith("v1_11_")
-                    || pluginInstance.getServerVersion().startsWith("v1_12_")) {
+        if (pluginInstance.getServerVersion().startsWith("v1_8_") || pluginInstance.getServerVersion().startsWith("v1_9_")
+                || pluginInstance.getServerVersion().startsWith("v1_10_") || pluginInstance.getServerVersion().startsWith("v1_11_")
+                || pluginInstance.getServerVersion().startsWith("v1_12_")) {
+            chunkCompleteFuture = PaperLib.getChunkAtAsync(world, x >> 16, z >> 16, true);
+        } else {
+            try {
+                chunkCompleteFuture = PaperLib.getChunkAtAsyncUrgently(world, x >> 16, z >> 16, true);
+            } catch (IllegalStateException | NoSuchMethodError ignored) {
                 chunkCompleteFuture = PaperLib.getChunkAtAsync(world, x >> 16, z >> 16, true);
-            } else {
-                try {
-                    chunkCompleteFuture = PaperLib.getChunkAtAsyncUrgently(world, x >> 16, z >> 16, true);
-                } catch (IllegalStateException | NoSuchMethodError ignored) {
-                    chunkCompleteFuture = PaperLib.getChunkAtAsync(world, x >> 16, z >> 16, true);
-                }
             }
+        }
 
-            chunkCompleteFuture.whenComplete((chunk, exception) -> {handleAction(chunk, x, z);});
-        });
+        chunkCompleteFuture.whenComplete((chunk, exception) ->
+                pluginInstance.getServer().getScheduler().runTask(pluginInstance, () -> {handleAction(chunk, x, z);}));
     }
 
     private void handleAction(@NotNull Chunk chunk, int x, int z) {
@@ -144,7 +150,8 @@ public class RandomTeleportation implements Runnable {
             return;
         }
 
-        final Block block = world.getBlockAt(x, highestY - 1, z);
+        final Block originalBlock = world.getBlockAt(x, highestY, z),
+                block = originalBlock.getRelative(BlockFace.DOWN);
 
         boolean isBlockedBiome = false;
         if (!biomeBlackList.isEmpty()) for (String biomeName : biomeBlackList)
@@ -153,18 +160,21 @@ public class RandomTeleportation implements Runnable {
                 break;
             }
 
-        final boolean failedSafeCheck = pluginInstance.getHookChecker().isNotSafe(player, block.getLocation().clone(), HookChecker.CheckType.RTP),
+        final boolean failedSafeCheck = pluginInstance.getHookChecker().isNotSafe(player, block.getLocation(), HookChecker.CheckType.RTP),
                 isForbiddenMaterial = pluginInstance.getManager().isForbiddenMaterial(block.getType(), block.getData());
         if (isBlockedBiome || failedSafeCheck || isForbiddenMaterial) {
             chunkCompleteFuture = null;
             return;
         }
 
-        Location location = block.getLocation().clone().add(0.5, 1.5, 0.5);
+        foundLocation = true;
+        pluginInstance.getServer().getScheduler().cancelTask(getTaskId());
+        clearRTPInstance(player.getUniqueId());
+
+        Location location = originalBlock.getLocation().clone().add(0.5, 1, 0.5);
         location.setYaw(player.getLocation().getYaw());
         location.setPitch(player.getLocation().getPitch());
 
-        pluginInstance.getServer().getScheduler().cancelTask(getTaskId());
         RandomTeleportEvent randomTeleportEvent = new RandomTeleportEvent(location, player);
         pluginInstance.getServer().getPluginManager().callEvent(randomTeleportEvent);
         if (randomTeleportEvent.isCancelled()) return;

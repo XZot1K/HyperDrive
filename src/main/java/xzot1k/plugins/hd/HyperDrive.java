@@ -53,7 +53,7 @@ public class HyperDrive extends JavaPlugin {
     private Connection databaseConnection;
     private List<String> databaseWarps;
 
-    private String serverVersion, tableName;
+    private String serverVersion, syntax;
     private int teleportationHandlerTaskId, autoSaveTaskId, crossServerTaskId;
 
     private FileConfiguration langConfig, menusConfig, dataConfig;
@@ -104,9 +104,9 @@ public class HyperDrive extends JavaPlugin {
         setServerVersion(args.length > 3 ? args[3] : "v" + getServer().getBukkitVersion().replace("-R0.", "_R")
                 .replace("-SNAPSHOT", "").replace(".", "_"));
 
-        tableName = "create table if not exists warps (name varchar(100), location varchar(255), status varchar(100), creation_date varchar(100),"
-                + " icon_theme varchar(100), animation_set varchar(100), description varchar(255), commands varchar(255), owner varchar(100), player_list varchar(255), "
-                + "assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int, dislikes int, voters longtext, "
+        syntax = "create table if not exists warps (name varchar(100), location longtext, status longtext, creation_date longtext,"
+                + " icon_theme longtext, animation_set longtext, description longtext, commands longtext, owner longtext, player_list longtext, "
+                + "assistants longtext, traffic int, usage_price double, enchanted_look int, server_ip longtext, likes int, dislikes int, voters longtext, "
                 + "white_list_mode int, notify int, extra_data longtext, primary key (name))";
 
         PaperLib.suggestPaper(this);
