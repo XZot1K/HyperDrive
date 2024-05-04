@@ -102,14 +102,14 @@
       <option name="url" value="https://oss.sonatype.org/content/repositories/snapshots" />
     </remote-repository>
     <remote-repository>
-      <option name="id" value="velocity" />
-      <option name="name" value="velocity" />
-      <option name="url" value="https://nexus.velocitypowered.com/repository/maven-public/" />
-    </remote-repository>
-    <remote-repository>
       <option name="id" value="my-local-repo" />
       <option name="name" value="my-local-repo" />
       <option name="url" value="file://C:\Users\alexo/.m2/repository" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="velocity" />
+      <option name="name" value="velocity" />
+      <option name="url" value="https://nexus.velocitypowered.com/repository/maven-public/" />
     </remote-repository>
   </component>
 </project>

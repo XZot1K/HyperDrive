@@ -86,39 +86,25 @@ public class Manager {
     private void setupPackets() {
         boolean succeeded = true;
         long startTime = System.currentTimeMillis();
-        switch (getPluginInstance().getServerVersion()) {
-            case "v1_12_R1": {
-                setParticleHandler(new PH_Old());
-                setTitleHandler(new Titles_Latest(getPluginInstance()));
-                setActionBarHandler(new ABH_Latest());
-                break;
-            }
-            case "v1_11_R1":
-            case "v1_10_R1":
-            case "v1_9_R2": {
-                setParticleHandler(new PH_Old());
-                setTitleHandler(new Titles_Old());
-                setActionBarHandler(new ABH_Latest());
-                break;
-            }
-            case "v1_9_R1":
-            case "v1_8_R3":
-            case "v1_8_R2":
-            case "v1_8_R1": {
-                setParticleHandler(new PH_Old());
-                setTitleHandler(new Titles_Old());
-                setActionBarHandler(new ABH_Old());
-                break;
-            }
-            default: {
-                if (!getPluginInstance().getServerVersion().contains("v1_7")) {
-                    setParticleHandler(new Particle_Latest());
-                    setTitleHandler(new Titles_Latest(getPluginInstance()));
-                    setActionBarHandler(new ABH_Latest());
-                } else succeeded = false;
-                break;
-            }
-        }
+
+        if (getPluginInstance().getServerVersion().startsWith("v1_12_")) {
+            setParticleHandler(new PH_Old());
+            setTitleHandler(new Titles_Latest(getPluginInstance()));
+            setActionBarHandler(new ABH_Latest());
+        } else if (getPluginInstance().getServerVersion().startsWith("v1_11_") || getPluginInstance().getServerVersion().startsWith("v1_10_")
+                || getPluginInstance().getServerVersion().startsWith("v1_9_R1")) {
+            setParticleHandler(new PH_Old());
+            setTitleHandler(new Titles_Old());
+            setActionBarHandler(new ABH_Latest());
+        } else if (getPluginInstance().getServerVersion().startsWith("v1_8_") || getPluginInstance().getServerVersion().startsWith("v1_9_R2")) {
+            setParticleHandler(new PH_Old());
+            setTitleHandler(new Titles_Old());
+            setActionBarHandler(new ABH_Old());
+        } else if (getPluginInstance().getServerVersion().startsWith("v1_7_")) {
+            setParticleHandler(new Particle_Latest());
+            setTitleHandler(new Titles_Latest(getPluginInstance()));
+            setActionBarHandler(new ABH_Latest());
+        } else succeeded = false;
 
         if (succeeded)
             getPluginInstance().log(Level.INFO, getPluginInstance().getServerVersion()
@@ -201,10 +187,10 @@ public class Manager {
     public String colorText(String message) {
         if (message == null || message.isEmpty()) return message;
 
-        if ((!getPluginInstance().getServerVersion().startsWith("v1_15") && !getPluginInstance().getServerVersion().startsWith("v1_14")
-                && !getPluginInstance().getServerVersion().startsWith("v1_13") && !getPluginInstance().getServerVersion().startsWith("v1_12")
-                && !getPluginInstance().getServerVersion().startsWith("v1_11") && !getPluginInstance().getServerVersion().startsWith("v1_10")
-                && !getPluginInstance().getServerVersion().startsWith("v1_9") && !getPluginInstance().getServerVersion().startsWith("v1_8"))) {
+        if ((!getPluginInstance().getServerVersion().startsWith("v1_15_") && !getPluginInstance().getServerVersion().startsWith("v1_14_")
+                && !getPluginInstance().getServerVersion().startsWith("v1_13_") && !getPluginInstance().getServerVersion().startsWith("v1_12_")
+                && !getPluginInstance().getServerVersion().startsWith("v1_11_") && !getPluginInstance().getServerVersion().startsWith("v1_10_")
+                && !getPluginInstance().getServerVersion().startsWith("v1_9_") && !getPluginInstance().getServerVersion().startsWith("v1_8_"))) {
             try {
                 Matcher matcher = hexPatternOne.matcher(message);
                 while (matcher.find()) {
@@ -415,9 +401,9 @@ public class Manager {
 
     @SuppressWarnings("deprecation")
     public ItemStack getPlayerHead(String headId, String displayName, List<String> lore, int amount) {
-        final boolean isNew = !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
-                || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9")
-                || getPluginInstance().getServerVersion().startsWith("v1_8"));
+        final boolean isNew = !(getPluginInstance().getServerVersion().startsWith("v1_12_") || getPluginInstance().getServerVersion().startsWith("v1_11_")
+                || getPluginInstance().getServerVersion().startsWith("v1_10_") || getPluginInstance().getServerVersion().startsWith("v1_9_")
+                || getPluginInstance().getServerVersion().startsWith("v1_8_"));
         ItemStack itemStack = null;
 
         if (headId != null && !headId.isEmpty()) {
@@ -494,7 +480,7 @@ public class Manager {
             SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
             if (skullMeta != null) {
                 OfflinePlayer player = getPluginInstance().getServer().getOfflinePlayer(headId);
-                if (isNew || getPluginInstance().getServerVersion().startsWith("v1_12")) skullMeta.setOwningPlayer(player);
+                if (isNew || getPluginInstance().getServerVersion().startsWith("v1_12_")) skullMeta.setOwningPlayer(player);
                 else skullMeta.setOwner(player.getName());
 
                 skullMeta.setDisplayName(displayName);
@@ -509,9 +495,9 @@ public class Manager {
 
     @SuppressWarnings("deprecation")
     public ItemStack getPlayerSelectionHead(OfflinePlayer player, boolean isSelected) {
-        final boolean isNew = !(getPluginInstance().getServerVersion().startsWith("v1_12") || getPluginInstance().getServerVersion().startsWith("v1_11")
-                || getPluginInstance().getServerVersion().startsWith("v1_10") || getPluginInstance().getServerVersion().startsWith("v1_9")
-                || getPluginInstance().getServerVersion().startsWith("v1_8"));
+        final boolean isNew = !(getPluginInstance().getServerVersion().startsWith("v1_12_") || getPluginInstance().getServerVersion().startsWith("v1_11_")
+                || getPluginInstance().getServerVersion().startsWith("v1_10_") || getPluginInstance().getServerVersion().startsWith("v1_9_")
+                || getPluginInstance().getServerVersion().startsWith("v1_8_"));
         ItemStack itemStack;
 
         if (isNew) {
@@ -1159,7 +1145,10 @@ public class Manager {
                             itemMeta.setLore(newLore);
 
                             if (warp.hasIconEnchantedLook()) {
-                                itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                                Enchantment enchantment = Enchantment.getByName("DURABILITY");
+                                if (enchantment == null) enchantment = Enchantment.UNBREAKING;
+
+                                itemMeta.addEnchant(enchantment, 10, true);
                                 itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                             }
 

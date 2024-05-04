@@ -98,7 +98,12 @@ public class HyperDrive extends JavaPlugin {
     public void onEnable() {
         long startTime = System.currentTimeMillis();
         setPluginInstance(this);
-        setServerVersion(getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3]);
+
+        // 1.20.5-1.20.6 changed packaging, so the server version is formatted as v1_20_6_R1
+        String[] args = getServer().getClass().getPackage().getName().split("\\.");
+        setServerVersion(args.length > 3 ? args[3] : "v" + getServer().getBukkitVersion().replace("-R0.", "_R")
+                .replace("-SNAPSHOT", "").replace(".", "_"));
+
         tableName = "create table if not exists warps (name varchar(100), location varchar(255), status varchar(100), creation_date varchar(100),"
                 + " icon_theme varchar(100), animation_set varchar(100), description varchar(255), commands varchar(255), owner varchar(100), player_list varchar(255), "
                 + "assistants varchar(255), traffic int, usage_price double, enchanted_look int, server_ip varchar(255), likes int, dislikes int, voters longtext, "
@@ -243,7 +248,7 @@ public class HyperDrive extends JavaPlugin {
         long startTime = System.currentTimeMillis();
         int totalUpdates = 0;
 
-        boolean isOffhandVersion = !getServerVersion().startsWith("v1_8");
+        boolean isOffhandVersion = !getServerVersion().startsWith("v1_8_");
         String[] configNames = {"config", "lang", "menus"};
         for (int i = -1; ++i < configNames.length; ) {
             String name = configNames[i];
@@ -259,16 +264,16 @@ public class HyperDrive extends JavaPlugin {
                             standaloneTeleporationSound = getConfig().getString("general-section.global-sounds.teleport");
                     if (isOffhandVersion) {
                         if (teleportationSound == null || teleportationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
-                            if (getServerVersion().toLowerCase().startsWith("v1_12") || getServerVersion().toLowerCase().startsWith("v1_11")
-                                    || getServerVersion().toLowerCase().startsWith("v1_10") || getServerVersion().toLowerCase().startsWith("v1_9"))
+                            if (getServerVersion().toLowerCase().startsWith("v1_12_") || getServerVersion().toLowerCase().startsWith("v1_11_")
+                                    || getServerVersion().toLowerCase().startsWith("v1_10_") || getServerVersion().toLowerCase().startsWith("v1_9_"))
                                 getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMEN_TELEPORT");
                             else getConfig().set("general-section.global-sounds.teleport", "ENTITY_ENDERMAN_TELEPORT");
                             updateCount++;
                         }
 
                         if (standaloneTeleporationSound == null || standaloneTeleporationSound.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
-                            if (getServerVersion().toLowerCase().startsWith("v1_12") || getServerVersion().toLowerCase().startsWith("v1_11")
-                                    || getServerVersion().toLowerCase().startsWith("v1_10") || getServerVersion().toLowerCase().startsWith("v1_9"))
+                            if (getServerVersion().toLowerCase().startsWith("v1_12_") || getServerVersion().toLowerCase().startsWith("v1_11_")
+                                    || getServerVersion().toLowerCase().startsWith("v1_10_") || getServerVersion().toLowerCase().startsWith("v1_9_"))
                                 getConfig().set("general-section.global-sounds.standalone-teleport", "ENTITY_ENDERMEN_TELEPORT");
                             else
                                 getConfig().set("general-section.global-sounds.standalone-teleport", "ENTITY_ENDERMAN_TELEPORT");
@@ -381,13 +386,13 @@ public class HyperDrive extends JavaPlugin {
                 String keyValue = yaml.getString(key);
                 if (keyValue != null) {
 
-                    if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
-                            || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
+                    if (getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_9_")
+                            || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")) {
                         if (!keyValue.equalsIgnoreCase("ENTITY_ENDERMEN_TELEPORT")) {
                             yaml.set(key, "ENTITY_ENDERMEN_TELEPORT");
                             updateCount++;
                         }
-                    } else if (getServerVersion().startsWith("v1_8")) {
+                    } else if (getServerVersion().startsWith("v1_8_")) {
                         if (!keyValue.equalsIgnoreCase("ENDERMAN_TELEPORT")) {
                             yaml.set(key, "ENDERMAN_TELEPORT");
                             updateCount++;
@@ -411,11 +416,11 @@ public class HyperDrive extends JavaPlugin {
                 if (keyValue != null)
                     switch (keyValue.toUpperCase().replace(" ", "_").replace("-", "_")) {
                         case "INK_SAC":
-                            if (getServerVersion().startsWith("v1_13")) {
+                            if (getServerVersion().startsWith("v1_13_")) {
                                 yaml.set(key, "ROSE_RED");
                                 updateCount++;
-                            } else if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
-                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
+                            } else if (getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_9")
+                                    || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")) {
                                 yaml.set(key, "INK_SACK");
                                 updateCount++;
                             } else {
@@ -424,10 +429,10 @@ public class HyperDrive extends JavaPlugin {
                             }
                             break;
                         case "INK_SACK":
-                            if (getServerVersion().startsWith("v1_8")) {
+                            if (getServerVersion().startsWith("v1_8_")) {
                                 yaml.set(key, "INK_SAC");
                                 updateCount++;
-                            } else if (getServerVersion().startsWith("v1_13")) {
+                            } else if (getServerVersion().startsWith("v1_13_")) {
                                 yaml.set(key, "ROSE_RED");
                                 updateCount++;
                             } else {
@@ -436,66 +441,67 @@ public class HyperDrive extends JavaPlugin {
                             }
                             break;
                         case "ROSE_RED":
-                            if (!getServerVersion().startsWith("v1_13") && (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
-                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")))
+                            if (!getServerVersion().startsWith("v1_13_") && (getServerVersion().startsWith("v1_12_")
+                                    || getServerVersion().startsWith("v1_9_") || getServerVersion().startsWith("v1_11_")
+                                    || getServerVersion().startsWith("v1_10_")))
                                 yaml.set(key, "INK_SACK");
-                            else if (getServerVersion().startsWith("v1_8"))
+                            else if (getServerVersion().startsWith("v1_8_"))
                                 yaml.set(key, "INK_SAC");
                             else yaml.set(key, "RED_DYE");
                             updateCount++;
                             break;
                         case "RED_DYE":
-                            if (getServerVersion().startsWith("v1_13")) {
+                            if (getServerVersion().startsWith("v1_13_")) {
                                 yaml.set(key, "ROSE_RED");
                                 updateCount++;
-                            } else if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_9")
-                                    || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")) {
+                            } else if (getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_9_")
+                                    || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")) {
                                 yaml.set(key, "INK_SACK");
                                 updateCount++;
-                            } else if (getServerVersion().startsWith("v1_8")) {
+                            } else if (getServerVersion().startsWith("v1_8_")) {
                                 yaml.set(key, "INK_SAC");
                                 updateCount++;
                             }
                             break;
                         case "CLOCK":
-                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
+                            if (getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")
+                                    || getServerVersion().startsWith("v1_9_") || getServerVersion().startsWith("v1_8_")) {
                                 yaml.set(key, "WATCH");
                                 updateCount++;
                             }
                             break;
                         case "WATCH":
-                            if (!(getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"))) {
+                            if (!(getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")
+                                    || getServerVersion().startsWith("v1_9_") || getServerVersion().startsWith("v1_8_"))) {
                                 yaml.set(key, "CLOCK");
                                 updateCount++;
                             }
                             break;
                         case "BLACK_STAINED_GLASS_PANE":
-                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
+                            if (getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")
+                                    || getServerVersion().startsWith("v1_9_") || getServerVersion().startsWith("v1_8_")) {
                                 yaml.set(key, "STAINED_GLASS_PANE");
                                 yaml.set(key.replace(".material", ".durability"), 15);
                                 updateCount++;
                             }
                             break;
                         case "STAINED_GLASS_PANE":
-                            if (!(getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"))) {
+                            if (!(getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")
+                                    || getServerVersion().startsWith("v1_9_") || getServerVersion().startsWith("v1_8_"))) {
                                 yaml.set(key, "BLACK_STAINED_GLASS_PANE");
                                 updateCount++;
                             }
                             break;
                         case "OAK_SIGN":
-                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
+                            if (getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")
+                                    || getServerVersion().startsWith("v1_9_") || getServerVersion().startsWith("v1_8_")) {
                                 yaml.set(key, "SIGN");
                                 updateCount++;
                             }
                             break;
                         case "SIGN":
-                            if (!(getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8"))) {
+                            if (!(getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")
+                                    || getServerVersion().startsWith("v1_9_") || getServerVersion().startsWith("v1_8_"))) {
                                 yaml.set(key, "OAK_SIGN");
                                 updateCount++;
                             }
@@ -503,15 +509,15 @@ public class HyperDrive extends JavaPlugin {
                         case "GREEN_WOOL":
                         case "LIME_WOOL":
                         case "RED_WOOL":
-                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
+                            if (getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")
+                                    || getServerVersion().startsWith("v1_9_") || getServerVersion().startsWith("v1_8_")) {
                                 yaml.set(key, "WOOL");
                                 updateCount++;
                             }
                             break;
                         case "GRASS_BLOCK":
-                            if (getServerVersion().startsWith("v1_12") || getServerVersion().startsWith("v1_11") || getServerVersion().startsWith("v1_10")
-                                    || getServerVersion().startsWith("v1_9") || getServerVersion().startsWith("v1_8")) {
+                            if (getServerVersion().startsWith("v1_12_") || getServerVersion().startsWith("v1_11_") || getServerVersion().startsWith("v1_10_")
+                                    || getServerVersion().startsWith("v1_9_") || getServerVersion().startsWith("v1_8_")) {
                                 yaml.set(key, "GRASS");
                                 updateCount++;
                             }
@@ -1416,9 +1422,7 @@ public class HyperDrive extends JavaPlugin {
         this.crossServerTaskId = crossServerTaskId;
     }
 
-    public String getServerVersion() {
-        return serverVersion;
-    }
+    public String getServerVersion() {return serverVersion;}
 
     private void setServerVersion(String serverVersion) {
         this.serverVersion = serverVersion;

@@ -82,7 +82,7 @@ public class RandomTeleportation implements Runnable {
         if (randomTeleportation != null) {
             pluginInstance.getServer().getScheduler().cancelTask(randomTeleportation.getTaskId());
             rtpMap.remove(playerUniqueId);
-            return null;
+            return randomTeleportation;
         }
         return null;
     }
@@ -121,9 +121,9 @@ public class RandomTeleportation implements Runnable {
         if (xAddition >= boundsRadius || zAddition >= boundsRadius) return;
 
         pluginInstance.getServer().getScheduler().runTask(pluginInstance, () -> {
-            if (pluginInstance.getServerVersion().startsWith("v1_8") || pluginInstance.getServerVersion().startsWith("v1_9")
-                    || pluginInstance.getServerVersion().startsWith("v1_10") || pluginInstance.getServerVersion().startsWith("v1_11")
-                    || pluginInstance.getServerVersion().startsWith("v1_12")) {
+            if (pluginInstance.getServerVersion().startsWith("v1_8_") || pluginInstance.getServerVersion().startsWith("v1_9_")
+                    || pluginInstance.getServerVersion().startsWith("v1_10_") || pluginInstance.getServerVersion().startsWith("v1_11_")
+                    || pluginInstance.getServerVersion().startsWith("v1_12_")) {
                 chunkCompleteFuture = PaperLib.getChunkAtAsync(world, x >> 16, z >> 16, true);
             } else {
                 try {

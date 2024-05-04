@@ -61,9 +61,9 @@ public class Listeners implements Listener {
 
         String inventoryName;
         try {
-            if (!(getPluginInstance().getServerVersion().startsWith("v1_13") || getPluginInstance().getServerVersion().startsWith("v1_12")
-                    || getPluginInstance().getServerVersion().startsWith("v1_11") || getPluginInstance().getServerVersion().startsWith("v1_10")
-                    || getPluginInstance().getServerVersion().startsWith("v1_9") || getPluginInstance().getServerVersion().startsWith("v1_8")))
+            if (!(getPluginInstance().getServerVersion().startsWith("v1_13_") || getPluginInstance().getServerVersion().startsWith("v1_12_")
+                    || getPluginInstance().getServerVersion().startsWith("v1_11_") || getPluginInstance().getServerVersion().startsWith("v1_10_")
+                    || getPluginInstance().getServerVersion().startsWith("v1_9_") || getPluginInstance().getServerVersion().startsWith("v1_8_")))
                 inventoryName = e.getView().getTitle();
             else {
                 Method method = e.getInventory().getClass().getMethod("getName");

@@ -16,7 +16,7 @@ public class Particle_Latest implements ParticleHandler {
                                 int offsetZ, int red, int green, int blue, int brightness, int speed, int amount) {
         if (location.getWorld() != null) {
             Particle particle = Particle.valueOf(particleName);
-            if (particle == Particle.REDSTONE)
+            if (particle.name().equals("REDSTONE") || particle.name().equals("DUST"))
                 location.getWorld().spawnParticle(particle, location, amount, offsetX, offsetY, offsetZ,
                         new Particle.DustOptions(Color.fromBGR(red, green, blue), 1));
             else location.getWorld().spawnParticle(particle, location, amount, offsetX, offsetY, offsetZ, 0);
@@ -28,7 +28,7 @@ public class Particle_Latest implements ParticleHandler {
                                int offsetY, int offsetZ, int speed, int amount) {
         Particle particle = Particle.valueOf(particleName);
         if (location.getWorld() != null) {
-            if (particle == Particle.REDSTONE)
+            if (particle.name().equals("REDSTONE") || particle.name().equals("DUST"))
                 location.getWorld().spawnParticle(particle, location, amount, offsetX, offsetY, offsetZ,
                         new Particle.DustOptions(Color.RED, 1));
             else location.getWorld().spawnParticle(particle, location, amount, offsetX, offsetY, offsetZ, 0);

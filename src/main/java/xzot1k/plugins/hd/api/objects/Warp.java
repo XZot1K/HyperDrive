@@ -327,7 +327,10 @@ public class Warp implements Comparable<Warp> {
                     setItemIcon(getPluginInstance().getManager().getPlayerHead(offlinePlayer.getName(), getPluginInstance().getManager().colorText(getWarpName()), new ArrayList<>(), amount));
                     ItemMeta itemMeta = getItemIcon().getItemMeta();
                     if (hasIconEnchantedLook() && itemMeta != null) {
-                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                        Enchantment enchantment = Enchantment.getByName("DURABILITY");
+                        if (enchantment == null) enchantment = Enchantment.UNBREAKING;
+
+                        itemMeta.addEnchant(enchantment, 10, true);
                         itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                         getItemIcon().setItemMeta(itemMeta);
                     }
@@ -342,7 +345,10 @@ public class Warp implements Comparable<Warp> {
                     setItemIcon(getPluginInstance().getManager().buildItem(material, durability, getPluginInstance().getManager().colorText(getWarpName()), new ArrayList<>(), amount));
                     ItemMeta itemMeta = getItemIcon().getItemMeta();
                     if (hasIconEnchantedLook() && itemMeta != null) {
-                        itemMeta.addEnchant(Enchantment.DURABILITY, 10, true);
+                        Enchantment enchantment = Enchantment.getByName("DURABILITY");
+                        if (enchantment == null) enchantment = Enchantment.UNBREAKING;
+
+                        itemMeta.addEnchant(enchantment, 10, true);
                         itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                         getItemIcon().setItemMeta(itemMeta);
                     }
