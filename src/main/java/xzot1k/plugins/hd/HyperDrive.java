@@ -617,7 +617,7 @@ public class HyperDrive extends JavaPlugin {
             }
 
             statement = getDatabaseConnection().createStatement();
-            statement.executeUpdate(tableName);
+            statement.executeUpdate(syntax);
 
             DatabaseMetaData md = getDatabaseConnection().getMetaData();
 
@@ -1191,7 +1191,7 @@ public class HyperDrive extends JavaPlugin {
         if (fixTables) {
             try {
                 PreparedStatement statement = getDatabaseConnection().prepareStatement("ALTER TABLE warps RENAME TO warps_old;");
-                statement.executeUpdate(tableName);
+                statement.executeUpdate(syntax);
 
                 final String columnsSeparated = "name, location, status, creation_date, icon_theme, animation_set, description, "
                         + "commands, owner, player_list, assistants, traffic, usage_price, enchanted_look, server_ip, likes, "

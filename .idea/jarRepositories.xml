@@ -32,6 +32,11 @@
       <option name="url" value="https://nexus.savagelabs.net/repository/maven-releases/" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="my-local-repo" />
+      <option name="name" value="my-local-repo" />
+      <option name="url" value="file://$MAVEN_REPOSITORY$" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="illyria" />
       <option name="name" value="illyria" />
       <option name="url" value="https://nexus.illyria.io/repository/maven-public/" />
@@ -95,11 +100,6 @@
       <option name="id" value="jboss.community" />
       <option name="name" value="JBoss Community repository" />
       <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
-    </remote-repository>
-    <remote-repository>
-      <option name="id" value="my-local-repo" />
-      <option name="name" value="my-local-repo" />
-      <option name="url" value="file://$MAVEN_REPOSITORY$" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="bungeecord-repo" />
