@@ -1070,8 +1070,9 @@ public class MainCommands implements CommandExecutor {
 
         int duration = !player.hasPermission("hyperdrive.tpdelaybypass") ? getPluginInstance().getConfig().getInt("teleportation-section.warp-delay-duration") : 0;
         boolean isVanished = getPluginInstance().getManager().isVanished(player);
-        if (!isVanished && warp.getAnimationSet().contains(":")) {
+        if (!isVanished && warp.getAnimationSet().contains(":") && !getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list").isEmpty()) {
             String[] themeArgs = warp.getAnimationSet().split(":");
+            if (themeArgs.length >= 3) {
             String delayTheme = themeArgs[1];
             if (delayTheme.contains("/")) {
                 String[] delayThemeArgs = delayTheme.split("/");
@@ -1079,6 +1080,7 @@ public class MainCommands implements CommandExecutor {
                 getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1],
                         EnumContainer.Animation.valueOf(delayThemeArgs[0].toUpperCase().replace(" ", "_")
                                 .replace("-", "_")), duration);
+            }
             }
         }
 

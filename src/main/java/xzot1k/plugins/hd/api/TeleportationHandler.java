@@ -256,15 +256,18 @@ public class TeleportationHandler implements Runnable {
 
                                         // Warp teleport animation
                                         if (!isVanished) {
-                                            if (warp.getAnimationSet() != null && warp.getAnimationSet().contains(":")) {
+                                            if (warp.getAnimationSet() != null && warp.getAnimationSet().contains(":")
+                                                    && !getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list").isEmpty()) {
                                                 String[] themeArgs = warp.getAnimationSet().split(":");
-                                                String teleportTheme = themeArgs[2];
-                                                if (teleportTheme.contains("/")) {
-                                                    String[] teleportThemeArgs = teleportTheme.split("/");
-                                                    getAnimation().stopActiveAnimation(player);
-                                                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[1],
-                                                            EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
-                                                                    .replace("-", "_")), 1);
+                                                if (themeArgs.length >= 2) {
+                                                    String teleportTheme = themeArgs[2];
+                                                    if (teleportTheme.contains("/")) {
+                                                        String[] teleportThemeArgs = teleportTheme.split("/");
+                                                        getAnimation().stopActiveAnimation(player);
+                                                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[1],
+                                                                EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_")
+                                                                        .replace("-", "_")), 1);
+                                                    }
                                                 }
                                             }
 
@@ -311,12 +314,10 @@ public class TeleportationHandler implements Runnable {
                                     String randomTeleportDelayAnimation = getPluginInstance().getConfig().getString("special-effects-section.random-teleport-delay-animation");
                                     if (!isVanished && randomTeleportDelayAnimation != null && randomTeleportDelayAnimation.contains(":")) {
                                         String[] themeArgs = randomTeleportDelayAnimation.split(":");
-                                        String teleportTheme = themeArgs[1];
-                                        if (teleportTheme.contains("/")) {
-                                            String[] teleportThemeArgs = teleportTheme.split("/");
+                                        if (themeArgs.length >= 2) {
                                             getAnimation().stopActiveAnimation(player);
-                                            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, teleportThemeArgs[0],
-                                                    EnumContainer.Animation.valueOf(teleportThemeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_")), 1);
+                                            getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                                                    EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_")), 1);
                                         }
                                     }
                                 }
@@ -376,10 +377,12 @@ public class TeleportationHandler implements Runnable {
             boolean isVanished = getPluginInstance().getManager().isVanished(player);
             if (!isVanished && animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
 
             if (getPluginInstance().getTeleportationCommands() != null && getPluginInstance().getTeleportationCommands().getSpawnLocation() != null)
@@ -399,9 +402,11 @@ public class TeleportationHandler implements Runnable {
                 final String currentAnimationSet = getPluginInstance().getConfig().getString("special-effects-section.spawn-teleport-animation");
                 if (!isVanished && currentAnimationSet != null && currentAnimationSet.contains(":")) {
                     String[] themeArgs = currentAnimationSet.split(":");
-                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
-                            .toUpperCase().replace(" ", "_").replace("-", "_")), 1);
+                    if (themeArgs.length >= 2) {
+                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
+                                .toUpperCase().replace(" ", "_").replace("-", "_")), 1);
+                    }
                 }
 
                 getPluginInstance().getManager().sendCustomMessage("teleport-spawn", player);
@@ -410,9 +415,11 @@ public class TeleportationHandler implements Runnable {
                 final String currentAnimationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-animation");
                 if (!isVanished && currentAnimationSet != null && currentAnimationSet.contains(":")) {
                     String[] themeArgs = currentAnimationSet.split(":");
-                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
-                            .toUpperCase().replace(" ", "_").replace("-", "_")), 1);
+                    if (themeArgs.length >= 2) {
+                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
+                                .toUpperCase().replace(" ", "_").replace("-", "_")), 1);
+                    }
                 }
 
                 if (teleportTitle != null && teleportSubTitle != null) {
@@ -440,9 +447,11 @@ public class TeleportationHandler implements Runnable {
                 final String animationSet = getPluginInstance().getConfig().getString("special-effects-section.spawn-teleport-delay-animation");
                 if (!isVanished && animationSet != null && animationSet.contains(":")) {
                     String[] themeArgs = animationSet.split(":");
-                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
-                            .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                    if (themeArgs.length >= 2) {
+                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
+                                .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                    }
                 }
             }
 
@@ -455,9 +464,11 @@ public class TeleportationHandler implements Runnable {
                 final String animationSet = getPluginInstance().getConfig().getString("special-effects-section.standalone-teleport-delay-animation");
                 if (!isVanished && animationSet != null && animationSet.contains(":")) {
                     String[] themeArgs = animationSet.split(":");
-                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
-                            .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                    if (themeArgs.length >= 2) {
+                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1], EnumContainer.Animation.valueOf(themeArgs[0]
+                                .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                    }
                 }
             }
 

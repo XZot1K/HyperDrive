@@ -84,7 +84,6 @@ public class Manager {
 
     // general stuff
     private void setupPackets() {
-        boolean succeeded = true;
         long startTime = System.currentTimeMillis();
 
         if (getPluginInstance().getServerVersion().startsWith("v1_12_")) {
@@ -100,19 +99,14 @@ public class Manager {
             setParticleHandler(new PH_Old());
             setTitleHandler(new Titles_Old());
             setActionBarHandler(new ABH_Old());
-        } else if (getPluginInstance().getServerVersion().startsWith("v1_7_")) {
+        } else {
             setParticleHandler(new Particle_Latest());
             setTitleHandler(new Titles_Latest(getPluginInstance()));
             setActionBarHandler(new ABH_Latest());
-        } else succeeded = false;
+        }
 
-        if (succeeded)
-            getPluginInstance().log(Level.INFO, getPluginInstance().getServerVersion()
-                    + " packets were successfully setup! (Took " + (System.currentTimeMillis() - startTime) + "ms)");
-        else
-            getPluginInstance().log(Level.WARNING,
-                    "Your version is not supported by HyperDrive's packets. Expect errors when attempting to use anything packet "
-                            + "related. (Took " + (System.currentTimeMillis() - startTime) + "ms)");
+        getPluginInstance().log(Level.INFO, getPluginInstance().getServerVersion()
+                + " packets were successfully setup! (Took " + (System.currentTimeMillis() - startTime) + "ms)");
     }
 
     /**

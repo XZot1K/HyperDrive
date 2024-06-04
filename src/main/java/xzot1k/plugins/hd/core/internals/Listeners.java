@@ -660,10 +660,12 @@ public class Listeners implements Listener {
                 boolean isVanished = getPluginInstance().getManager().isVanished(e.getPlayer());
                 if (!isVanished && animationSet != null && animationSet.contains(":")) {
                     String[] themeArgs = animationSet.split(":");
-                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
-                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
-                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                    .replace("-", "_")), 1);
+                    if (themeArgs.length >= 2) {
+                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
+                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
+                                EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                        .replace("-", "_")), 1);
+                    }
                 }
 
                 List<String> commandList = getPluginInstance().getConfig().getStringList("general-section.first-join-commands");
@@ -683,10 +685,12 @@ public class Listeners implements Listener {
                     e.getPlayer().getWorld().playSound(e.getPlayer().getLocation(), Sound.valueOf(teleportSound), 1, 1);
                 if (animationSet != null && animationSet.contains(":")) {
                     String[] themeArgs = animationSet.split(":");
-                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
-                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
-                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                    .replace("-", "_")), 1);
+                    if (themeArgs.length >= 2) {
+                        getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
+                        getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
+                                EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                        .replace("-", "_")), 1);
+                    }
                 }
 
                 getPluginInstance().getManager().sendCustomMessage("teleport-spawn", e.getPlayer(), "{player}:" + e.getPlayer().getName());
@@ -716,10 +720,12 @@ public class Listeners implements Listener {
             boolean isVanished = getPluginInstance().getManager().isVanished(e.getPlayer());
             if (!isVanished && animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(e.getPlayer());
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(e.getPlayer(), themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
 
             getPluginInstance().getManager().sendCustomMessage("teleport-spawn", e.getPlayer(), "{player}:" + e.getPlayer().getName());
@@ -811,14 +817,16 @@ public class Listeners implements Listener {
                         }
 
                         boolean isVanished = getPluginInstance().getManager().isVanished(player);
-                        if (!isVanished && warp.getAnimationSet().contains(":")) {
+                        if (!isVanished && warp.getAnimationSet().contains(":") && !getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list").isEmpty()) {
                             String[] themeArgs = warp.getAnimationSet().split(":");
-                            String delayTheme = themeArgs[1];
-                            if (delayTheme.contains("/")) {
-                                String[] delayThemeArgs = delayTheme.split("/");
-                                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(
-                                        delayThemeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                            if (themeArgs.length >= 2) {
+                                String delayTheme = themeArgs[1];
+                                if (delayTheme.contains("/")) {
+                                    String[] delayThemeArgs = delayTheme.split("/");
+                                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1], EnumContainer.Animation.valueOf(
+                                            delayThemeArgs[0].toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                                }
                             }
                         }
 
@@ -1070,15 +1078,17 @@ public class Listeners implements Listener {
                         }
 
                         boolean isVanished = getPluginInstance().getManager().isVanished(player);
-                        if (!isVanished && warp.getAnimationSet().contains(":")) {
+                        if (!isVanished && warp.getAnimationSet().contains(":") && !getPluginInstance().getConfig().getStringList("special-effects-section.warp-animation-list").isEmpty()) {
                             String[] themeArgs = warp.getAnimationSet().split(":");
-                            String delayTheme = themeArgs[1];
-                            if (delayTheme.contains("/")) {
-                                String[] delayThemeArgs = delayTheme.split("/");
-                                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1],
-                                        EnumContainer.Animation.valueOf(delayThemeArgs[0]
-                                                .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                            if (themeArgs.length >= 2) {
+                                String delayTheme = themeArgs[1];
+                                if (delayTheme.contains("/")) {
+                                    String[] delayThemeArgs = delayTheme.split("/");
+                                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, delayThemeArgs[1],
+                                            EnumContainer.Animation.valueOf(delayThemeArgs[0]
+                                                    .toUpperCase().replace(" ", "_").replace("-", "_")), duration);
+                                }
                             }
                         }
 

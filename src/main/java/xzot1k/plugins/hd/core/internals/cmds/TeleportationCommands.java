@@ -923,10 +923,12 @@ public class TeleportationCommands implements CommandExecutor {
                 player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
             if (animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
         }
 
@@ -1000,10 +1002,12 @@ public class TeleportationCommands implements CommandExecutor {
                 player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
             if (animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
         }
 
@@ -1207,10 +1211,12 @@ public class TeleportationCommands implements CommandExecutor {
                 player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
             if (animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
         }
 
@@ -1261,10 +1267,12 @@ public class TeleportationCommands implements CommandExecutor {
                 player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
             if (animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
         }
 
@@ -1335,10 +1343,12 @@ public class TeleportationCommands implements CommandExecutor {
                 enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
             if (animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer, themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
         }
 
@@ -1457,10 +1467,12 @@ public class TeleportationCommands implements CommandExecutor {
                 enteredPlayer.getWorld().playSound(enteredPlayer.getLocation(), Sound.valueOf(teleportSound), 1, 1);
             if (animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
 
             getPluginInstance().getManager().sendCustomMessage("tp-receiver", player, "{player}:" + enteredPlayer.getName());
@@ -1520,10 +1532,12 @@ public class TeleportationCommands implements CommandExecutor {
                 enteredPlayer1.getWorld().playSound(enteredPlayer1.getLocation(), Sound.valueOf(teleportSound), 1, 1);
             if (animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer1);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer1, themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(enteredPlayer1);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(enteredPlayer1, themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
 
             getPluginInstance().getManager().sendCustomMessage("tp-receiver", enteredPlayer2, "{player}:" + enteredPlayer1.getName());
@@ -1577,10 +1591,12 @@ public class TeleportationCommands implements CommandExecutor {
                 player.getWorld().playSound(player.getLocation(), Sound.valueOf(teleportSound), 1, 1);
             if (animationSet != null && animationSet.contains(":")) {
                 String[] themeArgs = animationSet.split(":");
-                getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
-                getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
-                        EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
-                                .replace("-", "_")), 1);
+                if (themeArgs.length >= 2) {
+                    getPluginInstance().getTeleportationHandler().getAnimation().stopActiveAnimation(player);
+                    getPluginInstance().getTeleportationHandler().getAnimation().playAnimation(player, themeArgs[1],
+                            EnumContainer.Animation.valueOf(themeArgs[0].toUpperCase().replace(" ", "_")
+                                    .replace("-", "_")), 1);
+                }
             }
         }
 
